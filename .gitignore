@@ -1,0 +1,25 @@
+# Local secrets and settings
+.env
+.env.local
+
+# Runtime state (runs, evidence, SQL log, H-MEM, contract ledgers). Nothing under data/ is committed;
+# the curated inputs live in seeds/.
+data/*
+
+# Dependencies and environments
+node_modules/
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Private working material
+transcripts/
+notes/
+
+# OS files
+Thumbs.db
+.DS_Store
+
+# Demo video (uploaded separately)
+*.mp4

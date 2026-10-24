@@ -1,0 +1,43 @@
+---
+description: Method integrity, untrusted input, network, secrets and public-text rules for all Weather-or-Not code
+alwaysApply: true
+---
+
+# Safety rules
+
+## The model never decides and never computes
+
+- Nemotron plans, reads tool results, resolves which hypothesis to test next and writes the explanation. It never produces a number: degree days come from Lightning SQL over the cached GHCN views, growth, the peer set, the like-for-like recast rule, the OLS and Theil-Sen slopes, the seeded bootstrap (300 resamples, seed 7, 10th to 90th percentile) and the three-way split come from the deterministic tools in `agent/src/tools/`.
+- Every number in the memo must match a tool output exactly (string match); an unmatched draft is retried once, then replaced by the template memo.
+- The answer carries ranges and a confidence label (high, medium, low by the fixed rule on peers, coverage and the slope interval), never a point estimate alone. Wording: "consistent with", "accounts for roughly". The claim verdict (supported, partly supported, not supported) follows the fixed ratio rule.
+- Revenue is a proxy. The card always lists what was not tested: fuel-cost pass-through, rate cases, data-centre load growth, mergers, weather normals, Q4, states beyond the first six served.
+- Recast conflicts are recorded and resolved by rule R1, never by whichever value was read last; the analyst's override is logged with actor `analyst`.
+- The verdict is withheld while the DQ gate shows an invalid coverage record for the target's stations; the card says so and when DQ last ran.
+
+## Untrusted input
+
+- Entity names, SIC descriptions and anything else read from a source are untrusted. The guard scans them before any model sees them; hits are wrapped in `<untrusted>` and flagged `untrusted_text`; text is never silently dropped.
+
+## Network
+
+- At runtime the agent reads SEC EDGAR, NOAA GHCN and company_dns only through Zetaris (via the gateway). The gateway client refuses non-loopback hosts and counts any attempt.
+- No cloud model calls. Nemotron runs in local Ollama at `OLLAMA_URL` (127.0.0.1:11434); the model client refuses non-loopback hosts.
+- Source etiquette: SEC EDGAR at most 10 requests per second with the `User-Agent` from `WON_USER_AGENT`; company_dns with an identifying `User-Agent`; NOAA GHCN read anonymously from the public bucket. Never invent or reuse a contact.
+- Services bind to 127.0.0.1 only: UI and API 8794, gateway 8793.
+
+## Secrets
+
+- Credentials, `WON_USER_AGENT` and `WON_CONTRACT_SECRET` live only in `.env.local`, which is gitignored. Never print, log, commit or paste them into prompts, fixtures, SQL files or task files; committed statements carry the placeholder `YOUR_APP_NAME YOUR_CONTACT_EMAIL`.
+
+## Integrity
+
+- Report only measured numbers, each labelled `measured` or `estimated (chars/4)`. Public numbers come from the agent's own run through Zetaris, not from dev-time scripts.
+- Never fabricate filing values, management quotes or analyst history. Synthetic fixtures are labelled synthetic and used for tests only. Never present a replayed run as live.
+- Extracted SEC data is never committed (counts and schemas are fine); `seeds/` holds identifiers, names, states and station ids only.
+- Dominion Energy is never the demo case.
+- Weather-or-Not is decision support for someone judging a claim, not financial or legal advice.
+
+## Public text
+
+- Repository files (code, comments, docs, SQL, commit messages) name no AI assistant, model vendor or coding tool. The one exception is the sentence stating that the project was developed in Cursor, in `README.md` and `docs/how-cursor-was-used.md`.
+- No local paths, no contact addresses, no secrets anywhere in the repository.

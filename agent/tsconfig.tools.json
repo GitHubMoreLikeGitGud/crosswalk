@@ -1,0 +1,10 @@
+{
+  "extends": "./tsconfig.json",
+  "include": [
+    "src/tools/**/*.ts",
+    "test/degree-days.test.ts",
+    "test/attribution.test.ts",
+    "test/recast.test.ts",
+    "test/frames.test.ts"
+  ]
+}

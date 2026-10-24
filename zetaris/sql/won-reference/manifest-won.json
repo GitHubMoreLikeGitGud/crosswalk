@@ -1,0 +1,145 @@
+{
+  "_comment": "Weather-or-Not Zetaris objects in onboarding order; each create script has a _select.sql verification pair. Status is from the Day-0 gate runs against Zetaris 2.4.3.1 (local Docker). The user-agent placeholder in REST scripts is replaced from WON_USER_AGENT at run time.",
+  "version": 1,
+  "sources": [
+    {
+      "id": "won_sec",
+      "kind": "rest",
+      "script": "zetaris/sql/01_won_sec_create.sql",
+      "select": "zetaris/sql/01_won_sec_select.sql",
+      "status": "verified",
+      "requires": [],
+      "hosts": [
+        "data.sec.gov"
+      ],
+      "summary": "SEC EDGAR XBRL: frames for the three revenue tags x CY2025Q1, CY2024Q1; companyconcept and submissions for Duke Energy, Southern Co, Xcel Energy, Entergy; container won; every view cached. Counts equal the source responses (2026-10-24)",
+      "objects": {
+        "database": "WON_SEC",
+        "container": "won",
+        "frames": [
+          "won.frames_<tag>_<period>"
+        ],
+        "concept": [
+          "won.concept_<cik10>_<tag>"
+        ],
+        "submission": [
+          "won.submission_<cik10>"
+        ]
+      }
+    },
+    {
+      "id": "won_dns",
+      "kind": "rest",
+      "script": "zetaris/sql/02_won_dns_create.sql",
+      "select": "zetaris/sql/02_won_dns_select.sql",
+      "status": "verified",
+      "requires": [
+        "won_sec"
+      ],
+      "hosts": [
+        "company-dns.mediumroast.io"
+      ],
+      "summary": "company_dns SIC reference V4, 1,005 codes, raw table and view won.sic_codes cached (2026-10-24)",
+      "objects": {
+        "database": "WON_DNS",
+        "raw": "WON_DNS.sic_codes_v4_raw",
+        "view": "won.sic_codes"
+      }
+    },
+    {
+      "id": "won_frames_runtime",
+      "kind": "registrar-template",
+      "script": "zetaris/sql/03_won_frames_runtime_template.sql",
+      "status": "verified",
+      "requires": [
+        "won_sec"
+      ],
+      "hosts": [
+        "data.sec.gov"
+      ],
+      "summary": "Run-time registration of a frames period by the gateway registrar (register_frames; also register_concept, register_submission). Proved with Revenues CY2025Q2 = 1,941 facts and Revenues CY2024Q2 = 2,018 facts (2026-10-24)"
+    },
+    {
+      "id": "won_sec_seeds",
+      "kind": "rest",
+      "script": "zetaris/sql/06_won_sec_seeds_create.sql",
+      "select": "zetaris/sql/06_won_sec_seeds_select.sql",
+      "status": "verified",
+      "requires": [
+        "won_sec"
+      ],
+      "hosts": [
+        "data.sec.gov"
+      ],
+      "summary": "Submissions profiles of the 39 seed utilities not in won_sec (01 + 06 = all 43 of seeds/utilities.json) and the companyconcept history of FirstEnergy and American Electric Power under Revenues and RevenueFromContractWithCustomerExcludingAssessedTax; every view cached; 129 statements in 49 s; concept counts equal the source (194, 42, 304, 18) (2026-10-24)",
+      "objects": {
+        "database": "WON_SEC",
+        "container": "won",
+        "submission": [
+          "won.submission_<cik10>"
+        ],
+        "concept": [
+          "won.concept_0001031296_<tag>",
+          "won.concept_0000004904_<tag>"
+        ]
+      }
+    },
+    {
+      "id": "won_ghcn",
+      "kind": "filestore-parquet",
+      "script": "zetaris/sql/04_won_ghcn_create.sql",
+      "select": "zetaris/sql/04_won_ghcn_select.sql",
+      "status": "verified",
+      "requires": [],
+      "hosts": [
+        "s3a://noaa-ghcn-pds/"
+      ],
+      "summary": "NOAA GHCN-Daily parquet by_year partitions for 2024 and 2025, TMAX and TMIN; station-filtered views (56 seed stations + USW00013740) cached. Raw count for USW00013740 and the four view counts equal pyarrow; 2025 Q1 degree days equal pyarrow to 0.01 (2026-10-24)",
+      "objects": {
+        "database": "WON_GHCN",
+        "container": "won",
+        "raw": [
+          "WON_GHCN.ghcn_2025_tmax",
+          "WON_GHCN.ghcn_2025_tmin",
+          "WON_GHCN.ghcn_2024_tmax",
+          "WON_GHCN.ghcn_2024_tmin"
+        ],
+        "views": [
+          "won.ghcn_2025_tmax",
+          "won.ghcn_2025_tmin",
+          "won.ghcn_2024_tmax",
+          "won.ghcn_2024_tmin"
+        ]
+      }
+    },
+    {
+      "id": "won_usl",
+      "kind": "usl",
+      "script": "zetaris/sql/05_won_usl_create.sql",
+      "select": "zetaris/sql/05_won_usl_select.sql",
+      "status": "verified",
+      "requires": [
+        "won_ghcn",
+        "won_sec",
+        "won_dns",
+        "won_sec_seeds"
+      ],
+      "hosts": [],
+      "summary": "USL weather_or_not_usl in lightning.metastore.weatherornot: sic_code, utility, station, weather_quarter, revenue_quarter with keys and descriptions; station and weather_quarter activated from the GHCN views, sic_code, utility and revenue_quarter from the SEC and SIC views (1,005 / 43 / 342 / 133 rows); DQ rule coverage_ok (342 / 342 / 0); RUN DQ at onboarding: utility FK sic 43 / 42 / 1 (MGE Energy SIC 4900 absent from company_dns), revenue_quarter PK and FK 133 / 133 / 0, sic_code PK 1,005 / 0; scripts/dq_onboard.py writes data/dq/latest.json (2026-10-24)",
+      "objects": {
+        "namespace": "lightning.metastore.weatherornot",
+        "usl": "lightning.metastore.weatherornot.weather_or_not_usl",
+        "tables": [
+          "sic_code",
+          "utility",
+          "station",
+          "weather_quarter",
+          "revenue_quarter"
+        ],
+        "dq": [
+          "coverage_ok"
+        ]
+      }
+    }
+  ]
+}

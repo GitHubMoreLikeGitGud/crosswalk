@@ -1,0 +1,289 @@
+{
+  "generated_at": "2026-10-24T08:51:18+00:00",
+  "generator": "scripts/curate-seeds.py (dev-time curation, not part of the agent)",
+  "source": "NOAA GHCN-Daily, s3://noaa-ghcn-pds/parquet/by_year/YEAR=<yyyy>/ELEMENT=<TMAX|TMIN>/; names and states from ghcnd-stations.txt",
+  "verification": "each station has >= 350 TMAX days in 2024, >= 270 TMAX days in 2025 and >= 0.95 coverage (days with both TMAX and TMIN) in each of Q1-Q3 2024 and 2025 in the parquet (checked by this script with pyarrow; counts kept in the private run log)",
+  "rule": "2 stations for states served by >= 3 seed utilities, otherwise 1; first-order airport stations only",
+  "stations": [
+    {
+      "id": "USW00013876",
+      "state": "AL",
+      "name": "BIRMINGHAM AP"
+    },
+    {
+      "id": "USW00013963",
+      "state": "AR",
+      "name": "LITTLE ROCK AP ADAMS FLD"
+    },
+    {
+      "id": "USW00023183",
+      "state": "AZ",
+      "name": "PHOENIX AP"
+    },
+    {
+      "id": "USW00023174",
+      "state": "CA",
+      "name": "LOS ANGELES INTL AP"
+    },
+    {
+      "id": "USW00023234",
+      "state": "CA",
+      "name": "SAN FRANCISCO INTL AP"
+    },
+    {
+      "id": "USW00003017",
+      "state": "CO",
+      "name": "DENVER INTL AP"
+    },
+    {
+      "id": "USW00014740",
+      "state": "CT",
+      "name": "HARTFORD-BRADLEY INTL AP"
+    },
+    {
+      "id": "USW00013781",
+      "state": "DE",
+      "name": "WILMINGTON NEW CASTLE CO AP"
+    },
+    {
+      "id": "USW00012839",
+      "state": "FL",
+      "name": "MIAMI INTL AP"
+    },
+    {
+      "id": "USW00012842",
+      "state": "FL",
+      "name": "TAMPA INTL AP"
+    },
+    {
+      "id": "USW00013874",
+      "state": "GA",
+      "name": "ATLANTA HARTSFIELD-JACKSON INT"
+    },
+    {
+      "id": "USW00022521",
+      "state": "HI",
+      "name": "HONOLULU INTL AP"
+    },
+    {
+      "id": "USW00014933",
+      "state": "IA",
+      "name": "DES MOINES INTL AP"
+    },
+    {
+      "id": "USW00024131",
+      "state": "ID",
+      "name": "BOISE AIR TERMINAL"
+    },
+    {
+      "id": "USW00094846",
+      "state": "IL",
+      "name": "CHICAGO OHARE INTL AP"
+    },
+    {
+      "id": "USW00014842",
+      "state": "IL",
+      "name": "GENERAL WAYNE A DOWNING INTL A"
+    },
+    {
+      "id": "USW00093819",
+      "state": "IN",
+      "name": "INDIANAPOLIS"
+    },
+    {
+      "id": "USW00093817",
+      "state": "IN",
+      "name": "EVANSVILLE RGNL AP"
+    },
+    {
+      "id": "USW00013996",
+      "state": "KS",
+      "name": "TOPEKA ASOS"
+    },
+    {
+      "id": "USW00093821",
+      "state": "KY",
+      "name": "LOUISVILLE INTL AP"
+    },
+    {
+      "id": "USW00012916",
+      "state": "LA",
+      "name": "NEW ORLEANS AP"
+    },
+    {
+      "id": "USW00014739",
+      "state": "MA",
+      "name": "BOSTON"
+    },
+    {
+      "id": "USW00093721",
+      "state": "MD",
+      "name": "BALTIMORE-WASHINGTON INTL AP"
+    },
+    {
+      "id": "USW00093720",
+      "state": "MD",
+      "name": "SALISBURY-WICOMICO RGNL AP"
+    },
+    {
+      "id": "USW00094847",
+      "state": "MI",
+      "name": "DETROIT METRO AP"
+    },
+    {
+      "id": "USW00014836",
+      "state": "MI",
+      "name": "LANSING CAPITAL CITY AP"
+    },
+    {
+      "id": "USW00014922",
+      "state": "MN",
+      "name": "MINNEAPOLIS-ST PAUL INTL AP"
+    },
+    {
+      "id": "USW00014913",
+      "state": "MN",
+      "name": "DULUTH"
+    },
+    {
+      "id": "USW00013994",
+      "state": "MO",
+      "name": "ST LOUIS LAMBERT INTL AP"
+    },
+    {
+      "id": "USW00003940",
+      "state": "MS",
+      "name": "JACKSON INTL AP"
+    },
+    {
+      "id": "USW00024033",
+      "state": "MT",
+      "name": "BILLINGS INTL AP"
+    },
+    {
+      "id": "USW00013722",
+      "state": "NC",
+      "name": "RALEIGH AP"
+    },
+    {
+      "id": "USW00024011",
+      "state": "ND",
+      "name": "BISMARCK"
+    },
+    {
+      "id": "USW00014745",
+      "state": "NH",
+      "name": "CONCORD ASOS"
+    },
+    {
+      "id": "USW00014734",
+      "state": "NJ",
+      "name": "NEWARK LIBERTY INTL AP"
+    },
+    {
+      "id": "USW00093730",
+      "state": "NJ",
+      "name": "ATLANTIC CITY INTL AP"
+    },
+    {
+      "id": "USW00023050",
+      "state": "NM",
+      "name": "ALBUQUERQUE INTL AP"
+    },
+    {
+      "id": "USW00094728",
+      "state": "NY",
+      "name": "NY CITY CNTRL PARK"
+    },
+    {
+      "id": "USW00014821",
+      "state": "OH",
+      "name": "JOHN GLENN INTL AP"
+    },
+    {
+      "id": "USW00014820",
+      "state": "OH",
+      "name": "CLEVELAND"
+    },
+    {
+      "id": "USW00013967",
+      "state": "OK",
+      "name": "OKLAHOMA CY WILL ROGERS WORLD"
+    },
+    {
+      "id": "USW00024229",
+      "state": "OR",
+      "name": "PORTLAND INTL AP"
+    },
+    {
+      "id": "USW00013739",
+      "state": "PA",
+      "name": "PHILA INTL AP"
+    },
+    {
+      "id": "USW00094823",
+      "state": "PA",
+      "name": "PITTSBURGH ASOS"
+    },
+    {
+      "id": "USW00014765",
+      "state": "RI",
+      "name": "PROVIDENCE"
+    },
+    {
+      "id": "USW00013883",
+      "state": "SC",
+      "name": "COLUMBIA"
+    },
+    {
+      "id": "USW00014944",
+      "state": "SD",
+      "name": "SIOUX FALLS"
+    },
+    {
+      "id": "USW00024090",
+      "state": "SD",
+      "name": "RAPID CITY RGNL AP"
+    },
+    {
+      "id": "USW00003927",
+      "state": "TX",
+      "name": "DAL-FTW WSCMO AP"
+    },
+    {
+      "id": "USW00012960",
+      "state": "TX",
+      "name": "HOUSTON INTERCONTINENTAL AP"
+    },
+    {
+      "id": "USW00013737",
+      "state": "VA",
+      "name": "NORFOLK INTL AP"
+    },
+    {
+      "id": "USW00024233",
+      "state": "WA",
+      "name": "SEATTLE TACOMA AP"
+    },
+    {
+      "id": "USW00014839",
+      "state": "WI",
+      "name": "MILWAUKEE MITCHELL AP"
+    },
+    {
+      "id": "USW00014837",
+      "state": "WI",
+      "name": "MADISON DANE CO RGNL AP"
+    },
+    {
+      "id": "USW00013866",
+      "state": "WV",
+      "name": "CHARLESTON - YEAGER AP"
+    },
+    {
+      "id": "USW00024018",
+      "state": "WY",
+      "name": "CHEYENNE"
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "name": "weather-or-not-agent",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Weather-or-Not agent and UI server: Node 22 + TypeScript via tsx, no runtime dependencies.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "dev": "tsx src/server.ts",
+    "cli": "tsx src/cli.ts",
+    "ask": "tsx src/cli.ts ask",
+    "warmup": "tsx src/cli.ts warmup",
+    "replay": "tsx src/cli.ts replay",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "22.20.5",
+    "tsx": "4.23.15",
+    "typescript": "7.0.2",
+    "vitest": "5.0.3"
+  },
+  "overrides": {
+    "vite": "7.3.7"
+  }
+}

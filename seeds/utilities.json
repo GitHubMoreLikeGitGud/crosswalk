@@ -1,0 +1,980 @@
+{
+  "generated_at": "2026-10-24T08:51:18+00:00",
+  "generator": "scripts/curate-seeds.py (dev-time curation, not part of the agent)",
+  "fields": {
+    "cik": "10-digit SEC CIK, verified against data.sec.gov/submissions on generated_at",
+    "name, sic, sic_description, hq_state": "copied from the submissions response",
+    "states_served": "curated electric service states (see states_source); hq_state is not the service territory",
+    "station_ids": "GHCN USW stations for states_served, from seeds/stations.json",
+    "flags": "competitive = merchant generator/retailer; gas_heavy = large gas distribution share; non_utility_segment = large non-utility business; never_demo = peer only"
+  },
+  "sic_filter": [
+    "4911",
+    "4931",
+    "4932",
+    "4991"
+  ],
+  "peer_sic": [
+    "4911",
+    "4931",
+    "4932"
+  ],
+  "utilities": [
+    {
+      "cik": "0001326160",
+      "name": "Duke Energy CORP",
+      "ticker": "DUK",
+      "sic": "4931",
+      "sic_description": "Electric & Other Services Combined",
+      "hq_state": "NC",
+      "states_served": [
+        "NC",
+        "SC",
+        "FL",
+        "IN",
+        "OH",
+        "KY"
+      ],
+      "states_source": "FY2024 Form 10-K Item 1 (Business) service-territory description; hand-curated 2026-10-24, electric service states only, capped at 6",
+      "states_note": "Duke Energy Carolinas and Progress (NC, SC), Duke Energy Florida, Indiana, Ohio and Kentucky",
+      "flags": [],
+      "curated": true,
+      "station_ids": [
+        "USW00013722",
+        "USW00013883",
+        "USW00012839",
+        "USW00012842",
+        "USW00093819",
+        "USW00093817",
+        "USW00014821",
+        "USW00014820",
+        "USW00093821"
+      ]
+    },
+    {
+      "cik": "0000092122",
+      "name": "SOUTHERN CO",
+      "ticker": "SO",
+      "sic": "4911",
+      "sic_description": "Electric Services",
+      "hq_state": "GA",
+      "states_served": [
+        "GA",
+        "AL",
+        "MS"
+      ],
+      "states_source": "FY2024 Form 10-K Item 1 (Business) service-territory description; hand-curated 2026-10-24, electric service states only, capped at 6",
+      "states_note": "Georgia Power, Alabama Power, Mississippi Power; gas distribution (IL, GA, VA, TN) not listed",
+      "flags": [],
+      "curated": true,
+      "station_ids": [
+        "USW00013874",
+        "USW00013876",
+        "USW00003940"
+      ]
+    },
+    {
+      "cik": "0000753308",
+      "name": "NEXTERA ENERGY INC",
+      "ticker": "NEE",
+      "sic": "4911",
+      "sic_description": "Electric Services",
+      "hq_state": "FL",
+      "states_served": [
+        "FL"
+      ],
+      "states_source": "FY2024 Form 10-K Item 1 (Business) service-territory description; hand-curated 2026-10-24, electric service states only, capped at 6",
+      "states_note": "Florida Power & Light including former Gulf Power; NextEra Energy Resources is wholesale nationwide",
+      "flags": [],
+      "curated": true,
+      "station_ids": [
+        "USW00012839",
+        "USW00012842"
+      ]
+    },
+    {
+      "cik": "0000004904",
+      "name": "AMERICAN ELECTRIC POWER CO INC",
+      "ticker": "AEP",
+      "sic": "4911",
+      "sic_description": "Electric Services",
+      "hq_state": "OH",
+      "states_served": [
+        "OH",
+        "TX",
+        "VA",
+        "WV",
+        "IN",
+        "OK"
+      ],
+      "states_source": "FY2024 Form 10-K Item 1 (Business) service-territory description; hand-curated 2026-10-24, electric service states only, capped at 6",
+      "states_note": "AEP Ohio, AEP Texas, Appalachian Power (VA, WV), Indiana Michigan Power, PSO; MI, KY, TN, LA, AR omitted by the cap",
+      "flags": [],
+      "curated": true,
+      "station_ids": [
+        "USW00014821",
+        "USW00014820",
+        "USW00003927",
+        "USW00012960",
+        "USW00013737",
+        "USW00013866",
+        "USW00093819",
+        "USW00093817",
+        "USW00013967"
+      ]
+    },
+    {
+      "cik": "0000072903",
+      "name": "XCEL ENERGY INC",
+      "ticker": "XEL",
+      "sic": "4931",
+      "sic_description": "Electric & Other Services Combined",
+      "hq_state": "MN",
+      "states_served": [
+        "MN",
+        "CO",
+        "TX",
+        "NM",
+        "WI",
+        "ND"
+      ],
+      "states_source": "FY2024 Form 10-K Item 1 (Business) service-territory description; hand-curated 2026-10-24, electric service states only, capped at 6",
+      "states_note": "NSP-Minnesota (MN, ND, SD), PSCo (CO), SPS (TX, NM), NSP-Wisconsin (WI, MI); SD and MI omitted by the cap",
+      "flags": [],
+      "curated": true,
+      "station_ids": [
+        "USW00014922",
+        "USW00014913",
+        "USW00003017",
+        "USW00003927",
+        "USW00012960",
+        "USW00023050",
+        "USW00014839",
+        "USW00014837",
+        "USW00024011"
+      ]
+    },
+    {
+      "cik": "0000065984",
+      "name": "ENTERGY CORP /DE/",
+      "ticker": "ETR",
+      "sic": "4911",
+      "sic_description": "Electric Services",
+      "hq_state": "LA",
+      "states_served": [
+        "AR",
+        "LA",
+        "MS",
+        "TX"
+      ],
+      "states_source": "FY2024 Form 10-K Item 1 (Business) service-territory description; hand-curated 2026-10-24, electric service states only, capped at 6",
+      "states_note": "Entergy Arkansas, Louisiana, Mississippi, Texas",
+      "flags": [],
+      "curated": true,
+      "station_ids": [
+        "USW00013963",
+        "USW00012916",
+        "USW00003940",
+        "USW00003927",
+        "USW00012960"
+      ]
+    },
+    {
+      "cik": "0001711269",
+      "name": "Evergy, Inc.",
+      "ticker": "EVRG",
+      "sic": "4931",
+      "sic_description": "Electric & Other Services Combined",
+      "hq_state": "MO",
+      "states_served": [
+        "KS",
+        "MO"
+      ],
+      "states_source": "FY2024 Form 10-K Item 1 (Business) service-territory description; hand-curated 2026-10-24, electric service states only, capped at 6",
+      "states_note": "Evergy Kansas Central, Evergy Metro, Evergy Missouri West",
+      "flags": [],
+      "curated": true,
+      "station_ids": [
+        "USW00013996",
+        "USW00013994"
+      ]
+    },
+    {
+      "cik": "0001002910",
+      "name": "AMEREN CORP",
+      "ticker": "AEE",
+      "sic": "4931",
+      "sic_description": "Electric & Other Services Combined",
+      "hq_state": "MO",
+      "states_served": [
+        "MO",
+        "IL"
+      ],
+      "states_source": "FY2024 Form 10-K Item 1 (Business) service-territory description; hand-curated 2026-10-24, electric service states only, capped at 6",
+      "states_note": "Ameren Missouri, Ameren Illinois",
+      "flags": [],
+      "curated": true,
+      "station_ids": [
+        "USW00013994",
+        "USW00094846",
+        "USW00014842"
+      ]
+    },
+    {
+      "cik": "0000811156",
+      "name": "CMS ENERGY CORP",
+      "ticker": "CMS",
+      "sic": "4931",
+      "sic_description": "Electric & Other Services Combined",
+      "hq_state": "MI",
+      "states_served": [
+        "MI"
+      ],
+      "states_source": "FY2024 Form 10-K Item 1 (Business) service-territory description; hand-curated 2026-10-24, electric service states only, capped at 6",
+      "states_note": "Consumers Energy",
+      "flags": [],
+      "curated": true,
+      "station_ids": [
+        "USW00094847",
+        "USW00014836"
+      ]
+    },
+    {
+      "cik": "0000936340",
+      "name": "DTE ENERGY CO",
+      "ticker": "DTE",
+      "sic": "4911",
+      "sic_description": "Electric Services",
+      "hq_state": "MI",
+      "states_served": [
+        "MI"
+      ],
+      "states_source": "FY2024 Form 10-K Item 1 (Business) service-territory description; hand-curated 2026-10-24, electric service states only, capped at 6",
+      "states_note": "DTE Electric and DTE Gas",
+      "flags": [],
+      "curated": true,
+      "station_ids": [
+        "USW00094847",
+        "USW00014836"
+      ]
+    },
+    {
+      "cik": "0000783325",
+      "name": "WEC ENERGY GROUP, INC.",
+      "ticker": "WEC",
+      "sic": "4931",
+      "sic_description": "Electric & Other Services Combined",
+      "hq_state": "WI",
+      "states_served": [
+        "WI",
+        "MI"
+      ],
+      "states_source": "FY2024 Form 10-K Item 1 (Business) service-territory description; hand-curated 2026-10-24, electric service states only, capped at 6",
+      "states_note": "We Energies, Wisconsin Public Service, Upper Michigan Energy Resources; gas in IL and MN not listed",
+      "flags": [],
+      "curated": true,
+      "station_ids": [
+        "USW00014839",
+        "USW00014837",
+        "USW00094847",
+        "USW00014836"
+      ]
+    },
+    {
+      "cik": "0000352541",
+      "name": "ALLIANT ENERGY CORP",
+      "ticker": "LNT",
+      "sic": "4931",
+      "sic_description": "Electric & Other Services Combined",
+      "hq_state": "WI",
+      "states_served": [
+        "IA",
+        "WI"
+      ],
+      "states_source": "FY2024 Form 10-K Item 1 (Business) service-territory description; hand-curated 2026-10-24, electric service states only, capped at 6",
+      "states_note": "Interstate Power and Light (IA), Wisconsin Power and Light (WI)",
+      "flags": [],
+      "curated": true,
+      "station_ids": [
+        "USW00014933",
+        "USW00014839",
+        "USW00014837"
+      ]
+    },
+    {
+      "cik": "0000922224",
+      "name": "PPL Corp",
+      "ticker": "PPL",
+      "sic": "4911",
+      "sic_description": "Electric Services",
+      "hq_state": "PA",
+      "states_served": [
+        "PA",
+        "KY",
+        "RI"
+      ],
+      "states_source": "FY2024 Form 10-K Item 1 (Business) service-territory description; hand-curated 2026-10-24, electric service states only, capped at 6",
+      "states_note": "PPL Electric Utilities (PA), LG&E and KU (KY), Rhode Island Energy (RI, since 2022)",
+      "flags": [],
+      "curated": true,
+      "station_ids": [
+        "USW00013739",
+        "USW00094823",
+        "USW00093821",
+        "USW00014765"
+      ]
+    },
+    {
+      "cik": "0001031296",
+      "name": "FIRSTENERGY CORP",
+      "ticker": "FE",
+      "sic": "4911",
+      "sic_description": "Electric Services",
+      "hq_state": "OH",
+      "states_served": [
+        "OH",
+        "PA",
+        "NJ",
+        "WV",
+        "MD"
+      ],
+      "states_source": "FY2024 Form 10-K Item 1 (Business) service-territory description; hand-curated 2026-10-24, electric service states only, capped at 6",
+      "states_note": "Ohio Edison, CEI, Toledo Edison; Penn Power, Penelec, Met-Ed, West Penn; JCP&L; Mon Power; Potomac Edison",
+      "flags": [],
+      "curated": true,
+      "station_ids": [
+        "USW00014821",
+        "USW00014820",
+        "USW00013739",
+        "USW00094823",
+        "USW00014734",
+        "USW00093730",
+        "USW00013866",
+        "USW00093721",
+        "USW00093720"
+      ]
+    },
+    {
+      "cik": "0000788784",
+      "name": "PUBLIC SERVICE ENTERPRISE GROUP INC",
+      "ticker": "PEG",
+      "sic": "4931",
+      "sic_description": "Electric & Other Services Combined",
+      "hq_state": "NJ",
+      "states_served": [
+        "NJ"
+      ],
+      "states_source": "FY2024 Form 10-K Item 1 (Business) service-territory description; hand-curated 2026-10-24, electric service states only, capped at 6",
+      "states_note": "Public Service Electric and Gas",
+      "flags": [],
+      "curated": true,
+      "station_ids": [
+        "USW00014734",
+        "USW00093730"
+      ]
+    },
+    {
+      "cik": "0001047862",
+      "name": "CONSOLIDATED EDISON INC",
+      "ticker": "ED",
+      "sic": "4931",
+      "sic_description": "Electric & Other Services Combined",
+      "hq_state": "NY",
+      "states_served": [
+        "NY"
+      ],
+      "states_source": "FY2024 Form 10-K Item 1 (Business) service-territory description; hand-curated 2026-10-24, electric service states only, capped at 6",
+      "states_note": "Consolidated Edison of New York; Orange and Rockland (NY, small NJ) folded into NY",
+      "flags": [],
+      "curated": true,
+      "station_ids": [
+        "USW00094728"
+      ]
+    },
+    {
+      "cik": "0000072741",
+      "name": "EVERSOURCE ENERGY",
+      "ticker": "ES",
+      "sic": "4911",
+      "sic_description": "Electric Services",
+      "hq_state": "MA",
+      "states_served": [
+        "CT",
+        "MA",
+        "NH"
+      ],
+      "states_source": "FY2024 Form 10-K Item 1 (Business) service-territory description; hand-curated 2026-10-24, electric service states only, capped at 6",
+      "states_note": "Connecticut Light and Power, NSTAR Electric (MA), Public Service of New Hampshire",
+      "flags": [],
+      "curated": true,
+      "station_ids": [
+        "USW00014740",
+        "USW00014739",
+        "USW00014745"
+      ]
+    },
+    {
+      "cik": "0001109357",
+      "name": "EXELON CORP",
+      "ticker": "EXC",
+      "sic": "4931",
+      "sic_description": "Electric & Other Services Combined",
+      "hq_state": "IL",
+      "states_served": [
+        "IL",
+        "PA",
+        "MD",
+        "NJ",
+        "DE"
+      ],
+      "states_source": "FY2024 Form 10-K Item 1 (Business) service-territory description; hand-curated 2026-10-24, electric service states only, capped at 6",
+      "states_note": "ComEd (IL), PECO (PA), BGE (MD), Atlantic City Electric (NJ), Delmarva (DE, MD), Pepco (DC, MD); DC covered by MD stations",
+      "flags": [],
+      "curated": true,
+      "station_ids": [
+        "USW00094846",
+        "USW00014842",
+        "USW00013739",
+        "USW00094823",
+        "USW00093721",
+        "USW00093720",
+        "USW00014734",
+        "USW00093730",
+        "USW00013781"
+      ]
+    },
+    {
+      "cik": "0000827052",
+      "name": "EDISON INTERNATIONAL",
+      "ticker": "EIX",
+      "sic": "4911",
+      "sic_description": "Electric Services",
+      "hq_state": "CA",
+      "states_served": [
+        "CA"
+      ],
+      "states_source": "FY2024 Form 10-K Item 1 (Business) service-territory description; hand-curated 2026-10-24, electric service states only, capped at 6",
+      "states_note": "Southern California Edison",
+      "flags": [],
+      "curated": true,
+      "station_ids": [
+        "USW00023174",
+        "USW00023234"
+      ]
+    },
+    {
+      "cik": "0001004980",
+      "name": "PG&E Corp",
+      "ticker": "PCG",
+      "sic": "4931",
+      "sic_description": "Electric & Other Services Combined",
+      "hq_state": "CA",
+      "states_served": [
+        "CA"
+      ],
+      "states_source": "FY2024 Form 10-K Item 1 (Business) service-territory description; hand-curated 2026-10-24, electric service states only, capped at 6",
+      "states_note": "Pacific Gas and Electric",
+      "flags": [],
+      "curated": true,
+      "station_ids": [
+        "USW00023174",
+        "USW00023234"
+      ]
+    },
+    {
+      "cik": "0001032208",
+      "name": "SEMPRA",
+      "ticker": "SRE",
+      "sic": "4932",
+      "sic_description": "Gas & Other Services Combined",
+      "hq_state": "CA",
+      "states_served": [
+        "CA"
+      ],
+      "states_source": "FY2024 Form 10-K Item 1 (Business) service-territory description; hand-curated 2026-10-24, electric service states only, capped at 6",
+      "states_note": "SDG&E and SoCalGas (CA); Oncor (TX) is equity-accounted; Sempra Infrastructure is not weather-driven",
+      "flags": [
+        "gas_heavy"
+      ],
+      "curated": true,
+      "station_ids": [
+        "USW00023174",
+        "USW00023234"
+      ]
+    },
+    {
+      "cik": "0000764622",
+      "name": "PINNACLE WEST CAPITAL CORP",
+      "ticker": "PNW",
+      "sic": "4911",
+      "sic_description": "Electric Services",
+      "hq_state": "AZ",
+      "states_served": [
+        "AZ"
+      ],
+      "states_source": "FY2024 Form 10-K Item 1 (Business) service-territory description; hand-curated 2026-10-24, electric service states only, capped at 6",
+      "states_note": "Arizona Public Service",
+      "flags": [],
+      "curated": true,
+      "station_ids": [
+        "USW00023183"
+      ]
+    },
+    {
+      "cik": "0000784977",
+      "name": "PORTLAND GENERAL ELECTRIC CO /OR/",
+      "ticker": "POR",
+      "sic": "4911",
+      "sic_description": "Electric Services",
+      "hq_state": "OR",
+      "states_served": [
+        "OR"
+      ],
+      "states_source": "FY2024 Form 10-K Item 1 (Business) service-territory description; hand-curated 2026-10-24, electric service states only, capped at 6",
+      "states_note": "Portland General Electric",
+      "flags": [],
+      "curated": true,
+      "station_ids": [
+        "USW00024229"
+      ]
+    },
+    {
+      "cik": "0001057877",
+      "name": "IDACORP INC",
+      "ticker": "IDA",
+      "sic": "4911",
+      "sic_description": "Electric Services",
+      "hq_state": "ID",
+      "states_served": [
+        "ID"
+      ],
+      "states_source": "FY2024 Form 10-K Item 1 (Business) service-territory description; hand-curated 2026-10-24, electric service states only, capped at 6",
+      "states_note": "Idaho Power (ID; small OR footprint omitted)",
+      "flags": [],
+      "curated": true,
+      "station_ids": [
+        "USW00024131"
+      ]
+    },
+    {
+      "cik": "0001993004",
+      "name": "NorthWestern Energy Group, Inc.",
+      "ticker": "NWE",
+      "sic": "4931",
+      "sic_description": "Electric & Other Services Combined",
+      "hq_state": "SD",
+      "states_served": [
+        "MT",
+        "SD"
+      ],
+      "states_source": "FY2024 Form 10-K Item 1 (Business) service-territory description; hand-curated 2026-10-24, electric service states only, capped at 6",
+      "states_note": "NorthWestern Energy electric (MT, SD); gas NE omitted",
+      "flags": [],
+      "curated": true,
+      "station_ids": [
+        "USW00024033",
+        "USW00014944",
+        "USW00024090"
+      ]
+    },
+    {
+      "cik": "0001130464",
+      "name": "BLACK HILLS CORP /SD/",
+      "ticker": "BKH",
+      "sic": "4911",
+      "sic_description": "Electric Services",
+      "hq_state": "SD",
+      "states_served": [
+        "SD",
+        "WY",
+        "CO"
+      ],
+      "states_source": "FY2024 Form 10-K Item 1 (Business) service-territory description; hand-curated 2026-10-24, electric service states only, capped at 6",
+      "states_note": "Black Hills Power (SD, WY), Cheyenne Light (WY), Black Hills Colorado Electric; gas in AR, IA, KS, NE omitted",
+      "flags": [
+        "gas_heavy"
+      ],
+      "curated": true,
+      "station_ids": [
+        "USW00014944",
+        "USW00024090",
+        "USW00024018",
+        "USW00003017"
+      ]
+    },
+    {
+      "cik": "0000104918",
+      "name": "AVISTA CORP",
+      "ticker": "AVA",
+      "sic": "4931",
+      "sic_description": "Electric & Other Services Combined",
+      "hq_state": "WA",
+      "states_served": [
+        "WA",
+        "ID"
+      ],
+      "states_source": "FY2024 Form 10-K Item 1 (Business) service-territory description; hand-curated 2026-10-24, electric service states only, capped at 6",
+      "states_note": "Avista Utilities (WA, ID); Alaska Electric Light and Power omitted",
+      "flags": [],
+      "curated": true,
+      "station_ids": [
+        "USW00024233",
+        "USW00024131"
+      ]
+    },
+    {
+      "cik": "0001021635",
+      "name": "OGE ENERGY CORP.",
+      "ticker": "OGE",
+      "sic": "4911",
+      "sic_description": "Electric Services",
+      "hq_state": "OK",
+      "states_served": [
+        "OK"
+      ],
+      "states_source": "FY2024 Form 10-K Item 1 (Business) service-territory description; hand-curated 2026-10-24, electric service states only, capped at 6",
+      "states_note": "Oklahoma Gas and Electric (OK; small western AR footprint omitted)",
+      "flags": [],
+      "curated": true,
+      "station_ids": [
+        "USW00013967"
+      ]
+    },
+    {
+      "cik": "0001130310",
+      "name": "CENTERPOINT ENERGY INC",
+      "ticker": "CNP",
+      "sic": "4911",
+      "sic_description": "Electric Services",
+      "hq_state": "TX",
+      "states_served": [
+        "TX",
+        "IN"
+      ],
+      "states_source": "FY2024 Form 10-K Item 1 (Business) service-territory description; hand-curated 2026-10-24, electric service states only, capped at 6",
+      "states_note": "CenterPoint Houston Electric (TX), SIGECO (IN); gas in MN, OH, IN, TX, LA, MS not listed",
+      "flags": [
+        "gas_heavy"
+      ],
+      "curated": true,
+      "station_ids": [
+        "USW00003927",
+        "USW00012960",
+        "USW00093819",
+        "USW00093817"
+      ]
+    },
+    {
+      "cik": "0001692819",
+      "name": "Vistra Corp.",
+      "ticker": "VST",
+      "sic": "4911",
+      "sic_description": "Electric Services",
+      "hq_state": "TX",
+      "states_served": [
+        "TX",
+        "IL",
+        "PA",
+        "OH"
+      ],
+      "states_source": "FY2024 Form 10-K Item 1 (Business) service-territory description; hand-curated 2026-10-24, electric service states only, capped at 6",
+      "states_note": "Competitive generator and retailer; ERCOT retail plus PJM and MISO generation",
+      "flags": [
+        "competitive"
+      ],
+      "curated": true,
+      "station_ids": [
+        "USW00003927",
+        "USW00012960",
+        "USW00094846",
+        "USW00014842",
+        "USW00013739",
+        "USW00094823",
+        "USW00014821",
+        "USW00014820"
+      ]
+    },
+    {
+      "cik": "0001013871",
+      "name": "NRG ENERGY, INC.",
+      "ticker": "NRG",
+      "sic": "4911",
+      "sic_description": "Electric Services",
+      "hq_state": "TX",
+      "states_served": [
+        "TX"
+      ],
+      "states_source": "FY2024 Form 10-K Item 1 (Business) service-territory description; hand-curated 2026-10-24, electric service states only, capped at 6",
+      "states_note": "Competitive retailer and generator; largest retail base in TX, national retail",
+      "flags": [
+        "competitive"
+      ],
+      "curated": true,
+      "station_ids": [
+        "USW00003927",
+        "USW00012960"
+      ]
+    },
+    {
+      "cik": "0000354707",
+      "name": "HAWAIIAN ELECTRIC INDUSTRIES INC",
+      "ticker": "HE",
+      "sic": "4911",
+      "sic_description": "Electric Services",
+      "hq_state": "HI",
+      "states_served": [
+        "HI"
+      ],
+      "states_source": "FY2024 Form 10-K Item 1 (Business) service-territory description; hand-curated 2026-10-24, electric service states only, capped at 6",
+      "states_note": "Hawaiian Electric (Oahu, Maui County, Hawaii Island); bank segment sold 2025",
+      "flags": [
+        "non_utility_segment"
+      ],
+      "curated": true,
+      "station_ids": [
+        "USW00022521"
+      ]
+    },
+    {
+      "cik": "0000066756",
+      "name": "ALLETE INC",
+      "ticker": "ALE",
+      "sic": "4931",
+      "sic_description": "Electric & Other Services Combined",
+      "hq_state": "MN",
+      "states_served": [
+        "MN",
+        "WI"
+      ],
+      "states_source": "FY2024 Form 10-K Item 1 (Business) service-territory description; hand-curated 2026-10-24, electric service states only, capped at 6",
+      "states_note": "Minnesota Power (MN), Superior Water Light and Power (WI)",
+      "flags": [],
+      "curated": true,
+      "station_ids": [
+        "USW00014922",
+        "USW00014913",
+        "USW00014839",
+        "USW00014837"
+      ]
+    },
+    {
+      "cik": "0001466593",
+      "name": "Otter Tail Corp",
+      "ticker": "OTTR",
+      "sic": "4911",
+      "sic_description": "Electric Services",
+      "hq_state": "MN",
+      "states_served": [
+        "MN",
+        "ND",
+        "SD"
+      ],
+      "states_source": "FY2024 Form 10-K Item 1 (Business) service-territory description; hand-curated 2026-10-24, electric service states only, capped at 6",
+      "states_note": "Otter Tail Power; manufacturing and plastics segments are large",
+      "flags": [
+        "non_utility_segment"
+      ],
+      "curated": true,
+      "station_ids": [
+        "USW00014922",
+        "USW00014913",
+        "USW00024011",
+        "USW00014944",
+        "USW00024090"
+      ]
+    },
+    {
+      "cik": "0001161728",
+      "name": "MGE ENERGY INC",
+      "ticker": "MGEE",
+      "sic": "4900",
+      "sic_description": "Electric, Gas & Sanitary Services",
+      "hq_state": "WI",
+      "states_served": [
+        "WI"
+      ],
+      "states_source": "FY2024 Form 10-K Item 1 (Business) service-territory description; hand-curated 2026-10-24, electric service states only, capped at 6",
+      "states_note": "Madison Gas and Electric",
+      "flags": [
+        "kept_despite_sic"
+      ],
+      "curated": true,
+      "sic_note": "MGE Energy (Madison Gas and Electric) is a combination electric and gas utility; EDGAR lists SIC 4900. Kept as a candidate target; excluded from the peer set by the SIC rule.",
+      "station_ids": [
+        "USW00014839",
+        "USW00014837"
+      ]
+    },
+    {
+      "cik": "0000755001",
+      "name": "UNITIL CORP",
+      "ticker": "UTL",
+      "sic": "4931",
+      "sic_description": "Electric & Other Services Combined",
+      "hq_state": "NH",
+      "states_served": [
+        "NH",
+        "MA"
+      ],
+      "states_source": "FY2024 Form 10-K Item 1 (Business) service-territory description; hand-curated 2026-10-24, electric service states only, capped at 6",
+      "states_note": "Unitil electric (NH, MA); gas ME omitted",
+      "flags": [],
+      "curated": true,
+      "station_ids": [
+        "USW00014745",
+        "USW00014739"
+      ]
+    },
+    {
+      "cik": "0001108426",
+      "name": "TXNM ENERGY INC",
+      "ticker": "TXNM",
+      "sic": "4911",
+      "sic_description": "Electric Services",
+      "hq_state": "NM",
+      "states_served": [
+        "NM",
+        "TX"
+      ],
+      "states_source": "FY2024 Form 10-K Item 1 (Business) service-territory description; hand-curated 2026-10-24, electric service states only, capped at 6",
+      "states_note": "PNM (NM), TNMP (TX); formerly PNM Resources",
+      "flags": [],
+      "curated": true,
+      "station_ids": [
+        "USW00023050",
+        "USW00003927",
+        "USW00012960"
+      ]
+    },
+    {
+      "cik": "0000715957",
+      "name": "DOMINION ENERGY, INC",
+      "ticker": "D",
+      "sic": "4911",
+      "sic_description": "Electric Services",
+      "hq_state": "VA",
+      "states_served": [
+        "VA",
+        "NC",
+        "SC"
+      ],
+      "states_source": "FY2024 Form 10-K Item 1 (Business) service-territory description; hand-curated 2026-10-24, electric service states only, capped at 6",
+      "states_note": "Dominion Energy Virginia (VA, NC), Dominion Energy South Carolina; peer only, never the demo pick",
+      "flags": [
+        "never_demo"
+      ],
+      "curated": true,
+      "station_ids": [
+        "USW00013737",
+        "USW00013722",
+        "USW00013883"
+      ]
+    },
+    {
+      "cik": "0001868275",
+      "name": "Constellation Energy Corp",
+      "ticker": "CEG",
+      "sic": "4911",
+      "sic_description": "Electric Services",
+      "hq_state": "MD",
+      "states_served": [
+        "IL",
+        "PA",
+        "MD",
+        "NY"
+      ],
+      "states_source": "FY2024 Form 10-K Item 1 (Business) service-territory description; hand-curated 2026-10-24, electric service states only, capped at 6",
+      "states_note": "Competitive generator and retailer",
+      "flags": [
+        "competitive"
+      ],
+      "curated": true,
+      "station_ids": [
+        "USW00094846",
+        "USW00014842",
+        "USW00013739",
+        "USW00094823",
+        "USW00093721",
+        "USW00093720",
+        "USW00094728"
+      ]
+    },
+    {
+      "cik": "0001111711",
+      "name": "NISOURCE INC.",
+      "ticker": "NI",
+      "sic": "4931",
+      "sic_description": "Electric & Other Services Combined",
+      "hq_state": "IN",
+      "states_served": [
+        "IN"
+      ],
+      "states_source": "FY2024 Form 10-K Item 1 (Business) service-territory description; hand-curated 2026-10-24, electric service states only, capped at 6",
+      "states_note": "NIPSCO electric (IN); gas in OH, PA, VA, KY, MD",
+      "flags": [
+        "gas_heavy"
+      ],
+      "curated": true,
+      "station_ids": [
+        "USW00093819",
+        "USW00093817"
+      ]
+    },
+    {
+      "cik": "0001193311",
+      "name": "ONCOR ELECTRIC DELIVERY CO LLC",
+      "ticker": null,
+      "sic": "4911",
+      "sic_description": "Electric Services",
+      "hq_state": "TX",
+      "states_served": [
+        "TX"
+      ],
+      "states_source": "FY2024 Form 10-K Item 1 (Business) service-territory description; hand-curated 2026-10-24, electric service states only, capped at 6",
+      "states_note": "Oncor Electric Delivery, transmission and distribution only; debt filer, no ticker",
+      "flags": [],
+      "curated": true,
+      "station_ids": [
+        "USW00003927",
+        "USW00012960"
+      ]
+    },
+    {
+      "cik": "0000100122",
+      "name": "TUCSON ELECTRIC POWER CO",
+      "ticker": null,
+      "sic": "4911",
+      "sic_description": "Electric Services",
+      "hq_state": "AZ",
+      "states_served": [
+        "AZ"
+      ],
+      "states_source": "FY2024 Form 10-K Item 1 (Business) service-territory description; hand-curated 2026-10-24, electric service states only, capped at 6",
+      "states_note": "Tucson Electric Power (Fortis); debt filer, no ticker",
+      "flags": [],
+      "curated": true,
+      "station_ids": [
+        "USW00023183"
+      ]
+    },
+    {
+      "cik": "0000096271",
+      "name": "TAMPA ELECTRIC CO",
+      "ticker": null,
+      "sic": "4911",
+      "sic_description": "Electric Services",
+      "hq_state": "FL",
+      "states_served": [
+        "FL"
+      ],
+      "states_source": "FY2024 Form 10-K Item 1 (Business) service-territory description; hand-curated 2026-10-24, electric service states only, capped at 6",
+      "states_note": "Tampa Electric (Emera); debt filer, no ticker",
+      "flags": [],
+      "curated": true,
+      "station_ids": [
+        "USW00012839",
+        "USW00012842"
+      ]
+    }
+  ]
+}

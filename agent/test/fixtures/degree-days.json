@@ -1,0 +1,3751 @@
+{
+  "synthetic": true,
+  "note": "Synthetic daily series in the shape of the GHCN by_year parquet (DATA_VALUE in tenths of a degree C). Station ids are made up. Expected values come from make_fixtures.py.",
+  "days_in_quarter": {
+    "2024": [
+      91,
+      91,
+      92,
+      92
+    ],
+    "2025": [
+      90,
+      91,
+      92,
+      92
+    ]
+  },
+  "conversions": [
+    {
+      "tenths_c": 0,
+      "f": 32.0
+    },
+    {
+      "tenths_c": 1000,
+      "f": 212.0
+    },
+    {
+      "tenths_c": -400,
+      "f": -40.0
+    },
+    {
+      "tenths_c": 183,
+      "f": 64.94
+    },
+    {
+      "tenths_c": 184,
+      "f": 65.12
+    }
+  ],
+  "daily": {
+    "USW00099001:2025:Q1": [
+      {
+        "ID": "USW00099001",
+        "DATE": "20250101",
+        "TMAX": 57,
+        "TMIN": -15,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250102",
+        "TMAX": 65,
+        "TMIN": -10,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250103",
+        "TMAX": 79,
+        "TMIN": 7,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250104",
+        "TMAX": 34,
+        "TMIN": -38,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250105",
+        "TMAX": 64,
+        "TMIN": -3,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250106",
+        "TMAX": 70,
+        "TMIN": -21,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250107",
+        "TMAX": 62,
+        "TMIN": -18,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250108",
+        "TMAX": 64,
+        "TMIN": 14,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250109",
+        "TMAX": 38,
+        "TMIN": -19,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250110",
+        "TMAX": 55,
+        "TMIN": -7,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250111",
+        "TMAX": 60,
+        "TMIN": null,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250112",
+        "TMAX": 75,
+        "TMIN": 1,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250113",
+        "TMAX": 74,
+        "TMIN": -17,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250114",
+        "TMAX": 96,
+        "TMIN": 10,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250115",
+        "TMAX": 63,
+        "TMIN": -14,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250116",
+        "TMAX": 44,
+        "TMIN": 0,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250117",
+        "TMAX": 102,
+        "TMIN": 3,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250118",
+        "TMAX": 51,
+        "TMIN": 3,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250119",
+        "TMAX": 85,
+        "TMIN": 24,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250120",
+        "TMAX": 82,
+        "TMIN": 7,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250121",
+        "TMAX": 87,
+        "TMIN": 39,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250122",
+        "TMAX": 109,
+        "TMIN": 20,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250123",
+        "TMAX": 59,
+        "TMIN": 17,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250124",
+        "TMAX": 66,
+        "TMIN": -25,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250125",
+        "TMAX": 83,
+        "TMIN": 11,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250126",
+        "TMAX": 69,
+        "TMIN": -1,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250127",
+        "TMAX": 86,
+        "TMIN": 41,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250128",
+        "TMAX": 80,
+        "TMIN": 38,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250129",
+        "TMAX": 87,
+        "TMIN": 9,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250130",
+        "TMAX": 114,
+        "TMIN": 49,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250131",
+        "TMAX": 82,
+        "TMIN": 21,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250201",
+        "TMAX": 70,
+        "TMIN": -14,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250202",
+        "TMAX": 94,
+        "TMIN": 8,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250203",
+        "TMAX": 82,
+        "TMIN": 8,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250204",
+        "TMAX": 94,
+        "TMIN": 4,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250205",
+        "TMAX": 62,
+        "TMIN": 15,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250206",
+        "TMAX": 107,
+        "TMIN": 30,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250207",
+        "TMAX": 70,
+        "TMIN": 8,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250208",
+        "TMAX": 103,
+        "TMIN": 7,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250209",
+        "TMAX": 124,
+        "TMIN": 46,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250210",
+        "TMAX": 107,
+        "TMIN": null,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250211",
+        "TMAX": 104,
+        "TMIN": 38,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250212",
+        "TMAX": 91,
+        "TMIN": 20,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250213",
+        "TMAX": 85,
+        "TMIN": -8,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250214",
+        "TMAX": 90,
+        "TMIN": 25,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250215",
+        "TMAX": 70,
+        "TMIN": 26,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250216",
+        "TMAX": 123,
+        "TMIN": 50,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250217",
+        "TMAX": 97,
+        "TMIN": 51,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250218",
+        "TMAX": 116,
+        "TMIN": 39,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250219",
+        "TMAX": 147,
+        "TMIN": 49,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250220",
+        "TMAX": 120,
+        "TMIN": 44,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250221",
+        "TMAX": 116,
+        "TMIN": 47,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250222",
+        "TMAX": 94,
+        "TMIN": 15,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250223",
+        "TMAX": 138,
+        "TMIN": 39,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250224",
+        "TMAX": 117,
+        "TMIN": 69,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250225",
+        "TMAX": 99,
+        "TMIN": 21,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250226",
+        "TMAX": 142,
+        "TMIN": 81,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250227",
+        "TMAX": 141,
+        "TMIN": 78,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250228",
+        "TMAX": 140,
+        "TMIN": 61,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250301",
+        "TMAX": 89,
+        "TMIN": 32,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250302",
+        "TMAX": 132,
+        "TMIN": 62,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250303",
+        "TMAX": 123,
+        "TMIN": 69,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250304",
+        "TMAX": 132,
+        "TMIN": 73,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250305",
+        "TMAX": 103,
+        "TMIN": 30,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250306",
+        "TMAX": 110,
+        "TMIN": 59,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250307",
+        "TMAX": 160,
+        "TMIN": 64,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250308",
+        "TMAX": 129,
+        "TMIN": 89,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250309",
+        "TMAX": 137,
+        "TMIN": 46,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250310",
+        "TMAX": 142,
+        "TMIN": 60,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250311",
+        "TMAX": 125,
+        "TMIN": 85,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250312",
+        "TMAX": 133,
+        "TMIN": 64,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250313",
+        "TMAX": 124,
+        "TMIN": 35,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250314",
+        "TMAX": 97,
+        "TMIN": 52,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250315",
+        "TMAX": 170,
+        "TMIN": 93,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250316",
+        "TMAX": 160,
+        "TMIN": 70,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250317",
+        "TMAX": 179,
+        "TMIN": 80,
+        "TMAX_Q_FLAG": "X",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250318",
+        "TMAX": 103,
+        "TMIN": 53,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250319",
+        "TMAX": 144,
+        "TMIN": 80,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250320",
+        "TMAX": 139,
+        "TMIN": 67,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250321",
+        "TMAX": 104,
+        "TMIN": 60,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250322",
+        "TMAX": 136,
+        "TMIN": 80,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250323",
+        "TMAX": 148,
+        "TMIN": 64,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250324",
+        "TMAX": 137,
+        "TMIN": 77,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250325",
+        "TMAX": 150,
+        "TMIN": 87,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250326",
+        "TMAX": 172,
+        "TMIN": 114,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250327",
+        "TMAX": 140,
+        "TMIN": 85,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250328",
+        "TMAX": 157,
+        "TMIN": 98,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250329",
+        "TMAX": 161,
+        "TMIN": 82,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250330",
+        "TMAX": 113,
+        "TMIN": 65,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250331",
+        "TMAX": 145,
+        "TMIN": 55,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      }
+    ],
+    "USW00099001:2024:Q1": [
+      {
+        "ID": "USW00099001",
+        "DATE": "20240101",
+        "TMAX": 10,
+        "TMIN": -35,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20240102",
+        "TMAX": 54,
+        "TMIN": -42,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20240103",
+        "TMAX": 2,
+        "TMIN": -39,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20240104",
+        "TMAX": 54,
+        "TMIN": -24,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20240105",
+        "TMAX": 49,
+        "TMIN": -35,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20240106",
+        "TMAX": 25,
+        "TMIN": -71,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20240107",
+        "TMAX": 31,
+        "TMIN": -40,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20240108",
+        "TMAX": 62,
+        "TMIN": -18,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20240109",
+        "TMAX": 54,
+        "TMIN": -34,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20240110",
+        "TMAX": 66,
+        "TMIN": 12,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20240111",
+        "TMAX": 45,
+        "TMIN": -48,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20240112",
+        "TMAX": 37,
+        "TMIN": -29,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20240113",
+        "TMAX": 20,
+        "TMIN": -28,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20240114",
+        "TMAX": 29,
+        "TMIN": -15,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20240115",
+        "TMAX": 29,
+        "TMIN": -29,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20240116",
+        "TMAX": 30,
+        "TMIN": -21,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20240117",
+        "TMAX": 61,
+        "TMIN": -16,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20240118",
+        "TMAX": 40,
+        "TMIN": -32,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20240119",
+        "TMAX": 36,
+        "TMIN": -19,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20240120",
+        "TMAX": 56,
+        "TMIN": -30,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20240121",
+        "TMAX": 21,
+        "TMIN": -20,
+        "TMAX_Q_FLAG": "X",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20240122",
+        "TMAX": 61,
+        "TMIN": -10,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20240123",
+        "TMAX": 24,
+        "TMIN": -22,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20240124",
+        "TMAX": 67,
+        "TMIN": 4,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20240125",
+        "TMAX": 34,
+        "TMIN": -28,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20240126",
+        "TMAX": 65,
+        "TMIN": -26,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20240127",
+        "TMAX": 42,
+        "TMIN": -42,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20240128",
+        "TMAX": 47,
+        "TMIN": -6,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20240129",
+        "TMAX": 45,
+        "TMIN": 1,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20240130",
+        "TMAX": 64,
+        "TMIN": 24,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20240131",
+        "TMAX": 40,
+        "TMIN": -36,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20240201",
+        "TMAX": 66,
+        "TMIN": -1,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20240202",
+        "TMAX": 53,
+        "TMIN": 2,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20240203",
+        "TMAX": 42,
+        "TMIN": -30,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20240204",
+        "TMAX": 86,
+        "TMIN": -11,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20240205",
+        "TMAX": 78,
+        "TMIN": 23,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20240206",
+        "TMAX": 86,
+        "TMIN": -2,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20240207",
+        "TMAX": 73,
+        "TMIN": -24,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20240208",
+        "TMAX": 66,
+        "TMIN": -26,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20240209",
+        "TMAX": 64,
+        "TMIN": -29,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20240210",
+        "TMAX": 42,
+        "TMIN": -14,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20240211",
+        "TMAX": 96,
+        "TMIN": 42,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20240212",
+        "TMAX": 71,
+        "TMIN": 12,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20240213",
+        "TMAX": 76,
+        "TMIN": 12,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20240214",
+        "TMAX": 83,
+        "TMIN": 35,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20240215",
+        "TMAX": 108,
+        "TMIN": 36,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20240216",
+        "TMAX": 119,
+        "TMIN": 21,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20240217",
+        "TMAX": 58,
+        "TMIN": -11,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20240218",
+        "TMAX": 75,
+        "TMIN": 23,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20240219",
+        "TMAX": 98,
+        "TMIN": 43,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20240220",
+        "TMAX": 54,
+        "TMIN": -8,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20240221",
+        "TMAX": 102,
+        "TMIN": 12,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20240222",
+        "TMAX": 79,
+        "TMIN": 26,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20240223",
+        "TMAX": 59,
+        "TMIN": 17,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20240224",
+        "TMAX": 97,
+        "TMIN": 50,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20240225",
+        "TMAX": 86,
+        "TMIN": 23,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20240226",
+        "TMAX": 78,
+        "TMIN": -4,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20240227",
+        "TMAX": 71,
+        "TMIN": 11,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20240228",
+        "TMAX": 98,
+        "TMIN": 33,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20240229",
+        "TMAX": 106,
+        "TMIN": 44,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20240301",
+        "TMAX": 76,
+        "TMIN": 1,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20240302",
+        "TMAX": 70,
+        "TMIN": 3,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20240303",
+        "TMAX": 94,
+        "TMIN": 49,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20240304",
+        "TMAX": 109,
+        "TMIN": 11,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20240305",
+        "TMAX": 72,
+        "TMIN": 19,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20240306",
+        "TMAX": 121,
+        "TMIN": 28,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20240307",
+        "TMAX": 111,
+        "TMIN": 18,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20240308",
+        "TMAX": 63,
+        "TMIN": 15,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20240309",
+        "TMAX": 67,
+        "TMIN": 22,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20240310",
+        "TMAX": 92,
+        "TMIN": 44,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20240311",
+        "TMAX": 120,
+        "TMIN": 39,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20240312",
+        "TMAX": 122,
+        "TMIN": 52,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20240313",
+        "TMAX": 66,
+        "TMIN": 26,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20240314",
+        "TMAX": 114,
+        "TMIN": 51,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20240315",
+        "TMAX": 109,
+        "TMIN": 23,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20240316",
+        "TMAX": 75,
+        "TMIN": 29,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20240317",
+        "TMAX": 97,
+        "TMIN": 34,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20240318",
+        "TMAX": 107,
+        "TMIN": 62,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20240319",
+        "TMAX": 86,
+        "TMIN": 20,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20240320",
+        "TMAX": 116,
+        "TMIN": 37,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20240321",
+        "TMAX": 135,
+        "TMIN": 59,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20240322",
+        "TMAX": 125,
+        "TMIN": 46,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20240323",
+        "TMAX": 110,
+        "TMIN": 17,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20240324",
+        "TMAX": 137,
+        "TMIN": 54,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20240325",
+        "TMAX": 110,
+        "TMIN": 51,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20240326",
+        "TMAX": 90,
+        "TMIN": 28,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20240327",
+        "TMAX": 95,
+        "TMIN": 34,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20240328",
+        "TMAX": 123,
+        "TMIN": 34,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20240329",
+        "TMAX": 129,
+        "TMIN": 47,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20240330",
+        "TMAX": 146,
+        "TMIN": 85,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20240331",
+        "TMAX": 125,
+        "TMIN": 38,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      }
+    ],
+    "USW00099002:2025:Q1": [
+      {
+        "ID": "USW00099002",
+        "DATE": "20250101",
+        "TMAX": 155,
+        "TMIN": 93,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20250102",
+        "TMAX": 117,
+        "TMIN": 74,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20250103",
+        "TMAX": 114,
+        "TMIN": 74,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20250104",
+        "TMAX": 129,
+        "TMIN": 68,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20250105",
+        "TMAX": 173,
+        "TMIN": 81,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20250106",
+        "TMAX": 177,
+        "TMIN": null,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20250107",
+        "TMAX": 138,
+        "TMIN": 88,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20250108",
+        "TMAX": 161,
+        "TMIN": 99,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20250109",
+        "TMAX": 170,
+        "TMIN": 93,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20250110",
+        "TMAX": 145,
+        "TMIN": 66,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20250111",
+        "TMAX": 165,
+        "TMIN": 85,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20250112",
+        "TMAX": 143,
+        "TMIN": 97,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20250113",
+        "TMAX": 178,
+        "TMIN": 113,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20250114",
+        "TMAX": 137,
+        "TMIN": 78,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20250115",
+        "TMAX": 127,
+        "TMIN": 83,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20250116",
+        "TMAX": 168,
+        "TMIN": 73,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20250117",
+        "TMAX": 168,
+        "TMIN": 85,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20250118",
+        "TMAX": 149,
+        "TMIN": 88,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20250119",
+        "TMAX": 165,
+        "TMIN": 83,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20250120",
+        "TMAX": 144,
+        "TMIN": 72,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20250121",
+        "TMAX": 139,
+        "TMIN": 87,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20250122",
+        "TMAX": 157,
+        "TMIN": 110,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20250123",
+        "TMAX": 148,
+        "TMIN": 92,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20250124",
+        "TMAX": 190,
+        "TMIN": 143,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20250125",
+        "TMAX": 165,
+        "TMIN": 79,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20250126",
+        "TMAX": 145,
+        "TMIN": 99,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20250127",
+        "TMAX": 176,
+        "TMIN": 82,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20250128",
+        "TMAX": 217,
+        "TMIN": 131,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20250129",
+        "TMAX": 154,
+        "TMIN": 92,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20250130",
+        "TMAX": 162,
+        "TMIN": 76,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20250131",
+        "TMAX": 153,
+        "TMIN": 99,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20250201",
+        "TMAX": 167,
+        "TMIN": 85,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20250202",
+        "TMAX": 218,
+        "TMIN": 120,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20250203",
+        "TMAX": 174,
+        "TMIN": 110,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20250204",
+        "TMAX": 210,
+        "TMIN": 115,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20250205",
+        "TMAX": 201,
+        "TMIN": 119,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20250206",
+        "TMAX": 213,
+        "TMIN": 118,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20250207",
+        "TMAX": 199,
+        "TMIN": 112,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20250208",
+        "TMAX": 202,
+        "TMIN": 111,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20250209",
+        "TMAX": 181,
+        "TMIN": 102,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20250210",
+        "TMAX": 168,
+        "TMIN": 109,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20250211",
+        "TMAX": 196,
+        "TMIN": 132,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20250212",
+        "TMAX": 157,
+        "TMIN": 112,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20250213",
+        "TMAX": 199,
+        "TMIN": 152,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20250214",
+        "TMAX": 229,
+        "TMIN": 141,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20250215",
+        "TMAX": 199,
+        "TMIN": 105,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20250216",
+        "TMAX": 210,
+        "TMIN": 161,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20250217",
+        "TMAX": 177,
+        "TMIN": 129,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20250218",
+        "TMAX": 193,
+        "TMIN": 133,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20250219",
+        "TMAX": 182,
+        "TMIN": 131,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20250220",
+        "TMAX": 215,
+        "TMIN": 130,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20250221",
+        "TMAX": 201,
+        "TMIN": 110,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20250222",
+        "TMAX": 232,
+        "TMIN": 157,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20250223",
+        "TMAX": 163,
+        "TMIN": 117,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20250224",
+        "TMAX": 195,
+        "TMIN": 143,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20250225",
+        "TMAX": 227,
+        "TMIN": 153,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20250226",
+        "TMAX": 235,
+        "TMIN": 150,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20250227",
+        "TMAX": 240,
+        "TMIN": 148,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20250228",
+        "TMAX": 190,
+        "TMIN": 98,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20250301",
+        "TMAX": 210,
+        "TMIN": 166,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20250302",
+        "TMAX": 172,
+        "TMIN": 130,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20250303",
+        "TMAX": 218,
+        "TMIN": 169,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20250304",
+        "TMAX": 191,
+        "TMIN": 142,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20250305",
+        "TMAX": 192,
+        "TMIN": 147,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20250306",
+        "TMAX": 228,
+        "TMIN": 128,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20250307",
+        "TMAX": 255,
+        "TMIN": 159,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20250308",
+        "TMAX": 230,
+        "TMIN": 141,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20250309",
+        "TMAX": 178,
+        "TMIN": 124,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20250310",
+        "TMAX": 235,
+        "TMIN": 149,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20250311",
+        "TMAX": 195,
+        "TMIN": 124,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20250312",
+        "TMAX": 233,
+        "TMIN": 148,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20250313",
+        "TMAX": 208,
+        "TMIN": 119,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20250314",
+        "TMAX": 233,
+        "TMIN": 167,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20250315",
+        "TMAX": 251,
+        "TMIN": 179,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20250316",
+        "TMAX": 205,
+        "TMIN": 125,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20250317",
+        "TMAX": 233,
+        "TMIN": 175,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20250318",
+        "TMAX": 239,
+        "TMIN": 178,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20250319",
+        "TMAX": 222,
+        "TMIN": 165,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20250320",
+        "TMAX": 253,
+        "TMIN": 156,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20250321",
+        "TMAX": 215,
+        "TMIN": 129,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20250322",
+        "TMAX": 250,
+        "TMIN": 161,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20250323",
+        "TMAX": 223,
+        "TMIN": 176,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20250324",
+        "TMAX": 212,
+        "TMIN": 131,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20250325",
+        "TMAX": 228,
+        "TMIN": 180,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20250326",
+        "TMAX": 230,
+        "TMIN": 188,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20250327",
+        "TMAX": 264,
+        "TMIN": 172,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20250328",
+        "TMAX": 231,
+        "TMIN": 172,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20250329",
+        "TMAX": 221,
+        "TMIN": 134,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20250330",
+        "TMAX": 271,
+        "TMIN": 175,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20250331",
+        "TMAX": 233,
+        "TMIN": 178,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      }
+    ],
+    "USW00099002:2024:Q1": [
+      {
+        "ID": "USW00099002",
+        "DATE": "20240101",
+        "TMAX": 170,
+        "TMIN": 104,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20240102",
+        "TMAX": 172,
+        "TMIN": 111,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20240103",
+        "TMAX": 156,
+        "TMIN": 90,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20240104",
+        "TMAX": 173,
+        "TMIN": 132,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20240105",
+        "TMAX": 215,
+        "TMIN": 123,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20240106",
+        "TMAX": 157,
+        "TMIN": 114,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20240107",
+        "TMAX": 181,
+        "TMIN": 140,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20240108",
+        "TMAX": 155,
+        "TMIN": 95,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20240109",
+        "TMAX": 190,
+        "TMIN": 94,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20240110",
+        "TMAX": 160,
+        "TMIN": 82,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20240111",
+        "TMAX": 176,
+        "TMIN": 90,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20240112",
+        "TMAX": 191,
+        "TMIN": 94,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20240113",
+        "TMAX": 206,
+        "TMIN": 111,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20240114",
+        "TMAX": 162,
+        "TMIN": 109,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20240115",
+        "TMAX": 163,
+        "TMIN": 84,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20240116",
+        "TMAX": 160,
+        "TMIN": 111,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20240117",
+        "TMAX": 186,
+        "TMIN": 129,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20240118",
+        "TMAX": 175,
+        "TMIN": 78,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20240119",
+        "TMAX": 201,
+        "TMIN": 115,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20240120",
+        "TMAX": 211,
+        "TMIN": 131,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20240121",
+        "TMAX": 178,
+        "TMIN": 109,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20240122",
+        "TMAX": 182,
+        "TMIN": 142,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20240123",
+        "TMAX": 193,
+        "TMIN": 109,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20240124",
+        "TMAX": 202,
+        "TMIN": 148,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20240125",
+        "TMAX": 176,
+        "TMIN": 130,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20240126",
+        "TMAX": 186,
+        "TMIN": 145,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20240127",
+        "TMAX": 189,
+        "TMIN": 119,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20240128",
+        "TMAX": 167,
+        "TMIN": 105,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20240129",
+        "TMAX": 192,
+        "TMIN": 131,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20240130",
+        "TMAX": 227,
+        "TMIN": 134,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20240131",
+        "TMAX": 194,
+        "TMIN": 121,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20240201",
+        "TMAX": 207,
+        "TMIN": 135,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20240202",
+        "TMAX": 206,
+        "TMIN": 150,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20240203",
+        "TMAX": 188,
+        "TMIN": 132,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20240204",
+        "TMAX": 233,
+        "TMIN": 133,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20240205",
+        "TMAX": 193,
+        "TMIN": 148,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20240206",
+        "TMAX": 187,
+        "TMIN": 114,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20240207",
+        "TMAX": 223,
+        "TMIN": 126,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20240208",
+        "TMAX": 192,
+        "TMIN": 152,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20240209",
+        "TMAX": 233,
+        "TMIN": 161,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20240210",
+        "TMAX": 219,
+        "TMIN": 121,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20240211",
+        "TMAX": 195,
+        "TMIN": 126,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20240212",
+        "TMAX": 243,
+        "TMIN": 151,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20240213",
+        "TMAX": 207,
+        "TMIN": 156,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20240214",
+        "TMAX": 198,
+        "TMIN": 126,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20240215",
+        "TMAX": 236,
+        "TMIN": 157,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20240216",
+        "TMAX": 205,
+        "TMIN": 131,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20240217",
+        "TMAX": 187,
+        "TMIN": 146,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20240218",
+        "TMAX": 198,
+        "TMIN": 131,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20240219",
+        "TMAX": 236,
+        "TMIN": 151,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20240220",
+        "TMAX": 175,
+        "TMIN": 134,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20240221",
+        "TMAX": 236,
+        "TMIN": 143,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20240222",
+        "TMAX": 228,
+        "TMIN": 167,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20240223",
+        "TMAX": 247,
+        "TMIN": 174,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20240224",
+        "TMAX": 231,
+        "TMIN": 139,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20240225",
+        "TMAX": 191,
+        "TMIN": 136,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20240226",
+        "TMAX": 239,
+        "TMIN": 170,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20240227",
+        "TMAX": 255,
+        "TMIN": 173,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20240228",
+        "TMAX": 183,
+        "TMIN": 132,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20240229",
+        "TMAX": 243,
+        "TMIN": 152,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20240301",
+        "TMAX": 240,
+        "TMIN": 169,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20240302",
+        "TMAX": 191,
+        "TMIN": 125,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20240303",
+        "TMAX": 222,
+        "TMIN": 148,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20240304",
+        "TMAX": 206,
+        "TMIN": 112,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20240305",
+        "TMAX": 227,
+        "TMIN": 145,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20240306",
+        "TMAX": 262,
+        "TMIN": 164,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20240307",
+        "TMAX": 199,
+        "TMIN": 145,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20240308",
+        "TMAX": 227,
+        "TMIN": 151,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20240309",
+        "TMAX": 261,
+        "TMIN": 164,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20240310",
+        "TMAX": 217,
+        "TMIN": 133,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20240311",
+        "TMAX": 254,
+        "TMIN": 166,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20240312",
+        "TMAX": 195,
+        "TMIN": 143,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20240313",
+        "TMAX": 234,
+        "TMIN": 184,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20240314",
+        "TMAX": 251,
+        "TMIN": 158,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20240315",
+        "TMAX": 260,
+        "TMIN": 178,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20240316",
+        "TMAX": 231,
+        "TMIN": 165,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20240317",
+        "TMAX": 237,
+        "TMIN": 191,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20240318",
+        "TMAX": 248,
+        "TMIN": 170,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20240319",
+        "TMAX": 265,
+        "TMIN": 170,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20240320",
+        "TMAX": 238,
+        "TMIN": 171,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20240321",
+        "TMAX": 262,
+        "TMIN": 170,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20240322",
+        "TMAX": 265,
+        "TMIN": 191,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20240323",
+        "TMAX": 226,
+        "TMIN": 133,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20240324",
+        "TMAX": 242,
+        "TMIN": 182,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20240325",
+        "TMAX": 246,
+        "TMIN": 174,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20240326",
+        "TMAX": 269,
+        "TMIN": 199,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20240327",
+        "TMAX": 250,
+        "TMIN": 166,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20240328",
+        "TMAX": 211,
+        "TMIN": 170,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20240329",
+        "TMAX": 213,
+        "TMIN": 170,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20240330",
+        "TMAX": 266,
+        "TMIN": 201,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099002",
+        "DATE": "20240331",
+        "TMAX": 248,
+        "TMIN": 189,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      }
+    ],
+    "USW00099001:2025:Q3": [
+      {
+        "ID": "USW00099001",
+        "DATE": "20250701",
+        "TMAX": 256,
+        "TMIN": 192,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250702",
+        "TMAX": 267,
+        "TMIN": 200,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250703",
+        "TMAX": 263,
+        "TMIN": 183,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250704",
+        "TMAX": 295,
+        "TMIN": 236,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250705",
+        "TMAX": 244,
+        "TMIN": 181,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250706",
+        "TMAX": 259,
+        "TMIN": 201,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250707",
+        "TMAX": 251,
+        "TMIN": 168,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250708",
+        "TMAX": 250,
+        "TMIN": 193,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250709",
+        "TMAX": 262,
+        "TMIN": 165,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250710",
+        "TMAX": 310,
+        "TMIN": 219,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250711",
+        "TMAX": 250,
+        "TMIN": 206,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250712",
+        "TMAX": 256,
+        "TMIN": 215,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250713",
+        "TMAX": 255,
+        "TMIN": 206,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250714",
+        "TMAX": 274,
+        "TMIN": 228,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250715",
+        "TMAX": 272,
+        "TMIN": 210,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250716",
+        "TMAX": 280,
+        "TMIN": 206,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250717",
+        "TMAX": 249,
+        "TMIN": 168,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250718",
+        "TMAX": 269,
+        "TMIN": 220,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250719",
+        "TMAX": 236,
+        "TMIN": 190,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250720",
+        "TMAX": 299,
+        "TMIN": 216,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250721",
+        "TMAX": 280,
+        "TMIN": 200,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250722",
+        "TMAX": 276,
+        "TMIN": 235,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250723",
+        "TMAX": 277,
+        "TMIN": 225,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250724",
+        "TMAX": 249,
+        "TMIN": 165,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250725",
+        "TMAX": 270,
+        "TMIN": 217,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250726",
+        "TMAX": 293,
+        "TMIN": 207,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250727",
+        "TMAX": 250,
+        "TMIN": 195,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250728",
+        "TMAX": 283,
+        "TMIN": 190,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250729",
+        "TMAX": 240,
+        "TMIN": 199,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250730",
+        "TMAX": 290,
+        "TMIN": 221,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250731",
+        "TMAX": 236,
+        "TMIN": 182,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250801",
+        "TMAX": 308,
+        "TMIN": 209,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250802",
+        "TMAX": 259,
+        "TMIN": 207,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250803",
+        "TMAX": 268,
+        "TMIN": 213,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250804",
+        "TMAX": 296,
+        "TMIN": 208,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250805",
+        "TMAX": 277,
+        "TMIN": 203,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250806",
+        "TMAX": 268,
+        "TMIN": 172,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250807",
+        "TMAX": 259,
+        "TMIN": 188,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250808",
+        "TMAX": 284,
+        "TMIN": 204,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250809",
+        "TMAX": 268,
+        "TMIN": 180,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250810",
+        "TMAX": 288,
+        "TMIN": 220,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250811",
+        "TMAX": 251,
+        "TMIN": 169,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250812",
+        "TMAX": 243,
+        "TMIN": 160,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250813",
+        "TMAX": 277,
+        "TMIN": 230,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250814",
+        "TMAX": 254,
+        "TMIN": 183,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250815",
+        "TMAX": 269,
+        "TMIN": 216,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250816",
+        "TMAX": 225,
+        "TMIN": 171,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250817",
+        "TMAX": 221,
+        "TMIN": 180,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250818",
+        "TMAX": 230,
+        "TMIN": 165,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250819",
+        "TMAX": 282,
+        "TMIN": 219,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250820",
+        "TMAX": 236,
+        "TMIN": 192,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250821",
+        "TMAX": 255,
+        "TMIN": 210,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250822",
+        "TMAX": 286,
+        "TMIN": 215,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250823",
+        "TMAX": 235,
+        "TMIN": 178,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250824",
+        "TMAX": 274,
+        "TMIN": 175,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250825",
+        "TMAX": 250,
+        "TMIN": 166,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250826",
+        "TMAX": 260,
+        "TMIN": 173,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250827",
+        "TMAX": 246,
+        "TMIN": 170,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250828",
+        "TMAX": 290,
+        "TMIN": 196,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250829",
+        "TMAX": 266,
+        "TMIN": 211,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250830",
+        "TMAX": 271,
+        "TMIN": 192,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250831",
+        "TMAX": 246,
+        "TMIN": 197,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250901",
+        "TMAX": 235,
+        "TMIN": 194,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250902",
+        "TMAX": 244,
+        "TMIN": 174,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250903",
+        "TMAX": 230,
+        "TMIN": 173,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250904",
+        "TMAX": 283,
+        "TMIN": 184,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250905",
+        "TMAX": 285,
+        "TMIN": 192,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250906",
+        "TMAX": 231,
+        "TMIN": 151,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250907",
+        "TMAX": 251,
+        "TMIN": 164,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250908",
+        "TMAX": 244,
+        "TMIN": 197,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250909",
+        "TMAX": 226,
+        "TMIN": 185,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250910",
+        "TMAX": 265,
+        "TMIN": 223,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250911",
+        "TMAX": 231,
+        "TMIN": 178,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250912",
+        "TMAX": 253,
+        "TMIN": 206,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250913",
+        "TMAX": 255,
+        "TMIN": 184,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250914",
+        "TMAX": 268,
+        "TMIN": 215,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250915",
+        "TMAX": 248,
+        "TMIN": 181,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250916",
+        "TMAX": 257,
+        "TMIN": 210,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250917",
+        "TMAX": 235,
+        "TMIN": 146,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250918",
+        "TMAX": 271,
+        "TMIN": 205,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250919",
+        "TMAX": 254,
+        "TMIN": 192,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250920",
+        "TMAX": 252,
+        "TMIN": 193,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250921",
+        "TMAX": 260,
+        "TMIN": 170,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250922",
+        "TMAX": 269,
+        "TMIN": 212,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250923",
+        "TMAX": 241,
+        "TMIN": 153,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250924",
+        "TMAX": 282,
+        "TMIN": 191,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250925",
+        "TMAX": 234,
+        "TMIN": 174,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250926",
+        "TMAX": 250,
+        "TMIN": 204,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250927",
+        "TMAX": 263,
+        "TMIN": 203,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250928",
+        "TMAX": 221,
+        "TMIN": 175,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250929",
+        "TMAX": 224,
+        "TMIN": 170,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      },
+      {
+        "ID": "USW00099001",
+        "DATE": "20250930",
+        "TMAX": 236,
+        "TMIN": 166,
+        "TMAX_Q_FLAG": "",
+        "TMIN_Q_FLAG": ""
+      }
+    ]
+  },
+  "expected": [
+    {
+      "station_id": "USW00099001",
+      "year": 2025,
+      "quarter": 1,
+      "hdd": 1785.0599999999995,
+      "cdd": 0.0,
+      "days_observed": 87,
+      "days_in_quarter": 90,
+      "coverage": 0.9666666666666667
+    },
+    {
+      "station_id": "USW00099001",
+      "year": 2024,
+      "quarter": 1,
+      "hdd": 2303.2800000000007,
+      "cdd": 0.0,
+      "days_observed": 90,
+      "days_in_quarter": 91,
+      "coverage": 0.989010989010989
+    },
+    {
+      "station_id": "USW00099002",
+      "year": 2025,
+      "quarter": 1,
+      "hdd": 478.97999999999985,
+      "cdd": 76.11000000000003,
+      "days_observed": 89,
+      "days_in_quarter": 90,
+      "coverage": 0.9888888888888889
+    },
+    {
+      "station_id": "USW00099002",
+      "year": 2024,
+      "quarter": 1,
+      "hdd": 265.46999999999997,
+      "cdd": 144.0,
+      "days_observed": 91,
+      "days_in_quarter": 91,
+      "coverage": 1.0
+    },
+    {
+      "station_id": "USW00099001",
+      "year": 2025,
+      "quarter": 3,
+      "hdd": 0.0,
+      "cdd": 713.1300000000001,
+      "days_observed": 92,
+      "days_in_quarter": 92,
+      "coverage": 1.0
+    }
+  ],
+  "utility": {
+    "cik": "0009999999",
+    "stations": [
+      "USW00099001",
+      "USW00099002"
+    ],
+    "year": 2025,
+    "quarter": 1,
+    "tdd_current": 1170.0749999999998,
+    "tdd_previous": 1356.3750000000002,
+    "delta_w": -0.13735139618468373,
+    "coverage_current": 0.9666666666666667,
+    "coverage_previous": 0.989010989010989,
+    "coverage": 0.9666666666666667
+  }
+}
