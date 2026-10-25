@@ -209,8 +209,10 @@ function provenanceCell(row, definitions) {
   return `<span class="jm-prov jm-prov--measured">Measured in this run${el ? ` ${esc(el)}` : ""}</span>${as}`;
 }
 
-function orphansCell(orphans) {
+function orphansCell(orphans, row = {}) {
   const list = Array.isArray(orphans) ? orphans.slice(0, 10) : [];
+  const unmatched = typeof row.matched_rows === "number" && typeof row.left_rows === "number" ? row.left_rows - row.matched_rows : null;
+  if (!list.length && unmatched) return `<span class="muted">${esc(String(unmatched))} unmatched; not listed by this statement</span>`;
   if (!list.length) return `<span class="muted">none</span>`;
   return `<ul class="jm-orphans">${list.map((o) => `<li><code>${esc(o)}</code></li>`).join("")}</ul>`;
 }
@@ -237,7 +239,7 @@ function oneRow(row, index, definitions) {
     <td class="jm-xform">${transformCell(row)}</td>
     <td class="jm-rate"><div class="jm-rate-rows tnum">${esc(rate)}</div><div class="jm-rate-dist tnum small muted">${esc(distinct)}</div></td>
     <td class="jm-verdict"><span class="chip chip--${cls}">${esc(v)}</span><span class="jm-verdict-def small">${esc(def)}</span></td>
-    <td class="jm-orphans-cell">${orphansCell(row.orphans)}</td>
+    <td class="jm-orphans-cell">${orphansCell(row.orphans, row)}</td>
     <td class="jm-prov-cell">${provenanceCell(row, definitions)}<div class="small muted">${esc(proposers)}</div></td>
     <td class="jm-sql-cell">${sqlDetails(row)}</td>
   </tr>`;

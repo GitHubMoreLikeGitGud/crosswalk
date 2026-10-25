@@ -79,7 +79,7 @@ export function measureWords(fact) {
 export function renderSkipped(s) {
   const m = SKIP_NOTE.exec(String(s?.note ?? ""));
   const what = m ? `<code>${esc(m[3])}</code> to <code>${esc(m[4])}</code> (${esc(m[5])}): ${esc(m[6])}, ${esc(m[7])} of ${esc(m[8])} rows when it was measured` : esc(s?.note ?? "");
-  return `<li class="tl tl--skip"><span class="tl__who">Skipped</span> <strong>skipped: verified earlier, memory ${esc(s?.memoryId ?? "?")}</strong> <span class="tl__fact">${what}</span> ${m ? eng(`<code>${esc(m[1])}</code> <code>${esc(m[2])}</code>${m[9] ? ` measured as <code>${esc(m[9])}</code>` : ""}`) : ""}</li>`;
+  return `<li class="tl tl--skip"><span class="tl__who">Skipped</span> <strong>skipped: verified earlier, recalled from memory</strong> <span class="tl__fact">${what}</span> ${eng(`memory <code>${esc(s?.memoryId ?? "?")}</code>`)} ${m ? eng(`<code>${esc(m[1])}</code> <code>${esc(m[2])}</code>${m[9] ? ` measured as <code>${esc(m[9])}</code>` : ""}`) : ""}</li>`;
 }
 
 /** Pure: the block of skipped rows with its heading line. */

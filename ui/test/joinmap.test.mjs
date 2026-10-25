@@ -209,3 +209,13 @@ test("review: keys between the same two tables are drawn as separate lines, and 
   assert.ok(table.includes("(a) first"));
   assert.ok(!table.includes("under identity"));
 });
+
+test("review: a key with unmatched rows but no orphan list says so instead of 'none'", () => {
+  const control = cold.rows.find((r) => r.key.startsWith("cik_control"));
+  assert.equal(control.matched_rows, 0);
+  assert.deepEqual(control.orphans, []);
+  const one = renderJoinTable({ rows: [control], definitions: {} });
+  assert.ok(stripEng(one).includes("43 unmatched; not listed by this statement"));
+  const full = { ...control, matched_rows: 43, left_rows: 43, orphans: [] };
+  assert.ok(stripEng(renderJoinTable({ rows: [full], definitions: {} })).includes(">none<"));
+});

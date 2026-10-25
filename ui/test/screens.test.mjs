@@ -128,7 +128,11 @@ test("timeline: a skipped measure step says it was verified earlier and names it
   const steps = events.skipped_steps;
   assert.ok(steps.length >= 1);
   const block = renderSkippedBlock(steps);
-  for (const s of steps) assert.ok(block.includes(`skipped: verified earlier, memory ${s.memoryId}`));
+  assert.equal((visible(block).match(/skipped: verified earlier, recalled from memory/gu) ?? []).length, steps.length);
+  for (const s of steps) {
+    assert.ok(block.includes(`memory <code>${s.memoryId}</code>`), "the memory id is kept behind the engineering toggle");
+    assert.ok(!visible(block).includes(s.memoryId), "no memory id with the toggle off");
+  }
   assert.equal((block.match(/class="tl tl--skip"/gu) ?? []).length, steps.length);
   const loc = renderSkipped({ memoryId: "mem-80", note: "measure_key b6 skipped: loc@CY2024Q1 (cw.frames_Revenues_CY2024Q1.loc ~ cw.seed_submissions_snapshot.hq_state, substr(4,2)) VERIFIED 42/42 as loc@CY2025Q1 recalled from memory" });
   assert.ok(visible(loc).includes("cw.frames_Revenues_CY2024Q1.loc to cw.seed_submissions_snapshot.hq_state (substr(4,2)): VERIFIED, 42 of 42 rows"));
