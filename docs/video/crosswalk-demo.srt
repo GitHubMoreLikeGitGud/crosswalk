@@ -211,12 +211,12 @@ and the model verified 3 of 11.
 The baseline wins.
 
 54
-00:03:15,133 --> 00:03:19,893
-By hand, an expert verified the five keys in 179.5 seconds,
+00:03:15,127 --> 00:03:17,307
+Run by hand from statements prepared in advance,
 
 55
-00:03:20,053 --> 00:03:21,993
-faster, but with 24 decisions.
+00:03:17,727 --> 00:03:21,687
+the five keys took 27 statements, 2 lookups and 24 decisions.
 
 56
 00:03:22,573 --> 00:03:24,243
