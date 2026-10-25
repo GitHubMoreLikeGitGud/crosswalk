@@ -188,6 +188,8 @@ describe("the registry", () => {
     expect(ctx.unmeasurable.get("k3")).toMatch(/no gateway join-map statement/u);
     expect(ctx.proposals.rejected).toHaveLength(1);
     expect(allowedTools(ctx, d).map((t) => t.name)).toContain("measure_key");
+    // Not-tested depends on the answer (weather measured or not), so it waits for it.
+    expect(allowedTools(ctx, d).map((t) => t.name)).not.toContain("not_tested");
     expect(completeInput(toolDef("measure_key")!, {}, ctx).key).toBe("k1");
   });
 

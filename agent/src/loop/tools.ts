@@ -679,7 +679,7 @@ function notTestedFor(ctx: QuestionContext, deps: ToolDeps): string[] {
 
 const notTestedTool = def("not_tested", {
   optional: false,
-  available: (ctx) => pending(ctx, "not_tested_listed"),
+  available: (ctx) => resolved(ctx, "answered") && pending(ctx, "not_tested_listed"),
   defaultInput: () => ({}),
   checkInput: noCheck,
   async run(_input, ctx, deps) {
