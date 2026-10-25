@@ -1,0 +1,121 @@
+{
+  "synthetic": true,
+  "note": "Synthetic lines in the fixed-width layout of ghcnd-stations.txt (ids, coordinates and names are made up). Expected fields from make_crosswalk_fixtures.py with 1-based inclusive columns id 1-11, lat 13-20, lon 22-30, elev 32-37, state 39-40, name 42-71.",
+  "columns": {
+    "id": [
+      1,
+      11
+    ],
+    "lat": [
+      13,
+      20
+    ],
+    "lon": [
+      22,
+      30
+    ],
+    "elev": [
+      32,
+      37
+    ],
+    "state": [
+      39,
+      40
+    ],
+    "name": [
+      42,
+      71
+    ]
+  },
+  "lines": [
+    "USW00099001  35.8656  -78.7847  126.5 NC SYNTHETIC CITY INTL AP             HCN 72306",
+    "USW00099002  33.6301  -84.4418  308.2 GA ANOTHER MADE UP FIELD                       ",
+    "USC00099003  29.5333  -98.4700  240.8 TX A NAME THAT IS EXACTLY THIRTY  GSN          ",
+    "CA001234567  45.3200  -75.6700  114.0    NON US STATION NO STATE                71063",
+    "USW00099004 -14.3310 -170.7105    3.7 AS PACIFIC TERRITORY STATION                   ",
+    "USW00099005  61.1689 -149.9961   36.6 AK NORTHERN SYNTHETIC AP                       "
+  ],
+  "expected": [
+    {
+      "id": "USW00099001",
+      "lat": 35.8656,
+      "lon": -78.7847,
+      "elev": 126.5,
+      "state": "NC",
+      "name": "SYNTHETIC CITY INTL AP"
+    },
+    {
+      "id": "USW00099002",
+      "lat": 33.6301,
+      "lon": -84.4418,
+      "elev": 308.2,
+      "state": "GA",
+      "name": "ANOTHER MADE UP FIELD"
+    },
+    {
+      "id": "USC00099003",
+      "lat": 29.5333,
+      "lon": -98.47,
+      "elev": 240.8,
+      "state": "TX",
+      "name": "A NAME THAT IS EXACTLY THIRTY"
+    },
+    {
+      "id": "CA001234567",
+      "lat": 45.32,
+      "lon": -75.67,
+      "elev": 114.0,
+      "state": null,
+      "name": "NON US STATION NO STATE"
+    },
+    {
+      "id": "USW00099004",
+      "lat": -14.331,
+      "lon": -170.7105,
+      "elev": 3.7,
+      "state": "AS",
+      "name": "PACIFIC TERRITORY STATION"
+    },
+    {
+      "id": "USW00099005",
+      "lat": 61.1689,
+      "lon": -149.9961,
+      "elev": 36.6,
+      "state": "AK",
+      "name": "NORTHERN SYNTHETIC AP"
+    }
+  ],
+  "us_station_ids": [
+    "USW00099001",
+    "USW00099002",
+    "USC00099003",
+    "USW00099004",
+    "USW00099005"
+  ],
+  "state_counts": {
+    "AK": 1,
+    "AS": 1,
+    "GA": 1,
+    "NC": 1,
+    "TX": 1
+  },
+  "bad_lines": [
+    {
+      "line": "USW00099001 35.8656",
+      "reason": "shorter than the name column"
+    },
+    {
+      "line": "",
+      "reason": "empty"
+    }
+  ],
+  "view_sql_must_contain": [
+    "SUBSTR(line, 1, 11) AS id",
+    "SUBSTR(line, 13, 8)",
+    "SUBSTR(line, 22, 9)",
+    "SUBSTR(line, 32, 6)",
+    "SUBSTR(line, 39, 2) AS state",
+    "SUBSTR(line, 42, 30) AS name",
+    "FROM CW_GHCN.stations_raw"
+  ]
+}

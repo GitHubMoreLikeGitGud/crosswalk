@@ -10,23 +10,25 @@ alwaysApply: false
 
 | Source | Licence | How we use it |
 |---|---|---|
-| SEC EDGAR XBRL APIs (`frames`, `companyconcept`, `submissions` on data.sec.gov) | US Government work, public domain; SEC fair-access policy | Queried live through Zetaris, never redistributed: no extracted fact values in the repository. Every request carries the declared `User-Agent` from `CW_USER_AGENT`; at most 10 requests per second. Attribution: "Data from SEC EDGAR (sec.gov)". |
-| NOAA GHCN-Daily parquet (Registry of Open Data on AWS, `s3://noaa-ghcn-pds`) | CC0 / public domain (US Government work); NOAA asks for attribution | Read anonymously from the public bucket as filestore tables. Attribution: "NOAA National Centers for Environmental Information, Global Historical Climatology Network daily (GHCN-Daily)". |
+| OpenFEMA (`DisasterDeclarationsSummaries` v2 and the `OpenFemaDataSets` catalogue on www.fema.gov/api/open) | Public US federal data, no API key. FEMA asks that OpenFEMA be cited as the source and that products are not presented as endorsed by FEMA. | Registered as REST tables through Zetaris with the OData query options percent-encoded (`$filter`, `$top`, `$select`); state-level roll-ups only. Attribution: "Data from OpenFEMA (fema.gov); this product is not endorsed by FEMA". |
+| SEC EDGAR XBRL APIs (`frames`, `submissions`, `companyconcept` on data.sec.gov) | US Government work, public domain; SEC fair-access policy | Queried live through Zetaris, never redistributed: no extracted fact values in the repository. Every request carries the declared `User-Agent` from `CW_USER_AGENT`; at most 10 requests per second. Attribution: "Data from SEC EDGAR (sec.gov)". |
+| NOAA GHCN-Daily (Registry of Open Data on AWS, `s3://noaa-ghcn-pds`: parquet `by_year` partitions and `ghcnd-stations.txt`) | CC0 / public domain (US Government work); NOAA asks for attribution | Read anonymously from the public bucket as filestore tables (parquet, and the station list as a one-column CSV parsed with SUBSTR). Attribution: "NOAA National Centers for Environmental Information, Global Historical Climatology Network daily (GHCN-Daily)". |
 | company_dns V4 (SIC reference, company-dns.mediumroast.io) | Apache-2.0 | One registration of the SIC code list, called with an identifying `User-Agent`. Attribution to the company_dns project. |
+| Zetaris getting-started manifest (`open_data/manifest.json`) | Apache-2.0 | Read locally at boot as part of the discovery catalogue; its `known_to_fail` entries seed negative memories. |
 
 Evidence records carry the endpoint, the licence string, the retrieval time and the Zetaris object.
 
 ## What may be committed
 
-- `seeds/utilities.json` and `seeds/stations.json`: CIKs, names, tickers, SIC codes, states served (curated from public service-territory descriptions and labelled curated) and GHCN station ids with state and name. Nothing else from the sources.
-- Counts, schemas, object names and timings in `zetaris/README.md` and the docs. Never SEC fact values, filing text or raw API responses; never a GHCN extract (the parquet is public, but `data/` is runtime state and stays gitignored).
-- Public numbers (growth, degree days, attribution) come from the agent's own run through Zetaris and appear only in `docs/demo-case.md` and `docs/eval-report.md`, with ranges and labels.
-- No personal data: SEC submissions are read for `cik`, `name`, `sic`, `sicDescription` and the business state only, never street fields.
+- `seeds/utilities.json` and `seeds/stations.json`: CIKs, names, tickers, SIC codes, states served (curated from public service-territory descriptions and labelled curated) and GHCN station ids with state and name. `seeds/states.json`: the 50 states and DC with FIPS codes (a public code list). `seeds/catalogue.json`: source ids, endpoint patterns, licences, statuses and traps. Nothing else from the sources.
+- Counts, schemas, object names, match rates, orphan keys (identifiers only) and timings in `zetaris/README.md`, the join map and the docs. Never SEC fact values, filing text, raw API responses, FEMA row extracts or a GHCN extract (`data/` is runtime state and stays gitignored).
+- Public numbers (declaration counts, match rates, degree days, revenue changes) come from the agent's own run through Zetaris and appear only in `docs/demo-case.md` and `docs/eval-report.md`, with their provenance.
+- No personal data: SEC submissions are read for `cik`, `name`, `sic`, `sicDescription` and the business state only, never street fields; FEMA rows are read at state level.
 
 ## Code and model licences
 
 - The project is Apache-2.0 (`LICENSE`, `NOTICE`).
 - Meterless engines are Apache-2.0 and vendored unchanged; keep their `LICENSE` files and the entry in `NOTICE`.
 - `gateway/jdbc.py` is adapted from the Zetaris getting-started repository (Apache-2.0): keep the attribution header and the `NOTICE` entry.
-- Scaffolding adapted from the sister project ClearShelf (same author, Apache-2.0) keeps its header note and is listed in `metadata.json` under pre-existing code.
+- Scaffolding adapted from the sister projects Weather-or-Not and ClearShelf (same author, Apache-2.0) keeps its header note and is listed in `metadata.json` under pre-existing code; `zetaris/sql/won-reference/` is Weather-or-Not's verified SQL kept as reference only.
 - NVIDIA Nemotron is used under the NVIDIA Open Model License. Model weights are never added to the repository.

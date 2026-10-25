@@ -1,12 +1,12 @@
 ---
-description: Zetaris Lightning SQL rules for the gateway, the SQL files, the USL model and the agent's gateway client
-globs: gateway/**,zetaris/**,scripts/**,agent/src/zetaris/**
+description: Zetaris Lightning SQL rules for the gateway, the SQL files, the match-rate and USL renderers and the agent's gateway client
+globs: gateway/**,zetaris/**,scripts/**,agent/src/zetaris/**,agent/src/tools/**
 alwaysApply: false
 ---
 
 # Zetaris rules
 
-Zetaris Lightning 2.4.3.1 runs locally in Docker. JDBC `jdbc:zetaris:lightning@localhost:10000`, driver class `com.zetaris.lightning.jdbc.LightningDriver`, driver JAR from `ZETARIS_JDBC_JAR`. UI http://localhost:3000, API 8888, Spark UI 4040 (the cache truth: its storage tab lists every cached table). Never call port 8889. The driver is shared with another project's cached tables: never CACHE, UNCACHE or read anything outside the objects below.
+Zetaris Lightning 2.4.3.1 runs locally in Docker. JDBC `jdbc:zetaris:lightning@localhost:10000`, driver class `com.zetaris.lightning.jdbc.LightningDriver`, driver JAR from `ZETARIS_JDBC_JAR`. UI http://localhost:3000, API 8888, Spark UI 4040 (the cache truth: its storage tab lists every cached table). Never call port 8889. The driver is shared with the sister entry Weather-or-Not (`WON_*`, `won.*`, `lightning.metastore.weatherornot`) and with ClearShelf's cached tables: never CACHE, UNCACHE, read, drop or alter anything outside the objects below.
 
 ## Writing SQL
 
@@ -14,40 +14,43 @@ Zetaris Lightning 2.4.3.1 runs locally in Docker. JDBC `jdbc:zetaris:lightning@l
 - One statement per call, no trailing semicolon, qualified names (`<database>.<table>`, `cw.<view>`).
 - A multi-table `COMPILE USL ... DDL CREATE TABLE ...; CREATE TABLE ...` is ONE statement. Never split it on `;`.
 - `CREATE LIGHTNING DATABASE` and `CREATE SCHEMASTORE CONTAINER` do not accept `IF NOT EXISTS` on 2.4.3.1 (parse error `mismatched input 'not'`); rerun scripts with `--skip-exists` instead. `CREATE NAMESPACE IF NOT EXISTS` and `COMPILE USL IF NOT EXISTS` are fine; `lightning.metastore` must exist before `lightning.metastore.crosswalk`.
-- `tag` is a reserved word in the Lightning catalog parser: the USL column is `xbrl_tag`. Table-level composite primary keys are accepted.
+- `tag` is a reserved word in the Lightning catalog parser: the revenue column is `xbrl_tag`. Table-level composite primary keys are accepted. Column types in the USL: `varchar(n)`, `int`, `double`.
 - `UPDATE USL ... SET [TABLE | COLUMN] DESCRIPTION <text>` takes unquoted text (a quoted string is stored with its quotes); no semicolon or apostrophe in the text.
-- Nested JSON is read with `LATERAL VIEW explode(...)` in a SchemaStore view (`CREATE SCHEMASTORE VIEW <v> WITH CONTAINER cw AS SELECT ...`); never select street address fields from SEC submissions.
-- Frames `cik` is an integer: join with `LPAD(CAST(cik AS STRING), 10, '0')`. Frames `val` is inferred `double` for some periods and `bigint` for others: `CAST(val AS DOUBLE)` downstream.
+- Nested JSON is read with `LATERAL VIEW explode(...)` in a SchemaStore view (`CREATE SCHEMASTORE VIEW <v> WITH CONTAINER cw AS SELECT ...`). OpenFEMA's array field is `DisasterDeclarationsSummaries`; its `metadata.count` is not a row count. Never select street address fields from SEC submissions.
+- REST endpoints must be percent-encoded: OData options `$filter` -> `%24filter`, spaces `%20`, quotes `%27`, colons `%3A`.
+- Frames `cik` is an integer: join with `LPAD(CAST(cik AS STRING), 10, '0')`. Frames `val` is inferred `double` for some periods and `bigint` for others: `CAST(val AS DOUBLE)` downstream. Frames `loc` is `US-XX`: `SUBSTR(loc, 4, 2)`. Frames serve the most recently filed fact for a period.
 - Arithmetic that feeds a USL `double` column must be double from the source (`CAST(... AS DOUBLE)`); a decimal result raises `java.math.BigDecimal is not a valid external type for schema of double` on aggregates over the USL table.
-- Degree days are computed in SQL over the cached station views: `Tmean F = ((TMAX + TMIN) / 2.0) / 10.0 * 9.0 / 5.0 + 32`, HDD and CDD with base 65, days with a non-empty `Q_FLAG` on either element dropped, in the same evaluation order as `agent/src/tools/degreeDays.ts`.
-- Every read of a filestore (parquet) table costs about 9 s of Zetaris-side source resolution per table per view level, regardless of the cache: ask for all stations of a period in ONE `weather_quarter` call (up to 40 ids, about 19 s), never one call per utility, and never read the USL weather table at question time (about 3 minutes).
-- DQ: `REGISTER DQ` evaluates the rule on registration (about 3 minutes here); `RUN DQ` on the weather table takes about 6 minutes; `SHOW DQ ALL INVALID` did not return within 900 s. The gateway's gate reads the single rule, `SHOW DQ INVALID RECORD coverage_ok TABLE ...`, bounded at 600 s, at onboarding and warm-up only. If DQ hangs, run the equivalent plain SQL and label the evidence "DQ-equivalent SQL".
+- Degree days (inherited method) are computed in SQL over the cached station views: `Tmean F = ((TMAX + TMIN) / 2.0) / 10.0 * 9.0 / 5.0 + 32`, HDD and CDD with base 65, days with a non-empty `Q_FLAG` on either element dropped.
+- Every read of a filestore (parquet) table costs about 9 s of Zetaris-side source resolution per table per view level, regardless of the cache: ask for all stations of a period in ONE statement (up to 60 ids, about 19 s), and never read a USL table activated over the parquet at question time (about 3 minutes).
+- Match rates are measured over CACHED views only: `SELECT COUNT(DISTINCT l.k) AS left_keys, COUNT(DISTINCT CASE WHEN r.k IS NOT NULL THEN l.k END) AS matched_keys FROM (SELECT DISTINCT <transform(left column)> AS k FROM <left view>) l LEFT JOIN (SELECT DISTINCT <right column> AS k FROM <right view>) r ON r.k = l.k`, plus an orphan statement `... WHERE r.k IS NULL ORDER BY l.k LIMIT 10`. A raw cross-source join (two REST or filestore tables not yet cached) is never issued. Weather-or-Not measured such statements in about 6 s each.
+- DQ: `REGISTER DQ` evaluates the rule on registration (about 3 minutes over the parquet-backed table); `RUN DQ` on it took about 6 minutes; `SHOW DQ ALL INVALID` did not return within 900 s. Bound RUN DQ at 900 s, read one rule at a time (`SHOW DQ INVALID RECORD <rule> TABLE ...`), and if DQ hangs, run the equivalent plain SQL and label the evidence "DQ-equivalent SQL". Activation is always from raw tables; a FK over the parquet-backed weather table is the slow one (fallback: drop it from the USL and read weather from the cached views).
 
 ## Objects we own (and the only ones we touch)
 
-- Lightning databases `CW_SEC` (REST, host `data.sec.gov`), `CW_DNS` (REST, host `company-dns.mediumroast.io`), `CW_GHCN` (FILESTORE PARQUET, bucket `s3a://noaa-ghcn-pds/`); SchemaStore container `cw`.
-- Views `cw.frames_<tag>_<period>`, `cw.concept_<cik10>_<tag>`, `cw.submission_<cik10>`, `cw.sic_codes`, `cw.ghcn_<year>_<element>` (station-filtered), all cached.
-- USL `lightning.metastore.crosswalk.crosswalk_usl` (`sic_code`, `utility`, `station`, `weather_quarter`, `revenue_quarter`), DQ rule `coverage_ok`.
+- Lightning databases `CW_FEMA` (REST, host `www.fema.gov`), `CW_SEC` (REST, host `data.sec.gov`), `CW_DNS` (REST, host `company-dns.mediumroast.io`), `CW_GHCN` (FILESTORE PARQUET and CSV, bucket `s3a://noaa-ghcn-pds/`); SchemaStore container `cw`.
+- Views `cw.fema_*`, `cw.frames_<tag>_<period>`, `cw.submission_<cik10>`, `cw.sic_codes`, `cw.ghcn_<year>_<element>` (station-filtered), `cw.stations` (SUBSTR over the one-column CSV), all cached; `cw.states` and `cw.utility_states` if the seeds are registered as inline VALUES views.
+- USL `lightning.metastore.crosswalk.crosswalk_usl` (`state`, `sic_code`, `utility`, `utility_state`, `fema_declaration`, `station`, `revenue_quarter`, `weather_quarter`), with PK/FK and DQ rules per FK.
 - Never DROP anything, ours or not; never GRANT, REVOKE or INVALIDATE CACHE; never touch other namespaces or databases.
 
 ## REST and filestore tables
 
 - The `user-agent` header is the placeholder `YOUR_APP_NAME YOUR_CONTACT_EMAIL` in every committed statement and template; the runner and the gateway replace it from `CW_USER_AGENT` on the wire only. Never commit a real value and never invent a contact.
-- SEC EDGAR: at most 10 requests per second (the runner and the registrar space statements that name `data.sec.gov` or `CW_SEC.*` by at least 0.1 s). Each `CREATE LIGHTNING REST TABLE` and each `CACHE TABLE` of a REST view is one request. companyconcept answers 404 for a tag a filer never used: concept tables exist per (filer, tag) and are registered on demand.
-- NOAA GHCN parquet: `isS3BucketPublic "true"`, endpoint `s3.us-east-1.amazonaws.com`, no credentials. The raw tables are never cached; the station-filtered views are.
-- The cache is held by the driver, not the JDBC session: a driver restart drops it, and the gateway warm-up (and `scripts/warmup.py`) re-caches `CACHE_TARGETS`. A template whose objects are not cached yet returns 503 `warming`.
+- SEC EDGAR: at most 10 requests per second (the runner and the registrar space statements that name `data.sec.gov` or `CW_SEC.*` by at least 0.1 s). Each `CREATE LIGHTNING REST TABLE` and each `CACHE TABLE` of a REST view is one request.
+- NOAA GHCN: `isS3BucketPublic "true"`, endpoint `s3.us-east-1.amazonaws.com`, no credentials. The raw tables are never cached; the station-filtered views are. `ghcnd-stations.txt` is registered as a one-column CSV with a delimiter that never occurs in the file and parsed with `SUBSTR(line, 1, 11)`, `SUBSTR(line, 39, 2)`, `SUBSTR(line, 42, 30)`.
+- OpenFEMA: no key; the Q1-2025 DR filter returns one page (`$top=1000`); the catalogue endpoint is `https://www.fema.gov/api/open/v1/OpenFemaDataSets`.
+- The cache is held by the driver, not the JDBC session: a driver restart drops it, and the gateway warm-up (and `scripts/warmup.py`) re-caches `CACHE_TARGETS` (`CW_CACHE_TARGETS` overrides; empty until the objects exist). A template whose objects are not cached yet returns 503 `warming`.
 
 ## Gateway contract
 
-- The agent sends only `{template_id, params, role}` to `POST /sql/template`; it never sends SQL text. A registrar plan runs through `POST /registrar/<action>` with the plan's parameters and a signed execution contract; a registrar-kind statement sent to `/sql/template` is refused (403).
-- Parameter kinds (`gateway/templates.py` PARAM_PATTERNS, mirrored in `agent/src/zetaris/client.ts`): `cik10` ten digits; `tag` one of `Revenues`, `RevenueFromContractWithCustomerExcludingAssessedTax`, `RegulatedAndUnregulatedOperatingRevenue`; `period` `^CY\d{4}Q[1-3]$`; `year` `^20\d{2}$`; `quarter` 1 to 3; `station` `^US[A-Z0-9]{9}$`; `station_list` 1 to 40 station ids separated by commas; `element` TMAX or TMIN; `sic` four digits.
-- Allowlist roles. Reader: `SELECT`, `SHOW`, `DESCRIBE`, `LOAD USL`, `LIST DQ`, `RUN DQ`, `SHOW DQ`. Registrar adds `CREATE LIGHTNING DATABASE CW_*`, `CREATE SCHEMASTORE CONTAINER cw`, `CREATE SCHEMASTORE VIEW ... WITH CONTAINER cw`, `CREATE LIGHTNING REST TABLE ... FROM CW_*` (one https endpoint on `data.sec.gov` or `company-dns.mediumroast.io`, no AUTH BY), `CREATE LIGHTNING FILESTORE TABLE ... FROM CW_*` (one PATH in `s3a://noaa-ghcn-pds/`, no credentials), `CACHE`/`UNCACHE TABLE` on `cw.*` and `CW_*.*`, `CREATE NAMESPACE`, `COMPILE USL ... crosswalk_usl`, `ACTIVATE USL TABLE lightning.metastore.crosswalk.*`, `REGISTER DQ`. Onboard (CLI only) adds `UPDATE USL ... DESCRIPTION`, `UPDATE DQ`, `REMOVE USL crosswalk_usl`.
-- Always refused: `DROP`, `GRANT`, `REVOKE`, `INVALIDATE CACHE`, `OFFSITE*`, port 8889, two statements in one call, a trailing `;`.
+- The agent sends only `{template_id, params, role}` to `POST /sql/template`; it never sends SQL text. A registrar plan runs through `POST /registrar/<action>` with the plan's parameters and a signed execution contract; a registrar-kind statement sent to `/sql/template` is refused (403). Match-rate and USL statements rendered by the agent's tools reach Zetaris through gateway templates or plans added for them (the renderer output is validated against the allowlist), never as free SQL.
+- Parameter kinds (`gateway/templates.py` PARAM_PATTERNS, mirrored in `agent/src/zetaris/client.ts`): `cik10` ten digits; `tag` one of the three revenue tags; `period` `^CY\d{4}Q[1-3]$`; `year` `^20\d{2}$`; `quarter` 1 to 3; `station` `^US[A-Z0-9]{9}$`; `station_list` 1 to 60 station ids separated by commas; `element` TMAX or TMIN; `sic` four digits. New kinds are added on both sides with a test each.
+- Allowlist roles. Reader: `SELECT`, `SHOW`, `DESCRIBE`, `LOAD USL`, `LIST DQ`, `RUN DQ`, `SHOW DQ`. Registrar adds `CREATE LIGHTNING DATABASE CW_*`, `CREATE SCHEMASTORE CONTAINER cw`, `CREATE SCHEMASTORE VIEW ... WITH CONTAINER cw`, `CREATE LIGHTNING REST TABLE ... FROM CW_*` (one https endpoint on an allowlisted host, no AUTH BY; `www.fema.gov` is added by the Zetaris lane with its test), `CREATE LIGHTNING FILESTORE TABLE ... FROM CW_*` (one PATH in `s3a://noaa-ghcn-pds/`, no credentials), `CACHE`/`UNCACHE TABLE` on `cw.*` and `CW_*.*`, `CREATE NAMESPACE`, `COMPILE USL ... crosswalk_usl`, `ACTIVATE USL TABLE lightning.metastore.crosswalk.*`, `REGISTER DQ`. Onboard (CLI only) adds `UPDATE USL ... DESCRIPTION`, `UPDATE DQ`, `REMOVE USL crosswalk_usl`.
+- Always refused: `DROP`, `GRANT`, `REVOKE`, `INVALIDATE CACHE`, `OFFSITE*`, port 8889, two statements in one call, a trailing `;`, any `WON_*` or `won.*` name.
 - Every statement is logged to `data/evidence/sql_log.jsonl` with its sha256; replies cap at 200 rows (`row_count` holds the total).
 
 ## Scripts and verification
 
-- SQL files live in `zetaris/sql/` as `NN_won_<name>_create.sql` / `_select.sql` pairs with the getting-started header (source, licence, format, docs, rate limit, status, caveats), declared in `zetaris/manifest.json`.
-- Dry-run first (`--dry-run`), rerun with `--skip-exists`; `--timeout 600` for files that read the USL weather table.
-- After creating a table, compare its row count with an independent count of the same source (the SEC response's `data` length, a pyarrow read of the same parquet files) and record both in `zetaris/README.md` with timings.
+- SQL files live in `zetaris/sql/` as `NN_cw_<name>_create.sql` / `_select.sql` pairs with the getting-started header (source, licence, format, docs, rate limit, status, caveats), declared in `zetaris/manifest.json`. `zetaris/sql/won-reference/` is reference only and is never run.
+- Dry-run first (`--dry-run`), rerun with `--skip-exists`; `--timeout 900` for files that run DQ or read a parquet-backed USL table.
+- After creating a table, compare its row count with an independent count of the same source (the OpenFEMA response's array length, the SEC response's `data` length, a pyarrow read of the same parquet files) and record both in `zetaris/README.md` with timings.
 - Reference: the Zetaris getting-started repository (https://github.com/zetaris/getting-started), `docs/guides/zetaris-lightning-sql-commands.md` and `docs/guides/zetaris-lightning-sql-companion.md`.

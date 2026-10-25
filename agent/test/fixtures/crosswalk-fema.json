@@ -1,0 +1,289 @@
+{
+  "synthetic": true,
+  "note": "Synthetic rows in the shape of OpenFEMA DisasterDeclarationsSummaries v2 (one row per designated county). Disaster numbers 9001-9009, dates and areas are made up. Expected values from make_crosswalk_fixtures.py: declarations are counted as DISTINCT disasterNumber per state (one disaster covers many counties), the DR filter keeps declarationType DR only, and the quarter comes from the first ten characters of the ISO date.",
+  "response_shape": {
+    "metadata": {
+      "skip": 0,
+      "top": 1000,
+      "count": 0
+    },
+    "DisasterDeclarationsSummaries": "rows[]"
+  },
+  "rows": [
+    {
+      "disasterNumber": 9001,
+      "state": "KY",
+      "fipsStateCode": "21",
+      "fipsCountyCode": "001",
+      "declarationDate": "2025-02-24T00:00:00.000Z",
+      "incidentType": "Severe Storm",
+      "declarationType": "DR",
+      "designatedArea": "County 001 (synthetic)"
+    },
+    {
+      "disasterNumber": 9001,
+      "state": "KY",
+      "fipsStateCode": "21",
+      "fipsCountyCode": "003",
+      "declarationDate": "2025-02-24T00:00:00.000Z",
+      "incidentType": "Severe Storm",
+      "declarationType": "DR",
+      "designatedArea": "County 003 (synthetic)"
+    },
+    {
+      "disasterNumber": 9001,
+      "state": "KY",
+      "fipsStateCode": "21",
+      "fipsCountyCode": "005",
+      "declarationDate": "2025-02-24T00:00:00.000Z",
+      "incidentType": "Severe Storm",
+      "declarationType": "DR",
+      "designatedArea": "County 005 (synthetic)"
+    },
+    {
+      "disasterNumber": 9001,
+      "state": "KY",
+      "fipsStateCode": "21",
+      "fipsCountyCode": "007",
+      "declarationDate": "2025-02-24T00:00:00.000Z",
+      "incidentType": "Severe Storm",
+      "declarationType": "DR",
+      "designatedArea": "County 007 (synthetic)"
+    },
+    {
+      "disasterNumber": 9001,
+      "state": "KY",
+      "fipsStateCode": "21",
+      "fipsCountyCode": "009",
+      "declarationDate": "2025-02-24T00:00:00.000Z",
+      "incidentType": "Severe Storm",
+      "declarationType": "DR",
+      "designatedArea": "County 009 (synthetic)"
+    },
+    {
+      "disasterNumber": 9002,
+      "state": "CA",
+      "fipsStateCode": "06",
+      "fipsCountyCode": "037",
+      "declarationDate": "2025-01-08T00:00:00.000Z",
+      "incidentType": "Fire",
+      "declarationType": "DR",
+      "designatedArea": "County 037 (synthetic)"
+    },
+    {
+      "disasterNumber": 9002,
+      "state": "CA",
+      "fipsStateCode": "06",
+      "fipsCountyCode": "111",
+      "declarationDate": "2025-01-08T00:00:00.000Z",
+      "incidentType": "Fire",
+      "declarationType": "DR",
+      "designatedArea": "County 111 (synthetic)"
+    },
+    {
+      "disasterNumber": 9003,
+      "state": "KY",
+      "fipsStateCode": "21",
+      "fipsCountyCode": "011",
+      "declarationDate": "2025-03-15T00:00:00.000Z",
+      "incidentType": "Flood",
+      "declarationType": "DR",
+      "designatedArea": "County 011 (synthetic)"
+    },
+    {
+      "disasterNumber": 9003,
+      "state": "KY",
+      "fipsStateCode": "21",
+      "fipsCountyCode": "013",
+      "declarationDate": "2025-03-15T00:00:00.000Z",
+      "incidentType": "Flood",
+      "declarationType": "DR",
+      "designatedArea": "County 013 (synthetic)"
+    },
+    {
+      "disasterNumber": 9003,
+      "state": "KY",
+      "fipsStateCode": "21",
+      "fipsCountyCode": "015",
+      "declarationDate": "2025-03-15T00:00:00.000Z",
+      "incidentType": "Flood",
+      "declarationType": "DR",
+      "designatedArea": "County 015 (synthetic)"
+    },
+    {
+      "disasterNumber": 9004,
+      "state": "OK",
+      "fipsStateCode": "40",
+      "fipsCountyCode": "017",
+      "declarationDate": "2025-03-31T00:00:00.000Z",
+      "incidentType": "Severe Storm",
+      "declarationType": "DR",
+      "designatedArea": "County 017 (synthetic)"
+    },
+    {
+      "disasterNumber": 9004,
+      "state": "OK",
+      "fipsStateCode": "40",
+      "fipsCountyCode": "019",
+      "declarationDate": "2025-03-31T00:00:00.000Z",
+      "incidentType": "Severe Storm",
+      "declarationType": "DR",
+      "designatedArea": "County 019 (synthetic)"
+    },
+    {
+      "disasterNumber": 9004,
+      "state": "OK",
+      "fipsStateCode": "40",
+      "fipsCountyCode": "021",
+      "declarationDate": "2025-03-31T00:00:00.000Z",
+      "incidentType": "Severe Storm",
+      "declarationType": "DR",
+      "designatedArea": "County 021 (synthetic)"
+    },
+    {
+      "disasterNumber": 9004,
+      "state": "OK",
+      "fipsStateCode": "40",
+      "fipsCountyCode": "023",
+      "declarationDate": "2025-03-31T00:00:00.000Z",
+      "incidentType": "Severe Storm",
+      "declarationType": "DR",
+      "designatedArea": "County 023 (synthetic)"
+    },
+    {
+      "disasterNumber": 9005,
+      "state": "OK",
+      "fipsStateCode": "40",
+      "fipsCountyCode": "025",
+      "declarationDate": "2025-04-01T00:00:00.000Z",
+      "incidentType": "Severe Storm",
+      "declarationType": "DR",
+      "designatedArea": "County 025 (synthetic)"
+    },
+    {
+      "disasterNumber": 9006,
+      "state": "SC",
+      "fipsStateCode": "45",
+      "fipsCountyCode": "001",
+      "declarationDate": "2024-12-20T00:00:00.000Z",
+      "incidentType": "Hurricane",
+      "declarationType": "DR",
+      "designatedArea": "County 001 (synthetic)"
+    },
+    {
+      "disasterNumber": 9006,
+      "state": "SC",
+      "fipsStateCode": "45",
+      "fipsCountyCode": "003",
+      "declarationDate": "2024-12-20T00:00:00.000Z",
+      "incidentType": "Hurricane",
+      "declarationType": "DR",
+      "designatedArea": "County 003 (synthetic)"
+    },
+    {
+      "disasterNumber": 9007,
+      "state": "CA",
+      "fipsStateCode": "06",
+      "fipsCountyCode": "037",
+      "declarationDate": "2025-01-07T00:00:00.000Z",
+      "incidentType": "Fire",
+      "declarationType": "EM",
+      "designatedArea": "County 037 (synthetic)"
+    },
+    {
+      "disasterNumber": 9008,
+      "state": "OR",
+      "fipsStateCode": "41",
+      "fipsCountyCode": "005",
+      "declarationDate": "2025-02-10T00:00:00.000Z",
+      "incidentType": "Fire",
+      "declarationType": "FM",
+      "designatedArea": "County 005 (synthetic)"
+    },
+    {
+      "disasterNumber": 9009,
+      "state": "PR",
+      "fipsStateCode": "72",
+      "fipsCountyCode": "127",
+      "declarationDate": "2025-02-01T00:00:00.000Z",
+      "incidentType": "Flood",
+      "declarationType": "DR",
+      "designatedArea": "County 127 (synthetic)"
+    }
+  ],
+  "expected": {
+    "rows_total": 20,
+    "dr_rows": 18,
+    "dr_disasters": 7,
+    "q1_2025_dr_rows": 15,
+    "q1_2025_dr_disasters": 5,
+    "q1_2025_states": [
+      "CA",
+      "KY",
+      "OK",
+      "PR"
+    ],
+    "quarter_of": {
+      "2025-02-24T00:00:00.000Z": "CY2025Q1",
+      "2025-01-08T00:00:00.000Z": "CY2025Q1",
+      "2025-03-15T00:00:00.000Z": "CY2025Q1",
+      "2025-03-31T00:00:00.000Z": "CY2025Q1",
+      "2025-04-01T00:00:00.000Z": "CY2025Q2",
+      "2024-12-20T00:00:00.000Z": "CY2024Q4",
+      "2025-01-07T00:00:00.000Z": "CY2025Q1",
+      "2025-02-10T00:00:00.000Z": "CY2025Q1",
+      "2025-02-01T00:00:00.000Z": "CY2025Q1"
+    },
+    "by_state_q1_2025": [
+      {
+        "state": "KY",
+        "declarations": 2,
+        "rows": 8,
+        "disaster_numbers": [
+          9001,
+          9003
+        ],
+        "by_incident_type": {
+          "Flood": 1,
+          "Severe Storm": 1
+        }
+      },
+      {
+        "state": "CA",
+        "declarations": 1,
+        "rows": 2,
+        "disaster_numbers": [
+          9002
+        ],
+        "by_incident_type": {
+          "Fire": 1
+        }
+      },
+      {
+        "state": "OK",
+        "declarations": 1,
+        "rows": 4,
+        "disaster_numbers": [
+          9004
+        ],
+        "by_incident_type": {
+          "Severe Storm": 1
+        }
+      },
+      {
+        "state": "PR",
+        "declarations": 1,
+        "rows": 1,
+        "disaster_numbers": [
+          9009
+        ],
+        "by_incident_type": {
+          "Flood": 1
+        }
+      }
+    ],
+    "states_outside_reference": [
+      "PR"
+    ]
+  }
+}

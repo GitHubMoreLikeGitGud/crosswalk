@@ -1,0 +1,121 @@
+{
+  "generated_at": "2026-10-25",
+  "generator": "scaffold lane; statuses copied from the getting-started manifest, from Weather-or-Not's verified registrations of 2026-10-24, or from the plain-HTTPS checks named in verified_how",
+  "fields": {
+    "id": "catalogue id the agent's search_catalogue tool returns",
+    "kind": "REST | FILESTORE | catalogue",
+    "url": "endpoint or path pattern ({tag}, {period}, {cik10}, {year}, {element} are template parameters)",
+    "licence": "licence and etiquette line shown in the evidence drawer",
+    "status": "verified | unverified | known_to_fail",
+    "note": "shape, keys and traps",
+    "verified_how": "what was checked, when and by which lane",
+    "zetaris_object": "the Lightning object once registered (planned names until zetaris/manifest.json lists them)"
+  },
+  "entries": [
+    {
+      "id": "getting_started_manifest",
+      "kind": "catalogue",
+      "url": "https://github.com/zetaris/getting-started/blob/main/open_data/manifest.json (read locally from ZETARIS_GETTING_STARTED_DIR/open_data/manifest.json)",
+      "licence": "Zetaris getting-started repository: Apache-2.0 (github.com/zetaris/getting-started).",
+      "status": "verified",
+      "note": "The vendor's onboarding manifest (version 1, 23 sources: kind rest | filestore | usl, status verified | unverified | known_to_fail | deprecated). Read at boot; the known_to_fail entries (pudl, nasa_donki, singapore_pm25, foursquare_places, overture_maps, ookla_speedtest, gbif) seed negative memories so the agent never proposes them.",
+      "verified_how": "read on 2026-10-25 from the local checkout; 23 sources listed"
+    },
+    {
+      "id": "openfema_catalogue",
+      "kind": "catalogue",
+      "url": "https://www.fema.gov/api/open/v1/OpenFemaDataSets",
+      "licence": "OpenFEMA: public US federal data, no API key; FEMA asks that OpenFEMA be cited as the source and that products not be presented as FEMA-endorsed (fema.gov/about/openfema/terms-conditions).",
+      "status": "verified",
+      "note": "The live OpenFEMA dataset catalogue: a `metadata` object and an `OpenFemaDataSets` array (name, identifier, version, title, landingPage, ...). $top / $select / $filter are OData-style query options and must be percent-encoded in a Zetaris REST endpoint ($ -> %24, space -> %20, quote -> %27).",
+      "verified_how": "plain HTTPS 2026-10-25 08:0x SGT: HTTP 200 with $top=2 (PublicAssistanceProjectsStatus v1, NfipResidentialPenetrationRates v1); registration in Zetaris is gate G1"
+    },
+    {
+      "id": "openfema_disaster_declarations",
+      "kind": "REST",
+      "url": "https://www.fema.gov/api/open/v2/DisasterDeclarationsSummaries?%24filter=declarationType%20eq%20%27DR%27%20and%20declarationDate%20ge%20%272025-01-01T00%3A00%3A00.000Z%27%20and%20declarationDate%20lt%20%272025-04-01T00%3A00%3A00.000Z%27&%24top=1000",
+      "licence": "OpenFEMA: public US federal data, no API key; FEMA asks that OpenFEMA be cited as the source and that products not be presented as FEMA-endorsed (fema.gov/about/openfema/terms-conditions).",
+      "status": "verified",
+      "note": "Disaster Declarations Summaries v2: one row per declared county/area (disasterNumber, state, fipsStateCode, fipsCountyCode, declarationDate, incidentType, declarationType DR | EM | FM, ...). The array field is `DisasterDeclarationsSummaries`; the Q1-2025 DR filter returns one page. Keys: state (two letters) -> states.code; fipsStateCode (2-digit string) -> states.fips; declarationDate (ISO) -> quarter bucket.",
+      "verified_how": "plain HTTPS 2026-10-25 08:0x SGT: HTTP 200, 116 rows, 10 distinct disasterNumber, states AK CA KY MO OK OR SC WV, incidentType Severe Storm 107 / Fire 6 / Flood 3; metadata.count was 0 (not a row count); registration in Zetaris is gate G1",
+      "zetaris_object": "CW_FEMA.declarations_dr_2025q1 (planned; lane Z names the object)"
+    },
+    {
+      "id": "sec_frames",
+      "kind": "REST",
+      "url": "https://data.sec.gov/api/xbrl/frames/us-gaap/{tag}/USD/{period}.json",
+      "licence": "SEC EDGAR data: US Government work, public domain; SEC fair-access policy (declared User-Agent, at most 10 requests per second). Queried live through Zetaris, never redistributed.",
+      "status": "verified",
+      "note": "One XBRL fact per filer for one tag and calendar period (CY2025Q1, CY2024Q1) under us-gaap Revenues, RevenueFromContractWithCustomerExcludingAssessedTax, RegulatedAndUnregulatedOperatingRevenue. Facts: cik (integer: LPAD(CAST(cik AS STRING), 10, '0') is the key), entityName, loc ('US-XX': SUBSTR(loc, 4, 2) is the state), start, end, val (inferred double or bigint by period: CAST(val AS DOUBLE)), accn. Frames serve the most recently filed fact for the period.",
+      "verified_how": "Weather-or-Not registered and cached the six (tag, period) views on 2026-10-24; Crosswalk's CW_SEC copies are registered by lane Z",
+      "zetaris_object": "CW_SEC.frames_{tag}_{period} -> cw.frames_{tag}_{period} (planned)"
+    },
+    {
+      "id": "sec_submissions",
+      "kind": "REST",
+      "url": "https://data.sec.gov/submissions/CIK{cik10}.json",
+      "licence": "SEC EDGAR data: US Government work, public domain; SEC fair-access policy (declared User-Agent, at most 10 requests per second). Queried live through Zetaris, never redistributed.",
+      "status": "verified",
+      "note": "A filer's profile: cik, name, sic, sicDescription, addresses.business.stateOrCountry (the business-address state; street fields are never selected). One request per seed CIK (43).",
+      "verified_how": "Weather-or-Not registered the 43 seed profiles on 2026-10-24; Crosswalk's CW_SEC copies are registered by lane Z",
+      "zetaris_object": "CW_SEC.submissions_{cik10} -> cw.submission_{cik10} (planned)"
+    },
+    {
+      "id": "sec_companyconcept",
+      "kind": "REST",
+      "url": "https://data.sec.gov/api/xbrl/companyconcept/CIK{cik10}/us-gaap/{tag}.json",
+      "licence": "SEC EDGAR data: US Government work, public domain; SEC fair-access policy (declared User-Agent, at most 10 requests per second). Queried live through Zetaris, never redistributed.",
+      "status": "verified",
+      "note": "A filer's full history for one tag (fy, fp, form, filed, accn, start, end, val). HTTP 404 for a tag the filer never used. Only if the answer needs a like-for-like value; Crosswalk reports frames values with the tag named.",
+      "verified_how": "Weather-or-Not registered ten (cik, tag) histories on 2026-10-24; not planned for Crosswalk unless needed"
+    },
+    {
+      "id": "company_dns_sic",
+      "kind": "REST",
+      "url": "https://company-dns.mediumroast.io/V4.0/na/sic/code/%25",
+      "licence": "company_dns: Apache-2.0 (github.com/miha42-github/company_dns); the SIC list is the SEC's public list. Called with an identifying User-Agent.",
+      "status": "verified",
+      "note": "The SIC hierarchy, 1,005 codes as a flat `data` array (section, division, group, class with descriptions). Key: class_id (4-digit string) vs submissions.sic (identity). MGE Energy's SIC 4900 is absent from V4: the expected orphan of the sic_code FK.",
+      "verified_how": "Weather-or-Not registered its sic_codes view (1,005 rows) on 2026-10-24; Crosswalk's CW_DNS copy is registered by lane Z (or the instance's COMPANY_DNS object is read if present)",
+      "zetaris_object": "CW_DNS.sic_codes_v4_raw -> cw.sic_codes (planned)"
+    },
+    {
+      "id": "noaa_ghcn_by_year",
+      "kind": "FILESTORE",
+      "url": "s3a://noaa-ghcn-pds/parquet/by_year/YEAR={year}/ELEMENT={element}/",
+      "licence": "NOAA GHCN-Daily: CC0-1.0 / US Government work (Registry of Open Data on AWS, bucket noaa-ghcn-pds); attribution to NOAA NCEI requested.",
+      "status": "verified",
+      "note": "GHCN-Daily parquet partitioned by year and element (ID, DATE yyyymmdd, DATA_VALUE in tenths of a degree C, M_FLAG, Q_FLAG, S_FLAG, OBS_TIME). Years 2024 and 2025, elements TMAX and TMIN; isS3BucketPublic true, endpoint s3.us-east-1.amazonaws.com, no credentials. Every read of a filestore table costs about 9 s per table per view level; the raw tables are never cached, the station-filtered views are. Days with a non-empty Q_FLAG on either element are dropped.",
+      "verified_how": "Weather-or-Not registered and cached the four year/element views on 2026-10-24 (pyarrow row counts matched); Crosswalk's CW_GHCN copies are registered by lane Z",
+      "zetaris_object": "CW_GHCN.ghcn_{year}_{element} -> cw.ghcn_{year}_{element} (planned)"
+    },
+    {
+      "id": "noaa_ghcn_stations",
+      "kind": "FILESTORE",
+      "url": "s3a://noaa-ghcn-pds/ghcnd-stations.txt",
+      "licence": "NOAA GHCN-Daily: CC0-1.0 / US Government work (Registry of Open Data on AWS, bucket noaa-ghcn-pds); attribution to NOAA NCEI requested.",
+      "status": "unverified",
+      "note": "Fixed-width station list: id columns 1-11, latitude 13-20, longitude 22-30, elevation 32-37, state 39-40, name 42-71 (GSN flag 73-75, HCN/CRN flag 77-79, WMO id 81-85). Registered as a one-column CSV with a delimiter that never occurs in the file (for example '|' or U+0001) and parsed with SUBSTR in a view: SUBSTR(line, 1, 11) AS id, SUBSTR(line, 39, 2) AS state, SUBSTR(line, 42, 30) AS name. Key: id vs seeds station_ids (identity); state vs states.code.",
+      "verified_how": "not yet verified in Zetaris (gate G2, lane Z); fallback is seeds/stations.json (56 stations with state, verified by Weather-or-Not on 2026-10-24)",
+      "zetaris_object": "CW_GHCN.stations_raw -> cw.stations (planned)"
+    },
+    {
+      "id": "pudl",
+      "kind": "FILESTORE",
+      "url": "Catalyst Cooperative PUDL (open_data/parquet_csv/sql/known_to_fail/03_pudl_create.sql in the getting-started repository)",
+      "licence": "PUDL data: CC-BY-4.0 (Catalyst Cooperative); not used here",
+      "status": "known_to_fail",
+      "note": "The vendor's own manifest marks the PUDL filestore registration known_to_fail. It is the obvious utility-data source an agent would reach for, so it is listed as a negative memory: the agent never proposes it.",
+      "verified_how": "status copied from the getting-started manifest; not attempted"
+    },
+    {
+      "id": "crosswalk_usl",
+      "kind": "catalogue",
+      "url": "lightning.metastore.crosswalk.crosswalk_usl",
+      "licence": "Crosswalk's own semantic layer over the sources above (their licences apply to the data it exposes)",
+      "status": "unverified",
+      "note": "The governed layer this project builds: tables utility, utility_state, state, fema_declaration, station, sic_code, revenue_quarter, weather_quarter with PK/FK, compiled from verified keys, activated from raw tables, DQ run bounded at 900 s. Gate G4 (lane Z) verifies it; the registered-object entries above are updated when lane Z writes zetaris/manifest.json.",
+      "verified_how": "not yet compiled (gate G4, lane Z)"
+    }
+  ]
+}

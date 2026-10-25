@@ -1,0 +1,634 @@
+{
+  "synthetic": true,
+  "note": "The closed transform set and match-rate cases for C1. Object names are the planned cw.* views; rows are made up. Expected values from make_crosswalk_fixtures.py.",
+  "thresholds": {
+    "verified": 0.95,
+    "partial": 0.8
+  },
+  "transforms": {
+    "identity": [
+      {
+        "input": "NC",
+        "expected": "NC"
+      },
+      {
+        "input": "4911",
+        "expected": "4911"
+      },
+      {
+        "input": 1326160,
+        "expected": 1326160
+      },
+      {
+        "input": null,
+        "expected": null
+      }
+    ],
+    "upper": [
+      {
+        "input": "nc",
+        "expected": "NC"
+      },
+      {
+        "input": "Nc",
+        "expected": "NC"
+      },
+      {
+        "input": "NC",
+        "expected": "NC"
+      },
+      {
+        "input": null,
+        "expected": null
+      }
+    ],
+    "lpad10": [
+      {
+        "input": 1326160,
+        "expected": "0001326160"
+      },
+      {
+        "input": "1326160",
+        "expected": "0001326160"
+      },
+      {
+        "input": 92122,
+        "expected": "0000092122"
+      },
+      {
+        "input": "0000092122",
+        "expected": "0000092122"
+      },
+      {
+        "input": 4904,
+        "expected": "0000004904"
+      },
+      {
+        "input": null,
+        "expected": null
+      }
+    ],
+    "substr(4,2)": [
+      {
+        "input": "US-NC",
+        "expected": "NC"
+      },
+      {
+        "input": "US-GA",
+        "expected": "GA"
+      },
+      {
+        "input": "CA-ON",
+        "expected": "ON"
+      },
+      {
+        "input": "US",
+        "expected": ""
+      },
+      {
+        "input": null,
+        "expected": null
+      }
+    ],
+    "substr(1,11)": [
+      {
+        "input": "USW00013740 35.8656  -78.7847  126.5 NC RALEIGH DURHAM INTL AP",
+        "expected": "USW00013740"
+      },
+      {
+        "input": "USC00011084",
+        "expected": "USC00011084"
+      },
+      {
+        "input": null,
+        "expected": null
+      }
+    ],
+    "substr(39,2)": [
+      {
+        "input": "USW00013740  35.8656  -78.7847  126.5 NC RALEIGH DURHAM INTL AP",
+        "expected": "NC"
+      },
+      {
+        "input": null,
+        "expected": null
+      }
+    ],
+    "strip_prefix('US-')": [
+      {
+        "input": "US-NC",
+        "expected": "NC"
+      },
+      {
+        "input": "US-TX",
+        "expected": "TX"
+      },
+      {
+        "input": "CA-ON",
+        "expected": null
+      },
+      {
+        "input": "NC",
+        "expected": null
+      },
+      {
+        "input": "",
+        "expected": null
+      },
+      {
+        "input": null,
+        "expected": null
+      }
+    ],
+    "yyyymmdd_to_date": [
+      {
+        "input": "20250318",
+        "expected": "2025-03-18"
+      },
+      {
+        "input": "20241231",
+        "expected": "2024-12-31"
+      },
+      {
+        "input": null,
+        "expected": null
+      }
+    ],
+    "iso_to_quarter": [
+      {
+        "input": "2025-03-18T00:00:00.000Z",
+        "expected": "CY2025Q1"
+      },
+      {
+        "input": "2025-01-01T00:00:00.000Z",
+        "expected": "CY2025Q1"
+      },
+      {
+        "input": "2025-03-31T23:59:59.000Z",
+        "expected": "CY2025Q1"
+      },
+      {
+        "input": "2025-04-01T00:00:00.000Z",
+        "expected": "CY2025Q2"
+      },
+      {
+        "input": "2024-12-31T00:00:00.000Z",
+        "expected": "CY2024Q4"
+      },
+      {
+        "input": "2025-09-30",
+        "expected": "CY2025Q3"
+      },
+      {
+        "input": "2025-10-01",
+        "expected": "CY2025Q4"
+      },
+      {
+        "input": null,
+        "expected": null
+      }
+    ]
+  },
+  "match_rate_cases": [
+    {
+      "name": "cik_lpad10_partial",
+      "proposal": {
+        "leftObject": "cw.frames_revenues_cy2025q1",
+        "leftColumn": "cik",
+        "rightObject": "cw.utility_profiles",
+        "rightColumn": "cik10",
+        "transform": "lpad10"
+      },
+      "left_rows": [
+        {
+          "cik": 1326160
+        },
+        {
+          "cik": 92122
+        },
+        {
+          "cik": 72903
+        },
+        {
+          "cik": 65984
+        },
+        {
+          "cik": 1031296
+        },
+        {
+          "cik": 4904
+        },
+        {
+          "cik": 9999999
+        },
+        {
+          "cik": 1326160
+        }
+      ],
+      "right_rows": [
+        {
+          "cik10": "0001326160"
+        },
+        {
+          "cik10": "0000092122"
+        },
+        {
+          "cik10": "0000072903"
+        },
+        {
+          "cik10": "0000065984"
+        },
+        {
+          "cik10": "0001031296"
+        },
+        {
+          "cik10": "0000004904"
+        },
+        {
+          "cik10": "0000100122"
+        }
+      ],
+      "expected": {
+        "left_keys": 7,
+        "matched_keys": 6,
+        "rate": 0.8571428571428571,
+        "orphans": [
+          "0009999999"
+        ],
+        "orphans_total": 1,
+        "verdict": "PARTIAL"
+      },
+      "note": "7 distinct left keys, 6 matched (0.857): PARTIAL; the orphan is 0009999999. The duplicate 1326160 counts once."
+    },
+    {
+      "name": "loc_strip_prefix_verified",
+      "proposal": {
+        "leftObject": "cw.frames_revenues_cy2025q1",
+        "leftColumn": "loc",
+        "rightObject": "cw.states",
+        "rightColumn": "code",
+        "transform": "strip_prefix('US-')"
+      },
+      "left_rows": [
+        {
+          "loc": "US-NC"
+        },
+        {
+          "loc": "US-GA"
+        },
+        {
+          "loc": "US-NC"
+        },
+        {
+          "loc": "US-TX"
+        },
+        {
+          "loc": "CA-ON"
+        },
+        {
+          "loc": null
+        }
+      ],
+      "right_rows": [
+        {
+          "code": "NC"
+        },
+        {
+          "code": "GA"
+        },
+        {
+          "code": "TX"
+        },
+        {
+          "code": "OH"
+        },
+        {
+          "code": "KY"
+        }
+      ],
+      "expected": {
+        "left_keys": 3,
+        "matched_keys": 3,
+        "rate": 1.0,
+        "orphans": [],
+        "orphans_total": 0,
+        "verdict": "VERIFIED"
+      },
+      "note": "3 distinct left keys (NC, GA, TX), all matched: VERIFIED at 1.0; CA-ON and null produce no key."
+    },
+    {
+      "name": "sic_identity_verified_with_orphan",
+      "proposal": {
+        "leftObject": "cw.utility_profiles",
+        "leftColumn": "sic",
+        "rightObject": "cw.sic_codes",
+        "rightColumn": "code",
+        "transform": "identity"
+      },
+      "left_rows": [
+        {
+          "sic": "4911"
+        },
+        {
+          "sic": "4931"
+        },
+        {
+          "sic": "4932"
+        },
+        {
+          "sic": "4911"
+        },
+        {
+          "sic": "4900"
+        },
+        {
+          "sic": "4924"
+        },
+        {
+          "sic": "4941"
+        },
+        {
+          "sic": "4953"
+        },
+        {
+          "sic": "4961"
+        },
+        {
+          "sic": "4991"
+        },
+        {
+          "sic": "4922"
+        },
+        {
+          "sic": "4923"
+        },
+        {
+          "sic": "4925"
+        },
+        {
+          "sic": "4939"
+        },
+        {
+          "sic": "4950"
+        },
+        {
+          "sic": "4952"
+        },
+        {
+          "sic": "4955"
+        },
+        {
+          "sic": "4959"
+        },
+        {
+          "sic": "4971"
+        },
+        {
+          "sic": "6512"
+        },
+        {
+          "sic": "6798"
+        },
+        {
+          "sic": "4910"
+        },
+        {
+          "sic": "4911"
+        }
+      ],
+      "right_rows": [
+        {
+          "code": "4910"
+        },
+        {
+          "code": "4911"
+        },
+        {
+          "code": "4922"
+        },
+        {
+          "code": "4923"
+        },
+        {
+          "code": "4924"
+        },
+        {
+          "code": "4925"
+        },
+        {
+          "code": "4931"
+        },
+        {
+          "code": "4932"
+        },
+        {
+          "code": "4939"
+        },
+        {
+          "code": "4941"
+        },
+        {
+          "code": "4950"
+        },
+        {
+          "code": "4952"
+        },
+        {
+          "code": "4953"
+        },
+        {
+          "code": "4955"
+        },
+        {
+          "code": "4959"
+        },
+        {
+          "code": "4961"
+        },
+        {
+          "code": "4971"
+        },
+        {
+          "code": "4991"
+        },
+        {
+          "code": "6512"
+        },
+        {
+          "code": "6798"
+        }
+      ],
+      "expected": {
+        "left_keys": 21,
+        "matched_keys": 20,
+        "rate": 0.9523809523809523,
+        "orphans": [
+          "4900"
+        ],
+        "orphans_total": 1,
+        "verdict": "VERIFIED"
+      },
+      "note": "21 distinct codes, 20 matched (0.952): VERIFIED with 4900 named as the orphan."
+    },
+    {
+      "name": "fips_identity_rejected",
+      "proposal": {
+        "leftObject": "cw.fema_declarations",
+        "leftColumn": "fipsStateCode",
+        "rightObject": "cw.states",
+        "rightColumn": "fips",
+        "transform": "identity"
+      },
+      "left_rows": [
+        {
+          "fipsStateCode": "6"
+        },
+        {
+          "fipsStateCode": "40"
+        },
+        {
+          "fipsStateCode": "21"
+        },
+        {
+          "fipsStateCode": "54"
+        },
+        {
+          "fipsStateCode": "2"
+        },
+        {
+          "fipsStateCode": "40"
+        },
+        {
+          "fipsStateCode": "40"
+        }
+      ],
+      "right_rows": [
+        {
+          "fips": "06"
+        },
+        {
+          "fips": "40"
+        },
+        {
+          "fips": "21"
+        },
+        {
+          "fips": "54"
+        },
+        {
+          "fips": "02"
+        },
+        {
+          "fips": "45"
+        }
+      ],
+      "expected": {
+        "left_keys": 5,
+        "matched_keys": 3,
+        "rate": 0.6,
+        "orphans": [
+          "2",
+          "6"
+        ],
+        "orphans_total": 2,
+        "verdict": "REJECTED"
+      },
+      "note": "5 distinct left keys, 3 matched (0.6): REJECTED; orphans 2 and 6 show the missing zero padding."
+    },
+    {
+      "name": "date_iso_to_quarter_rejected",
+      "proposal": {
+        "leftObject": "cw.fema_declarations",
+        "leftColumn": "declarationDate",
+        "rightObject": "cw.revenue_quarter",
+        "rightColumn": "period",
+        "transform": "iso_to_quarter"
+      },
+      "left_rows": [
+        {
+          "declarationDate": "2025-03-18T00:00:00.000Z"
+        },
+        {
+          "declarationDate": "2025-01-12T00:00:00.000Z"
+        },
+        {
+          "declarationDate": "2024-12-20T00:00:00.000Z"
+        },
+        {
+          "declarationDate": "2025-02-03T00:00:00.000Z"
+        }
+      ],
+      "right_rows": [
+        {
+          "period": "CY2025Q1"
+        },
+        {
+          "period": "CY2024Q1"
+        }
+      ],
+      "expected": {
+        "left_keys": 2,
+        "matched_keys": 1,
+        "rate": 0.5,
+        "orphans": [
+          "CY2024Q4"
+        ],
+        "orphans_total": 1,
+        "verdict": "REJECTED"
+      },
+      "note": "2 distinct left keys (CY2025Q1, CY2024Q4), 1 matched (0.5): REJECTED; the orphan is CY2024Q4."
+    },
+    {
+      "name": "state_upper_verified",
+      "proposal": {
+        "leftObject": "cw.stations",
+        "leftColumn": "state",
+        "rightObject": "cw.states",
+        "rightColumn": "code",
+        "transform": "upper"
+      },
+      "left_rows": [
+        {
+          "state": "nc"
+        },
+        {
+          "state": "NC"
+        },
+        {
+          "state": "Ga"
+        },
+        {
+          "state": "tx"
+        },
+        {
+          "state": null
+        },
+        {
+          "state": ""
+        }
+      ],
+      "right_rows": [
+        {
+          "code": "NC"
+        },
+        {
+          "code": "GA"
+        },
+        {
+          "code": "TX"
+        }
+      ],
+      "expected": {
+        "left_keys": 4,
+        "matched_keys": 3,
+        "rate": 0.75,
+        "orphans": [
+          ""
+        ],
+        "orphans_total": 1,
+        "verdict": "REJECTED"
+      },
+      "note": "Distinct left keys after upper: '', GA, NC, TX (4); 3 matched (0.75): REJECTED; the empty string is the orphan."
+    }
+  ]
+}

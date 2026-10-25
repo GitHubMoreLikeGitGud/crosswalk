@@ -1,0 +1,2813 @@
+{
+  "synthetic": true,
+  "plan": {
+    "usl": "crosswalk_usl",
+    "namespace": "lightning.metastore.crosswalk",
+    "tables": [
+      {
+        "name": "state",
+        "source": "cw.states",
+        "description": "The 50 states and DC with FIPS codes (seeds/states.json)",
+        "columns": [
+          {
+            "name": "code",
+            "type": "varchar(2)",
+            "nullable": false,
+            "description": "USPS two-letter code"
+          },
+          {
+            "name": "name",
+            "type": "varchar(40)"
+          },
+          {
+            "name": "fips",
+            "type": "varchar(2)",
+            "description": "two-digit FIPS state code"
+          }
+        ],
+        "pk": [
+          "code"
+        ]
+      },
+      {
+        "name": "sic_code",
+        "source": "cw.sic_codes",
+        "columns": [
+          {
+            "name": "code",
+            "type": "varchar(4)",
+            "nullable": false
+          },
+          {
+            "name": "description",
+            "type": "varchar(200)"
+          }
+        ],
+        "pk": [
+          "code"
+        ]
+      },
+      {
+        "name": "utility",
+        "source": "cw.utility_profiles",
+        "columns": [
+          {
+            "name": "cik",
+            "type": "varchar(10)",
+            "nullable": false
+          },
+          {
+            "name": "name",
+            "type": "varchar(200)"
+          },
+          {
+            "name": "ticker",
+            "type": "varchar(10)"
+          },
+          {
+            "name": "sic",
+            "type": "varchar(4)"
+          },
+          {
+            "name": "hq_state",
+            "type": "varchar(2)"
+          }
+        ],
+        "pk": [
+          "cik"
+        ]
+      },
+      {
+        "name": "utility_state",
+        "source": "cw.utility_states",
+        "columns": [
+          {
+            "name": "cik",
+            "type": "varchar(10)",
+            "nullable": false
+          },
+          {
+            "name": "state",
+            "type": "varchar(2)",
+            "nullable": false
+          }
+        ],
+        "pk": [
+          "cik",
+          "state"
+        ]
+      },
+      {
+        "name": "fema_declaration",
+        "source": "cw.fema_declarations_dr_2025q1",
+        "columns": [
+          {
+            "name": "disaster_number",
+            "type": "int",
+            "nullable": false
+          },
+          {
+            "name": "state",
+            "type": "varchar(2)",
+            "nullable": false
+          },
+          {
+            "name": "declaration_date",
+            "type": "varchar(10)"
+          },
+          {
+            "name": "incident_type",
+            "type": "varchar(40)"
+          },
+          {
+            "name": "declaration_type",
+            "type": "varchar(2)"
+          },
+          {
+            "name": "period",
+            "type": "varchar(8)"
+          }
+        ],
+        "pk": [
+          "disaster_number",
+          "state"
+        ]
+      },
+      {
+        "name": "station",
+        "source": "cw.stations",
+        "columns": [
+          {
+            "name": "id",
+            "type": "varchar(11)",
+            "nullable": false
+          },
+          {
+            "name": "state",
+            "type": "varchar(2)"
+          },
+          {
+            "name": "name",
+            "type": "varchar(60)"
+          }
+        ],
+        "pk": [
+          "id"
+        ]
+      },
+      {
+        "name": "revenue_quarter",
+        "source": "cw.frames_seeds_union",
+        "columns": [
+          {
+            "name": "cik",
+            "type": "varchar(10)",
+            "nullable": false
+          },
+          {
+            "name": "xbrl_tag",
+            "type": "varchar(60)",
+            "nullable": false
+          },
+          {
+            "name": "period",
+            "type": "varchar(8)",
+            "nullable": false
+          },
+          {
+            "name": "val",
+            "type": "double"
+          },
+          {
+            "name": "accn",
+            "type": "varchar(25)"
+          }
+        ],
+        "pk": [
+          "cik",
+          "xbrl_tag",
+          "period"
+        ]
+      },
+      {
+        "name": "weather_quarter",
+        "source": "cw.weather_quarters",
+        "columns": [
+          {
+            "name": "station_id",
+            "type": "varchar(11)",
+            "nullable": false
+          },
+          {
+            "name": "period",
+            "type": "varchar(8)",
+            "nullable": false
+          },
+          {
+            "name": "hdd",
+            "type": "double"
+          },
+          {
+            "name": "cdd",
+            "type": "double"
+          },
+          {
+            "name": "days_observed",
+            "type": "int"
+          },
+          {
+            "name": "coverage",
+            "type": "double"
+          }
+        ],
+        "pk": [
+          "station_id",
+          "period"
+        ]
+      }
+    ],
+    "fks": [
+      {
+        "from": "utility.sic",
+        "to": "sic_code.code",
+        "transform": "identity",
+        "match_rate": 0.9767,
+        "verdict": "VERIFIED"
+      },
+      {
+        "from": "utility.hq_state",
+        "to": "state.code",
+        "transform": "identity"
+      },
+      {
+        "from": "utility_state.cik",
+        "to": "utility.cik",
+        "transform": "identity"
+      },
+      {
+        "from": "utility_state.state",
+        "to": "state.code",
+        "transform": "identity"
+      },
+      {
+        "from": "fema_declaration.state",
+        "to": "state.code",
+        "transform": "identity"
+      },
+      {
+        "from": "station.state",
+        "to": "state.code",
+        "transform": "identity"
+      },
+      {
+        "from": "revenue_quarter.cik",
+        "to": "utility.cik",
+        "transform": "identity"
+      },
+      {
+        "from": "weather_quarter.station_id",
+        "to": "station.id",
+        "transform": "identity"
+      }
+    ]
+  },
+  "expected": {
+    "table_order": [
+      "state",
+      "sic_code",
+      "utility",
+      "utility_state",
+      "fema_declaration",
+      "station",
+      "revenue_quarter",
+      "weather_quarter"
+    ],
+    "fk_lines": [
+      "utility.sic -> sic_code.code (identity)",
+      "utility.hq_state -> state.code (identity)",
+      "utility_state.cik -> utility.cik (identity)",
+      "utility_state.state -> state.code (identity)",
+      "fema_declaration.state -> state.code (identity)",
+      "station.state -> state.code (identity)",
+      "revenue_quarter.cik -> utility.cik (identity)",
+      "weather_quarter.station_id -> station.id (identity)"
+    ],
+    "ddl_must_contain": [
+      "COMPILE USL IF NOT EXISTS crosswalk_usl DEPLOY NAMESPACE lightning.metastore.crosswalk DDL",
+      "CREATE TABLE state (",
+      "code varchar(2) NOT NULL PRIMARY KEY",
+      "sic varchar(4) FOREIGN KEY REFERENCES sic_code(code)",
+      "PRIMARY KEY (cik, state)",
+      "PRIMARY KEY (disaster_number, state)",
+      "PRIMARY KEY (cik, xbrl_tag, period)",
+      "station_id varchar(11) NOT NULL FOREIGN KEY REFERENCES station(id)"
+    ],
+    "ddl_must_not_contain": [
+      "DROP",
+      "GRANT",
+      "REVOKE",
+      "INVALIDATE",
+      "weatherornot",
+      "WON_",
+      "won."
+    ],
+    "ddl_statement_count_rule": "one statement: the CREATE TABLE parts are separated by ';' inside the DDL and the text has no trailing ';'",
+    "description_statements": [
+      "UPDATE USL crosswalk_usl NAMESPACE lightning.metastore.crosswalk SET TABLE DESCRIPTION state The 50 states and DC with FIPS codes (seeds/states.json)",
+      "UPDATE USL crosswalk_usl NAMESPACE lightning.metastore.crosswalk SET COLUMN DESCRIPTION state.code USPS two-letter code",
+      "UPDATE USL crosswalk_usl NAMESPACE lightning.metastore.crosswalk SET COLUMN DESCRIPTION state.fips two-digit FIPS state code"
+    ],
+    "description_rule": "unquoted text, no semicolon, no apostrophe (an apostrophe is dropped, a semicolon becomes a comma)"
+  },
+  "invalid_plans": [
+    {
+      "name": "duplicate table",
+      "plan": {
+        "usl": "crosswalk_usl",
+        "namespace": "lightning.metastore.crosswalk",
+        "tables": [
+          {
+            "name": "state",
+            "source": "cw.states",
+            "description": "The 50 states and DC with FIPS codes (seeds/states.json)",
+            "columns": [
+              {
+                "name": "code",
+                "type": "varchar(2)",
+                "nullable": false,
+                "description": "USPS two-letter code"
+              },
+              {
+                "name": "name",
+                "type": "varchar(40)"
+              },
+              {
+                "name": "fips",
+                "type": "varchar(2)",
+                "description": "two-digit FIPS state code"
+              }
+            ],
+            "pk": [
+              "code"
+            ]
+          },
+          {
+            "name": "sic_code",
+            "source": "cw.sic_codes",
+            "columns": [
+              {
+                "name": "code",
+                "type": "varchar(4)",
+                "nullable": false
+              },
+              {
+                "name": "description",
+                "type": "varchar(200)"
+              }
+            ],
+            "pk": [
+              "code"
+            ]
+          },
+          {
+            "name": "utility",
+            "source": "cw.utility_profiles",
+            "columns": [
+              {
+                "name": "cik",
+                "type": "varchar(10)",
+                "nullable": false
+              },
+              {
+                "name": "name",
+                "type": "varchar(200)"
+              },
+              {
+                "name": "ticker",
+                "type": "varchar(10)"
+              },
+              {
+                "name": "sic",
+                "type": "varchar(4)"
+              },
+              {
+                "name": "hq_state",
+                "type": "varchar(2)"
+              }
+            ],
+            "pk": [
+              "cik"
+            ]
+          },
+          {
+            "name": "utility_state",
+            "source": "cw.utility_states",
+            "columns": [
+              {
+                "name": "cik",
+                "type": "varchar(10)",
+                "nullable": false
+              },
+              {
+                "name": "state",
+                "type": "varchar(2)",
+                "nullable": false
+              }
+            ],
+            "pk": [
+              "cik",
+              "state"
+            ]
+          },
+          {
+            "name": "fema_declaration",
+            "source": "cw.fema_declarations_dr_2025q1",
+            "columns": [
+              {
+                "name": "disaster_number",
+                "type": "int",
+                "nullable": false
+              },
+              {
+                "name": "state",
+                "type": "varchar(2)",
+                "nullable": false
+              },
+              {
+                "name": "declaration_date",
+                "type": "varchar(10)"
+              },
+              {
+                "name": "incident_type",
+                "type": "varchar(40)"
+              },
+              {
+                "name": "declaration_type",
+                "type": "varchar(2)"
+              },
+              {
+                "name": "period",
+                "type": "varchar(8)"
+              }
+            ],
+            "pk": [
+              "disaster_number",
+              "state"
+            ]
+          },
+          {
+            "name": "station",
+            "source": "cw.stations",
+            "columns": [
+              {
+                "name": "id",
+                "type": "varchar(11)",
+                "nullable": false
+              },
+              {
+                "name": "state",
+                "type": "varchar(2)"
+              },
+              {
+                "name": "name",
+                "type": "varchar(60)"
+              }
+            ],
+            "pk": [
+              "id"
+            ]
+          },
+          {
+            "name": "revenue_quarter",
+            "source": "cw.frames_seeds_union",
+            "columns": [
+              {
+                "name": "cik",
+                "type": "varchar(10)",
+                "nullable": false
+              },
+              {
+                "name": "xbrl_tag",
+                "type": "varchar(60)",
+                "nullable": false
+              },
+              {
+                "name": "period",
+                "type": "varchar(8)",
+                "nullable": false
+              },
+              {
+                "name": "val",
+                "type": "double"
+              },
+              {
+                "name": "accn",
+                "type": "varchar(25)"
+              }
+            ],
+            "pk": [
+              "cik",
+              "xbrl_tag",
+              "period"
+            ]
+          },
+          {
+            "name": "weather_quarter",
+            "source": "cw.weather_quarters",
+            "columns": [
+              {
+                "name": "station_id",
+                "type": "varchar(11)",
+                "nullable": false
+              },
+              {
+                "name": "period",
+                "type": "varchar(8)",
+                "nullable": false
+              },
+              {
+                "name": "hdd",
+                "type": "double"
+              },
+              {
+                "name": "cdd",
+                "type": "double"
+              },
+              {
+                "name": "days_observed",
+                "type": "int"
+              },
+              {
+                "name": "coverage",
+                "type": "double"
+              }
+            ],
+            "pk": [
+              "station_id",
+              "period"
+            ]
+          },
+          {
+            "name": "state",
+            "source": "cw.states",
+            "description": "The 50 states and DC with FIPS codes (seeds/states.json)",
+            "columns": [
+              {
+                "name": "code",
+                "type": "varchar(2)",
+                "nullable": false,
+                "description": "USPS two-letter code"
+              },
+              {
+                "name": "name",
+                "type": "varchar(40)"
+              },
+              {
+                "name": "fips",
+                "type": "varchar(2)",
+                "description": "two-digit FIPS state code"
+              }
+            ],
+            "pk": [
+              "code"
+            ]
+          }
+        ],
+        "fks": [
+          {
+            "from": "utility.sic",
+            "to": "sic_code.code",
+            "transform": "identity",
+            "match_rate": 0.9767,
+            "verdict": "VERIFIED"
+          },
+          {
+            "from": "utility.hq_state",
+            "to": "state.code",
+            "transform": "identity"
+          },
+          {
+            "from": "utility_state.cik",
+            "to": "utility.cik",
+            "transform": "identity"
+          },
+          {
+            "from": "utility_state.state",
+            "to": "state.code",
+            "transform": "identity"
+          },
+          {
+            "from": "fema_declaration.state",
+            "to": "state.code",
+            "transform": "identity"
+          },
+          {
+            "from": "station.state",
+            "to": "state.code",
+            "transform": "identity"
+          },
+          {
+            "from": "revenue_quarter.cik",
+            "to": "utility.cik",
+            "transform": "identity"
+          },
+          {
+            "from": "weather_quarter.station_id",
+            "to": "station.id",
+            "transform": "identity"
+          }
+        ]
+      },
+      "error_code": "duplicate_table"
+    },
+    {
+      "name": "fk to an unknown table",
+      "plan": {
+        "usl": "crosswalk_usl",
+        "namespace": "lightning.metastore.crosswalk",
+        "tables": [
+          {
+            "name": "state",
+            "source": "cw.states",
+            "description": "The 50 states and DC with FIPS codes (seeds/states.json)",
+            "columns": [
+              {
+                "name": "code",
+                "type": "varchar(2)",
+                "nullable": false,
+                "description": "USPS two-letter code"
+              },
+              {
+                "name": "name",
+                "type": "varchar(40)"
+              },
+              {
+                "name": "fips",
+                "type": "varchar(2)",
+                "description": "two-digit FIPS state code"
+              }
+            ],
+            "pk": [
+              "code"
+            ]
+          },
+          {
+            "name": "sic_code",
+            "source": "cw.sic_codes",
+            "columns": [
+              {
+                "name": "code",
+                "type": "varchar(4)",
+                "nullable": false
+              },
+              {
+                "name": "description",
+                "type": "varchar(200)"
+              }
+            ],
+            "pk": [
+              "code"
+            ]
+          },
+          {
+            "name": "utility",
+            "source": "cw.utility_profiles",
+            "columns": [
+              {
+                "name": "cik",
+                "type": "varchar(10)",
+                "nullable": false
+              },
+              {
+                "name": "name",
+                "type": "varchar(200)"
+              },
+              {
+                "name": "ticker",
+                "type": "varchar(10)"
+              },
+              {
+                "name": "sic",
+                "type": "varchar(4)"
+              },
+              {
+                "name": "hq_state",
+                "type": "varchar(2)"
+              }
+            ],
+            "pk": [
+              "cik"
+            ]
+          },
+          {
+            "name": "utility_state",
+            "source": "cw.utility_states",
+            "columns": [
+              {
+                "name": "cik",
+                "type": "varchar(10)",
+                "nullable": false
+              },
+              {
+                "name": "state",
+                "type": "varchar(2)",
+                "nullable": false
+              }
+            ],
+            "pk": [
+              "cik",
+              "state"
+            ]
+          },
+          {
+            "name": "fema_declaration",
+            "source": "cw.fema_declarations_dr_2025q1",
+            "columns": [
+              {
+                "name": "disaster_number",
+                "type": "int",
+                "nullable": false
+              },
+              {
+                "name": "state",
+                "type": "varchar(2)",
+                "nullable": false
+              },
+              {
+                "name": "declaration_date",
+                "type": "varchar(10)"
+              },
+              {
+                "name": "incident_type",
+                "type": "varchar(40)"
+              },
+              {
+                "name": "declaration_type",
+                "type": "varchar(2)"
+              },
+              {
+                "name": "period",
+                "type": "varchar(8)"
+              }
+            ],
+            "pk": [
+              "disaster_number",
+              "state"
+            ]
+          },
+          {
+            "name": "station",
+            "source": "cw.stations",
+            "columns": [
+              {
+                "name": "id",
+                "type": "varchar(11)",
+                "nullable": false
+              },
+              {
+                "name": "state",
+                "type": "varchar(2)"
+              },
+              {
+                "name": "name",
+                "type": "varchar(60)"
+              }
+            ],
+            "pk": [
+              "id"
+            ]
+          },
+          {
+            "name": "revenue_quarter",
+            "source": "cw.frames_seeds_union",
+            "columns": [
+              {
+                "name": "cik",
+                "type": "varchar(10)",
+                "nullable": false
+              },
+              {
+                "name": "xbrl_tag",
+                "type": "varchar(60)",
+                "nullable": false
+              },
+              {
+                "name": "period",
+                "type": "varchar(8)",
+                "nullable": false
+              },
+              {
+                "name": "val",
+                "type": "double"
+              },
+              {
+                "name": "accn",
+                "type": "varchar(25)"
+              }
+            ],
+            "pk": [
+              "cik",
+              "xbrl_tag",
+              "period"
+            ]
+          },
+          {
+            "name": "weather_quarter",
+            "source": "cw.weather_quarters",
+            "columns": [
+              {
+                "name": "station_id",
+                "type": "varchar(11)",
+                "nullable": false
+              },
+              {
+                "name": "period",
+                "type": "varchar(8)",
+                "nullable": false
+              },
+              {
+                "name": "hdd",
+                "type": "double"
+              },
+              {
+                "name": "cdd",
+                "type": "double"
+              },
+              {
+                "name": "days_observed",
+                "type": "int"
+              },
+              {
+                "name": "coverage",
+                "type": "double"
+              }
+            ],
+            "pk": [
+              "station_id",
+              "period"
+            ]
+          }
+        ],
+        "fks": [
+          {
+            "from": "utility.sic",
+            "to": "sic_code.code",
+            "transform": "identity",
+            "match_rate": 0.9767,
+            "verdict": "VERIFIED"
+          },
+          {
+            "from": "utility.hq_state",
+            "to": "state.code",
+            "transform": "identity"
+          },
+          {
+            "from": "utility_state.cik",
+            "to": "utility.cik",
+            "transform": "identity"
+          },
+          {
+            "from": "utility_state.state",
+            "to": "state.code",
+            "transform": "identity"
+          },
+          {
+            "from": "fema_declaration.state",
+            "to": "state.code",
+            "transform": "identity"
+          },
+          {
+            "from": "station.state",
+            "to": "state.code",
+            "transform": "identity"
+          },
+          {
+            "from": "revenue_quarter.cik",
+            "to": "utility.cik",
+            "transform": "identity"
+          },
+          {
+            "from": "weather_quarter.station_id",
+            "to": "station.id",
+            "transform": "identity"
+          },
+          {
+            "from": "utility.cik",
+            "to": "filer.cik",
+            "transform": "identity"
+          }
+        ]
+      },
+      "error_code": "unknown_table"
+    },
+    {
+      "name": "fk to an unknown column",
+      "plan": {
+        "usl": "crosswalk_usl",
+        "namespace": "lightning.metastore.crosswalk",
+        "tables": [
+          {
+            "name": "state",
+            "source": "cw.states",
+            "description": "The 50 states and DC with FIPS codes (seeds/states.json)",
+            "columns": [
+              {
+                "name": "code",
+                "type": "varchar(2)",
+                "nullable": false,
+                "description": "USPS two-letter code"
+              },
+              {
+                "name": "name",
+                "type": "varchar(40)"
+              },
+              {
+                "name": "fips",
+                "type": "varchar(2)",
+                "description": "two-digit FIPS state code"
+              }
+            ],
+            "pk": [
+              "code"
+            ]
+          },
+          {
+            "name": "sic_code",
+            "source": "cw.sic_codes",
+            "columns": [
+              {
+                "name": "code",
+                "type": "varchar(4)",
+                "nullable": false
+              },
+              {
+                "name": "description",
+                "type": "varchar(200)"
+              }
+            ],
+            "pk": [
+              "code"
+            ]
+          },
+          {
+            "name": "utility",
+            "source": "cw.utility_profiles",
+            "columns": [
+              {
+                "name": "cik",
+                "type": "varchar(10)",
+                "nullable": false
+              },
+              {
+                "name": "name",
+                "type": "varchar(200)"
+              },
+              {
+                "name": "ticker",
+                "type": "varchar(10)"
+              },
+              {
+                "name": "sic",
+                "type": "varchar(4)"
+              },
+              {
+                "name": "hq_state",
+                "type": "varchar(2)"
+              }
+            ],
+            "pk": [
+              "cik"
+            ]
+          },
+          {
+            "name": "utility_state",
+            "source": "cw.utility_states",
+            "columns": [
+              {
+                "name": "cik",
+                "type": "varchar(10)",
+                "nullable": false
+              },
+              {
+                "name": "state",
+                "type": "varchar(2)",
+                "nullable": false
+              }
+            ],
+            "pk": [
+              "cik",
+              "state"
+            ]
+          },
+          {
+            "name": "fema_declaration",
+            "source": "cw.fema_declarations_dr_2025q1",
+            "columns": [
+              {
+                "name": "disaster_number",
+                "type": "int",
+                "nullable": false
+              },
+              {
+                "name": "state",
+                "type": "varchar(2)",
+                "nullable": false
+              },
+              {
+                "name": "declaration_date",
+                "type": "varchar(10)"
+              },
+              {
+                "name": "incident_type",
+                "type": "varchar(40)"
+              },
+              {
+                "name": "declaration_type",
+                "type": "varchar(2)"
+              },
+              {
+                "name": "period",
+                "type": "varchar(8)"
+              }
+            ],
+            "pk": [
+              "disaster_number",
+              "state"
+            ]
+          },
+          {
+            "name": "station",
+            "source": "cw.stations",
+            "columns": [
+              {
+                "name": "id",
+                "type": "varchar(11)",
+                "nullable": false
+              },
+              {
+                "name": "state",
+                "type": "varchar(2)"
+              },
+              {
+                "name": "name",
+                "type": "varchar(60)"
+              }
+            ],
+            "pk": [
+              "id"
+            ]
+          },
+          {
+            "name": "revenue_quarter",
+            "source": "cw.frames_seeds_union",
+            "columns": [
+              {
+                "name": "cik",
+                "type": "varchar(10)",
+                "nullable": false
+              },
+              {
+                "name": "xbrl_tag",
+                "type": "varchar(60)",
+                "nullable": false
+              },
+              {
+                "name": "period",
+                "type": "varchar(8)",
+                "nullable": false
+              },
+              {
+                "name": "val",
+                "type": "double"
+              },
+              {
+                "name": "accn",
+                "type": "varchar(25)"
+              }
+            ],
+            "pk": [
+              "cik",
+              "xbrl_tag",
+              "period"
+            ]
+          },
+          {
+            "name": "weather_quarter",
+            "source": "cw.weather_quarters",
+            "columns": [
+              {
+                "name": "station_id",
+                "type": "varchar(11)",
+                "nullable": false
+              },
+              {
+                "name": "period",
+                "type": "varchar(8)",
+                "nullable": false
+              },
+              {
+                "name": "hdd",
+                "type": "double"
+              },
+              {
+                "name": "cdd",
+                "type": "double"
+              },
+              {
+                "name": "days_observed",
+                "type": "int"
+              },
+              {
+                "name": "coverage",
+                "type": "double"
+              }
+            ],
+            "pk": [
+              "station_id",
+              "period"
+            ]
+          }
+        ],
+        "fks": [
+          {
+            "from": "utility.sic",
+            "to": "sic_code.code",
+            "transform": "identity",
+            "match_rate": 0.9767,
+            "verdict": "VERIFIED"
+          },
+          {
+            "from": "utility.hq_state",
+            "to": "state.code",
+            "transform": "identity"
+          },
+          {
+            "from": "utility_state.cik",
+            "to": "utility.cik",
+            "transform": "identity"
+          },
+          {
+            "from": "utility_state.state",
+            "to": "state.code",
+            "transform": "identity"
+          },
+          {
+            "from": "fema_declaration.state",
+            "to": "state.code",
+            "transform": "identity"
+          },
+          {
+            "from": "station.state",
+            "to": "state.code",
+            "transform": "identity"
+          },
+          {
+            "from": "revenue_quarter.cik",
+            "to": "utility.cik",
+            "transform": "identity"
+          },
+          {
+            "from": "weather_quarter.station_id",
+            "to": "station.id",
+            "transform": "identity"
+          },
+          {
+            "from": "utility.cik",
+            "to": "state.abbrev",
+            "transform": "identity"
+          }
+        ]
+      },
+      "error_code": "unknown_column"
+    },
+    {
+      "name": "fk transform outside the closed set",
+      "plan": {
+        "usl": "crosswalk_usl",
+        "namespace": "lightning.metastore.crosswalk",
+        "tables": [
+          {
+            "name": "state",
+            "source": "cw.states",
+            "description": "The 50 states and DC with FIPS codes (seeds/states.json)",
+            "columns": [
+              {
+                "name": "code",
+                "type": "varchar(2)",
+                "nullable": false,
+                "description": "USPS two-letter code"
+              },
+              {
+                "name": "name",
+                "type": "varchar(40)"
+              },
+              {
+                "name": "fips",
+                "type": "varchar(2)",
+                "description": "two-digit FIPS state code"
+              }
+            ],
+            "pk": [
+              "code"
+            ]
+          },
+          {
+            "name": "sic_code",
+            "source": "cw.sic_codes",
+            "columns": [
+              {
+                "name": "code",
+                "type": "varchar(4)",
+                "nullable": false
+              },
+              {
+                "name": "description",
+                "type": "varchar(200)"
+              }
+            ],
+            "pk": [
+              "code"
+            ]
+          },
+          {
+            "name": "utility",
+            "source": "cw.utility_profiles",
+            "columns": [
+              {
+                "name": "cik",
+                "type": "varchar(10)",
+                "nullable": false
+              },
+              {
+                "name": "name",
+                "type": "varchar(200)"
+              },
+              {
+                "name": "ticker",
+                "type": "varchar(10)"
+              },
+              {
+                "name": "sic",
+                "type": "varchar(4)"
+              },
+              {
+                "name": "hq_state",
+                "type": "varchar(2)"
+              }
+            ],
+            "pk": [
+              "cik"
+            ]
+          },
+          {
+            "name": "utility_state",
+            "source": "cw.utility_states",
+            "columns": [
+              {
+                "name": "cik",
+                "type": "varchar(10)",
+                "nullable": false
+              },
+              {
+                "name": "state",
+                "type": "varchar(2)",
+                "nullable": false
+              }
+            ],
+            "pk": [
+              "cik",
+              "state"
+            ]
+          },
+          {
+            "name": "fema_declaration",
+            "source": "cw.fema_declarations_dr_2025q1",
+            "columns": [
+              {
+                "name": "disaster_number",
+                "type": "int",
+                "nullable": false
+              },
+              {
+                "name": "state",
+                "type": "varchar(2)",
+                "nullable": false
+              },
+              {
+                "name": "declaration_date",
+                "type": "varchar(10)"
+              },
+              {
+                "name": "incident_type",
+                "type": "varchar(40)"
+              },
+              {
+                "name": "declaration_type",
+                "type": "varchar(2)"
+              },
+              {
+                "name": "period",
+                "type": "varchar(8)"
+              }
+            ],
+            "pk": [
+              "disaster_number",
+              "state"
+            ]
+          },
+          {
+            "name": "station",
+            "source": "cw.stations",
+            "columns": [
+              {
+                "name": "id",
+                "type": "varchar(11)",
+                "nullable": false
+              },
+              {
+                "name": "state",
+                "type": "varchar(2)"
+              },
+              {
+                "name": "name",
+                "type": "varchar(60)"
+              }
+            ],
+            "pk": [
+              "id"
+            ]
+          },
+          {
+            "name": "revenue_quarter",
+            "source": "cw.frames_seeds_union",
+            "columns": [
+              {
+                "name": "cik",
+                "type": "varchar(10)",
+                "nullable": false
+              },
+              {
+                "name": "xbrl_tag",
+                "type": "varchar(60)",
+                "nullable": false
+              },
+              {
+                "name": "period",
+                "type": "varchar(8)",
+                "nullable": false
+              },
+              {
+                "name": "val",
+                "type": "double"
+              },
+              {
+                "name": "accn",
+                "type": "varchar(25)"
+              }
+            ],
+            "pk": [
+              "cik",
+              "xbrl_tag",
+              "period"
+            ]
+          },
+          {
+            "name": "weather_quarter",
+            "source": "cw.weather_quarters",
+            "columns": [
+              {
+                "name": "station_id",
+                "type": "varchar(11)",
+                "nullable": false
+              },
+              {
+                "name": "period",
+                "type": "varchar(8)",
+                "nullable": false
+              },
+              {
+                "name": "hdd",
+                "type": "double"
+              },
+              {
+                "name": "cdd",
+                "type": "double"
+              },
+              {
+                "name": "days_observed",
+                "type": "int"
+              },
+              {
+                "name": "coverage",
+                "type": "double"
+              }
+            ],
+            "pk": [
+              "station_id",
+              "period"
+            ]
+          }
+        ],
+        "fks": [
+          {
+            "from": "utility.sic",
+            "to": "sic_code.code",
+            "transform": "identity",
+            "match_rate": 0.9767,
+            "verdict": "VERIFIED"
+          },
+          {
+            "from": "utility.hq_state",
+            "to": "state.code",
+            "transform": "identity"
+          },
+          {
+            "from": "utility_state.cik",
+            "to": "utility.cik",
+            "transform": "identity"
+          },
+          {
+            "from": "utility_state.state",
+            "to": "state.code",
+            "transform": "identity"
+          },
+          {
+            "from": "fema_declaration.state",
+            "to": "state.code",
+            "transform": "identity"
+          },
+          {
+            "from": "station.state",
+            "to": "state.code",
+            "transform": "identity"
+          },
+          {
+            "from": "revenue_quarter.cik",
+            "to": "utility.cik",
+            "transform": "identity"
+          },
+          {
+            "from": "weather_quarter.station_id",
+            "to": "station.id",
+            "transform": "identity"
+          },
+          {
+            "from": "fema_declaration.declaration_date",
+            "to": "revenue_quarter.period",
+            "transform": "to_quarter"
+          }
+        ]
+      },
+      "error_code": "unknown_transform"
+    },
+    {
+      "name": "pk names a column the table does not have",
+      "plan": {
+        "usl": "crosswalk_usl",
+        "namespace": "lightning.metastore.crosswalk",
+        "tables": [
+          {
+            "name": "state",
+            "source": "cw.states",
+            "description": "The 50 states and DC with FIPS codes (seeds/states.json)",
+            "columns": [
+              {
+                "name": "code",
+                "type": "varchar(2)",
+                "nullable": false,
+                "description": "USPS two-letter code"
+              },
+              {
+                "name": "name",
+                "type": "varchar(40)"
+              },
+              {
+                "name": "fips",
+                "type": "varchar(2)",
+                "description": "two-digit FIPS state code"
+              }
+            ],
+            "pk": [
+              "code"
+            ]
+          },
+          {
+            "name": "sic_code",
+            "source": "cw.sic_codes",
+            "columns": [
+              {
+                "name": "code",
+                "type": "varchar(4)",
+                "nullable": false
+              },
+              {
+                "name": "description",
+                "type": "varchar(200)"
+              }
+            ],
+            "pk": [
+              "code"
+            ]
+          },
+          {
+            "name": "utility",
+            "source": "cw.utility_profiles",
+            "columns": [
+              {
+                "name": "cik",
+                "type": "varchar(10)",
+                "nullable": false
+              },
+              {
+                "name": "name",
+                "type": "varchar(200)"
+              },
+              {
+                "name": "ticker",
+                "type": "varchar(10)"
+              },
+              {
+                "name": "sic",
+                "type": "varchar(4)"
+              },
+              {
+                "name": "hq_state",
+                "type": "varchar(2)"
+              }
+            ],
+            "pk": [
+              "cik"
+            ]
+          },
+          {
+            "name": "utility_state",
+            "source": "cw.utility_states",
+            "columns": [
+              {
+                "name": "cik",
+                "type": "varchar(10)",
+                "nullable": false
+              },
+              {
+                "name": "state",
+                "type": "varchar(2)",
+                "nullable": false
+              }
+            ],
+            "pk": [
+              "cik",
+              "state"
+            ]
+          },
+          {
+            "name": "fema_declaration",
+            "source": "cw.fema_declarations_dr_2025q1",
+            "columns": [
+              {
+                "name": "disaster_number",
+                "type": "int",
+                "nullable": false
+              },
+              {
+                "name": "state",
+                "type": "varchar(2)",
+                "nullable": false
+              },
+              {
+                "name": "declaration_date",
+                "type": "varchar(10)"
+              },
+              {
+                "name": "incident_type",
+                "type": "varchar(40)"
+              },
+              {
+                "name": "declaration_type",
+                "type": "varchar(2)"
+              },
+              {
+                "name": "period",
+                "type": "varchar(8)"
+              }
+            ],
+            "pk": [
+              "disaster_number",
+              "state"
+            ]
+          },
+          {
+            "name": "station",
+            "source": "cw.stations",
+            "columns": [
+              {
+                "name": "id",
+                "type": "varchar(11)",
+                "nullable": false
+              },
+              {
+                "name": "state",
+                "type": "varchar(2)"
+              },
+              {
+                "name": "name",
+                "type": "varchar(60)"
+              }
+            ],
+            "pk": [
+              "station_id"
+            ]
+          },
+          {
+            "name": "revenue_quarter",
+            "source": "cw.frames_seeds_union",
+            "columns": [
+              {
+                "name": "cik",
+                "type": "varchar(10)",
+                "nullable": false
+              },
+              {
+                "name": "xbrl_tag",
+                "type": "varchar(60)",
+                "nullable": false
+              },
+              {
+                "name": "period",
+                "type": "varchar(8)",
+                "nullable": false
+              },
+              {
+                "name": "val",
+                "type": "double"
+              },
+              {
+                "name": "accn",
+                "type": "varchar(25)"
+              }
+            ],
+            "pk": [
+              "cik",
+              "xbrl_tag",
+              "period"
+            ]
+          },
+          {
+            "name": "weather_quarter",
+            "source": "cw.weather_quarters",
+            "columns": [
+              {
+                "name": "station_id",
+                "type": "varchar(11)",
+                "nullable": false
+              },
+              {
+                "name": "period",
+                "type": "varchar(8)",
+                "nullable": false
+              },
+              {
+                "name": "hdd",
+                "type": "double"
+              },
+              {
+                "name": "cdd",
+                "type": "double"
+              },
+              {
+                "name": "days_observed",
+                "type": "int"
+              },
+              {
+                "name": "coverage",
+                "type": "double"
+              }
+            ],
+            "pk": [
+              "station_id",
+              "period"
+            ]
+          }
+        ],
+        "fks": [
+          {
+            "from": "utility.sic",
+            "to": "sic_code.code",
+            "transform": "identity",
+            "match_rate": 0.9767,
+            "verdict": "VERIFIED"
+          },
+          {
+            "from": "utility.hq_state",
+            "to": "state.code",
+            "transform": "identity"
+          },
+          {
+            "from": "utility_state.cik",
+            "to": "utility.cik",
+            "transform": "identity"
+          },
+          {
+            "from": "utility_state.state",
+            "to": "state.code",
+            "transform": "identity"
+          },
+          {
+            "from": "fema_declaration.state",
+            "to": "state.code",
+            "transform": "identity"
+          },
+          {
+            "from": "station.state",
+            "to": "state.code",
+            "transform": "identity"
+          },
+          {
+            "from": "revenue_quarter.cik",
+            "to": "utility.cik",
+            "transform": "identity"
+          },
+          {
+            "from": "weather_quarter.station_id",
+            "to": "station.id",
+            "transform": "identity"
+          }
+        ]
+      },
+      "error_code": "unknown_column"
+    },
+    {
+      "name": "reserved word tag as a column name",
+      "plan": {
+        "usl": "crosswalk_usl",
+        "namespace": "lightning.metastore.crosswalk",
+        "tables": [
+          {
+            "name": "state",
+            "source": "cw.states",
+            "description": "The 50 states and DC with FIPS codes (seeds/states.json)",
+            "columns": [
+              {
+                "name": "code",
+                "type": "varchar(2)",
+                "nullable": false,
+                "description": "USPS two-letter code"
+              },
+              {
+                "name": "name",
+                "type": "varchar(40)"
+              },
+              {
+                "name": "fips",
+                "type": "varchar(2)",
+                "description": "two-digit FIPS state code"
+              }
+            ],
+            "pk": [
+              "code"
+            ]
+          },
+          {
+            "name": "sic_code",
+            "source": "cw.sic_codes",
+            "columns": [
+              {
+                "name": "code",
+                "type": "varchar(4)",
+                "nullable": false
+              },
+              {
+                "name": "description",
+                "type": "varchar(200)"
+              }
+            ],
+            "pk": [
+              "code"
+            ]
+          },
+          {
+            "name": "utility",
+            "source": "cw.utility_profiles",
+            "columns": [
+              {
+                "name": "cik",
+                "type": "varchar(10)",
+                "nullable": false
+              },
+              {
+                "name": "name",
+                "type": "varchar(200)"
+              },
+              {
+                "name": "ticker",
+                "type": "varchar(10)"
+              },
+              {
+                "name": "sic",
+                "type": "varchar(4)"
+              },
+              {
+                "name": "hq_state",
+                "type": "varchar(2)"
+              }
+            ],
+            "pk": [
+              "cik"
+            ]
+          },
+          {
+            "name": "utility_state",
+            "source": "cw.utility_states",
+            "columns": [
+              {
+                "name": "cik",
+                "type": "varchar(10)",
+                "nullable": false
+              },
+              {
+                "name": "state",
+                "type": "varchar(2)",
+                "nullable": false
+              }
+            ],
+            "pk": [
+              "cik",
+              "state"
+            ]
+          },
+          {
+            "name": "fema_declaration",
+            "source": "cw.fema_declarations_dr_2025q1",
+            "columns": [
+              {
+                "name": "disaster_number",
+                "type": "int",
+                "nullable": false
+              },
+              {
+                "name": "state",
+                "type": "varchar(2)",
+                "nullable": false
+              },
+              {
+                "name": "declaration_date",
+                "type": "varchar(10)"
+              },
+              {
+                "name": "incident_type",
+                "type": "varchar(40)"
+              },
+              {
+                "name": "declaration_type",
+                "type": "varchar(2)"
+              },
+              {
+                "name": "period",
+                "type": "varchar(8)"
+              }
+            ],
+            "pk": [
+              "disaster_number",
+              "state"
+            ]
+          },
+          {
+            "name": "station",
+            "source": "cw.stations",
+            "columns": [
+              {
+                "name": "id",
+                "type": "varchar(11)",
+                "nullable": false
+              },
+              {
+                "name": "state",
+                "type": "varchar(2)"
+              },
+              {
+                "name": "name",
+                "type": "varchar(60)"
+              }
+            ],
+            "pk": [
+              "id"
+            ]
+          },
+          {
+            "name": "revenue_quarter",
+            "source": "cw.frames_seeds_union",
+            "columns": [
+              {
+                "name": "cik",
+                "type": "varchar(10)",
+                "nullable": false
+              },
+              {
+                "name": "tag",
+                "type": "varchar(60)"
+              }
+            ],
+            "pk": [
+              "cik"
+            ]
+          },
+          {
+            "name": "weather_quarter",
+            "source": "cw.weather_quarters",
+            "columns": [
+              {
+                "name": "station_id",
+                "type": "varchar(11)",
+                "nullable": false
+              },
+              {
+                "name": "period",
+                "type": "varchar(8)",
+                "nullable": false
+              },
+              {
+                "name": "hdd",
+                "type": "double"
+              },
+              {
+                "name": "cdd",
+                "type": "double"
+              },
+              {
+                "name": "days_observed",
+                "type": "int"
+              },
+              {
+                "name": "coverage",
+                "type": "double"
+              }
+            ],
+            "pk": [
+              "station_id",
+              "period"
+            ]
+          }
+        ],
+        "fks": [
+          {
+            "from": "utility.sic",
+            "to": "sic_code.code",
+            "transform": "identity",
+            "match_rate": 0.9767,
+            "verdict": "VERIFIED"
+          },
+          {
+            "from": "utility.hq_state",
+            "to": "state.code",
+            "transform": "identity"
+          },
+          {
+            "from": "utility_state.cik",
+            "to": "utility.cik",
+            "transform": "identity"
+          },
+          {
+            "from": "utility_state.state",
+            "to": "state.code",
+            "transform": "identity"
+          },
+          {
+            "from": "fema_declaration.state",
+            "to": "state.code",
+            "transform": "identity"
+          },
+          {
+            "from": "station.state",
+            "to": "state.code",
+            "transform": "identity"
+          },
+          {
+            "from": "revenue_quarter.cik",
+            "to": "utility.cik",
+            "transform": "identity"
+          },
+          {
+            "from": "weather_quarter.station_id",
+            "to": "station.id",
+            "transform": "identity"
+          }
+        ]
+      },
+      "error_code": "reserved_word"
+    },
+    {
+      "name": "table name with a hyphen",
+      "plan": {
+        "usl": "crosswalk_usl",
+        "namespace": "lightning.metastore.crosswalk",
+        "tables": [
+          {
+            "name": "state",
+            "source": "cw.states",
+            "description": "The 50 states and DC with FIPS codes (seeds/states.json)",
+            "columns": [
+              {
+                "name": "code",
+                "type": "varchar(2)",
+                "nullable": false,
+                "description": "USPS two-letter code"
+              },
+              {
+                "name": "name",
+                "type": "varchar(40)"
+              },
+              {
+                "name": "fips",
+                "type": "varchar(2)",
+                "description": "two-digit FIPS state code"
+              }
+            ],
+            "pk": [
+              "code"
+            ]
+          },
+          {
+            "name": "sic_code",
+            "source": "cw.sic_codes",
+            "columns": [
+              {
+                "name": "code",
+                "type": "varchar(4)",
+                "nullable": false
+              },
+              {
+                "name": "description",
+                "type": "varchar(200)"
+              }
+            ],
+            "pk": [
+              "code"
+            ]
+          },
+          {
+            "name": "utility",
+            "source": "cw.utility_profiles",
+            "columns": [
+              {
+                "name": "cik",
+                "type": "varchar(10)",
+                "nullable": false
+              },
+              {
+                "name": "name",
+                "type": "varchar(200)"
+              },
+              {
+                "name": "ticker",
+                "type": "varchar(10)"
+              },
+              {
+                "name": "sic",
+                "type": "varchar(4)"
+              },
+              {
+                "name": "hq_state",
+                "type": "varchar(2)"
+              }
+            ],
+            "pk": [
+              "cik"
+            ]
+          },
+          {
+            "name": "utility_state",
+            "source": "cw.utility_states",
+            "columns": [
+              {
+                "name": "cik",
+                "type": "varchar(10)",
+                "nullable": false
+              },
+              {
+                "name": "state",
+                "type": "varchar(2)",
+                "nullable": false
+              }
+            ],
+            "pk": [
+              "cik",
+              "state"
+            ]
+          },
+          {
+            "name": "fema_declaration",
+            "source": "cw.fema_declarations_dr_2025q1",
+            "columns": [
+              {
+                "name": "disaster_number",
+                "type": "int",
+                "nullable": false
+              },
+              {
+                "name": "state",
+                "type": "varchar(2)",
+                "nullable": false
+              },
+              {
+                "name": "declaration_date",
+                "type": "varchar(10)"
+              },
+              {
+                "name": "incident_type",
+                "type": "varchar(40)"
+              },
+              {
+                "name": "declaration_type",
+                "type": "varchar(2)"
+              },
+              {
+                "name": "period",
+                "type": "varchar(8)"
+              }
+            ],
+            "pk": [
+              "disaster_number",
+              "state"
+            ]
+          },
+          {
+            "name": "station-2025",
+            "source": "cw.stations",
+            "columns": [
+              {
+                "name": "id",
+                "type": "varchar(11)",
+                "nullable": false
+              },
+              {
+                "name": "state",
+                "type": "varchar(2)"
+              },
+              {
+                "name": "name",
+                "type": "varchar(60)"
+              }
+            ],
+            "pk": [
+              "id"
+            ]
+          },
+          {
+            "name": "revenue_quarter",
+            "source": "cw.frames_seeds_union",
+            "columns": [
+              {
+                "name": "cik",
+                "type": "varchar(10)",
+                "nullable": false
+              },
+              {
+                "name": "xbrl_tag",
+                "type": "varchar(60)",
+                "nullable": false
+              },
+              {
+                "name": "period",
+                "type": "varchar(8)",
+                "nullable": false
+              },
+              {
+                "name": "val",
+                "type": "double"
+              },
+              {
+                "name": "accn",
+                "type": "varchar(25)"
+              }
+            ],
+            "pk": [
+              "cik",
+              "xbrl_tag",
+              "period"
+            ]
+          },
+          {
+            "name": "weather_quarter",
+            "source": "cw.weather_quarters",
+            "columns": [
+              {
+                "name": "station_id",
+                "type": "varchar(11)",
+                "nullable": false
+              },
+              {
+                "name": "period",
+                "type": "varchar(8)",
+                "nullable": false
+              },
+              {
+                "name": "hdd",
+                "type": "double"
+              },
+              {
+                "name": "cdd",
+                "type": "double"
+              },
+              {
+                "name": "days_observed",
+                "type": "int"
+              },
+              {
+                "name": "coverage",
+                "type": "double"
+              }
+            ],
+            "pk": [
+              "station_id",
+              "period"
+            ]
+          }
+        ],
+        "fks": [
+          {
+            "from": "utility.sic",
+            "to": "sic_code.code",
+            "transform": "identity",
+            "match_rate": 0.9767,
+            "verdict": "VERIFIED"
+          },
+          {
+            "from": "utility.hq_state",
+            "to": "state.code",
+            "transform": "identity"
+          },
+          {
+            "from": "utility_state.cik",
+            "to": "utility.cik",
+            "transform": "identity"
+          },
+          {
+            "from": "utility_state.state",
+            "to": "state.code",
+            "transform": "identity"
+          },
+          {
+            "from": "fema_declaration.state",
+            "to": "state.code",
+            "transform": "identity"
+          },
+          {
+            "from": "station.state",
+            "to": "state.code",
+            "transform": "identity"
+          },
+          {
+            "from": "revenue_quarter.cik",
+            "to": "utility.cik",
+            "transform": "identity"
+          },
+          {
+            "from": "weather_quarter.station_id",
+            "to": "station.id",
+            "transform": "identity"
+          }
+        ]
+      },
+      "error_code": "bad_identifier"
+    },
+    {
+      "name": "column type outside varchar(n) | int | double",
+      "plan": {
+        "usl": "crosswalk_usl",
+        "namespace": "lightning.metastore.crosswalk",
+        "tables": [
+          {
+            "name": "state",
+            "source": "cw.states",
+            "description": "The 50 states and DC with FIPS codes (seeds/states.json)",
+            "columns": [
+              {
+                "name": "code",
+                "type": "text",
+                "nullable": false
+              }
+            ],
+            "pk": [
+              "code"
+            ]
+          },
+          {
+            "name": "sic_code",
+            "source": "cw.sic_codes",
+            "columns": [
+              {
+                "name": "code",
+                "type": "varchar(4)",
+                "nullable": false
+              },
+              {
+                "name": "description",
+                "type": "varchar(200)"
+              }
+            ],
+            "pk": [
+              "code"
+            ]
+          },
+          {
+            "name": "utility",
+            "source": "cw.utility_profiles",
+            "columns": [
+              {
+                "name": "cik",
+                "type": "varchar(10)",
+                "nullable": false
+              },
+              {
+                "name": "name",
+                "type": "varchar(200)"
+              },
+              {
+                "name": "ticker",
+                "type": "varchar(10)"
+              },
+              {
+                "name": "sic",
+                "type": "varchar(4)"
+              },
+              {
+                "name": "hq_state",
+                "type": "varchar(2)"
+              }
+            ],
+            "pk": [
+              "cik"
+            ]
+          },
+          {
+            "name": "utility_state",
+            "source": "cw.utility_states",
+            "columns": [
+              {
+                "name": "cik",
+                "type": "varchar(10)",
+                "nullable": false
+              },
+              {
+                "name": "state",
+                "type": "varchar(2)",
+                "nullable": false
+              }
+            ],
+            "pk": [
+              "cik",
+              "state"
+            ]
+          },
+          {
+            "name": "fema_declaration",
+            "source": "cw.fema_declarations_dr_2025q1",
+            "columns": [
+              {
+                "name": "disaster_number",
+                "type": "int",
+                "nullable": false
+              },
+              {
+                "name": "state",
+                "type": "varchar(2)",
+                "nullable": false
+              },
+              {
+                "name": "declaration_date",
+                "type": "varchar(10)"
+              },
+              {
+                "name": "incident_type",
+                "type": "varchar(40)"
+              },
+              {
+                "name": "declaration_type",
+                "type": "varchar(2)"
+              },
+              {
+                "name": "period",
+                "type": "varchar(8)"
+              }
+            ],
+            "pk": [
+              "disaster_number",
+              "state"
+            ]
+          },
+          {
+            "name": "station",
+            "source": "cw.stations",
+            "columns": [
+              {
+                "name": "id",
+                "type": "varchar(11)",
+                "nullable": false
+              },
+              {
+                "name": "state",
+                "type": "varchar(2)"
+              },
+              {
+                "name": "name",
+                "type": "varchar(60)"
+              }
+            ],
+            "pk": [
+              "id"
+            ]
+          },
+          {
+            "name": "revenue_quarter",
+            "source": "cw.frames_seeds_union",
+            "columns": [
+              {
+                "name": "cik",
+                "type": "varchar(10)",
+                "nullable": false
+              },
+              {
+                "name": "xbrl_tag",
+                "type": "varchar(60)",
+                "nullable": false
+              },
+              {
+                "name": "period",
+                "type": "varchar(8)",
+                "nullable": false
+              },
+              {
+                "name": "val",
+                "type": "double"
+              },
+              {
+                "name": "accn",
+                "type": "varchar(25)"
+              }
+            ],
+            "pk": [
+              "cik",
+              "xbrl_tag",
+              "period"
+            ]
+          },
+          {
+            "name": "weather_quarter",
+            "source": "cw.weather_quarters",
+            "columns": [
+              {
+                "name": "station_id",
+                "type": "varchar(11)",
+                "nullable": false
+              },
+              {
+                "name": "period",
+                "type": "varchar(8)",
+                "nullable": false
+              },
+              {
+                "name": "hdd",
+                "type": "double"
+              },
+              {
+                "name": "cdd",
+                "type": "double"
+              },
+              {
+                "name": "days_observed",
+                "type": "int"
+              },
+              {
+                "name": "coverage",
+                "type": "double"
+              }
+            ],
+            "pk": [
+              "station_id",
+              "period"
+            ]
+          }
+        ],
+        "fks": [
+          {
+            "from": "utility.sic",
+            "to": "sic_code.code",
+            "transform": "identity",
+            "match_rate": 0.9767,
+            "verdict": "VERIFIED"
+          },
+          {
+            "from": "utility.hq_state",
+            "to": "state.code",
+            "transform": "identity"
+          },
+          {
+            "from": "utility_state.cik",
+            "to": "utility.cik",
+            "transform": "identity"
+          },
+          {
+            "from": "utility_state.state",
+            "to": "state.code",
+            "transform": "identity"
+          },
+          {
+            "from": "fema_declaration.state",
+            "to": "state.code",
+            "transform": "identity"
+          },
+          {
+            "from": "station.state",
+            "to": "state.code",
+            "transform": "identity"
+          },
+          {
+            "from": "revenue_quarter.cik",
+            "to": "utility.cik",
+            "transform": "identity"
+          },
+          {
+            "from": "weather_quarter.station_id",
+            "to": "station.id",
+            "transform": "identity"
+          }
+        ]
+      },
+      "error_code": "bad_type"
+    },
+    {
+      "name": "namespace outside lightning.metastore.crosswalk",
+      "plan": {
+        "usl": "crosswalk_usl",
+        "namespace": "lightning.metastore.weatherornot",
+        "tables": [
+          {
+            "name": "state",
+            "source": "cw.states",
+            "description": "The 50 states and DC with FIPS codes (seeds/states.json)",
+            "columns": [
+              {
+                "name": "code",
+                "type": "varchar(2)",
+                "nullable": false,
+                "description": "USPS two-letter code"
+              },
+              {
+                "name": "name",
+                "type": "varchar(40)"
+              },
+              {
+                "name": "fips",
+                "type": "varchar(2)",
+                "description": "two-digit FIPS state code"
+              }
+            ],
+            "pk": [
+              "code"
+            ]
+          },
+          {
+            "name": "sic_code",
+            "source": "cw.sic_codes",
+            "columns": [
+              {
+                "name": "code",
+                "type": "varchar(4)",
+                "nullable": false
+              },
+              {
+                "name": "description",
+                "type": "varchar(200)"
+              }
+            ],
+            "pk": [
+              "code"
+            ]
+          },
+          {
+            "name": "utility",
+            "source": "cw.utility_profiles",
+            "columns": [
+              {
+                "name": "cik",
+                "type": "varchar(10)",
+                "nullable": false
+              },
+              {
+                "name": "name",
+                "type": "varchar(200)"
+              },
+              {
+                "name": "ticker",
+                "type": "varchar(10)"
+              },
+              {
+                "name": "sic",
+                "type": "varchar(4)"
+              },
+              {
+                "name": "hq_state",
+                "type": "varchar(2)"
+              }
+            ],
+            "pk": [
+              "cik"
+            ]
+          },
+          {
+            "name": "utility_state",
+            "source": "cw.utility_states",
+            "columns": [
+              {
+                "name": "cik",
+                "type": "varchar(10)",
+                "nullable": false
+              },
+              {
+                "name": "state",
+                "type": "varchar(2)",
+                "nullable": false
+              }
+            ],
+            "pk": [
+              "cik",
+              "state"
+            ]
+          },
+          {
+            "name": "fema_declaration",
+            "source": "cw.fema_declarations_dr_2025q1",
+            "columns": [
+              {
+                "name": "disaster_number",
+                "type": "int",
+                "nullable": false
+              },
+              {
+                "name": "state",
+                "type": "varchar(2)",
+                "nullable": false
+              },
+              {
+                "name": "declaration_date",
+                "type": "varchar(10)"
+              },
+              {
+                "name": "incident_type",
+                "type": "varchar(40)"
+              },
+              {
+                "name": "declaration_type",
+                "type": "varchar(2)"
+              },
+              {
+                "name": "period",
+                "type": "varchar(8)"
+              }
+            ],
+            "pk": [
+              "disaster_number",
+              "state"
+            ]
+          },
+          {
+            "name": "station",
+            "source": "cw.stations",
+            "columns": [
+              {
+                "name": "id",
+                "type": "varchar(11)",
+                "nullable": false
+              },
+              {
+                "name": "state",
+                "type": "varchar(2)"
+              },
+              {
+                "name": "name",
+                "type": "varchar(60)"
+              }
+            ],
+            "pk": [
+              "id"
+            ]
+          },
+          {
+            "name": "revenue_quarter",
+            "source": "cw.frames_seeds_union",
+            "columns": [
+              {
+                "name": "cik",
+                "type": "varchar(10)",
+                "nullable": false
+              },
+              {
+                "name": "xbrl_tag",
+                "type": "varchar(60)",
+                "nullable": false
+              },
+              {
+                "name": "period",
+                "type": "varchar(8)",
+                "nullable": false
+              },
+              {
+                "name": "val",
+                "type": "double"
+              },
+              {
+                "name": "accn",
+                "type": "varchar(25)"
+              }
+            ],
+            "pk": [
+              "cik",
+              "xbrl_tag",
+              "period"
+            ]
+          },
+          {
+            "name": "weather_quarter",
+            "source": "cw.weather_quarters",
+            "columns": [
+              {
+                "name": "station_id",
+                "type": "varchar(11)",
+                "nullable": false
+              },
+              {
+                "name": "period",
+                "type": "varchar(8)",
+                "nullable": false
+              },
+              {
+                "name": "hdd",
+                "type": "double"
+              },
+              {
+                "name": "cdd",
+                "type": "double"
+              },
+              {
+                "name": "days_observed",
+                "type": "int"
+              },
+              {
+                "name": "coverage",
+                "type": "double"
+              }
+            ],
+            "pk": [
+              "station_id",
+              "period"
+            ]
+          }
+        ],
+        "fks": [
+          {
+            "from": "utility.sic",
+            "to": "sic_code.code",
+            "transform": "identity",
+            "match_rate": 0.9767,
+            "verdict": "VERIFIED"
+          },
+          {
+            "from": "utility.hq_state",
+            "to": "state.code",
+            "transform": "identity"
+          },
+          {
+            "from": "utility_state.cik",
+            "to": "utility.cik",
+            "transform": "identity"
+          },
+          {
+            "from": "utility_state.state",
+            "to": "state.code",
+            "transform": "identity"
+          },
+          {
+            "from": "fema_declaration.state",
+            "to": "state.code",
+            "transform": "identity"
+          },
+          {
+            "from": "station.state",
+            "to": "state.code",
+            "transform": "identity"
+          },
+          {
+            "from": "revenue_quarter.cik",
+            "to": "utility.cik",
+            "transform": "identity"
+          },
+          {
+            "from": "weather_quarter.station_id",
+            "to": "station.id",
+            "transform": "identity"
+          }
+        ]
+      },
+      "error_code": "bad_namespace"
+    }
+  ]
+}
