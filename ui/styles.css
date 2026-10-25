@@ -597,3 +597,8 @@ code.wrap { overflow-wrap: anywhere; }
 @media (max-width: 1640px) { .tele__item--showing { display: none; } }
 .eng-row { display: none; }
 .eng-on .eng-row { display: contents; }
+.tl--pending { color: var(--ink-2); font-style: italic; }
+.tl--pending .tl__who { background: var(--bad-bg); border-color: var(--bad-edge); color: var(--bad); font-style: normal; }
+.tl__spin { display: inline-block; width: 11px; height: 11px; margin-right: 4px; border: 2px solid var(--rule-strong); border-right-color: var(--accent); border-radius: 50%; animation: tlspin 0.9s linear infinite; vertical-align: -1px; }
+@keyframes tlspin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .tl__spin { animation: none; } }

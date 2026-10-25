@@ -91,7 +91,13 @@ export function renderSkippedBlock(steps) {
 
 /** Pure: the counts line above the timeline from the events seen and the skipped steps. */
 export function summaryLine(counts, skipped) {
-  return `${plural(counts.chunks, "chunk")}, ${plural(counts.tools, "tool step")} (${fmtNum(counts.fallback)} by the host after an invalid model reply), ${plural(counts.planner, "model choice")}, ${fmtNum(skipped)} measure step${skipped === 1 ? "" : "s"} skipped as verified earlier`;
+  return `${plural(counts.chunks, "chunk")}, ${plural(counts.planner, "model reply", "model replies")} (${fmtNum(counts.invalid ?? 0)} invalid), ${plural(counts.tools, "tool step")} (${fmtNum(counts.fallback)} run by the host after an invalid reply), ${fmtNum(skipped)} measure step${skipped === 1 ? "" : "s"} skipped as verified earlier`;
+}
+
+/** Pure: the row that says what is running now in a live run (the chosen tool, or the model choosing). */
+export function pendingRow(tool) {
+  const what = tool ? `Running: ${esc(toolWord(tool))}` : "The model is choosing the next step";
+  return `<li class="tl tl--pending" data-pending role="status"><span class="tl__who">Now</span> <span class="tl__spin" aria-hidden="true"></span> ${what}…</li>`;
 }
 
 /** Where the skipped block goes: after the key proposals, else before the first measurement, else before the USL. */
@@ -141,7 +147,7 @@ export function mount(el, ctx) {
   const start = (delayMs) => {
     close?.();
     list.innerHTML = "";
-    counts = { chunks: 0, tools: 0, fallback: 0, planner: 0 };
+    counts = { chunks: 0, tools: 0, fallback: 0, planner: 0, invalid: 0 };
     skipped = [];
     let mode = null;
     close = openRunStream(ctx.run, {
@@ -160,14 +166,23 @@ export function mount(el, ctx) {
           counts.tools++;
           if (d.source === "fallback") counts.fallback++;
         }
-        if (type === "planner") counts.planner++;
+        if (type === "planner") {
+          counts.planner++;
+          if (d.valid === false) counts.invalid++;
+        }
+        list.querySelector("[data-pending]")?.remove();
         const html = renderEvent(type, d);
         if (html) list.insertAdjacentHTML("beforeend", html);
+        if (mode === "live" && type !== "run_finished" && type !== "run_failed" && type !== "chunk_end") {
+          const next = type === "planner" && d.valid !== false ? d.tool : null;
+          list.insertAdjacentHTML("beforeend", pendingRow(next));
+        }
         if (mode === "live") list.lastElementChild?.scrollIntoView({ block: "nearest" });
         refreshSummary(false);
       },
       onEnd: async () => {
         if (!alive) return;
+        list.querySelector("[data-pending]")?.remove();
         await loadSkipped();
         refreshSummary(true);
         if (mode === "live") {

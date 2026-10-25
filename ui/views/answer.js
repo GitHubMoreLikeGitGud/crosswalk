@@ -52,7 +52,7 @@ export function renderRow(run, r, i) {
       ? `${cellBtn(run, c.weather_change, esc(fmtPct(w.change, 2)), `Degree-day change at the stations of ${r.ticker ?? r.name}`, `fig--s ${signCls(w.change)}`)}
          <span class="ans__pair">${cellBtn(run, c.weather_current, esc(fmtNum(w.tdd_current, 0)), "Degree days this quarter")} vs ${cellBtn(run, c.weather_previous, esc(fmtNum(w.tdd_previous, 0)), "Degree days a year earlier")} degree days</span>
          <span class="ans__tag">${esc(plural((w.stations ?? []).length, "station"))}</span>`
-      : `<span class="nm">not measured</span>${r.weather_note ? `<span class="ans__note">${esc(r.weather_note)}</span>` : ""}`;
+      : `<span class="nm">${esc(r.weather_note || "not measured")}</span>`;
   return `<tr>
     <td class="r muted tnum">${i + 1}</td>
     <th scope="row" class="ans__util">${name} ${eng(`<code>CIK ${esc(r.cik)}</code>`)}</th>

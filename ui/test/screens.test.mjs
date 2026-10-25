@@ -12,7 +12,7 @@ import { answerSummary, renderAnswer, typesWords } from "../views/answer.js";
 import { bannerHtml } from "../views/banner.js";
 import { renderCell, valueWords } from "../views/provenance.js";
 import { renderFooter } from "../views/telemetry.js";
-import { keyWords, measureWords, renderEvent, renderSkipped, renderSkippedBlock, stripRefs, summaryLine } from "../views/timeline.js";
+import { keyWords, measureWords, pendingRow, renderEvent, renderSkipped, renderSkippedBlock, stripRefs, summaryLine } from "../views/timeline.js";
 import { invalidWords, renderUsl } from "../views/usl.js";
 
 const fx = (name) => JSON.parse(readFileSync(new URL(`fixtures/${name}`, import.meta.url), "utf8"));
@@ -134,7 +134,9 @@ test("timeline: a skipped measure step says it was verified earlier and names it
   assert.ok(visible(loc).includes("cw.frames_Revenues_CY2024Q1.loc to cw.seed_submissions_snapshot.hq_state (substr(4,2)): VERIFIED, 42 of 42 rows"));
   assert.ok(!ENG_IDS.test(visible(loc)));
   assert.equal(renderSkippedBlock([]), "");
-  assert.equal(summaryLine({ chunks: 8, tools: 22, fallback: 5, planner: 22 }, 6), "8 chunks, 22 tool steps (5 by the host after an invalid model reply), 22 model choices, 6 measure steps skipped as verified earlier");
+  assert.equal(summaryLine({ chunks: 8, tools: 22, fallback: 5, planner: 22, invalid: 5 }, 6), "8 chunks, 22 model replies (5 invalid), 22 tool steps (5 run by the host after an invalid reply), 6 measure steps skipped as verified earlier");
+  assert.ok(pendingRow("measure_key").includes("Running: Measure a key in Lightning SQL"));
+  assert.ok(pendingRow(null).includes("The model is choosing the next step"));
 });
 
 test("timeline: measure facts in words, routes kept for engineering detail", () => {
