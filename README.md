@@ -6,7 +6,7 @@
 
 Open Agent Hackathon 2026, Track 1: Solving Fragmented Intelligence. Team: Umar Mohktar, Singapore - solo.
 
-Demo video: link added at submission · Deck (PDF): [`docs/deck/Crosswalk.pdf`](docs/deck/Crosswalk.pdf) · Evaluation: [`docs/eval-report.md`](docs/eval-report.md) · The demo case step by step: [`docs/demo-case.md`](docs/demo-case.md) · How Cursor was used: [`docs/how-cursor-was-used.md`](docs/how-cursor-was-used.md)
+Demo video (3:29): https://youtu.be/AJyT-ar1LBs · Deck (PDF): [`docs/deck/Crosswalk.pdf`](docs/deck/Crosswalk.pdf) · Evaluation: [`docs/eval-report.md`](docs/eval-report.md) · The demo case step by step: [`docs/demo-case.md`](docs/demo-case.md) · How Cursor was used: [`docs/how-cursor-was-used.md`](docs/how-cursor-was-used.md)
 
 ![The Crosswalk answer screen for a saved cold run of Q1 2025, shown as a replay: twelve investor-owned electric utilities that served states with FEMA major-disaster declarations, with the declarations per state by incident type, the revenue change against Q1 2024 under the tag each one reports (Sempra not compared), and the degree-day change at their weather stations; every number opens the Lightning SQL that produced it.](docs/deck/img/answer.png)
 
