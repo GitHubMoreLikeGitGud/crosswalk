@@ -386,7 +386,7 @@ export interface L2Section {
     only_model: string[];
     only_baseline: string[];
     both: string[];
-    /** Model keys that no baseline proposal (its scored six or its measure queue) measured VERIFIED in any run. */
+    /** Model keys VERIFIED in a run whose join-map row names no baseline proposer (scored six or measure queue) in that run. */
     model_beyond_any_baseline: string[];
   };
   winner: "model" | "baseline" | "tie";
@@ -411,8 +411,13 @@ export function l2Section(runs: { sel: SelectedRun; run: EvalRun }[]): L2Section
     for (const r of withModel) for (const k of r[side].verified_keys) if (!r[side].recalled_keys.includes(k)) s.add(k);
     return [...s].sort();
   };
-  const anyBaseline = new Set<string>();
-  for (const { run } of runs) for (const j of run.join_map ?? []) if (j.verdict === "VERIFIED" && (j.proposed_by ?? []).some((x) => x.startsWith("baseline"))) anyBaseline.add(keyFamily(j.key));
+  // Per run: a model key is "beyond the baseline" when the run's join-map row for it names no baseline proposer (scored six or queue).
+  const beyond = new Set<string>();
+  for (const { sel, run } of runs) {
+    if (sel.setting === "no_model") continue;
+    const rows = new Map((run.join_map ?? []).map((j) => [keyFamily(j.key), j]));
+    for (const k of sideTally(run, "model").verified_keys) if (!(rows.get(k)?.proposed_by ?? []).some((x) => x.startsWith("baseline"))) beyond.add(k);
+  }
   const m = found("model");
   const b = found("baseline");
   const totals = { model: sum(withModel, "model"), baseline: sum(withModel, "baseline") };
@@ -421,7 +426,7 @@ export function l2Section(runs: { sel: SelectedRun; run: EvalRun }[]): L2Section
     rows,
     totals,
     cold_totals: { model: sum(coldWithModel, "model"), baseline: sum(coldWithModel, "baseline") },
-    keys_found: { model: m, baseline: b, only_model: m.filter((k) => !b.includes(k)), only_baseline: b.filter((k) => !m.includes(k)), both: m.filter((k) => b.includes(k)), model_beyond_any_baseline: m.filter((k) => !anyBaseline.has(k)) },
+    keys_found: { model: m, baseline: b, only_model: m.filter((k) => !b.includes(k)), only_baseline: b.filter((k) => !m.includes(k)), both: m.filter((k) => b.includes(k)), model_beyond_any_baseline: [...beyond].sort() },
     winner,
     runs_counted: withModel.length,
     cold_runs_counted: coldWithModel.length,
@@ -964,7 +969,7 @@ export function renderMarkdown(r: EvalReport): string {
   );
   out.push("");
   out.push(
-    `Distinct keys each side found VERIFIED by measuring them (runs with the model): model ${l2.keys_found.model.map(shortKey).join(", ") || "none"}; baseline ${l2.keys_found.baseline.map(shortKey).join(", ") || "none"}. Model keys outside the baseline's scored six: ${l2.keys_found.only_model.map(shortKey).join(", ") || "none"}; of these, VERIFIED by no baseline proposal at all (scored six or measure queue) in any run: ${l2.keys_found.model_beyond_any_baseline.map(shortKey).join(", ") || "none"}.`,
+    `Distinct keys each side found VERIFIED by measuring them (runs with the model): model ${l2.keys_found.model.map(shortKey).join(", ") || "none"}; baseline ${l2.keys_found.baseline.map(shortKey).join(", ") || "none"}. Model keys outside the baseline's scored six: ${l2.keys_found.only_model.map(shortKey).join(", ") || "none"}; of these, VERIFIED in a run where no baseline proposal (scored six or measure queue) named the same key: ${l2.keys_found.model_beyond_any_baseline.map(shortKey).join(", ") || "none"}.`,
   );
   out.push("");
 
