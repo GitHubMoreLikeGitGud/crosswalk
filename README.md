@@ -115,7 +115,7 @@ npm run dev                                            # terminal 2: http://127.
 - Every statement the runner and the gateway send is checked against `gateway/allowlist.py` (hosts `www.fema.gov`, `data.sec.gov`, `company-dns.mediumroast.io` and the `noaa-ghcn-pds` bucket; only `CW_*` databases, the `cw` container and the `lightning.metastore.crosswalk` namespace) and logged with its sha256 to `data/evidence/sql_log.jsonl`.
 - The SQL files carry a User-Agent placeholder that is filled from `CW_USER_AGENT` on the wire only.
 
-**Command line** (from `agent/`): `npm run replay -- <run_id>` prints a saved run without the model or the gateway; `npm run cli -- runs` lists runs; `npm run cli -- why <memory_id>` prints the ledger of one memory; `npm run cli -- known --left <object.column> --right <object.column>` answers "what did we know about this key, and since when". The HTTP API the UI is built on is in [`docs/api.md`](docs/api.md).
+**Command line** (from `agent/`): `npm run replay -- <run_id>` prints a saved run without the model or the gateway; `npm run cli -- runs` lists runs; `npm run cli -- why <memory_id>` prints the ledger of one memory; `npm run cli -- known --left <object.column> --right <object.column>` answers "what did we know about this key, and since when" (a period-specific view is named by its family, for example `--left cw.seed_submissions_snapshot.cik10 --right "cw.frames_*_CY2025Q1.cik"`). The HTTP API the UI is built on is in [`docs/api.md`](docs/api.md).
 
 ## Architecture
 
@@ -152,7 +152,7 @@ Zetaris is Crosswalk's only runtime path to data. Instance: local Docker, Zetari
 | `CW_FEMA.declarations_dr_<quarter>` -> `cw.fema_declarations_dr_<quarter>` | OpenFEMA `DisasterDeclarationsSummaries`, DR declarations dated in the quarter (`$filter` percent-encoded) | Q1 2025: 116 county rows, 10 declarations, 8 states; Q1 2024 (registered through the gateway's `register_source` endpoint by an operator call before the first question run; every run found it already registered): 72 rows, 14 declarations, 11 states. Both equal the same URL fetched outside Zetaris |
 | `CW_FEMA.datasets_catalogue` -> `cw.fema_catalogue` | OpenFEMA dataset list | 44 rows, 43 distinct names |
 | `CW_GHCN.ghcnd_stations_txt` -> `cw.stations` | `ghcnd-stations.txt` as a one-column CSV with a delimiter that never occurs, parsed by `SUBSTR` | 133,039 rows; the 56 seed stations all present with the same state |
-| `CW_SEC.frames_<tag>_<period>` -> `cw.frames_<tag>_<period>` | SEC XBRL frames, three revenue tags x CY2025Q1 and CY2024Q1 (plus CY2023Q1, registered at run time) | 1,937 / 2,095 / 2,546 / 2,654 / 20 / 22 facts, one row per filer |
+| `CW_SEC.frames_<tag>_<period>` -> `cw.frames_<tag>_<period>` | SEC XBRL frames, three revenue tags x CY2025Q1 and CY2024Q1 (plus CY2023Q1 and CY2022Q1, registered at run time) | 1,937 / 2,095 / 2,546 / 2,654 / 20 / 22 facts, one row per filer |
 | `CW_SEC.submissions_<cik10>` -> `cw.submission_<cik10>` | SEC submissions, 43 seed utilities | read once at onboarding into the snapshot view `cw.seed_submissions_snapshot` (43 rows), which the question path reads |
 | `CW_DNS.sic_codes_v4_raw` -> `cw.sic_codes` | company_dns SIC list | 1,005 codes |
 | `CW_GHCN.ghcn_<year>_<element>` -> `cw.ghcn_<year>_<element>` | GHCN-Daily parquet, 2024 and 2025, TMAX and TMIN, filtered to the seed stations plus one validation station | 57 stations each; degree days equal an independent parquet read to 0.01 |
@@ -181,7 +181,7 @@ Every view is cached; the gateway's warm-up keeps 63 cache targets (its `/health
 
 `SHOW DQ INVALID RECORD` names the one invalid row: MGE Energy (`0001161728`, SIC 4900, absent from the SIC list). **What runs live on a question and what is read from that file:** `compile_usl` runs `fema_declaration.state` and `utility_state.state` live in every run (116 / 116 / 0 and 97 / 97 / 0 in the Day-2 runs); the other four rules, and the MGE row, are read from the onboarding file and shown with its date. The question path never reads the USL tables themselves (a read of `utility` takes about 62 s because it resolves 43 submission views); the answer reads the cached views, and the USL is the governed copy a colleague queries.
 
-**Run-time registration.** `register_source` maps a catalogue id to a registrar plan (`register_fema`, `register_frames`, `register_submission`, `register_stations`, `register_ghcn`), signs a medium-risk contract and creates the REST or filestore table, its view and its cache. A Day-1 warm run (`r20261025T1413091c1c`) registered the three CY2023Q1 frames views this way (2,206, 2,755 and 22 rows, about 1 s each). In the Day-2 evaluation runs every registration answered `already_registered`.
+**Run-time registration.** `register_source` maps a catalogue id to a registrar plan (`register_fema`, `register_frames`, `register_submission`, `register_stations`, `register_ghcn`), signs a medium-risk contract and creates the REST or filestore table, its view and its cache. A Day-1 warm run (`r20261025T1413091c1c`) registered the three CY2023Q1 frames views this way (2,206, 2,755 and 22 rows, about 1 s each). In the Day-2 evaluation runs every registration answered `already_registered`. The warm Q1 2023 run recorded for the video (`r20261025T183917676f`, not part of the evaluation) registered FEMA Q1 2023 in 1.6 s and the three CY2022Q1 frames views in 1.1 to 1.4 s each ([`docs/video/shotlist.md`](docs/video/shotlist.md)).
 
 **What we learned on 2.4.3.1** (each recorded in `zetaris/README.md` with the statement that showed it): a view may be referenced once per statement; `DESCRIBE BY` text accepts letters, digits, spaces and `_ . - ,` only; `CREATE LIGHTNING DATABASE` and `CREATE SCHEMASTORE CONTAINER` take no `IF NOT EXISTS`; the OpenFEMA `$filter` must be percent-encoded and its `metadata.count` is not a row count; a USL read pays one hop per source view, so the 43-view `utility` table is read at onboarding only.
 
@@ -219,7 +219,7 @@ Developed in Cursor; details in [docs/how-cursor-was-used.md](docs/how-cursor-wa
 
 ## Evaluation
 
-All numbers are measured unless labelled otherwise. The full report is [`docs/eval-report.md`](docs/eval-report.md), generated by `agent/src/eval/run.ts` from seven saved Day-2 runs; its summary JSON and the side files are indexed in [`docs/eval/README.md`](docs/eval/README.md). The runs used code `6652e2f`, `ee04b0c` and `fc130bd`; between `fc130bd` and the commit this README describes, the code outside `docs/` changed only in the server's view functions (`agent/src/ops/cells.ts`, `agent/src/ops/usl.ts`), the UI, the evaluation tools (`agent/src/eval/`), tests and CI.
+All numbers are measured unless labelled otherwise. The full report is [`docs/eval-report.md`](docs/eval-report.md), generated by `agent/src/eval/run.ts` from seven saved Day-2 runs; its summary JSON and the side files are indexed in [`docs/eval/README.md`](docs/eval/README.md). The runs used code `6652e2f`, `ee04b0c` and `fc130bd`; between `fc130bd` and the commit this README describes, the code outside `docs/` changed only in the server's view functions (`agent/src/ops/cells.ts`, `agent/src/ops/usl.ts`), the UI, the header labels of the CLI replay (`agent/src/cli.ts`), the evaluation tools (`agent/src/eval/`), tests and CI; besides that, the configuration example dropped one unused key, two Zetaris SQL files changed in comments only, and one unused inherited script was removed from `scripts/`.
 
 **Reproducible.** 6 cold runs of the demo question (think on, think off, no model) give the same 12-row answer in every field and the same numbers and orphans for the 7 governed join-map keys; all 7 Day-2 answers equal the Day-1 reference runs.
 
@@ -269,7 +269,7 @@ In the warm Q1 2024 run the FEMA state key measures 8 of 11 = 0.727, REJECTED (A
 - **The live DQ covers two rules**; the other four and the MGE finding come from the onboarding file, dated on screen.
 - **Warm-run weather** is Not-tested when the year-earlier GHCN views are not among the objects the agent knows (its manifest and its own run-time registrations). The 2022 and 2023 views registered by an operator call before the video was recorded are therefore invisible to it, and the recorded Q1 2023 answer lists weather as Not-tested, saying the views are not registered. The warm run's recalled keys carry the numbers of the run that measured them (shown as recalled, with the key they were measured as).
 - **No least-privilege reader.** The gateway runs read templates on the admin login behind its reader allowlist; `/health` reports `admin_fallback`.
-- **One question at a time**, one local GPU, 43 seed utilities and 56 stations, Q1 2024 and Q1 2025 cached (plus CY2023Q1 frames). Tested on Windows 11 only.
+- **One question at a time**, one local GPU, 43 seed utilities and 56 stations, Q1 2024 and Q1 2025 cached (plus what warm runs registered: the CY2023Q1 and CY2022Q1 frames and FEMA Q1 2023). Tested on Windows 11 only.
 
 ## What did not go well
 
@@ -286,7 +286,7 @@ In the warm Q1 2024 run the FEMA state key measures 8 of 11 = 0.727, REJECTED (A
 - A person's time to find, write and read the manual-baseline SQL (the 179.5 s session ran pre-written statements).
 - More than one run per ablation setting; think off or no model on the warm question; a second quantisation of the model.
 - Revenue against the companies' own 10-Q figures; the served states of the other 41 seed utilities against their 10-Ks.
-- A run-time registration in the Day-2 runs (they all answered `already_registered`; the evidence is the Day-1 warm run).
+- A run-time registration in the Day-2 runs (they all answered `already_registered`; the evidence is the Day-1 warm run and the warm run recorded for the video).
 - The full onboarding DQ pass on Day 2 (the DQ file is from 25 Oct 13:46 SGT), and statement times under concurrent questions.
 - A from-scratch install of the Zetaris objects on a new instance (Quickstart B is the order in which they were created on 25 Oct).
 - CI on GitHub Actions before the repository went public (the same steps were run on a fresh clone, above).
@@ -296,7 +296,7 @@ In the warm Q1 2024 run the FEMA state key measures 8 of 11 = 0.727, REJECTED (A
 - The model never computes a number and never writes SQL or DDL. Match rates, counts, DQ results and every answer value come from Lightning SQL through the gateway; the note's numbers and words are checked against the run.
 - Every verdict word is defined where it is shown, the orphans are named, and the "no" results (REJECTED, PARTIAL, DQ invalid, not compared) are shown as plainly as the VERIFIED ones.
 - The utilities in the answer are whoever the FEMA join selects; none is hand-picked.
-- Source etiquette: SEC EDGAR at most 10 requests per second with the declared User-Agent, queried live and never redistributed; OpenFEMA cited as the source and nothing presented as FEMA-endorsed; GHCN read anonymously from the public bucket; company_dns called with an identifying User-Agent.
+- Source etiquette: SEC EDGAR with the declared User-Agent, queried live and never redistributed; the SQL runner (`gateway/run_sql.py`) spaces the statements that may call SEC EDGAR at least 0.1 s apart (the SEC's 10 requests per second), while Zetaris's own re-reads of its SEC REST tables are not paced by Crosswalk (on Day 0 one `RUN DQ` re-read the 43 submission endpoints in a burst and one call was refused, as `zetaris/README.md` records); OpenFEMA cited as the source and nothing presented as FEMA-endorsed; GHCN read anonymously from the public bucket; company_dns called with an identifying User-Agent.
 - Secrets (`CW_USER_AGENT`, `CW_CONTRACT_SECRET`, the Zetaris login) live only in `.env.local`, which is gitignored; the SQL files carry a placeholder filled on the wire only.
 - The planner's `thought` is shown as the model's plan, never as a fact; replayed runs are labelled REPLAY.
 
