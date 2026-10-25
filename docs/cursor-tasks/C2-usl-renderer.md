@@ -103,3 +103,9 @@ The activation queries (`ACTIVATE USL TABLE ... AS SELECT ...`, written by the Z
 `C2: USL plan validator and DDL renderer (Cursor Agent)`
 
 Do not commit; leave the changes in the working tree.
+
+## Run record
+
+- Run 2026-10-25, Cursor Agent CLI 2026.10.22-27dcf5f (model Auto), headless with the prompt from `README.md`: 153.8 s wall, exit 0, no commit (as asked), only the two deliverables added. Cursor reported `npx vitest run usl-plan` 15/15 and the tools type-check clean; it imported `isTransformSpec` from C1's `transforms.ts`, which was in the working tree.
+- Reviewed by hand against this file and `zetaris/sql/won-reference/05_won_usl_create.sql` (the full DDL of the fixture plan was rendered and read against the sister's compiled statement); checks re-run: 15 passed, tsc exit 0. Committed unchanged as `780d725` (`C2: USL plan validator and DDL renderer (Cursor Agent)`).
+- Corrected in `92d0971` (`C2 review`): the first version of this task and its fixture gave `renderDescriptions` the `LOAD USL` grammar (`<usl> NAMESPACE <namespace>`); the `UPDATE USL` statements that compiled on 2.4.3.1 address the object by its dotted path (`<namespace>.<usl>.<table>[.<column>] SET [TABLE | COLUMN] DESCRIPTION <text>`), so the renderer, the generator's three expected statements and the Rendering rules paragraph above were changed to that grammar (a task defect, not Cursor's); an optional plan-level `description` renders first as `UPDATE USL <namespace>.<usl> SET DESCRIPTION <text>`; the test file added to `tsconfig.tools.json`. After: 17 passed, tsc exit 0.

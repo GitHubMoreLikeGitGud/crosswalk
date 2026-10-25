@@ -51,8 +51,8 @@ From the repository root, in PowerShell:
 
 | Task | File | Scope | Status |
 |---|---|---|---|
-| C1 | [`C1-transforms-and-match-sql.md`](C1-transforms-and-match-sql.md) | the closed transform set as named functions with their Lightning SQL expressions, the match-rate statement renderer over two cached views, the result parser and verdict rule, tests against synthetic rows | written 2026-10-25; not yet run |
-| C2 | [`C2-usl-renderer.md`](C2-usl-renderer.md) | USL plan schema, validator (identifiers, types, PK/FK references, closed transform set, reserved words, namespace) and renderer to the one-statement `COMPILE USL` DDL plus description statements, tests | written 2026-10-25; not yet run |
-| C3 | [`C3-fema-and-stations.md`](C3-fema-and-stations.md) | OpenFEMA row parsing, DR filter, quarter bucketing from ISO dates, per-state declaration counts by incident type; the fixed-width `ghcnd-stations.txt` parser and its SUBSTR view text; tests | written 2026-10-25; not yet run |
+| C1 | [`C1-transforms-and-match-sql.md`](C1-transforms-and-match-sql.md) | the closed transform set as named functions with their Lightning SQL expressions, the match-rate statement renderer over two cached views, the result parser and verdict rule, tests against synthetic rows | run 2026-10-25 (199.4 s, exit 0); committed `bf07fa5`, review `f5295cf` |
+| C2 | [`C2-usl-renderer.md`](C2-usl-renderer.md) | USL plan schema, validator (identifiers, types, PK/FK references, closed transform set, reserved words, namespace) and renderer to the one-statement `COMPILE USL` DDL plus description statements, tests | run 2026-10-25 (153.8 s, exit 0); committed `780d725`, review `92d0971` |
+| C3 | [`C3-fema-and-stations.md`](C3-fema-and-stations.md) | OpenFEMA row parsing, DR filter, quarter bucketing from ISO dates, per-state declaration counts by incident type; the fixed-width `ghcnd-stations.txt` parser and its SUBSTR view text; tests | run 2026-10-25 (289.3 s, exit 0); committed `2a8c52b`, review `5237c2a` |
 
 The inherited task files of the sister entry (degree days, attribution, like-for-like revenue) are not part of this repository; their tools remain in `agent/src/tools/` as inherited code until the Crosswalk agent lane replaces them.

@@ -102,3 +102,9 @@ Registering the FEMA REST table or the station CSV in Zetaris (the Zetaris lane)
 `C3: FEMA declarations and GHCN station parsers (Cursor Agent)`
 
 Do not commit; leave the changes in the working tree.
+
+## Run record
+
+- Run 2026-10-25, Cursor Agent CLI 2026.10.22-27dcf5f (model Auto), headless with the prompt from `README.md`: 289.3 s wall, exit 0, no commit (as asked), only the four deliverables added. Cursor reported `npx vitest run fema` 9 and `npx vitest run stations` 7 passed and the tools type-check clean, and noted that it had dropped `TRIM(...)` from the name column of `stationsViewSql` because the fixture's `view_sql_must_contain` asked for the bare `SUBSTR(line, 42, 30) AS name`.
+- Reviewed by hand against this file; checks re-run: 16 passed, tsc exit 0. Committed unchanged as `2a8c52b` (`C3: FEMA declarations and GHCN station parsers (Cursor Agent)`).
+- Corrected in `5237c2a` (`C3 review`): the fixture fragment was the defect, not the task text, so the generator now expects `TRIM(SUBSTR(line, 42, 30)) AS name` (regenerated, one line changed) and the view trims the name as `parseStationLine` does; a blank coordinate field throws (`Number("        ")` is 0, while `CAST(TRIM('') AS DOUBLE)` is NULL in SQL); `quarterOf` throws on a month outside 1 to 12; the `WON_` refusal is case-insensitive and also covers the `won` container; the two test files added to `tsconfig.tools.json`. After: 21 passed, tsc exit 0.

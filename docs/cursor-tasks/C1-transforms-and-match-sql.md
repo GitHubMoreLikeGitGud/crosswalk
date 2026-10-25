@@ -135,3 +135,9 @@ The gateway template or plan that runs the rendered statements (the Zetaris lane
 `C1: transform set and match-rate SQL renderer (Cursor Agent)`
 
 Do not commit; leave the changes in the working tree.
+
+## Run record
+
+- Run 2026-10-25, Cursor Agent CLI 2026.10.22-27dcf5f (model Auto), headless with the prompt from `README.md`: 199.4 s wall, exit 0, no commit (as asked), only the four deliverables added. Cursor reported both suites green (30 tests) and the tools type-check clean, and noted that it had made `identity.apply` pass values through because the fixture expected the integer `1326160` back.
+- Reviewed by hand against the method and the SQL shapes in this file; checks re-run: `npx vitest run transforms match-rate` 30 passed, `npx tsc --noEmit -p tsconfig.tools.json` exit 0. Committed unchanged as `bf07fa5` (`C1: transform set and match-rate SQL renderer (Cursor Agent)`).
+- Corrected in `f5295cf` (`C1 review`): the fixture generator's `identity` returned the value unchanged instead of `str(v)` (a fixture defect; regenerated, one line changed), so `identity.apply` is `String(v)` as the table above says; `substr(01,2)` was accepted as a non-canonical spelling (now refused); `iso_to_quarter` returns `null` when the month is not 1 to 12 (Lightning's `CAST` of a bad month is NULL, so the SQL side drops the key too); `parseMatchRows` throws on a null or empty count instead of reading 0; the `WON_`/`won.` refusal is case-insensitive (Lightning folds identifier case); the two test files added to `tsconfig.tools.json`. After: 35 passed, tsc exit 0.
