@@ -31,7 +31,7 @@ Commits marked `(Cursor Agent)`: `git log --grep "(Cursor Agent)"` lists `bf07fa
 
 Wall time of the seven runs: 199.4 + 153.8 + 289.3 + 119.7 + 92.0 + 148 + 234.7 = 1,236.9 s of Cursor Agent time; no re-runs and no task-file clarification were needed. In three runs (C1, C3 and the C2 grammar) Cursor Agent flagged or followed an inconsistency between the task file and its fixture; in each case the reviewer's fixture or task file was at fault.
 
-**How much of it is still in the tree.** At commit `078f890`, `git blame -w --ignore-rev 0895579` attributes 3,208 of the 3,400 lines in the 17 files to the seven Cursor Agent commits:
+**How much of it is still in the tree.** At commit `078f890`, `git blame -w --ignore-rev 0895579` attributes 3,208 of the 3,400 lines in the 21 files to the seven Cursor Agent commits:
 
 | Task | Files (Cursor Agent's lines / lines now) | Total |
 |---|---|---|
