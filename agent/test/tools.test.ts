@@ -116,9 +116,9 @@ describe("the discovery loop on the fallback alone", () => {
     expect(steps.filter((s) => s === "probe_source")).toHaveLength(ctx.targets.length);
     expect(ctx.probes.size).toBe(8);
     // Every measurable proposal is measured, plus the identity control of the lpad10 key (L3).
-    expect(steps.filter((s) => s === "measure_key")).toHaveLength(6);
+    expect(steps.filter((s) => s === "measure_key")).toHaveLength(7);
     expect(ctx.proposals.proposedBy).toBe("baseline");
-    expect([...ctx.measured.keys()].sort()).toEqual(["cik@CY2025Q1", "cik_control@CY2025Q1", "fema_state@CY2025Q1", "loc@CY2025Q1", "sic@all", "station@all"]);
+    expect([...ctx.measured.keys()].sort()).toEqual(["cik@CY2025Q1", "cik_control@CY2025Q1", "fema_fips@CY2025Q1", "fema_state@CY2025Q1", "loc@CY2025Q1", "sic@all", "station@all"]);
     expect(ctx.measured.get("cik_control@CY2025Q1")!.verdict).toBe("REJECTED");
     expect(ctx.measured.get("fema_state@CY2025Q1")!.verdict).toBe("PARTIAL");
     expect(ctx.measured.get("sic@all")!.rate_distinct).toBe(0.75);
@@ -148,14 +148,14 @@ describe("the discovery loop on the fallback alone", () => {
       },
     };
     await runFallback(deps({ keyMemory: port }));
-    expect([...memory.values()].map((m) => m.key).sort()).toEqual(["cik@CY2025Q1", "cik_control@CY2025Q1", "fema_state@CY2025Q1", "loc@CY2025Q1", "sic@all", "station@all"]);
+    expect([...memory.values()].map((m) => m.key).sort()).toEqual(["cik@CY2025Q1", "cik_control@CY2025Q1", "fema_fips@CY2025Q1", "fema_state@CY2025Q1", "loc@CY2025Q1", "sic@all", "station@all"]);
     expect(memory.has("cw.frames_revenues_<period>.cik|cw.seed_utilities.cik|lpad10")).toBe(true);
     const warm = deps({ keyMemory: port });
     const { ctx, steps } = await runFallback(warm);
     expect(ctx.checklist.complete()).toBe(true);
     const skipped = ctx.skipped.filter((s) => s.item === "keys_measured").length;
     // VERIFIED keys are recalled; the PARTIAL FEMA key and the REJECTED control are measured again.
-    expect(skipped).toBe(4);
+    expect(skipped).toBe(5);
     expect(steps.filter((s) => s === "measure_key")).toHaveLength(2);
     expect(ctx.measured.get("cik@CY2025Q1")!.from_memory).toBe("mem-cik@CY2025Q1");
   });

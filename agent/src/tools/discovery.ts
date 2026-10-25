@@ -68,6 +68,10 @@ export interface Provenance {
   run_id: string;
   executed_at: string | null;
   cache_state: string | null;
+  /** The rows the statement returned (count, and the first rows for the evidence record). */
+  row_count?: number;
+  columns?: string[];
+  rows?: unknown[][];
 }
 
 export class DiscoveryRefusal extends Error {
@@ -90,6 +94,9 @@ async function call(port: TemplatePort, runId: string, template: string, params:
     run_id: runId,
     executed_at: reply.executed_at ?? null,
     cache_state: reply.cache_state ?? null,
+    row_count: reply.rows.length,
+    columns: [...reply.columns],
+    rows: reply.rows.slice(0, 20),
   };
   const rows = reply.rows.map((r) => Object.fromEntries(reply.columns.map((c, i) => [c, r[i] ?? null])));
   return { reply, prov, rows };

@@ -271,7 +271,8 @@ export async function investigate(opts: InvestigateOptions, deps: ToolDeps): Pro
     if (m.length) incomplete[r.id] = m;
   }
   const comparison = ctx.comparison ?? compareProposals(ctx);
-  const invalidPlanner = ctx.proposals.proposedBy === "planner" ? ctx.proposals.rejected.length : 0;
+  // The refused choices are always the model's (the baseline's own choices are valid by construction).
+  const invalidPlanner = ctx.proposals.rejected.length;
   const plannerChoices = ctx.proposals.proposedBy === "planner" ? ctx.proposals.model.map((a) => ({ id: a.id, left: a.left, right: a.right, transform: a.transform, route: a.route })) : [];
   const baseTop = ctx.proposals.baseline.slice(0, BASELINE_SCORED).map((b) => ({ id: b.id, left: b.left, right: b.right, transform: b.transform, route: b.route, score: b.score }));
   const proposeCalls = tel.plannerCalls.filter((p) => p.chosen?.tool === "propose_keys" || (p.first_errors ?? []).some((e) => e.includes("choices")));

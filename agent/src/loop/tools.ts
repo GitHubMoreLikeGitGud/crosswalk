@@ -330,8 +330,10 @@ function compilePort(gateway: TemplatePort): TemplatePort {
 const knownTemplates = () => new Set(Object.keys(TEMPLATE_PARAMS));
 
 /** An evidence record for one statement the gateway ran (its provenance as the tool returned it). */
-function statementEvidence(deps: ToolDeps, p: Provenance, claim: string, object: string, rows: unknown[][] = [], columns: string[] = []): EvidenceRecord {
+function statementEvidence(deps: ToolDeps, p: Provenance, claim: string, object: string, rowsIn: unknown[][] = [], columnsIn: string[] = []): EvidenceRecord {
   const src = sourceFor(object);
+  const rows = rowsIn.length ? rowsIn : (p.rows ?? []);
+  const columns = columnsIn.length ? columnsIn : (p.columns ?? []);
   return deps.evidence.add({
     kind: "zetaris_sql",
     claim,
@@ -347,7 +349,7 @@ function statementEvidence(deps: ToolDeps, p: Provenance, claim: string, object:
     source_cached_at: null,
     columns,
     rows: rows.slice(0, 60),
-    row_count: rows.length,
+    row_count: p.row_count ?? rows.length,
     elapsed_ms: p.elapsed_ms,
     cache_state: p.cache_state ?? "unknown",
     ...(p.executed_at ? { queried_at: p.executed_at } : {}),
@@ -432,7 +434,7 @@ const probeTool = def("probe_source", {
 
 /** The baseline is scored on as many choices as the planner may make; ranks 7-12 only extend the measure queue so a run without the model still reaches five keys. */
 export const BASELINE_SCORED = 6;
-export const BASELINE_QUEUE = 12;
+export const BASELINE_QUEUE = 24;
 
 /** The deterministic baseline's choices on this run's probes (C5), as the fallback input of propose_keys. */
 export function baselineChoices(ctx: QuestionContext, limit = BASELINE_SCORED): BaselineChoice[] {
@@ -445,7 +447,12 @@ const proposeTool = def("propose_keys", {
   optional: false,
   available: (ctx) => resolved(ctx, "shapes_probed") && ctx.probes.size >= 2 && pending(ctx, "keys_proposed"),
   defaultInput: (ctx) => ({ choices: baselineChoices(ctx).map(plain) }),
-  checkInput: noCheck,
+  // A reply whose every choice is refused (an object not probed, a cut name, a transform outside the set) goes back to the model in the repair round.
+  checkInput(input, ctx) {
+    if (input.choices === undefined) return [];
+    const checked = proposeKeys(input.choices, { probed: new Set(ctx.probes.keys()), knownTemplates: knownTemplates() });
+    return checked.accepted.length ? [] : [`action.input.choices: no choice is valid (${checked.rejected.slice(0, 3).map((r) => r.error).join("; ")}); copy object names exactly from the probed views`];
+  },
   async run(input, ctx, deps) {
     const probed = new Set(ctx.probes.keys());
     const known = knownTemplates();
@@ -454,9 +461,15 @@ const proposeTool = def("propose_keys", {
       const r = routeOf(toProposal(b), known);
       return { ...b, id: `b${i + 1}`, route: r ? routeKey(r, toProposal(b)) : null };
     });
-    const choices = input.choices ?? [];
+    let choices = input.choices ?? [];
+    let checked = proposeKeys(choices, { probed, knownTemplates: known });
+    const modelRejected = checked.rejected;
+    // A second refusal of every choice falls back to the deterministic baseline (the run says so); the model's refused choices are kept for the score.
+    if (checked.accepted.length === 0 && ctx.checklist.get("keys_proposed").failures >= 1) {
+      choices = base.slice(0, BASELINE_SCORED).map(plain);
+      checked = { accepted: proposeKeys(choices, { probed, knownTemplates: known }).accepted, rejected: modelRejected };
+    }
     const byBaseline = JSON.stringify(choices) === JSON.stringify(base.slice(0, BASELINE_SCORED).map(plain));
-    const checked = proposeKeys(choices, { probed, knownTemplates: known });
     ctx.proposals.rejected = checked.rejected;
     ctx.proposals.model = checked.accepted.map((a, i) => ({ ...a, id: `k${i + 1}` }));
     ctx.proposals.proposedBy = byBaseline ? "baseline" : "planner";
@@ -727,19 +740,17 @@ export function noteMaterial(ctx: QuestionContext): { allowed: AllowedNumber[]; 
   if (a) {
     add("utilities", String(a.rows.length));
     findings.push(`${a.rows.length} utilities served states with major-disaster declarations in ${ctx.quarter}.`);
-    for (const r of a.rows.slice(0, 8)) {
-      add(`${r.name} declarations`, String(r.declarations));
-      if (r.revenue?.change !== null && r.revenue?.change !== undefined) {
-        add(`${r.name} revenue change`, pct(r.revenue.change));
-        findings.push(`${r.name}: ${r.declarations} declaration(s) in ${r.states.map((s) => s.state).join(", ")}; revenue ${pct(r.revenue.change)} year on year under ${r.revenue.tag}.`);
-      } else {
-        findings.push(`${r.name}: ${r.declarations} declaration(s) in ${r.states.map((s) => s.state).join(", ")}; revenue not compared (${r.revenue?.note ?? r.revenue_note ?? "no value"}).`);
-      }
-      if (r.weather) {
-        add(`${r.name} weather change`, pct(r.weather.change));
-        findings.push(`${r.name}: total degree days ${pct(r.weather.change)} year on year over ${r.weather.stations.length === 1 ? "one station" : "its stations"}.`);
-      }
-    }
+    const label = (r: (typeof a.rows)[number]) => r.ticker ?? r.name;
+    const states = [...new Set(a.rows.flatMap((r) => r.states.map((s) => s.state)))].sort();
+    findings.push(`Declared states served: ${states.join(", ")}; ${a.rows.map((r) => `${label(r)} ${r.states.map((s) => s.state).join("+")}`).join(", ")}.`);
+    const compared = a.rows.filter((r) => r.revenue?.change !== null && r.revenue?.change !== undefined);
+    for (const r of compared) add(`${label(r)} revenue change`, pct(r.revenue!.change!));
+    if (compared.length) findings.push(`Revenue year on year (first available tag): ${compared.map((r) => `${label(r)} ${pct(r.revenue!.change!)}`).join(", ")}.`);
+    const notCompared = a.rows.filter((r) => !compared.includes(r));
+    if (notCompared.length) findings.push(`Revenue not compared: ${notCompared.map((r) => `${label(r)} (${r.revenue?.note ?? r.revenue_note ?? "no value"})`).join("; ")}.`);
+    const withWeather = a.rows.filter((r) => r.weather);
+    for (const r of withWeather) add(`${label(r)} degree-day change`, pct(r.weather!.change));
+    if (withWeather.length) findings.push(`Total heating plus cooling degree days at their stations, year on year: ${withWeather.map((r) => `${label(r)} ${pct(r.weather!.change)}`).join(", ")}.`);
   }
   return { allowed, findings, dq };
 }
