@@ -17,7 +17,7 @@
       },
       {
         "input": 1326160,
-        "expected": 1326160
+        "expected": "1326160"
       },
       {
         "input": null,

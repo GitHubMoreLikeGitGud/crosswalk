@@ -33,7 +33,8 @@ function assertObjectName(name: string, label: string): void {
   if (typeof name !== "string" || !OBJECT_RE.test(name)) {
     throw new Error(`invalid ${label}: ${name}`);
   }
-  if (name.startsWith("WON_") || name.startsWith("won.")) {
+  // Lightning folds identifier case: refuse the sister project's objects in any spelling.
+  if (/^won[_.]/i.test(name)) {
     throw new Error(`refused object: ${name}`);
   }
 }
@@ -101,9 +102,13 @@ function coerceCount(row: Record<string, unknown>, col: string): number {
   if (!(col in row)) {
     throw new Error(`missing column: ${col}`);
   }
-  const n = Number(row[col]);
+  const raw = row[col];
+  if (raw === null || raw === undefined || raw === "") {
+    throw new Error(`null ${col}`);
+  }
+  const n = Number(raw);
   if (Number.isNaN(n)) {
-    throw new Error(`invalid ${col}: ${row[col]}`);
+    throw new Error(`invalid ${col}: ${raw}`);
   }
   return n;
 }

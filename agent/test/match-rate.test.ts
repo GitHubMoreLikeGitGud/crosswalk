@@ -102,6 +102,8 @@ describe("validateProposal", () => {
       validateProposal({ ...base, leftObject: "won.frames_revenues_cy2025q1" }),
     ).toThrow(Error);
     expect(() => validateProposal({ ...base, rightObject: "WON_SEC.frames" })).toThrow(Error);
+    expect(() => validateProposal({ ...base, rightObject: "won_sec.frames" })).toThrow(Error);
+    expect(() => validateProposal({ ...base, rightObject: "Won.frames" })).toThrow(Error);
   });
 });
 
@@ -130,6 +132,15 @@ describe("parseMatchRows", () => {
 
   it("throws on a missing column", () => {
     expect(() => parseMatchRows(proposal, [{ left_keys: 7 }], [])).toThrow(Error);
+  });
+
+  it("throws on a null count instead of reading it as zero", () => {
+    expect(() => parseMatchRows(proposal, [{ left_keys: null, matched_keys: 6 }], [])).toThrow(
+      Error,
+    );
+    expect(() => parseMatchRows(proposal, [{ left_keys: 7, matched_keys: "" }], [])).toThrow(
+      Error,
+    );
   });
 
   it("throws on two count rows", () => {

@@ -30,11 +30,27 @@ describe("parseTransform refuses invalid specs", () => {
     "strip_prefix(US-)",
     "",
     "identity;",
+    "substr(01,2)",
+    "substr(4,02)",
   ]) {
     it(`refuses ${JSON.stringify(bad)}`, () => {
       expect(() => parseTransform(bad)).toThrow(Error);
     });
   }
+});
+
+describe("apply returns strings and mirrors the SQL null cases", () => {
+  it("identity stringifies a numeric cik", () => {
+    expect(parseTransform("identity").apply(1326160)).toBe("1326160");
+  });
+
+  it("iso_to_quarter is null when the month cannot be read, like CAST in SQL", () => {
+    const t = parseTransform("iso_to_quarter");
+    expect(t.apply("2025")).toBeNull();
+    expect(t.apply("2025-xx-01")).toBeNull();
+    expect(t.apply("2025-13-01")).toBeNull();
+    expect(t.apply("2025-12-31")).toBe("CY2025Q4");
+  });
 });
 
 describe("transform sql", () => {

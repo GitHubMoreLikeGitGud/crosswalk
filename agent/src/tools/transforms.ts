@@ -24,7 +24,6 @@ function nullIn(v: unknown): v is null | undefined {
   return v === null || v === undefined;
 }
 
-/** Pass-through: fixture expects numeric identity unchanged; SQL still CAST AS STRING. */
 export function identity(): Transform {
   return {
     spec: "identity",
@@ -32,7 +31,7 @@ export function identity(): Transform {
     args: [],
     apply(v: unknown): string | null {
       if (nullIn(v)) return null;
-      return v as string;
+      return String(v);
     },
     sql(x: string): string {
       return `CAST(${x} AS STRING)`;
@@ -132,6 +131,10 @@ export function isoToQuarter(): Transform {
       const s = String(v);
       const year = s.slice(0, 4);
       const month = Number(s.slice(5, 7));
+      // Lightning's CAST of a non-numeric month is NULL and the CONCAT is NULL: same here.
+      if (!/^\d{4}$/.test(year) || !Number.isInteger(month) || month < 1 || month > 12) {
+        return null;
+      }
       const q = Math.floor((month + 2) / 3);
       return `CY${year}Q${q}`;
     },
@@ -150,7 +153,7 @@ const SIMPLE: Record<string, () => Transform> = {
   "strip_prefix('US-')": stripPrefixUS,
 };
 
-const SUBSTR_RE = /^substr\((\d+),(\d+)\)$/;
+const SUBSTR_RE = /^substr\(([1-9]\d*),([1-9]\d*)\)$/;
 
 export function parseTransform(spec: string): Transform {
   if (Object.prototype.hasOwnProperty.call(SIMPLE, spec)) {

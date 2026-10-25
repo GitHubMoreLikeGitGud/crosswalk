@@ -20,7 +20,7 @@ VERIFIED, PARTIAL = 0.95, 0.80
 
 # ---------------------------------------------------------------- the closed transform set
 def identity(v):
-    return v
+    return None if v is None else str(v)
 
 
 def upper(v):

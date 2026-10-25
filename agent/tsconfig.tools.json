@@ -5,6 +5,8 @@
     "test/degree-days.test.ts",
     "test/attribution.test.ts",
     "test/recast.test.ts",
-    "test/frames.test.ts"
+    "test/frames.test.ts",
+    "test/transforms.test.ts",
+    "test/match-rate.test.ts"
   ]
 }
