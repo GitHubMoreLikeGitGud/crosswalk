@@ -76,7 +76,21 @@ def test_risk_classes_follow_the_plan_registry():
     assert contracts.risk_level("read") == "low"
     assert contracts.risk_level(ACTION) == "medium"
     assert contracts.risk_level("register_off") is None
-    assert ACTION in contracts.registrar_actions() and set(contracts.registrar_actions()) == set(templates.REGISTRAR_PLANS)
+    assert ACTION in contracts.registrar_actions()
+    assert set(contracts.registrar_actions()) == set(templates.REGISTRAR_PLANS) | {"register_source"}
+    assert contracts.risk_level("register_source") == "medium"
+
+
+def test_register_source_contracts_are_checked_like_a_plan():
+    params = {"catalogue_id": "openfema_disaster_declarations", "quarter": "CY2024Q1"}
+    c = contract("register_source", params)
+    assert verify_contract(c, "register_source", params, SECRET, T0 + timedelta(seconds=5)) is None
+    r = verify_contract(c, "register_source", {**params, "quarter": "CY2023Q1"}, SECRET, T0)
+    assert r is not None and r.code == "parameter_mismatch"
+    r = verify_contract(contract(ACTION, PARAMS), "register_source", params, SECRET, T0)
+    assert r is not None and r.code == "wrong_action"
+    r = verify_contract(contract("register_source", params, level="high"), "register_source", params, SECRET, T0)
+    assert r is not None and r.code == "risk_mismatch"
 
 
 def test_accepts_a_valid_registrar_contract():

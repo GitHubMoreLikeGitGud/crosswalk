@@ -223,3 +223,108 @@ def test_health_lists_the_registrar_actions(setup):
     client, _, _, _ = setup
     body = client.get("/health").json()
     assert ACTION in body["registrar_actions"] and "registrar_frames_cache" in body["templates"]
+
+
+# -- register_source: catalogue id -> registrar plan, idempotent ------------------------------------------------------
+
+SRC = {"catalogue_id": "openfema_disaster_declarations", "quarter": "CY2024Q1"}
+FEMA_VIEW_2024Q1 = "cw.fema_declarations_dr_2024q1"
+NOT_FOUND = ("[TABLE_OR_VIEW_NOT_FOUND] The table or view `cw`.`fema_declarations_dr_2024q1` cannot be found.")
+
+
+class MissingOnce(FakeZetaris):
+    """DESCRIBE of the view fails as not found until the view is created."""
+
+    def __init__(self, storage):
+        super().__init__(storage=storage)
+        self.created = False
+
+    def execute(self, sql, timeout_s=None, max_rows=None):
+        if sql.startswith("CREATE SCHEMASTORE VIEW"):
+            self.created = True
+        if sql.startswith("DESCRIBE") and not self.created:
+            self.sql.append(sql)
+            raise ZetarisError(NOT_FOUND)
+        return super().execute(sql, timeout_s, max_rows)
+
+
+def source_client(tmp_path, monkeypatch, conn, storage):
+    monkeypatch.setenv("CW_USER_AGENT", UA)
+    gw = Gateway(connect=lambda role: conn, storage=lambda: storage)
+    gw.start_warmup = lambda: None
+    verifier = Verifier(SECRET, name="test", directory=tmp_path / "contracts")
+    return TestClient(create_app(gw, warm_on_start=False, registrar=registrar.Registrar(gw, verifier=verifier)))
+
+
+def test_register_source_runs_the_mapped_plan_when_the_view_is_missing(tmp_path, monkeypatch):
+    storage = {"app_id": "local-1", "started_at_ms": 0, "cached": set()}
+    conn = MissingOnce(storage)
+    client = source_client(tmp_path, monkeypatch, conn, storage)
+    c = contract("register_source", SRC, cid="c-src-1")
+    r = client.post("/registrar/register_source", json={**SRC, "contract": c})
+    body = r.json()
+    assert r.status_code == 200, body
+    assert body["action"] == "register_source" and body["dispatched_to"] == "register_fema" and body["already_registered"] is False
+    assert [s.split()[0] + " " + s.split()[1] for s in sent(conn)] == [
+        "DESCRIBE cw.fema_declarations_dr_2024q1", "CREATE LIGHTNING", "CREATE SCHEMASTORE", "DESCRIBE cw.fema_declarations_dr_2024q1",
+        "CACHE TABLE"]
+    assert "declarationDate%20ge%20%272024-01-01T00%3A00%3A00.000Z%27" in sent(conn)[1]
+    assert body["steps"][0]["missing"] is True and FEMA_VIEW_2024Q1 in storage["cached"]
+    again = client.post("/registrar/register_source", json={**SRC, "contract": c})
+    assert again.status_code == 403 and again.json()["code"] == "replayed"
+
+
+def test_register_source_answers_already_registered_and_recaches_only_if_evicted(tmp_path, monkeypatch):
+    storage = {"app_id": "local-1", "started_at_ms": 0, "cached": {FEMA_VIEW_2024Q1}}
+    conn = FakeZetaris(storage=storage)
+    client = source_client(tmp_path, monkeypatch, conn, storage)
+    r = client.post("/registrar/register_source", json={**SRC, "contract": contract("register_source", SRC, cid="c-src-2")})
+    assert r.status_code == 200 and r.json()["already_registered"] is True
+    assert sent(conn) == [f"DESCRIBE {FEMA_VIEW_2024Q1}"]
+    storage["cached"].clear()
+    r = client.post("/registrar/register_source", json={**SRC, "contract": contract("register_source", SRC, cid="c-src-3")})
+    assert r.status_code == 200 and r.json()["already_registered"] is True and r.json()["cache_ok"] is True
+    assert sent(conn)[1:] == [f"DESCRIBE {FEMA_VIEW_2024Q1}", f"CACHE TABLE {FEMA_VIEW_2024Q1}"]
+
+
+@pytest.mark.parametrize("body,status,code", [
+    ({"catalogue_id": "pudl"}, 403, "known_to_fail"),
+    ({"catalogue_id": "sec_companyconcept", "cik10": "0000004904", "tag": "Revenues"}, 400, "not_registrable"),
+    ({"catalogue_id": "openfema_catalogue"}, 400, "not_registrable"),
+    ({"catalogue_id": "nasa_donki"}, 404, "unknown_source"),
+    ({"catalogue_id": "Sec_frames", "tag": "Revenues", "period": "CY2023Q1"}, 400, "bad_params"),
+    ({"catalogue_id": "sec_frames", "tag": "Revenues", "period": "CY2023Q4"}, 400, "bad_params"),
+    ({"catalogue_id": "noaa_ghcn_by_year", "year": "2025", "element": "PRCP"}, 400, "bad_params"),
+])
+def test_register_source_refuses_before_any_statement(tmp_path, monkeypatch, body, status, code):
+    storage = {"app_id": "local-1", "started_at_ms": 0, "cached": set()}
+    conn = FakeZetaris(storage=storage)
+    client = source_client(tmp_path, monkeypatch, conn, storage)
+    r = client.post("/registrar/register_source", json={**body, "contract": contract("register_source", body)})
+    assert r.status_code == status and r.json()["code"] == code
+    assert conn.sql == []
+
+
+def test_register_source_needs_a_register_source_contract_for_the_same_parameters(tmp_path, monkeypatch):
+    storage = {"app_id": "local-1", "started_at_ms": 0, "cached": set()}
+    conn = FakeZetaris(storage=storage)
+    client = source_client(tmp_path, monkeypatch, conn, storage)
+    plan_contract = contract("register_fema", {"quarter": "CY2024Q1"})
+    r = client.post("/registrar/register_source", json={**SRC, "contract": plan_contract})
+    assert r.status_code == 403 and r.json()["code"] == "wrong_action"
+    r = client.post("/registrar/register_source", json={**SRC, "contract": contract("register_source", {**SRC, "quarter": "CY2025Q1"})})
+    assert r.status_code == 403 and r.json()["code"] == "parameter_mismatch"
+    r = client.post("/registrar/register_source", json={**SRC, "contract": contract("register_source", {"quarter": "CY2024Q1"})})
+    assert r.status_code == 403 and r.json()["code"] == "parameter_mismatch"  # catalogue_id is a signed parameter too
+    assert conn.sql == []
+
+
+def test_register_source_reports_a_describe_error_that_is_not_a_missing_view(tmp_path, monkeypatch):
+    storage = {"app_id": "local-1", "started_at_ms": 0, "cached": set()}
+    conn = FakeZetaris(fail={"DESCRIBE": "connection reset"}, storage=storage)
+    client = source_client(tmp_path, monkeypatch, conn, storage)
+    c = contract("register_source", SRC, cid="c-src-9")
+    r = client.post("/registrar/register_source", json={**SRC, "contract": c})
+    assert r.status_code == 502 and r.json()["code"] == "registrar_failed"
+    assert [s for s in sent(conn) if not s.startswith("DESCRIBE")] == []  # nothing created after a failed probe
+    assert client.post("/registrar/register_source", json={**SRC, "contract": c}).json()["code"] == "replayed"

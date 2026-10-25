@@ -41,10 +41,11 @@ CLOCK_SKEW = timedelta(seconds=60)
 APPROVER = "analyst"
 APPROVAL_SURFACE = "cw-ui"
 SURFACES = ("cw-ui", "cw-agent")
-# Reads are low risk; every registrar plan (templates.REGISTRAR_PLANS) is medium risk. The
-# analyst's override_recast (parameters conflict_id, chosen, reason) is high risk and runs in
-# the agent, never here; it is mirrored so both verifiers class every action of the pack alike.
-RISK_CLASSES: dict[str, str] = {"read": "low", "override_recast": "high"}
+# Reads are low risk; every registrar plan (templates.REGISTRAR_PLANS) and register_source (a catalogue
+# id dispatched to one of those plans) are medium risk. The analyst's override_recast (parameters
+# conflict_id, chosen, reason) is high risk and runs in the agent, never here; it is mirrored so both
+# verifiers class every action of the pack alike.
+RISK_CLASSES: dict[str, str] = {"read": "low", "override_recast": "high", "register_source": "medium"}
 CONTRACTS_DIR = ROOT / "data" / "contracts"
 
 _LONE_SURROGATE = re.compile(r"[\ud800-\udfff]")
@@ -57,7 +58,7 @@ class ContractError(ValueError):
 
 
 def registrar_actions() -> tuple[str, ...]:
-    return tuple(templates.REGISTRAR_PLANS)
+    return templates.registrar_actions()
 
 
 def risk_level(action: str) -> str | None:
@@ -283,8 +284,8 @@ def default_verifier() -> Verifier:
 
 def check_request(raw, action: str, params: dict[str, str], verifier: Verifier | None = None) -> tuple[int, dict | None]:
     """(200, None) if the registrar may run `action`; else (403, body) for the HTTP reply.
-    The registrar accepts only its own medium-risk plans, never anything else."""
-    if action not in templates.REGISTRAR_PLANS:
+    The registrar accepts only its own medium-risk plans and register_source, never anything else."""
+    if action not in templates.REGISTRAR_PLANS and action != templates.REGISTER_SOURCE:
         return 403, {"error": f"refused: the registrar does not run {action}", "code": "wrong_action"}
     try:
         v = verifier or default_verifier()

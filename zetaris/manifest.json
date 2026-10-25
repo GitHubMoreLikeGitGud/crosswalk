@@ -10,13 +10,14 @@
       "status": "verified",
       "requires": [],
       "hosts": ["www.fema.gov"],
-      "summary": "OpenFEMA DisasterDeclarationsSummaries v2 filtered to major disasters (DR) declared in Q1 2025 (116 designated areas, 10 declarations, 8 states; equals the response fetched outside Zetaris) and the OpenFemaDataSets v1 catalogue (44 rows, 43 distinct names); container cw created here; both views cached (2026-10-25)",
+      "summary": "OpenFEMA DisasterDeclarationsSummaries v2 filtered to major disasters (DR) declared in Q1 2025 (116 designated areas, 10 declarations, 8 states; equals the response fetched outside Zetaris) and the OpenFemaDataSets v1 catalogue (44 rows, 43 distinct names); container cw created here; both views cached (2026-10-25). CY2024Q1 registered at run time through the gateway's register_source (catalogue id openfema_disaster_declarations -> register_fema, signed contract): 72 designated areas, 14 declarations, 11 states, equal to the same URL fetched outside Zetaris; cached; registration 1.34 s wall (2026-10-25)",
       "objects": {
         "database": "CW_FEMA",
         "container": "cw",
         "raw": ["CW_FEMA.declarations_dr_2025q1", "CW_FEMA.datasets_catalogue"],
         "views": ["cw.fema_declarations_dr_2025q1", "cw.fema_catalogue"],
-        "runtime_views": ["cw.fema_declarations_dr_<quarter_slug>"]
+        "runtime_views": ["cw.fema_declarations_dr_<quarter_slug>"],
+        "registered_at_run_time": ["cw.fema_declarations_dr_2024q1"]
       }
     },
     {
