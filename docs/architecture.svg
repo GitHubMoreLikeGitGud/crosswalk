@@ -1,0 +1,170 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="1150" viewBox="0 0 1500 1150" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" role="img" aria-labelledby="t d">
+<title id="t">Crosswalk architecture</title>
+<desc id="d">OpenFEMA, SEC EDGAR, NOAA GHCN-Daily and the company_dns SIC list are read only through Zetaris Lightning: REST and filestore tables, cached SchemaStore views in the container cw, and the crosswalk_usl Unified Semantic Layer with foreign-key data-quality rules. A gateway exposes 59 named SQL templates and contract-checked registrar plans. In the agent server a Markovian discovery loop runs six discovery tools; Nemotron 3 Nano 4B on local Ollama chooses the next step and proposes join keys from a menu of probed columns, deterministic tools measure every key as a match rate in Lightning SQL, H-MEM keeps verified keys for the next question, the World Model keeps key edges with their measurement time, and every number cites the SQL that produced it. The analyst reads the discovery timeline, the join map, the semantic layer with its DQ results and the cited answer in the UI.</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#4A5563"/></marker><marker id="arrow-start" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#4A5563"/></marker></defs>
+<rect width="1500" height="1150" fill="#FFFFFF"/>
+<text x="30" y="46" font-size="26" font-weight="bold" font-style="normal" fill="#1F2933" text-anchor="start">Crosswalk: measure how three agencies' data join, then answer from the joins</text>
+<text x="30" y="74" font-size="15" font-weight="normal" font-style="normal" fill="#52606D" text-anchor="start">One machine: Zetaris Lightning in local Docker, the gateway and the agent server on 127.0.0.1, Nemotron in local Ollama. No cloud model calls.</text>
+<rect x="280" y="110" width="400" height="700" rx="14" fill="#F6FBFB" stroke="#0E7C86" stroke-width="2.0" stroke-dasharray="7 5"/>
+<rect x="985" y="110" width="490" height="790" rx="14" fill="#FAFAFC" stroke="#9AA3AF" stroke-width="2.0" stroke-dasharray="7 5"/>
+<text x="30" y="150" font-size="11" font-weight="bold" font-style="normal" fill="#5F6670" text-anchor="start" letter-spacing="1.2">PUBLIC SOURCES</text>
+<rect x="30" y="165" width="226" height="104" rx="10" fill="#F5F6F8" stroke="#8A8F98" stroke-width="2.0"/>
+<text x="44" y="195" font-size="17" font-weight="bold" font-style="normal" fill="#1F2933" text-anchor="start">OpenFEMA</text>
+<text x="44" y="218" font-size="14" font-weight="normal" font-style="normal" fill="#52606D" text-anchor="start">disaster declarations (DR)</text>
+<text x="44" y="237" font-size="14" font-weight="normal" font-style="normal" fill="#52606D" text-anchor="start">and the dataset list</text>
+<text x="44" y="256" font-size="14" font-weight="normal" font-style="normal" fill="#52606D" text-anchor="start">public US federal data</text>
+<rect x="30" y="285" width="226" height="104" rx="10" fill="#F5F6F8" stroke="#8A8F98" stroke-width="2.0"/>
+<text x="44" y="315" font-size="17" font-weight="bold" font-style="normal" fill="#1F2933" text-anchor="start">SEC EDGAR</text>
+<text x="44" y="338" font-size="14" font-weight="normal" font-style="normal" fill="#52606D" text-anchor="start">XBRL frames, submissions</text>
+<text x="44" y="357" font-size="14" font-weight="normal" font-style="normal" fill="#52606D" text-anchor="start">declared User-Agent;</text>
+<text x="44" y="376" font-size="14" font-weight="normal" font-style="normal" fill="#52606D" text-anchor="start">queried live, not redistributed</text>
+<rect x="30" y="405" width="226" height="104" rx="10" fill="#F5F6F8" stroke="#8A8F98" stroke-width="2.0"/>
+<text x="44" y="435" font-size="17" font-weight="bold" font-style="normal" fill="#1F2933" text-anchor="start">NOAA GHCN-Daily</text>
+<text x="44" y="458" font-size="14" font-weight="normal" font-style="normal" fill="#52606D" text-anchor="start">station inventory, daily</text>
+<text x="44" y="477" font-size="14" font-weight="normal" font-style="normal" fill="#52606D" text-anchor="start">TMAX and TMIN parquet</text>
+<text x="44" y="496" font-size="14" font-weight="normal" font-style="normal" fill="#52606D" text-anchor="start">CC0-1.0 (cite NOAA NCEI)</text>
+<rect x="30" y="525" width="226" height="104" rx="10" fill="#F5F6F8" stroke="#8A8F98" stroke-width="2.0"/>
+<text x="44" y="555" font-size="17" font-weight="bold" font-style="normal" fill="#1F2933" text-anchor="start">company_dns</text>
+<text x="44" y="578" font-size="14" font-weight="normal" font-style="normal" fill="#52606D" text-anchor="start">US SIC code list,</text>
+<text x="44" y="597" font-size="14" font-weight="normal" font-style="normal" fill="#52606D" text-anchor="start">1,005 codes</text>
+<text x="44" y="616" font-size="14" font-weight="normal" font-style="normal" fill="#52606D" text-anchor="start">service under Apache-2.0</text>
+<text x="30" y="662" font-size="13" font-weight="normal" font-style="italic" fill="#52606D" text-anchor="start">Zetaris is the only</text>
+<text x="30" y="680" font-size="13" font-weight="normal" font-style="italic" fill="#52606D" text-anchor="start">runtime path to them.</text>
+<text x="300" y="138" font-size="11" font-weight="bold" font-style="normal" fill="#0B6670" text-anchor="start" letter-spacing="1.2">ZETARIS</text>
+<text x="300" y="160" font-size="17" font-weight="bold" font-style="normal" fill="#1F2933" text-anchor="start">Lightning 2.4.3.1, local Docker</text>
+<rect x="300" y="175" width="360" height="148" rx="10" fill="#E7F4F5" stroke="#0E7C86" stroke-width="2.0"/>
+<text x="314" y="205" font-size="17" font-weight="bold" font-style="normal" fill="#1F2933" text-anchor="start">REST tables, views cached</text>
+<text x="314" y="228" font-size="14" font-weight="normal" font-style="normal" fill="#52606D" text-anchor="start">CW_FEMA.declarations_dr_&lt;quarter&gt;</text>
+<text x="314" y="247" font-size="14" font-weight="normal" font-style="normal" fill="#52606D" text-anchor="start">CW_FEMA.datasets_catalogue</text>
+<text x="314" y="266" font-size="14" font-weight="normal" font-style="normal" fill="#52606D" text-anchor="start">CW_SEC.frames_&lt;tag&gt;_&lt;period&gt;, submissions</text>
+<text x="314" y="285" font-size="14" font-weight="normal" font-style="normal" fill="#52606D" text-anchor="start">CW_DNS.sic_codes_v4_raw</text>
+<text x="314" y="304" font-size="14" font-weight="bold" font-style="normal" fill="#1F2933" text-anchor="start">flattened into the container cw</text>
+<rect x="300" y="340" width="360" height="128" rx="10" fill="#E7F4F5" stroke="#0E7C86" stroke-width="2.0"/>
+<text x="314" y="370" font-size="17" font-weight="bold" font-style="normal" fill="#1F2933" text-anchor="start">FILESTORE tables, views cached</text>
+<text x="314" y="393" font-size="14" font-weight="normal" font-style="normal" fill="#52606D" text-anchor="start">CW_GHCN station inventory (CSV,</text>
+<text x="314" y="412" font-size="14" font-weight="normal" font-style="normal" fill="#52606D" text-anchor="start">parsed by SUBSTR): 133,039 rows</text>
+<text x="314" y="431" font-size="14" font-weight="normal" font-style="normal" fill="#52606D" text-anchor="start">CW_GHCN.ghcn_&lt;year&gt;_&lt;element&gt; parquet</text>
+<text x="314" y="450" font-size="14" font-weight="bold" font-style="normal" fill="#1F2933" text-anchor="start">degree days computed in Lightning SQL</text>
+<rect x="300" y="485" width="360" height="170" rx="10" fill="#E7F4F5" stroke="#0E7C86" stroke-width="2.0"/>
+<text x="314" y="515" font-size="17" font-weight="bold" font-style="normal" fill="#1F2933" text-anchor="start">crosswalk_usl</text>
+<text x="314" y="538" font-size="14" font-weight="normal" font-style="normal" fill="#52606D" text-anchor="start">Unified Semantic Layer, 7 tables:</text>
+<text x="314" y="557" font-size="14" font-weight="normal" font-style="normal" fill="#52606D" text-anchor="start">state, sic_code, utility, utility_state,</text>
+<text x="314" y="576" font-size="14" font-weight="normal" font-style="normal" fill="#52606D" text-anchor="start">fema_declaration, station, revenue_quarter</text>
+<text x="314" y="595" font-size="14" font-weight="bold" font-style="normal" fill="#1F2933" text-anchor="start">6 foreign keys, each a measured join key</text>
+<text x="314" y="614" font-size="14" font-weight="bold" font-style="normal" fill="#1F2933" text-anchor="start">RUN DQ at onboarding: MGE Energy invalid</text>
+<text x="314" y="633" font-size="14" font-weight="bold" font-style="normal" fill="#1F2933" text-anchor="start">2 DQ rules run live on every question</text>
+<text x="300" y="688" font-size="13" font-weight="normal" font-style="italic" fill="#52606D" text-anchor="start">Match rates are Lightning SQL over the</text>
+<text x="300" y="706" font-size="13" font-weight="normal" font-style="italic" fill="#52606D" text-anchor="start">cached views; the agent never writes SQL.</text>
+<text x="300" y="724" font-size="13" font-weight="normal" font-style="italic" fill="#52606D" text-anchor="start">The gateway's named templates do, and the</text>
+<text x="300" y="742" font-size="13" font-weight="normal" font-style="italic" fill="#52606D" text-anchor="start">logged SQL text is the citation of every</text>
+<text x="300" y="760" font-size="13" font-weight="normal" font-style="italic" fill="#52606D" text-anchor="start">number on the answer.</text>
+<line x1="256" y1="217" x2="268" y2="217" stroke="#4A5563" stroke-width="2"/>
+<line x1="256" y1="337" x2="268" y2="337" stroke="#4A5563" stroke-width="2"/>
+<line x1="256" y1="457" x2="268" y2="457" stroke="#4A5563" stroke-width="2"/>
+<line x1="256" y1="577" x2="268" y2="577" stroke="#4A5563" stroke-width="2"/>
+<line x1="268" y1="217" x2="268" y2="577" stroke="#4A5563" stroke-width="2"/>
+<polyline points="268,250 300,250" fill="none" stroke="#4A5563" stroke-width="2" marker-end="url(#arrow)"/>
+<polyline points="268,404 300,404" fill="none" stroke="#4A5563" stroke-width="2" marker-end="url(#arrow)"/>
+<polyline points="480,323 480,340" fill="none" stroke="#4A5563" stroke-width="2" marker-end="url(#arrow)"/>
+<polyline points="480,468 480,485" fill="none" stroke="#4A5563" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="495" y="480" font-size="12" font-weight="normal" font-style="normal" fill="#52606D" text-anchor="start">ACTIVATE from the cached views</text>
+<rect x="730" y="300" width="226" height="212" rx="10" fill="#EAF0F7" stroke="#3B5B85" stroke-width="2.0"/>
+<text x="744" y="330" font-size="17" font-weight="bold" font-style="normal" fill="#1F2933" text-anchor="start">Zetaris gateway</text>
+<text x="744" y="353" font-size="14" font-weight="normal" font-style="normal" fill="#52606D" text-anchor="start">FastAPI + JDBC, 127.0.0.1:8803</text>
+<text x="744" y="372" font-size="14" font-weight="normal" font-style="normal" fill="#52606D" text-anchor="start">59 named SQL templates</text>
+<text x="744" y="391" font-size="14" font-weight="normal" font-style="normal" fill="#52606D" text-anchor="start">parameters checked against</text>
+<text x="744" y="410" font-size="14" font-weight="normal" font-style="normal" fill="#52606D" text-anchor="start">the manifest, the closed</text>
+<text x="744" y="429" font-size="14" font-weight="normal" font-style="normal" fill="#52606D" text-anchor="start">transform set and DESCRIBE</text>
+<text x="744" y="448" font-size="14" font-weight="bold" font-style="normal" fill="#1F2933" text-anchor="start">registrar plans under a</text>
+<text x="744" y="467" font-size="14" font-weight="bold" font-style="normal" fill="#1F2933" text-anchor="start">signed contract</text>
+<text x="744" y="486" font-size="14" font-weight="bold" font-style="normal" fill="#1F2933" text-anchor="start">every statement logged</text>
+<polyline points="660,420 730,420" fill="none" stroke="#4A5563" stroke-width="2" marker-start="url(#arrow-start)" marker-end="url(#arrow)"/>
+<text x="705" y="410" font-size="12.5" font-weight="normal" font-style="normal" fill="#52606D" text-anchor="middle">JDBC</text>
+<polyline points="956,420 1005,420" fill="none" stroke="#4A5563" stroke-width="2" marker-start="url(#arrow-start)" marker-end="url(#arrow)"/>
+<text x="843" y="536" font-size="12.5" font-weight="normal" font-style="normal" fill="#52606D" text-anchor="middle">template id + parameters in;</text>
+<text x="843" y="553" font-size="12.5" font-weight="normal" font-style="normal" fill="#52606D" text-anchor="middle">rows + SQL text back</text>
+<text x="1005" y="138" font-size="11" font-weight="bold" font-style="normal" fill="#5F6670" text-anchor="start" letter-spacing="1.2">AGENT SERVER</text>
+<text x="1005" y="160" font-size="17" font-weight="bold" font-style="normal" fill="#1F2933" text-anchor="start">Node 22 + TypeScript, 127.0.0.1:8804</text>
+<rect x="1005" y="175" width="450" height="186" rx="10" fill="#F1EDFA" stroke="#6B4FBB" stroke-width="2.0"/>
+<text x="1019" y="197" font-size="11" font-weight="bold" font-style="normal" fill="#5A3FA8" text-anchor="start" letter-spacing="1.2">METERLESS</text>
+<text x="1019" y="220" font-size="17" font-weight="bold" font-style="normal" fill="#1F2933" text-anchor="start">Markovian discovery loop</text>
+<text x="1019" y="243" font-size="14" font-weight="normal" font-style="normal" fill="#52606D" text-anchor="start">at most 12 chunks, carried state at most 800 tokens</text>
+<text x="1019" y="262" font-size="14" font-weight="normal" font-style="normal" fill="#52606D" text-anchor="start">six discovery tools: search_catalogue, probe_source,</text>
+<text x="1019" y="281" font-size="14" font-weight="normal" font-style="normal" fill="#52606D" text-anchor="start">propose_keys, measure_key, register_source, compile_usl</text>
+<text x="1019" y="300" font-size="14" font-weight="normal" font-style="normal" fill="#52606D" text-anchor="start">then answer, not_tested, finalize</text>
+<text x="1019" y="319" font-size="14" font-weight="bold" font-style="normal" fill="#1F2933" text-anchor="start">fixed order = a checklist; invalid reply: repair, then</text>
+<text x="1019" y="338" font-size="14" font-weight="bold" font-style="normal" fill="#1F2933" text-anchor="start">the host takes the next step (a counted fallback)</text>
+<rect x="1005" y="380" width="220" height="180" rx="10" fill="#F2F8E6" stroke="#76B900" stroke-width="2.0"/>
+<text x="1019" y="402" font-size="11" font-weight="bold" font-style="normal" fill="#4B7700" text-anchor="start" letter-spacing="1.2">NVIDIA</text>
+<text x="1019" y="425" font-size="17" font-weight="bold" font-style="normal" fill="#1F2933" text-anchor="start">Nemotron 3 Nano 4B</text>
+<text x="1019" y="448" font-size="14" font-weight="normal" font-style="normal" fill="#52606D" text-anchor="start">local Ollama, loopback only</text>
+<text x="1019" y="467" font-size="14" font-weight="normal" font-style="normal" fill="#52606D" text-anchor="start">picks the next step;</text>
+<text x="1019" y="486" font-size="14" font-weight="normal" font-style="normal" fill="#52606D" text-anchor="start">proposes keys from a menu</text>
+<text x="1019" y="505" font-size="14" font-weight="normal" font-style="normal" fill="#52606D" text-anchor="start">of probed columns</text>
+<text x="1019" y="524" font-size="14" font-weight="bold" font-style="normal" fill="#1F2933" text-anchor="start">never computes a number</text>
+<text x="1019" y="543" font-size="14" font-weight="bold" font-style="normal" fill="#1F2933" text-anchor="start">0 cloud model calls</text>
+<rect x="1235" y="380" width="220" height="180" rx="10" fill="#EAF0F7" stroke="#3B5B85" stroke-width="2.0"/>
+<text x="1249" y="402" font-size="11" font-weight="bold" font-style="normal" fill="#2F4A6E" text-anchor="start" letter-spacing="1.2">DETERMINISTIC</text>
+<text x="1249" y="425" font-size="17" font-weight="bold" font-style="normal" fill="#1F2933" text-anchor="start">Deterministic tools</text>
+<text x="1249" y="448" font-size="14" font-weight="normal" font-style="normal" fill="#52606D" text-anchor="start">match-rate SQL, verdict rule</text>
+<text x="1249" y="467" font-size="14" font-weight="normal" font-style="normal" fill="#52606D" text-anchor="start">(VERIFIED at 0.95, PARTIAL</text>
+<text x="1249" y="486" font-size="14" font-weight="normal" font-style="normal" fill="#52606D" text-anchor="start">at 0.80), orphans</text>
+<text x="1249" y="505" font-size="14" font-weight="normal" font-style="normal" fill="#52606D" text-anchor="start">name-and-statistics baseline</text>
+<text x="1249" y="524" font-size="14" font-weight="normal" font-style="normal" fill="#52606D" text-anchor="start">USL renderer, the answer</text>
+<text x="1249" y="543" font-size="14" font-weight="bold" font-style="normal" fill="#1F2933" text-anchor="start">every proposal measured</text>
+<rect x="1005" y="579" width="220" height="162" rx="10" fill="#F1EDFA" stroke="#6B4FBB" stroke-width="2.0"/>
+<text x="1019" y="601" font-size="11" font-weight="bold" font-style="normal" fill="#5A3FA8" text-anchor="start" letter-spacing="1.2">METERLESS</text>
+<text x="1019" y="624" font-size="17" font-weight="bold" font-style="normal" fill="#1F2933" text-anchor="start">H-MEM</text>
+<text x="1019" y="647" font-size="14" font-weight="normal" font-style="normal" fill="#52606D" text-anchor="start">key_verified memories:</text>
+<text x="1019" y="666" font-size="14" font-weight="normal" font-style="normal" fill="#52606D" text-anchor="start">a warm run skips their</text>
+<text x="1019" y="685" font-size="14" font-weight="normal" font-style="normal" fill="#52606D" text-anchor="start">measure steps</text>
+<text x="1019" y="704" font-size="14" font-weight="normal" font-style="normal" fill="#52606D" text-anchor="start">source_access memories</text>
+<text x="1019" y="723" font-size="14" font-weight="normal" font-style="normal" fill="#52606D" text-anchor="start">known_to_fail as negatives</text>
+<rect x="1235" y="579" width="220" height="162" rx="10" fill="#F1EDFA" stroke="#6B4FBB" stroke-width="2.0"/>
+<text x="1249" y="601" font-size="11" font-weight="bold" font-style="normal" fill="#5A3FA8" text-anchor="start" letter-spacing="1.2">METERLESS</text>
+<text x="1249" y="624" font-size="17" font-weight="bold" font-style="normal" fill="#1F2933" text-anchor="start">World Model</text>
+<text x="1249" y="647" font-size="14" font-weight="normal" font-style="normal" fill="#52606D" text-anchor="start">datasets, columns, utilities,</text>
+<text x="1249" y="666" font-size="14" font-weight="normal" font-style="normal" fill="#52606D" text-anchor="start">states, declarations</text>
+<text x="1249" y="685" font-size="14" font-weight="normal" font-style="normal" fill="#52606D" text-anchor="start">crosswalks_to edges with</text>
+<text x="1249" y="704" font-size="14" font-weight="normal" font-style="normal" fill="#52606D" text-anchor="start">transform, rate and the</text>
+<text x="1249" y="723" font-size="14" font-weight="normal" font-style="normal" fill="#52606D" text-anchor="start">time they were measured</text>
+<rect x="1005" y="760" width="450" height="126" rx="10" fill="#F1EDFA" stroke="#6B4FBB" stroke-width="2.0"/>
+<text x="1019" y="782" font-size="11" font-weight="bold" font-style="normal" fill="#5A3FA8" text-anchor="start" letter-spacing="1.2">SCOUT INTENT SUBSET, REIMPLEMENTED</text>
+<text x="1019" y="805" font-size="17" font-weight="bold" font-style="normal" fill="#1F2933" text-anchor="start">Evidence store and signed registration</text>
+<text x="1019" y="828" font-size="14" font-weight="normal" font-style="normal" fill="#52606D" text-anchor="start">every number cites its Lightning SQL, rows, object,</text>
+<text x="1019" y="847" font-size="14" font-weight="normal" font-style="normal" fill="#52606D" text-anchor="start">endpoint, licence, time, latency and cache state</text>
+<text x="1019" y="866" font-size="14" font-weight="bold" font-style="normal" fill="#1F2933" text-anchor="start">register_source: HMAC-signed, single-use contract</text>
+<polyline points="1115,361 1115,380" fill="none" stroke="#4A5563" stroke-width="2" marker-start="url(#arrow-start)" marker-end="url(#arrow)"/>
+<polyline points="1345,361 1345,380" fill="none" stroke="#4A5563" stroke-width="2" marker-start="url(#arrow-start)" marker-end="url(#arrow)"/>
+<polyline points="1115,560 1115,579" fill="none" stroke="#4A5563" stroke-width="2" marker-start="url(#arrow-start)" marker-end="url(#arrow)"/>
+<polyline points="1345,560 1345,579" fill="none" stroke="#4A5563" stroke-width="2" marker-start="url(#arrow-start)" marker-end="url(#arrow)"/>
+<polyline points="1230,741 1230,760" fill="none" stroke="#4A5563" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="1005" y="955" width="450" height="150" rx="10" fill="#FFF4E2" stroke="#B26A00" stroke-width="2.0"/>
+<text x="1019" y="977" font-size="11" font-weight="bold" font-style="normal" fill="#8A5200" text-anchor="start" letter-spacing="1.2">ANALYST</text>
+<text x="1019" y="1000" font-size="17" font-weight="bold" font-style="normal" fill="#1F2933" text-anchor="start">Analyst UI</text>
+<text x="1019" y="1023" font-size="14" font-weight="normal" font-style="normal" fill="#52606D" text-anchor="start">Ask; Discovery timeline (live over SSE, or REPLAY);</text>
+<text x="1019" y="1042" font-size="14" font-weight="normal" font-style="normal" fill="#52606D" text-anchor="start">Join map: both rates, the verdict in plain words,</text>
+<text x="1019" y="1061" font-size="14" font-weight="normal" font-style="normal" fill="#52606D" text-anchor="start">orphans by name; USL and DQ: the governed model</text>
+<text x="1019" y="1080" font-size="14" font-weight="normal" font-style="normal" fill="#52606D" text-anchor="start">and the invalid row; Answer: click any number for its SQL</text>
+<polyline points="1230,955 1230,886" fill="none" stroke="#4A5563" stroke-width="2" marker-start="url(#arrow-start)" marker-end="url(#arrow)"/>
+<text x="1242" y="926" font-size="12.5" font-weight="normal" font-style="normal" fill="#52606D" text-anchor="start">one question at a time</text>
+<rect x="30" y="955" width="640" height="150" rx="10" fill="#EAF0F7" stroke="#3B5B85" stroke-width="2.0"/>
+<text x="44" y="977" font-size="11" font-weight="bold" font-style="normal" fill="#2F4A6E" text-anchor="start" letter-spacing="1.2">QUESTION</text>
+<text x="44" y="1000" font-size="17" font-weight="bold" font-style="normal" fill="#1F2933" text-anchor="start">The demo question</text>
+<text x="44" y="1023" font-size="14" font-weight="normal" font-style="normal" fill="#52606D" text-anchor="start">Which investor-owned electric utilities served states with FEMA</text>
+<text x="44" y="1042" font-size="14" font-weight="normal" font-style="normal" fill="#52606D" text-anchor="start">major-disaster declarations in Q1 2025, what did the weather</text>
+<text x="44" y="1061" font-size="14" font-weight="normal" font-style="normal" fill="#52606D" text-anchor="start">at their stations do, and did their revenue hold up year on year?</text>
+<text x="44" y="1080" font-size="14" font-weight="bold" font-style="normal" fill="#1F2933" text-anchor="start">The FEMA join selects the utilities; none is hand-picked.</text>
+<rect x="30" y="1119" width="16" height="16" rx="4" fill="#E7F4F5" stroke="#0E7C86" stroke-width="2.0"/>
+<text x="54" y="1132" font-size="13" font-weight="normal" font-style="normal" fill="#52606D" text-anchor="start">Zetaris</text>
+<rect x="129" y="1119" width="16" height="16" rx="4" fill="#F1EDFA" stroke="#6B4FBB" stroke-width="2.0"/>
+<text x="153" y="1132" font-size="13" font-weight="normal" font-style="normal" fill="#52606D" text-anchor="start">Meterless</text>
+<rect x="240" y="1119" width="16" height="16" rx="4" fill="#F2F8E6" stroke="#76B900" stroke-width="2.0"/>
+<text x="264" y="1132" font-size="13" font-weight="normal" font-style="normal" fill="#52606D" text-anchor="start">NVIDIA</text>
+<rect x="333" y="1119" width="16" height="16" rx="4" fill="#EAF0F7" stroke="#3B5B85" stroke-width="2.0"/>
+<text x="357" y="1132" font-size="13" font-weight="normal" font-style="normal" fill="#52606D" text-anchor="start">Crosswalk code, deterministic</text>
+<rect x="562" y="1119" width="16" height="16" rx="4" fill="#FFF4E2" stroke="#B26A00" stroke-width="2.0"/>
+<text x="586" y="1132" font-size="13" font-weight="normal" font-style="normal" fill="#52606D" text-anchor="start">Analyst</text>
+<rect x="661" y="1119" width="16" height="16" rx="4" fill="#F5F6F8" stroke="#8A8F98" stroke-width="2.0"/>
+<text x="685" y="1132" font-size="13" font-weight="normal" font-style="normal" fill="#52606D" text-anchor="start">Public source</text>
+</svg>
