@@ -98,3 +98,9 @@ Measuring the proposals (the host tool `measure_key` routes them to the gateway'
 `C5: deterministic key-proposal baseline (Cursor Agent)`
 
 Do not commit; leave the changes in the working tree.
+
+## Run record
+
+- Run 2026-10-25 13:06:49 SGT (right after C4, same tree), Cursor Agent CLI 2026.10.22-27dcf5f (model Auto): 92.0 s wall, exit 0, no commit (as asked), only the two deliverables added. Cursor reported `npx vitest run baseline-keys` 6 passed and the tools type-check clean.
+- Reviewed by hand against this file (key classes, transform rules, orientation, score and reasons, sort order, the `won` refusal); checks re-run: 6 passed, tsc exit 0. Committed unchanged as `1cef0cb` (`C5: deterministic key-proposal baseline (Cursor Agent)`). No correction was needed.
+- Used by the host: the loop's `propose_keys` fallback input is the baseline's top 6 (scored beside the planner's choices, SPEC L2); ranks 7 to 12 only extend the measure queue (`agent/src/loop/tools.ts`).

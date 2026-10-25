@@ -99,3 +99,9 @@ Calling the gateway (`catalogue_list`, `describe_object`, `sample_rows`, `distin
 `C4: catalogue search ranking and probe key columns (Cursor Agent)`
 
 Do not commit; leave the changes in the working tree.
+
+## Run record
+
+- Run 2026-10-25 13:04:49 SGT, Cursor Agent CLI 2026.10.22-27dcf5f (model Auto), headless with the prompt from `README.md`: 119.7 s wall, exit 0, no commit (as asked), only the four deliverables added. Cursor reported `npx vitest run catalogue-search` 7 and `npx vitest run probe-heuristic` 3 passed and the tools type-check clean.
+- Reviewed by hand against this file; checks re-run: 10 passed, tsc exit 0. Committed unchanged as `4421365` (`C4: catalogue search ranking and probe key columns (Cursor Agent)`).
+- Corrected in `eb17ca9` (`C4 review`): `objectOf` split on `->` with a limit of 2, which drops the text after a second arrow, while the rule says keep everything after the first arrow; it now slices after the first arrow (test added). After: 8 + 3 passed.
