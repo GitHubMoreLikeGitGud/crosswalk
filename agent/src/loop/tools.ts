@@ -338,7 +338,21 @@ function compilePort(gateway: TemplatePort): TemplatePort {
 const knownTemplates = () => new Set(Object.keys(TEMPLATE_PARAMS));
 
 /** An evidence record for one statement the gateway ran (its provenance as the tool returned it). */
-function statementEvidence(deps: ToolDeps, p: Provenance, claim: string, object: string, rowsIn: unknown[][] = [], columnsIn: string[] = []): EvidenceRecord {
+/** D15: the onboarding snapshot time recorded in zetaris/manifest.json (entry cw_seed_snapshot), or null. */
+export function snapshotTakenAt(manifest: unknown): string | null {
+  const sources = (manifest as { sources?: { id?: string; snapshot?: { snapshot_at?: string } }[] })?.sources ?? [];
+  return sources.find((s) => s.id === "cw_seed_snapshot")?.snapshot?.snapshot_at ?? null;
+}
+
+let SNAPSHOT_AT: string | null | undefined;
+function snapshotNote(sql: string): string {
+  if (!sql.includes(SNAPSHOT)) return "";
+  if (SNAPSHOT_AT === undefined) SNAPSHOT_AT = snapshotTakenAt(JSON.parse(readFileSync(new URL("zetaris/manifest.json", REPO_ROOT_URL), "utf8")));
+  return ` (SEC submissions snapshot taken at onboarding ${SNAPSHOT_AT ?? "(time not recorded)"})`;
+}
+
+function statementEvidence(deps: ToolDeps, p: Provenance, claimIn: string, object: string, rowsIn: unknown[][] = [], columnsIn: string[] = []): EvidenceRecord {
+  const claim = `${claimIn}${snapshotNote(p.sql ?? "")}`;
   const src = sourceFor(object);
   const rows = rowsIn.length ? rowsIn : (p.rows ?? []);
   const columns = columnsIn.length ? columnsIn : (p.columns ?? []);

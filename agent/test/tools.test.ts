@@ -7,7 +7,7 @@ import { describe, expect, it } from "vitest";
 import { EvidenceStore } from "../src/evidence/store.ts";
 import { plannerSchema, validate } from "../src/llm/schemas.ts";
 import { TOOL_CATALOG } from "../src/llm/toolCatalog.ts";
-import { allowedTools, completeInput, fallbackStep, memoryKeyOf, newQuestionContext, questionPort, runTool, toolDef, type KeyMemoryPort, type RegistrarPort, type ToolDeps } from "../src/loop/tools.ts";
+import { allowedTools, completeInput, fallbackStep, memoryKeyOf, newQuestionContext, questionPort, runTool, snapshotTakenAt, toolDef, type KeyMemoryPort, type RegistrarPort, type ToolDeps } from "../src/loop/tools.ts";
 import { loadSeeds } from "../src/seeds.ts";
 import type { MeasureResult } from "../src/tools/discovery.ts";
 import type { RegistrarResult } from "../src/zetaris/client.ts";
@@ -223,5 +223,12 @@ describe("the registry", () => {
     expect(validate(schema, ok)).toEqual([]);
     const bad = { ...base, action: { tool: "propose_keys", input: { choices: [{ left: { object: "cw.a", column: "x" }, right: { object: "cw.b", column: "y" }, transform: "substr(0,2)" }] } } };
     expect(validate(schema, bad)).toEqual(["$.action: matches no allowed shape"]);
+  });
+});
+
+describe("D15 snapshot provenance", () => {
+  it("reads the onboarding snapshot time the generator recorded in the manifest", () => {
+    expect(snapshotTakenAt(manifest)).toMatch(/^2026-10-25T\d{2}:\d{2}:\d{2}\+0800$/u);
+    expect(snapshotTakenAt({ sources: [] })).toBeNull();
   });
 });
