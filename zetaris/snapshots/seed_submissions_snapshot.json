@@ -1,7 +1,7 @@
 {
   "source_statement": "SELECT cik, name, ticker, sic, hq_state FROM cw.seed_utilities ORDER BY cik",
-  "snapshot_at": "2026-10-25T15:25:59+0800",
-  "elapsed_ms": 18074,
+  "snapshot_at": "2026-10-25T15:45:49+0800",
+  "elapsed_ms": 18301,
   "rows_read": 43,
   "columns": [
     "cik10",
