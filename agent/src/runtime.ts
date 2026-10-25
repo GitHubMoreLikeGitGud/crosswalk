@@ -16,7 +16,7 @@ import { demoQuestion, investigate, type InvestigateOptions, type RunResult } fr
 import { memoryKeyOf, type KeyMemoryPort, type RegistrarAction, type RegistrarPort, type ToolDeps } from "./loop/tools.ts";
 import { openMemory, provenanceOf, type HMEM } from "./memory/hmemFacade.ts";
 import { seedMemory, type SeedReport } from "./memory/seed.ts";
-import { RunStore } from "./ops/runStore.ts";
+import { DEMO_RUNS_DIR, RunStore, RUNS_DIR } from "./ops/runStore.ts";
 import { loadSeeds, type Seeds } from "./seeds.ts";
 import { loadCatalogueInputs, registeredObjects, registrationPlan, registerSource, readDqFile, parseDqRun, type RegisterResult } from "./tools/discovery.ts";
 import { CrosswalkWorld, type DeclarationInput } from "./world/world.ts";
@@ -139,7 +139,7 @@ export function openRuntime(o: RuntimeOptions = {}): Runtime {
       ollama,
       hmem: openMemory(),
       world: new CrosswalkWorld(),
-      runs: new RunStore(),
+      runs: new RunStore(RUNS_DIR, DEMO_RUNS_DIR),
       seeds: loadSeeds(),
       registrar: registrarPort(gateway),
       lock,

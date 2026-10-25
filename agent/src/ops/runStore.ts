@@ -5,11 +5,11 @@
 
 import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { DATA_DIR_URL } from "../config.ts";
+import { DATA_DIR_URL, REPO_ROOT_URL } from "../config.ts";
 import type { RunResult } from "../loop/investigate.ts";
 
 export interface RunOrigin {
-  source: "cli" | "server" | "test";
+  source: "cli" | "server" | "test" | "demo";
   note?: string;
 }
 
@@ -36,19 +36,38 @@ export interface RunIndex {
 export type SavedRun = RunResult & { saved: RunOrigin & { at: string } };
 
 export const RUNS_DIR = fileURLToPath(new URL("runs/", DATA_DIR_URL));
+/** One redacted saved run committed for a fresh clone (scripts/make_demo_run.py); listed only while RUNS_DIR holds no run. */
+export const DEMO_RUNS_DIR = fileURLToPath(new URL("docs/demo-run/runs/", REPO_ROOT_URL));
+/** The onboarding DQ counts that go with the demo run, read only while data/dq/latest.json is absent. */
+export const DEMO_DQ_FILE = fileURLToPath(new URL("docs/demo-run/dq/latest.json", REPO_ROOT_URL));
 
 export class RunStore {
   readonly dir: string | null;
   private readonly mem = new Map<string, SavedRun>();
   private index: RunIndex = { runs: [], latest: {} };
 
-  /** `dir` null keeps runs in memory only (tests). */
-  constructor(dir: string | null = RUNS_DIR) {
+  private readonly demoDir: string | null;
+
+  /** `dir` null keeps runs in memory only (tests). `demoDir`, when given, is read only while this store holds no run. */
+  constructor(dir: string | null = RUNS_DIR, demoDir: string | null = null) {
     this.dir = dir ? dir.replace(/[\\/]$/u, "") : null;
+    this.demoDir = demoDir && existsSync(`${demoDir.replace(/[\\/]$/u, "")}/index.json`) ? demoDir.replace(/[\\/]$/u, "") : null;
     if (this.dir) {
       mkdirSync(this.dir, { recursive: true });
       this.reloadIndex();
     }
+  }
+
+  /** The committed demo store, while this store has no run of its own. */
+  private demo(): RunStore | null {
+    if (!this.demoDir || this.mem.size > 0 || this.index.runs.length > 0) return null;
+    return new RunStore(this.demoDir);
+  }
+
+  /** True while the listed runs are the committed demo run. */
+  servingDemo(): boolean {
+    this.reloadIndex();
+    return this.demo() !== null;
   }
 
   private get indexPath(): string | null {
@@ -106,17 +125,21 @@ export class RunStore {
     if (m) return m;
     if (!this.dir) return null;
     const p = `${this.dir}/${id}/run.json`;
-    return existsSync(p) ? (JSON.parse(readFileSync(p, "utf8")) as SavedRun) : null;
+    if (existsSync(p)) return JSON.parse(readFileSync(p, "utf8")) as SavedRun;
+    this.reloadIndex();
+    return this.demo()?.load(id) ?? null;
   }
 
   list(): RunIndexEntry[] {
     this.reloadIndex();
+    const demo = this.demo();
+    if (demo) return demo.list();
     return [...this.index.runs].sort((a, b) => b.started_at.localeCompare(a.started_at));
   }
 
   latestId(quarter: string, mode = "cold"): string | null {
     this.reloadIndex();
-    return this.index.latest[`${quarter}|${mode}`] ?? null;
+    return this.index.latest[`${quarter}|${mode}`] ?? this.demo()?.latestId(quarter, mode) ?? null;
   }
 
   latest(quarter: string, mode = "cold"): SavedRun | null {

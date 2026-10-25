@@ -42,7 +42,7 @@ import { answerView, CELL_ID, cellEvidence } from "./ops/cells.ts";
 import { canonicalRow, joinMapView } from "./ops/joinmap.ts";
 import { finishedSummary, replayEvents, telemetryView, type StreamEvent } from "./ops/replay.ts";
 import { asRun, type RunIn } from "./ops/runShape.ts";
-import type { SavedRun } from "./ops/runStore.ts";
+import { DEMO_DQ_FILE, type SavedRun } from "./ops/runStore.ts";
 import { sgt, seconds } from "./ops/time.ts";
 import { readJsonFile, uslView, type DqFile, type UslPlanFile } from "./ops/usl.ts";
 import { ask as runAsk, openRuntime, type AskOutcome, type AskRequest, type Runtime } from "./runtime.ts";
@@ -548,7 +548,8 @@ export function createServer(deps: ServerDeps): CwServer {
     if (m === "GET" && p === "/api/usl") {
       const pick = url.searchParams.get("run");
       const liveRun = pick ? asRun(runOf(pick)) : latestLiveRulesRun();
-      return send(res, 200, uslView(readJsonFile<UslPlanFile>(uslPlanFile), readJsonFile<DqFile>(dqFile), liveRun));
+      const dq = readJsonFile<DqFile>(dqFile) ?? (deps.dqFile === undefined && rt.runs.servingDemo?.() ? readJsonFile<DqFile>(DEMO_DQ_FILE) : null);
+      return send(res, 200, uslView(readJsonFile<UslPlanFile>(uslPlanFile), dq, liveRun));
     }
 
     if (m === "GET" && p === "/api/seeds") {

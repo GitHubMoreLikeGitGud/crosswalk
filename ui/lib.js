@@ -134,7 +134,7 @@ export function modeWords(mode) {
 export function runWords(r) {
   if (!r) return "";
   const when = fmtSgt(r.started_at_sgt ?? r.started_at, { seconds: false });
-  return `${modeWords(r.mode)}, ${quarterWords(r.quarter)}${when ? `, ${when}` : ""}`;
+  return `${modeWords(r.mode)}, ${quarterWords(r.quarter)}${when ? `, ${when}` : ""}${r.source === "demo" ? ", redacted demo run (synthetic revenue and weather values)" : ""}`;
 }
 
 /** An engineering id: hidden unless "Show engineering detail" is on. */
