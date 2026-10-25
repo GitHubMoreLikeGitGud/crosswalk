@@ -714,6 +714,8 @@ export function noteMaterial(ctx: QuestionContext): { allowed: AllowedNumber[]; 
     add(`${k.route} left`, String(k.left_rows));
     add(`${k.route} rate`, num(k.rate, 3));
     for (const o of k.orphans) for (const tok of o.match(/\d+/gu) ?? []) add(`${k.route} orphan identifier`, tok);
+    // Transform names are identifiers that carry digits (lpad10, substr(4,2)); the number check would otherwise refuse a note that names them.
+    for (const tok of `${k.proposal.transform} ${k.label ?? ""}`.match(/\d+/gu) ?? []) add("transform name", tok);
     findings.push(`Key ${k.label}: ${k.matched_rows} of ${k.left_rows} matched (${num(k.rate, 3)}), ${k.verdict}${k.orphans.length ? `; orphans ${k.orphans.join("; ")}` : ""}${k.from_memory ? " (recalled from memory)" : ""}.`);
   }
   const dqParts: string[] = [];
