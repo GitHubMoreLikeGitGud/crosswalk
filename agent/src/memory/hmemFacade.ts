@@ -381,7 +381,9 @@ export class HMEM extends ReferenceHMEM {
   /** Chunk-0 memory context: keys earlier runs measured, sources they registered, and the negative memories. */
   memoryContext(limitChars = 1600): string {
     const parts: string[] = [];
-    const keys = this.keyRecords().filter((k) => k.record.verdict === "VERIFIED");
+    // A key remembered on cw.seed_utilities (Day 1) is not shown: the question path reads its onboarding snapshot instead (D15),
+    // and a context naming it made the planner ask to probe a view it may not read.
+    const keys = this.keyRecords().filter((k) => k.record.verdict === "VERIFIED" && !/\bcw\.seed_utilities\b/iu.test(`${k.record.left} ${k.record.right}`));
     if (keys.length) parts.push(["[KEYS VERIFIED IN EARLIER RUNS]", ...keys.slice(0, 8).map((k) => `- ${k.record.left} ~ ${k.record.right} (${k.record.transform}): ${k.record.verdict} ${pct3(k.record.rate)} as ${k.record.measured_as} <${k.memoryId}>`), "[/KEYS VERIFIED IN EARLIER RUNS]"].join("\n"));
     const neg = this.allByTag("negative").filter((m) => m.tags.includes("source:catalogue")).slice(0, 3);
     if (neg.length) parts.push(["[NEGATIVE MEMORIES]", ...neg.map((m) => `- ${m.content} <${m.id}>`), "[/NEGATIVE MEMORIES]"].join("\n"));
