@@ -44,7 +44,7 @@ export function renderPreset(p, saved, busy) {
     <p class="ask__q"><q>${esc(questionFor(p.quarter))}</q></p>
     <p class="small muted">${esc(p.note)}</p>
     <div class="ask__btns">
-      <button type="button" class="btn btn--primary" data-ask="${esc(p.id)}"${busy ? " disabled" : ""}>Ask now (runs the local model, about 4-6 minutes)</button>
+      <button type="button" class="btn btn--primary" data-ask="${esc(p.id)}"${busy ? " disabled" : ""}>Ask now (runs the local model, about 3-5 minutes)</button>
       ${saved ? `<a class="btn" href="#/timeline/${esc(saved.run_id)}">Replay the saved run</a><span class="small muted">${esc(runWords(saved))}, ${esc(fmtNum(saved.wall_s, 1))} s</span>` : `<span class="small muted">No saved run of this question yet.</span>`}
     </div>
   </article>`;
