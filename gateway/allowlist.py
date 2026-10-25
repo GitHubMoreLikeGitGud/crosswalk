@@ -29,6 +29,7 @@ ROLES = ("reader", "registrar", "onboard")
 REST_HOSTS = {
     "data.sec.gov": "https",
     "company-dns.mediumroast.io": "https",
+    "www.fema.gov": "https",
 }
 FILESTORE_BUCKETS = ("s3a://noaa-ghcn-pds/",)
 CONTAINER = "cw"

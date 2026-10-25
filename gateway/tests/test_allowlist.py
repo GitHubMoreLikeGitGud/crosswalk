@@ -10,6 +10,9 @@ FRAMES = "https://data.sec.gov/api/xbrl/frames/us-gaap/Revenues/USD/CY2025Q1.jso
 CONCEPT = "https://data.sec.gov/api/xbrl/companyconcept/CIK0001326160/us-gaap/Revenues.json"
 SUBMISSIONS = "https://data.sec.gov/submissions/CIK0001326160.json"
 DNS = "https://company-dns.mediumroast.io/V4.0/sic/description/electric"
+FEMA = ("https://www.fema.gov/api/open/v2/DisasterDeclarationsSummaries?%24filter=declarationType%20eq%20%27DR%27"
+        "%20and%20declarationDate%20ge%20%272025-01-01T00%3A00%3A00.000Z%27&%24top=1000")
+FEMA_CATALOGUE = "https://www.fema.gov/api/open/v1/OpenFemaDataSets"
 GHCN = "s3a://noaa-ghcn-pds/parquet/by_year/YEAR=2025/ELEMENT=TMAX/"
 
 
@@ -78,6 +81,7 @@ def test_reader_cannot_register_or_cache():
 
 @pytest.mark.parametrize("url,db", [
     (FRAMES, "CW_SEC"), (CONCEPT, "CW_SEC"), (SUBMISSIONS, "CW_SEC"), (DNS, "CW_DNS"), (FRAMES, "cw_sec"),
+    (FEMA, "CW_FEMA"), (FEMA_CATALOGUE, "CW_FEMA"),
 ])
 def test_registrar_rest_hosts(url, db):
     assert check(rest(url, db), "registrar") == "register"
@@ -91,6 +95,9 @@ def test_registrar_rest_hosts(url, db):
     "https://data.sec.gov.example.net/x.json",
     "http://localhost:8888/api",
     "https://world.openfoodfacts.org/api/v2/product/1.json",
+    "http://www.fema.gov/api/open/v2/DisasterDeclarationsSummaries",
+    "https://fema.gov/api/open/v2/DisasterDeclarationsSummaries",
+    "https://www.fema.gov.example.net/api/open/v2/DisasterDeclarationsSummaries",
 ])
 def test_registrar_rest_hosts_refused(url):
     with pytest.raises(Refused):
