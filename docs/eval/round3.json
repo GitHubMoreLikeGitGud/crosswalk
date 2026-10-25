@@ -1,0 +1,4605 @@
+{
+  "about": "Crosswalk round 3 (26 Oct 2026): the data behind docs/eval/round3.md. Measured from the saved runs, the driver log and the nvidia-smi samples; no SEC value, no model output.",
+  "code": {
+    "ablation_and_gate": "f60fdb0",
+    "opaque": "5562457"
+  },
+  "ablation": {
+    "settings": {
+      "think_on": {
+        "n": 3,
+        "run_ids": [
+          "r20261026T015224d28c",
+          "r20261026T020756eece",
+          "r20261026T02241541a4"
+        ],
+        "wall_s": [
+          268.4,
+          274.2,
+          317.9
+        ],
+        "wall_median": 274.2,
+        "wall_min": 268.4,
+        "wall_max": 317.9,
+        "wall_spread": 49.5,
+        "chunks_median": 9,
+        "planner_calls_median": 26,
+        "planner_valid_median": 22,
+        "replies_rejected": [
+          9,
+          8,
+          16
+        ],
+        "fallback_steps": [
+          4,
+          4,
+          8
+        ],
+        "output_tokens_median": 22666,
+        "tok_s_median": 136.5,
+        "model_made": [
+          3,
+          1,
+          2
+        ],
+        "model_verified": [
+          1,
+          0,
+          2
+        ],
+        "model_by": [
+          "planner",
+          "planner",
+          "planner"
+        ],
+        "baseline_made": [
+          6,
+          6,
+          6
+        ],
+        "baseline_verified": [
+          5,
+          5,
+          5
+        ],
+        "answer_rows": [
+          12,
+          12,
+          12
+        ],
+        "identical": [
+          true,
+          true,
+          true
+        ],
+        "vram_ollama": [
+          2881,
+          2881,
+          2881
+        ],
+        "smi_max": [
+          12029,
+          11374,
+          11541
+        ],
+        "util_median": [
+          71,
+          74,
+          81.5
+        ],
+        "cache_time": [
+          "57/59",
+          "54/56",
+          "55/57"
+        ],
+        "unload_dips": [
+          3,
+          3,
+          4
+        ],
+        "ram_start": [
+          4954,
+          3656,
+          1802
+        ],
+        "memo": [
+          "template 246",
+          "template 246",
+          "model 180"
+        ]
+      },
+      "think_off": {
+        "n": 3,
+        "run_ids": [
+          "r20261026T015654ca0d",
+          "r20261026T0212327366",
+          "r20261026T0230040c8d"
+        ],
+        "wall_s": [
+          219.1,
+          211.7,
+          216
+        ],
+        "wall_median": 216,
+        "wall_min": 211.7,
+        "wall_max": 219.1,
+        "wall_spread": 7.4,
+        "chunks_median": 10,
+        "planner_calls_median": 28,
+        "planner_valid_median": 21,
+        "replies_rejected": [
+          17,
+          15,
+          14
+        ],
+        "fallback_steps": [
+          8,
+          7,
+          7
+        ],
+        "output_tokens_median": 14733,
+        "tok_s_median": 136.3,
+        "model_made": [
+          2,
+          2,
+          2
+        ],
+        "model_verified": [
+          1,
+          1,
+          1
+        ],
+        "model_by": [
+          "planner",
+          "planner",
+          "planner"
+        ],
+        "baseline_made": [
+          6,
+          6,
+          6
+        ],
+        "baseline_verified": [
+          5,
+          5,
+          5
+        ],
+        "answer_rows": [
+          12,
+          12,
+          12
+        ],
+        "identical": [
+          true,
+          true,
+          true
+        ],
+        "vram_ollama": [
+          2881,
+          2881,
+          2881
+        ],
+        "smi_max": [
+          11688,
+          11797,
+          11371
+        ],
+        "util_median": [
+          67,
+          57,
+          60
+        ],
+        "cache_time": [
+          "58/60",
+          "58/60",
+          "58/60"
+        ],
+        "unload_dips": [
+          2,
+          2,
+          2
+        ],
+        "ram_start": [
+          4737,
+          3155,
+          3570
+        ],
+        "memo": [
+          "template 245",
+          "model 249",
+          "template 245"
+        ]
+      },
+      "no_model": {
+        "n": 3,
+        "run_ids": [
+          "r20261026T0200355275",
+          "r20261026T0216053986",
+          "r20261026T023342b706"
+        ],
+        "wall_s": [
+          90.2,
+          87.1,
+          87.5
+        ],
+        "wall_median": 87.5,
+        "wall_min": 87.1,
+        "wall_max": 90.2,
+        "wall_spread": 3.1,
+        "chunks_median": 9,
+        "planner_calls_median": 0,
+        "planner_valid_median": 0,
+        "replies_rejected": [
+          0,
+          0,
+          0
+        ],
+        "fallback_steps": [
+          25,
+          25,
+          25
+        ],
+        "output_tokens_median": 0,
+        "tok_s_median": null,
+        "model_made": [
+          0,
+          0,
+          0
+        ],
+        "model_verified": [
+          0,
+          0,
+          0
+        ],
+        "model_by": [
+          null,
+          null,
+          null
+        ],
+        "baseline_made": [
+          6,
+          6,
+          6
+        ],
+        "baseline_verified": [
+          5,
+          5,
+          5
+        ],
+        "answer_rows": [
+          12,
+          12,
+          12
+        ],
+        "identical": [
+          true,
+          true,
+          true
+        ],
+        "vram_ollama": [
+          null,
+          null,
+          null
+        ],
+        "smi_max": [
+          11670,
+          11795,
+          11393
+        ],
+        "util_median": [
+          10,
+          10,
+          10
+        ],
+        "cache_time": [
+          "54/56",
+          "54/56",
+          "54/56"
+        ],
+        "unload_dips": [
+          0,
+          0,
+          0
+        ],
+        "ram_start": [
+          4243,
+          1967,
+          2670
+        ],
+        "memo": [
+          "template 247",
+          "template 247",
+          "template 247"
+        ]
+      },
+      "q8": {
+        "n": 3,
+        "run_ids": [
+          "r20261026T020207838b",
+          "r20261026T0217334649",
+          "r20261026T0235116875"
+        ],
+        "wall_s": [
+          347.8,
+          400,
+          297.5
+        ],
+        "wall_median": 347.8,
+        "wall_min": 297.5,
+        "wall_max": 400,
+        "wall_spread": 102.5,
+        "chunks_median": 9,
+        "planner_calls_median": 27,
+        "planner_valid_median": 21,
+        "replies_rejected": [
+          13,
+          13,
+          12
+        ],
+        "fallback_steps": [
+          6,
+          6,
+          6
+        ],
+        "output_tokens_median": 22140,
+        "tok_s_median": 100.9,
+        "model_made": [
+          2,
+          2,
+          1
+        ],
+        "model_verified": [
+          0,
+          1,
+          0
+        ],
+        "model_by": [
+          "planner",
+          "planner",
+          "planner"
+        ],
+        "baseline_made": [
+          6,
+          6,
+          6
+        ],
+        "baseline_verified": [
+          5,
+          5,
+          5
+        ],
+        "answer_rows": [
+          12,
+          12,
+          12
+        ],
+        "identical": [
+          true,
+          true,
+          true
+        ],
+        "vram_ollama": [
+          4066,
+          4066,
+          4066
+        ],
+        "smi_max": [
+          11900,
+          11530,
+          11769
+        ],
+        "util_median": [
+          85,
+          85,
+          78
+        ],
+        "cache_time": [
+          "58/60",
+          "57/59",
+          "54/56"
+        ],
+        "unload_dips": [
+          5,
+          6,
+          4
+        ],
+        "ram_start": [
+          3717,
+          1892,
+          2610
+        ],
+        "memo": [
+          "template 246",
+          "template 243",
+          "template 246"
+        ]
+      },
+      "warm": {
+        "n": 1,
+        "run_ids": [
+          "r20261026T02401036cf"
+        ],
+        "wall_s": [
+          252.2
+        ],
+        "wall_median": 252.2,
+        "wall_min": 252.2,
+        "wall_max": 252.2,
+        "wall_spread": 0,
+        "chunks_median": 8,
+        "planner_calls_median": 24,
+        "planner_valid_median": 16,
+        "replies_rejected": [
+          16
+        ],
+        "fallback_steps": [
+          8
+        ],
+        "output_tokens_median": 25581,
+        "tok_s_median": 137.3,
+        "model_made": [
+          4
+        ],
+        "model_verified": [
+          1
+        ],
+        "model_by": [
+          "planner"
+        ],
+        "baseline_made": [
+          6
+        ],
+        "baseline_verified": [
+          5
+        ],
+        "answer_rows": [
+          16
+        ],
+        "identical": [
+          null
+        ],
+        "vram_ollama": [
+          2881
+        ],
+        "smi_max": [
+          11492
+        ],
+        "util_median": [
+          90
+        ],
+        "cache_time": [
+          "48/50"
+        ],
+        "unload_dips": [
+          4
+        ],
+        "ram_start": [
+          2172
+        ],
+        "memo": [
+          "template 236"
+        ]
+      }
+    },
+    "runs": [
+      {
+        "tag": "01-think_on-015223",
+        "setting": "think_on",
+        "exit": 0,
+        "shell_s": 270.7,
+        "run_id": "r20261026T015224d28c",
+        "model": "nemotron-3-nano:4b",
+        "host_ram_free_mib_at_start": 4954,
+        "mode": "cold",
+        "quarter": "CY2025Q1",
+        "wall_s": 268.4,
+        "chunks": 9,
+        "planner_calls": 27,
+        "planner_valid": 23,
+        "planner_valid_first_try": 22,
+        "planner_repaired": 1,
+        "planner_replies_rejected": 9,
+        "fallback_steps": 4,
+        "output_tokens": 21208,
+        "median_planner_tok_s": 135.8,
+        "model_proposals": {
+          "by": "planner",
+          "made": 3,
+          "verified": 1,
+          "partial": 1,
+          "rejected": 1,
+          "unmeasurable": 0,
+          "invalid_schema": 0,
+          "keys": [
+            "pair:cw.utility_states.state~cw.states.code|identity",
+            "pair:cw.utility_states.state~cw.states.fips|identity",
+            "fema_state@CY2025Q1"
+          ]
+        },
+        "baseline_proposals": {
+          "made": 6,
+          "verified": 5,
+          "partial": 0,
+          "rejected": 1
+        },
+        "join_map": [
+          {
+            "id": "k1",
+            "key": "pair:cw.utility_states.state~cw.states.code|identity",
+            "left": "cw.utility_states.state",
+            "right": "cw.states.code",
+            "transform": "identity",
+            "verdict": "VERIFIED",
+            "matched_rows": 43,
+            "left_rows": 43,
+            "matched_keys": 43,
+            "left_keys": 43,
+            "by": [
+              "planner",
+              "baseline (queue)"
+            ],
+            "recalled": null
+          },
+          {
+            "id": "k2",
+            "key": "pair:cw.utility_states.state~cw.states.fips|identity",
+            "left": "cw.utility_states.state",
+            "right": "cw.states.fips",
+            "transform": "identity",
+            "verdict": "REJECTED",
+            "matched_rows": 0,
+            "left_rows": 43,
+            "matched_keys": 0,
+            "left_keys": 43,
+            "by": [
+              "planner"
+            ],
+            "recalled": null
+          },
+          {
+            "id": "k3",
+            "key": "fema_state@CY2025Q1",
+            "left": "cw.fema_declarations_dr_2025q1.state",
+            "right": "cw.utility_states.state",
+            "transform": "identity",
+            "verdict": "PARTIAL",
+            "matched_rows": 7,
+            "left_rows": 8,
+            "matched_keys": 7,
+            "left_keys": 8,
+            "by": [
+              "planner",
+              "baseline (queue)"
+            ],
+            "recalled": null
+          },
+          {
+            "id": "b1",
+            "key": "pair:cw.frames_revenues_cy2025q1.cik~cw.utility_states.cik|lpad10",
+            "left": "cw.frames_Revenues_CY2025Q1.cik",
+            "right": "cw.utility_states.cik",
+            "transform": "lpad10",
+            "verdict": "REJECTED",
+            "matched_rows": 34,
+            "left_rows": 1937,
+            "matched_keys": 34,
+            "left_keys": 1937,
+            "by": [
+              "baseline"
+            ],
+            "recalled": null
+          },
+          {
+            "id": "b3",
+            "key": "station@all",
+            "left": "cw.seed_stations.id",
+            "right": "cw.stations.id",
+            "transform": "identity",
+            "verdict": "VERIFIED",
+            "matched_rows": 56,
+            "left_rows": 56,
+            "matched_keys": 56,
+            "left_keys": 56,
+            "by": [
+              "baseline"
+            ],
+            "recalled": null
+          },
+          {
+            "id": "b4",
+            "key": "pair:cw.seed_submissions_snapshot.cik10~cw.utility_states.cik|identity",
+            "left": "cw.seed_submissions_snapshot.cik10",
+            "right": "cw.utility_states.cik",
+            "transform": "identity",
+            "verdict": "VERIFIED",
+            "matched_rows": 43,
+            "left_rows": 43,
+            "matched_keys": 43,
+            "left_keys": 43,
+            "by": [
+              "baseline"
+            ],
+            "recalled": null
+          },
+          {
+            "id": "b2",
+            "key": "cik@CY2025Q1",
+            "left": "cw.seed_submissions_snapshot.cik10",
+            "right": "cw.frames_*_CY2025Q1.cik",
+            "transform": "lpad10",
+            "verdict": "VERIFIED",
+            "matched_rows": 42,
+            "left_rows": 43,
+            "matched_keys": 42,
+            "left_keys": 43,
+            "by": [
+              "baseline"
+            ],
+            "recalled": null
+          },
+          {
+            "id": "b5",
+            "key": "sic@all",
+            "left": "cw.seed_submissions_snapshot.sic",
+            "right": "cw.sic_codes.code",
+            "transform": "identity",
+            "verdict": "VERIFIED",
+            "matched_rows": 42,
+            "left_rows": 43,
+            "matched_keys": 3,
+            "left_keys": 4,
+            "by": [
+              "baseline"
+            ],
+            "recalled": null
+          },
+          {
+            "id": "b6",
+            "key": "loc@CY2025Q1",
+            "left": "cw.frames_*_CY2025Q1.loc",
+            "right": "cw.seed_submissions_snapshot.hq_state",
+            "transform": "substr(4,2)",
+            "verdict": "VERIFIED",
+            "matched_rows": 42,
+            "left_rows": 42,
+            "matched_keys": 42,
+            "left_keys": 42,
+            "by": [
+              "baseline"
+            ],
+            "recalled": null
+          },
+          {
+            "id": "b17",
+            "key": "fema_fips@CY2025Q1",
+            "left": "cw.fema_declarations_dr_2025q1.fips_state_code",
+            "right": "cw.states.fips",
+            "transform": "identity",
+            "verdict": "VERIFIED",
+            "matched_rows": 8,
+            "left_rows": 8,
+            "matched_keys": 8,
+            "left_keys": 8,
+            "by": [
+              "baseline (queue)"
+            ],
+            "recalled": null
+          },
+          {
+            "id": "c1",
+            "key": "cik_control@CY2025Q1",
+            "left": "cw.seed_submissions_snapshot.cik10",
+            "right": "cw.frames_*_CY2025Q1.cik",
+            "transform": "identity",
+            "verdict": "REJECTED",
+            "matched_rows": 0,
+            "left_rows": 43,
+            "matched_keys": 0,
+            "left_keys": 43,
+            "by": [
+              "control"
+            ],
+            "recalled": null
+          }
+        ],
+        "verified_keys": 7,
+        "answer_rows": 12,
+        "weather": "measured",
+        "answer_identical_to_ref": true,
+        "gate": {
+          "fema": {
+            "key": "fema_fips@CY2025Q1",
+            "verdict": "VERIFIED",
+            "matched": 8,
+            "rows": 8,
+            "recalled": false,
+            "ok": true
+          },
+          "revenue": {
+            "key": "cik@CY2025Q1",
+            "verdict": "VERIFIED",
+            "matched": 42,
+            "rows": 43,
+            "recalled": false,
+            "ok": true
+          },
+          "weather": {
+            "key": "station@all",
+            "verdict": "VERIFIED",
+            "matched": 56,
+            "rows": 56,
+            "recalled": false,
+            "ok": true
+          },
+          "coverage": {
+            "key": "fema_state@CY2025Q1",
+            "verdict": "PARTIAL",
+            "matched": 7,
+            "rows": 8,
+            "orphans": [
+              "AK"
+            ]
+          }
+        },
+        "statements": 59,
+        "statements_with_cache_time": 57,
+        "skipped_chunks": 0,
+        "memo": {
+          "source": "template",
+          "words": 246
+        },
+        "checklist_complete": true,
+        "vram_mib_ollama_mid": 2881,
+        "smi": {
+          "samples": 529,
+          "mem_min": 8509,
+          "mem_median": 11664,
+          "mem_max": 12029,
+          "util_median": 71,
+          "util_max": 99,
+          "unload_dips": 3
+        }
+      },
+      {
+        "tag": "02-think_off-015653",
+        "setting": "think_off",
+        "exit": 0,
+        "shell_s": 220.6,
+        "run_id": "r20261026T015654ca0d",
+        "model": "nemotron-3-nano:4b",
+        "host_ram_free_mib_at_start": 4737,
+        "mode": "cold",
+        "quarter": "CY2025Q1",
+        "wall_s": 219.1,
+        "chunks": 10,
+        "planner_calls": 28,
+        "planner_valid": 20,
+        "planner_valid_first_try": 19,
+        "planner_repaired": 1,
+        "planner_replies_rejected": 17,
+        "fallback_steps": 8,
+        "output_tokens": 15668,
+        "median_planner_tok_s": 136.3,
+        "model_proposals": {
+          "by": "planner",
+          "made": 2,
+          "verified": 1,
+          "partial": 0,
+          "rejected": 1,
+          "unmeasurable": 0,
+          "invalid_schema": 0,
+          "keys": [
+            "pair:cw.utility_states.state~cw.states.code|identity",
+            "pair:cw.utility_states.state~cw.states.fips|identity"
+          ]
+        },
+        "baseline_proposals": {
+          "made": 6,
+          "verified": 5,
+          "partial": 0,
+          "rejected": 1
+        },
+        "join_map": [
+          {
+            "id": "k1",
+            "key": "pair:cw.utility_states.state~cw.states.code|identity",
+            "left": "cw.utility_states.state",
+            "right": "cw.states.code",
+            "transform": "identity",
+            "verdict": "VERIFIED",
+            "matched_rows": 43,
+            "left_rows": 43,
+            "matched_keys": 43,
+            "left_keys": 43,
+            "by": [
+              "planner",
+              "baseline (queue)"
+            ],
+            "recalled": null
+          },
+          {
+            "id": "k2",
+            "key": "pair:cw.utility_states.state~cw.states.fips|identity",
+            "left": "cw.utility_states.state",
+            "right": "cw.states.fips",
+            "transform": "identity",
+            "verdict": "REJECTED",
+            "matched_rows": 0,
+            "left_rows": 43,
+            "matched_keys": 0,
+            "left_keys": 43,
+            "by": [
+              "planner"
+            ],
+            "recalled": null
+          },
+          {
+            "id": "b13",
+            "key": "fema_state@CY2025Q1",
+            "left": "cw.fema_declarations_dr_2025q1.state",
+            "right": "cw.utility_states.state",
+            "transform": "identity",
+            "verdict": "PARTIAL",
+            "matched_rows": 7,
+            "left_rows": 8,
+            "matched_keys": 7,
+            "left_keys": 8,
+            "by": [
+              "baseline (queue)"
+            ],
+            "recalled": null
+          },
+          {
+            "id": "b6",
+            "key": "pair:cw.utility_states.state~cw.seed_stations.state|identity",
+            "left": "cw.utility_states.state",
+            "right": "cw.seed_stations.state",
+            "transform": "identity",
+            "verdict": "VERIFIED",
+            "matched_rows": 43,
+            "left_rows": 43,
+            "matched_keys": 43,
+            "left_keys": 43,
+            "by": [
+              "baseline"
+            ],
+            "recalled": null
+          },
+          {
+            "id": "b17",
+            "key": "fema_fips@CY2025Q1",
+            "left": "cw.fema_declarations_dr_2025q1.fips_state_code",
+            "right": "cw.states.fips",
+            "transform": "identity",
+            "verdict": "VERIFIED",
+            "matched_rows": 8,
+            "left_rows": 8,
+            "matched_keys": 8,
+            "left_keys": 8,
+            "by": [
+              "baseline (queue)"
+            ],
+            "recalled": null
+          },
+          {
+            "id": "b2",
+            "key": "cik@CY2025Q1",
+            "left": "cw.seed_submissions_snapshot.cik10",
+            "right": "cw.frames_*_CY2025Q1.cik",
+            "transform": "lpad10",
+            "verdict": "VERIFIED",
+            "matched_rows": 42,
+            "left_rows": 43,
+            "matched_keys": 42,
+            "left_keys": 43,
+            "by": [
+              "baseline"
+            ],
+            "recalled": null
+          },
+          {
+            "id": "b1",
+            "key": "pair:cw.frames_revenues_cy2025q1.cik~cw.utility_states.cik|lpad10",
+            "left": "cw.frames_Revenues_CY2025Q1.cik",
+            "right": "cw.utility_states.cik",
+            "transform": "lpad10",
+            "verdict": "REJECTED",
+            "matched_rows": 34,
+            "left_rows": 1937,
+            "matched_keys": 34,
+            "left_keys": 1937,
+            "by": [
+              "baseline"
+            ],
+            "recalled": null
+          },
+          {
+            "id": "b3",
+            "key": "station@all",
+            "left": "cw.seed_stations.id",
+            "right": "cw.stations.id",
+            "transform": "identity",
+            "verdict": "VERIFIED",
+            "matched_rows": 56,
+            "left_rows": 56,
+            "matched_keys": 56,
+            "left_keys": 56,
+            "by": [
+              "baseline"
+            ],
+            "recalled": null
+          },
+          {
+            "id": "b4",
+            "key": "pair:cw.seed_submissions_snapshot.cik10~cw.utility_states.cik|identity",
+            "left": "cw.seed_submissions_snapshot.cik10",
+            "right": "cw.utility_states.cik",
+            "transform": "identity",
+            "verdict": "VERIFIED",
+            "matched_rows": 43,
+            "left_rows": 43,
+            "matched_keys": 43,
+            "left_keys": 43,
+            "by": [
+              "baseline"
+            ],
+            "recalled": null
+          },
+          {
+            "id": "b5",
+            "key": "sic@all",
+            "left": "cw.seed_submissions_snapshot.sic",
+            "right": "cw.sic_codes.code",
+            "transform": "identity",
+            "verdict": "VERIFIED",
+            "matched_rows": 42,
+            "left_rows": 43,
+            "matched_keys": 3,
+            "left_keys": 4,
+            "by": [
+              "baseline"
+            ],
+            "recalled": null
+          },
+          {
+            "id": "b8",
+            "key": "loc@CY2025Q1",
+            "left": "cw.frames_*_CY2025Q1.loc",
+            "right": "cw.seed_submissions_snapshot.hq_state",
+            "transform": "substr(4,2)",
+            "verdict": "VERIFIED",
+            "matched_rows": 42,
+            "left_rows": 42,
+            "matched_keys": 42,
+            "left_keys": 42,
+            "by": [
+              "baseline (queue)"
+            ],
+            "recalled": null
+          },
+          {
+            "id": "c1",
+            "key": "cik_control@CY2025Q1",
+            "left": "cw.seed_submissions_snapshot.cik10",
+            "right": "cw.frames_*_CY2025Q1.cik",
+            "transform": "identity",
+            "verdict": "REJECTED",
+            "matched_rows": 0,
+            "left_rows": 43,
+            "matched_keys": 0,
+            "left_keys": 43,
+            "by": [
+              "control"
+            ],
+            "recalled": null
+          }
+        ],
+        "verified_keys": 8,
+        "answer_rows": 12,
+        "weather": "measured",
+        "answer_identical_to_ref": true,
+        "gate": {
+          "fema": {
+            "key": "fema_fips@CY2025Q1",
+            "verdict": "VERIFIED",
+            "matched": 8,
+            "rows": 8,
+            "recalled": false,
+            "ok": true
+          },
+          "revenue": {
+            "key": "cik@CY2025Q1",
+            "verdict": "VERIFIED",
+            "matched": 42,
+            "rows": 43,
+            "recalled": false,
+            "ok": true
+          },
+          "weather": {
+            "key": "station@all",
+            "verdict": "VERIFIED",
+            "matched": 56,
+            "rows": 56,
+            "recalled": false,
+            "ok": true
+          },
+          "coverage": {
+            "key": "fema_state@CY2025Q1",
+            "verdict": "PARTIAL",
+            "matched": 7,
+            "rows": 8,
+            "orphans": [
+              "AK"
+            ]
+          }
+        },
+        "statements": 60,
+        "statements_with_cache_time": 58,
+        "skipped_chunks": 0,
+        "memo": {
+          "source": "template",
+          "words": 245
+        },
+        "checklist_complete": true,
+        "vram_mib_ollama_mid": 2881,
+        "smi": {
+          "samples": 431,
+          "mem_min": 8509,
+          "mem_median": 11664,
+          "mem_max": 11688,
+          "util_median": 67,
+          "util_max": 100,
+          "unload_dips": 2
+        }
+      },
+      {
+        "tag": "03-no_model-020034",
+        "setting": "no_model",
+        "exit": 0,
+        "shell_s": 91.7,
+        "run_id": "r20261026T0200355275",
+        "model": "none",
+        "host_ram_free_mib_at_start": 4243,
+        "mode": "cold",
+        "quarter": "CY2025Q1",
+        "wall_s": 90.2,
+        "chunks": 9,
+        "planner_calls": 0,
+        "planner_valid": 0,
+        "planner_valid_first_try": 0,
+        "planner_repaired": 0,
+        "planner_replies_rejected": 0,
+        "fallback_steps": 25,
+        "output_tokens": 0,
+        "median_planner_tok_s": null,
+        "model_proposals": {
+          "by": null,
+          "made": 0,
+          "verified": 0,
+          "partial": 0,
+          "rejected": 0,
+          "unmeasurable": 0,
+          "invalid_schema": 0,
+          "keys": []
+        },
+        "baseline_proposals": {
+          "made": 6,
+          "verified": 5,
+          "partial": 0,
+          "rejected": 1
+        },
+        "join_map": [
+          {
+            "id": "k1",
+            "key": "pair:cw.frames_revenues_cy2025q1.cik~cw.utility_states.cik|lpad10",
+            "left": "cw.frames_Revenues_CY2025Q1.cik",
+            "right": "cw.utility_states.cik",
+            "transform": "lpad10",
+            "verdict": "REJECTED",
+            "matched_rows": 34,
+            "left_rows": 1937,
+            "matched_keys": 34,
+            "left_keys": 1937,
+            "by": [
+              "baseline"
+            ],
+            "recalled": null
+          },
+          {
+            "id": "k2",
+            "key": "cik@CY2025Q1",
+            "left": "cw.seed_submissions_snapshot.cik10",
+            "right": "cw.frames_*_CY2025Q1.cik",
+            "transform": "lpad10",
+            "verdict": "VERIFIED",
+            "matched_rows": 42,
+            "left_rows": 43,
+            "matched_keys": 42,
+            "left_keys": 43,
+            "by": [
+              "baseline"
+            ],
+            "recalled": null
+          },
+          {
+            "id": "k3",
+            "key": "station@all",
+            "left": "cw.seed_stations.id",
+            "right": "cw.stations.id",
+            "transform": "identity",
+            "verdict": "VERIFIED",
+            "matched_rows": 56,
+            "left_rows": 56,
+            "matched_keys": 56,
+            "left_keys": 56,
+            "by": [
+              "baseline"
+            ],
+            "recalled": null
+          },
+          {
+            "id": "k4",
+            "key": "pair:cw.seed_submissions_snapshot.cik10~cw.utility_states.cik|identity",
+            "left": "cw.seed_submissions_snapshot.cik10",
+            "right": "cw.utility_states.cik",
+            "transform": "identity",
+            "verdict": "VERIFIED",
+            "matched_rows": 43,
+            "left_rows": 43,
+            "matched_keys": 43,
+            "left_keys": 43,
+            "by": [
+              "baseline"
+            ],
+            "recalled": null
+          },
+          {
+            "id": "k5",
+            "key": "sic@all",
+            "left": "cw.seed_submissions_snapshot.sic",
+            "right": "cw.sic_codes.code",
+            "transform": "identity",
+            "verdict": "VERIFIED",
+            "matched_rows": 42,
+            "left_rows": 43,
+            "matched_keys": 3,
+            "left_keys": 4,
+            "by": [
+              "baseline"
+            ],
+            "recalled": null
+          },
+          {
+            "id": "k6",
+            "key": "loc@CY2025Q1",
+            "left": "cw.frames_*_CY2025Q1.loc",
+            "right": "cw.seed_submissions_snapshot.hq_state",
+            "transform": "substr(4,2)",
+            "verdict": "VERIFIED",
+            "matched_rows": 42,
+            "left_rows": 42,
+            "matched_keys": 42,
+            "left_keys": 42,
+            "by": [
+              "baseline"
+            ],
+            "recalled": null
+          },
+          {
+            "id": "b11",
+            "key": "fema_state@CY2025Q1",
+            "left": "cw.fema_declarations_dr_2025q1.state",
+            "right": "cw.utility_states.state",
+            "transform": "identity",
+            "verdict": "PARTIAL",
+            "matched_rows": 7,
+            "left_rows": 8,
+            "matched_keys": 7,
+            "left_keys": 8,
+            "by": [
+              "baseline (queue)"
+            ],
+            "recalled": null
+          },
+          {
+            "id": "b17",
+            "key": "fema_fips@CY2025Q1",
+            "left": "cw.fema_declarations_dr_2025q1.fips_state_code",
+            "right": "cw.states.fips",
+            "transform": "identity",
+            "verdict": "VERIFIED",
+            "matched_rows": 8,
+            "left_rows": 8,
+            "matched_keys": 8,
+            "left_keys": 8,
+            "by": [
+              "baseline (queue)"
+            ],
+            "recalled": null
+          },
+          {
+            "id": "c1",
+            "key": "cik_control@CY2025Q1",
+            "left": "cw.seed_submissions_snapshot.cik10",
+            "right": "cw.frames_*_CY2025Q1.cik",
+            "transform": "identity",
+            "verdict": "REJECTED",
+            "matched_rows": 0,
+            "left_rows": 43,
+            "matched_keys": 0,
+            "left_keys": 43,
+            "by": [
+              "control"
+            ],
+            "recalled": null
+          }
+        ],
+        "verified_keys": 6,
+        "answer_rows": 12,
+        "weather": "measured",
+        "answer_identical_to_ref": true,
+        "gate": {
+          "fema": {
+            "key": "fema_fips@CY2025Q1",
+            "verdict": "VERIFIED",
+            "matched": 8,
+            "rows": 8,
+            "recalled": false,
+            "ok": true
+          },
+          "revenue": {
+            "key": "cik@CY2025Q1",
+            "verdict": "VERIFIED",
+            "matched": 42,
+            "rows": 43,
+            "recalled": false,
+            "ok": true
+          },
+          "weather": {
+            "key": "station@all",
+            "verdict": "VERIFIED",
+            "matched": 56,
+            "rows": 56,
+            "recalled": false,
+            "ok": true
+          },
+          "coverage": {
+            "key": "fema_state@CY2025Q1",
+            "verdict": "PARTIAL",
+            "matched": 7,
+            "rows": 8,
+            "orphans": [
+              "AK"
+            ]
+          }
+        },
+        "statements": 56,
+        "statements_with_cache_time": 54,
+        "skipped_chunks": 0,
+        "memo": {
+          "source": "template",
+          "words": 247
+        },
+        "checklist_complete": true,
+        "vram_mib_ollama_mid": null,
+        "smi": {
+          "samples": 178,
+          "mem_min": 11662,
+          "mem_median": 11662,
+          "mem_max": 11670,
+          "util_median": 10,
+          "util_max": 13,
+          "unload_dips": 0
+        }
+      },
+      {
+        "tag": "04-q8-020206",
+        "setting": "q8",
+        "exit": 0,
+        "shell_s": 349.2,
+        "run_id": "r20261026T020207838b",
+        "model": "nemotron-3-nano:4b-q8_0",
+        "host_ram_free_mib_at_start": 3717,
+        "mode": "cold",
+        "quarter": "CY2025Q1",
+        "wall_s": 347.8,
+        "chunks": 9,
+        "planner_calls": 27,
+        "planner_valid": 21,
+        "planner_valid_first_try": 20,
+        "planner_repaired": 1,
+        "planner_replies_rejected": 13,
+        "fallback_steps": 6,
+        "output_tokens": 22140,
+        "median_planner_tok_s": 100.8,
+        "model_proposals": {
+          "by": "planner",
+          "made": 2,
+          "verified": 0,
+          "partial": 0,
+          "rejected": 2,
+          "unmeasurable": 0,
+          "invalid_schema": 0,
+          "keys": [
+            "pair:cw.utility_states.cik~cw.frames_revenues_cy2025q1.cik|identity",
+            "pair:cw.utility_states.state~cw.frames_revenues_cy2025q1.loc|substr(4,2)"
+          ]
+        },
+        "baseline_proposals": {
+          "made": 6,
+          "verified": 5,
+          "partial": 0,
+          "rejected": 1
+        },
+        "join_map": [
+          {
+            "id": "k1",
+            "key": "pair:cw.utility_states.cik~cw.frames_revenues_cy2025q1.cik|identity",
+            "left": "cw.utility_states.cik",
+            "right": "cw.frames_Revenues_CY2025Q1.cik",
+            "transform": "identity",
+            "verdict": "REJECTED",
+            "matched_rows": 0,
+            "left_rows": 43,
+            "matched_keys": 0,
+            "left_keys": 43,
+            "by": [
+              "planner"
+            ],
+            "recalled": null
+          },
+          {
+            "id": "k2",
+            "key": "pair:cw.utility_states.state~cw.frames_revenues_cy2025q1.loc|substr(4,2)",
+            "left": "cw.utility_states.state",
+            "right": "cw.frames_Revenues_CY2025Q1.loc",
+            "transform": "substr(4,2)",
+            "verdict": "REJECTED",
+            "matched_rows": 0,
+            "left_rows": 1,
+            "matched_keys": 0,
+            "left_keys": 1,
+            "by": [
+              "planner"
+            ],
+            "recalled": null
+          },
+          {
+            "id": "b2",
+            "key": "cik@CY2025Q1",
+            "left": "cw.seed_submissions_snapshot.cik10",
+            "right": "cw.frames_*_CY2025Q1.cik",
+            "transform": "lpad10",
+            "verdict": "VERIFIED",
+            "matched_rows": 42,
+            "left_rows": 43,
+            "matched_keys": 42,
+            "left_keys": 43,
+            "by": [
+              "baseline"
+            ],
+            "recalled": null
+          },
+          {
+            "id": "b3",
+            "key": "station@all",
+            "left": "cw.seed_stations.id",
+            "right": "cw.stations.id",
+            "transform": "identity",
+            "verdict": "VERIFIED",
+            "matched_rows": 56,
+            "left_rows": 56,
+            "matched_keys": 56,
+            "left_keys": 56,
+            "by": [
+              "baseline"
+            ],
+            "recalled": null
+          },
+          {
+            "id": "b13",
+            "key": "fema_state@CY2025Q1",
+            "left": "cw.fema_declarations_dr_2025q1.state",
+            "right": "cw.utility_states.state",
+            "transform": "identity",
+            "verdict": "PARTIAL",
+            "matched_rows": 7,
+            "left_rows": 8,
+            "matched_keys": 7,
+            "left_keys": 8,
+            "by": [
+              "baseline (queue)"
+            ],
+            "recalled": null
+          },
+          {
+            "id": "b1",
+            "key": "pair:cw.frames_revenues_cy2025q1.cik~cw.utility_states.cik|lpad10",
+            "left": "cw.frames_Revenues_CY2025Q1.cik",
+            "right": "cw.utility_states.cik",
+            "transform": "lpad10",
+            "verdict": "REJECTED",
+            "matched_rows": 34,
+            "left_rows": 1937,
+            "matched_keys": 34,
+            "left_keys": 1937,
+            "by": [
+              "baseline"
+            ],
+            "recalled": null
+          },
+          {
+            "id": "b4",
+            "key": "pair:cw.seed_submissions_snapshot.cik10~cw.utility_states.cik|identity",
+            "left": "cw.seed_submissions_snapshot.cik10",
+            "right": "cw.utility_states.cik",
+            "transform": "identity",
+            "verdict": "VERIFIED",
+            "matched_rows": 43,
+            "left_rows": 43,
+            "matched_keys": 43,
+            "left_keys": 43,
+            "by": [
+              "baseline"
+            ],
+            "recalled": null
+          },
+          {
+            "id": "b5",
+            "key": "sic@all",
+            "left": "cw.seed_submissions_snapshot.sic",
+            "right": "cw.sic_codes.code",
+            "transform": "identity",
+            "verdict": "VERIFIED",
+            "matched_rows": 42,
+            "left_rows": 43,
+            "matched_keys": 3,
+            "left_keys": 4,
+            "by": [
+              "baseline"
+            ],
+            "recalled": null
+          },
+          {
+            "id": "b6",
+            "key": "loc@CY2025Q1",
+            "left": "cw.frames_*_CY2025Q1.loc",
+            "right": "cw.seed_submissions_snapshot.hq_state",
+            "transform": "substr(4,2)",
+            "verdict": "VERIFIED",
+            "matched_rows": 42,
+            "left_rows": 42,
+            "matched_keys": 42,
+            "left_keys": 42,
+            "by": [
+              "baseline"
+            ],
+            "recalled": null
+          },
+          {
+            "id": "c1",
+            "key": "cik_control@CY2025Q1",
+            "left": "cw.seed_submissions_snapshot.cik10",
+            "right": "cw.frames_*_CY2025Q1.cik",
+            "transform": "identity",
+            "verdict": "REJECTED",
+            "matched_rows": 0,
+            "left_rows": 43,
+            "matched_keys": 0,
+            "left_keys": 43,
+            "by": [
+              "control"
+            ],
+            "recalled": null
+          },
+          {
+            "id": "b17",
+            "key": "fema_fips@CY2025Q1",
+            "left": "cw.fema_declarations_dr_2025q1.fips_state_code",
+            "right": "cw.states.fips",
+            "transform": "identity",
+            "verdict": "VERIFIED",
+            "matched_rows": 8,
+            "left_rows": 8,
+            "matched_keys": 8,
+            "left_keys": 8,
+            "by": [
+              "baseline (queue)"
+            ],
+            "recalled": null
+          }
+        ],
+        "verified_keys": 6,
+        "answer_rows": 12,
+        "weather": "measured",
+        "answer_identical_to_ref": true,
+        "gate": {
+          "fema": {
+            "key": "fema_fips@CY2025Q1",
+            "verdict": "VERIFIED",
+            "matched": 8,
+            "rows": 8,
+            "recalled": false,
+            "ok": true
+          },
+          "revenue": {
+            "key": "cik@CY2025Q1",
+            "verdict": "VERIFIED",
+            "matched": 42,
+            "rows": 43,
+            "recalled": false,
+            "ok": true
+          },
+          "weather": {
+            "key": "station@all",
+            "verdict": "VERIFIED",
+            "matched": 56,
+            "rows": 56,
+            "recalled": false,
+            "ok": true
+          },
+          "coverage": {
+            "key": "fema_state@CY2025Q1",
+            "verdict": "PARTIAL",
+            "matched": 7,
+            "rows": 8,
+            "orphans": [
+              "AK"
+            ]
+          }
+        },
+        "statements": 60,
+        "statements_with_cache_time": 58,
+        "skipped_chunks": 0,
+        "memo": {
+          "source": "template",
+          "words": 246
+        },
+        "checklist_complete": true,
+        "vram_mib_ollama_mid": 4066,
+        "smi": {
+          "samples": 682,
+          "mem_min": 7026,
+          "mem_median": 11366,
+          "mem_max": 11900,
+          "util_median": 85,
+          "util_max": 100,
+          "unload_dips": 5
+        }
+      },
+      {
+        "tag": "05-think_on-020755",
+        "setting": "think_on",
+        "exit": 0,
+        "shell_s": 275.6,
+        "run_id": "r20261026T020756eece",
+        "model": "nemotron-3-nano:4b",
+        "host_ram_free_mib_at_start": 3656,
+        "mode": "cold",
+        "quarter": "CY2025Q1",
+        "wall_s": 274.2,
+        "chunks": 9,
+        "planner_calls": 25,
+        "planner_valid": 22,
+        "planner_valid_first_try": 20,
+        "planner_repaired": 2,
+        "planner_replies_rejected": 8,
+        "fallback_steps": 4,
+        "output_tokens": 22666,
+        "median_planner_tok_s": 136.5,
+        "model_proposals": {
+          "by": "planner",
+          "made": 1,
+          "verified": 0,
+          "partial": 1,
+          "rejected": 0,
+          "unmeasurable": 0,
+          "invalid_schema": 0,
+          "keys": [
+            "fema_state@CY2025Q1"
+          ]
+        },
+        "baseline_proposals": {
+          "made": 6,
+          "verified": 5,
+          "partial": 0,
+          "rejected": 1
+        },
+        "join_map": [
+          {
+            "id": "k1",
+            "key": "fema_state@CY2025Q1",
+            "left": "cw.fema_declarations_dr_2025q1.state",
+            "right": "cw.utility_states.state",
+            "transform": "identity",
+            "verdict": "PARTIAL",
+            "matched_rows": 7,
+            "left_rows": 8,
+            "matched_keys": 7,
+            "left_keys": 8,
+            "by": [
+              "planner",
+              "baseline (queue)"
+            ],
+            "recalled": null
+          },
+          {
+            "id": "b1",
+            "key": "pair:cw.frames_revenues_cy2025q1.cik~cw.utility_states.cik|lpad10",
+            "left": "cw.frames_Revenues_CY2025Q1.cik",
+            "right": "cw.utility_states.cik",
+            "transform": "lpad10",
+            "verdict": "REJECTED",
+            "matched_rows": 34,
+            "left_rows": 1937,
+            "matched_keys": 34,
+            "left_keys": 1937,
+            "by": [
+              "baseline"
+            ],
+            "recalled": null
+          },
+          {
+            "id": "b2",
+            "key": "cik@CY2025Q1",
+            "left": "cw.seed_submissions_snapshot.cik10",
+            "right": "cw.frames_*_CY2025Q1.cik",
+            "transform": "lpad10",
+            "verdict": "VERIFIED",
+            "matched_rows": 42,
+            "left_rows": 43,
+            "matched_keys": 42,
+            "left_keys": 43,
+            "by": [
+              "baseline"
+            ],
+            "recalled": null
+          },
+          {
+            "id": "b3",
+            "key": "station@all",
+            "left": "cw.seed_stations.id",
+            "right": "cw.stations.id",
+            "transform": "identity",
+            "verdict": "VERIFIED",
+            "matched_rows": 56,
+            "left_rows": 56,
+            "matched_keys": 56,
+            "left_keys": 56,
+            "by": [
+              "baseline"
+            ],
+            "recalled": null
+          },
+          {
+            "id": "b4",
+            "key": "pair:cw.seed_submissions_snapshot.cik10~cw.utility_states.cik|identity",
+            "left": "cw.seed_submissions_snapshot.cik10",
+            "right": "cw.utility_states.cik",
+            "transform": "identity",
+            "verdict": "VERIFIED",
+            "matched_rows": 43,
+            "left_rows": 43,
+            "matched_keys": 43,
+            "left_keys": 43,
+            "by": [
+              "baseline"
+            ],
+            "recalled": null
+          },
+          {
+            "id": "b5",
+            "key": "sic@all",
+            "left": "cw.seed_submissions_snapshot.sic",
+            "right": "cw.sic_codes.code",
+            "transform": "identity",
+            "verdict": "VERIFIED",
+            "matched_rows": 42,
+            "left_rows": 43,
+            "matched_keys": 3,
+            "left_keys": 4,
+            "by": [
+              "baseline"
+            ],
+            "recalled": null
+          },
+          {
+            "id": "b6",
+            "key": "loc@CY2025Q1",
+            "left": "cw.frames_*_CY2025Q1.loc",
+            "right": "cw.seed_submissions_snapshot.hq_state",
+            "transform": "substr(4,2)",
+            "verdict": "VERIFIED",
+            "matched_rows": 42,
+            "left_rows": 42,
+            "matched_keys": 42,
+            "left_keys": 42,
+            "by": [
+              "baseline"
+            ],
+            "recalled": null
+          },
+          {
+            "id": "b17",
+            "key": "fema_fips@CY2025Q1",
+            "left": "cw.fema_declarations_dr_2025q1.fips_state_code",
+            "right": "cw.states.fips",
+            "transform": "identity",
+            "verdict": "VERIFIED",
+            "matched_rows": 8,
+            "left_rows": 8,
+            "matched_keys": 8,
+            "left_keys": 8,
+            "by": [
+              "baseline (queue)"
+            ],
+            "recalled": null
+          },
+          {
+            "id": "c1",
+            "key": "cik_control@CY2025Q1",
+            "left": "cw.seed_submissions_snapshot.cik10",
+            "right": "cw.frames_*_CY2025Q1.cik",
+            "transform": "identity",
+            "verdict": "REJECTED",
+            "matched_rows": 0,
+            "left_rows": 43,
+            "matched_keys": 0,
+            "left_keys": 43,
+            "by": [
+              "control"
+            ],
+            "recalled": null
+          }
+        ],
+        "verified_keys": 6,
+        "answer_rows": 12,
+        "weather": "measured",
+        "answer_identical_to_ref": true,
+        "gate": {
+          "fema": {
+            "key": "fema_fips@CY2025Q1",
+            "verdict": "VERIFIED",
+            "matched": 8,
+            "rows": 8,
+            "recalled": false,
+            "ok": true
+          },
+          "revenue": {
+            "key": "cik@CY2025Q1",
+            "verdict": "VERIFIED",
+            "matched": 42,
+            "rows": 43,
+            "recalled": false,
+            "ok": true
+          },
+          "weather": {
+            "key": "station@all",
+            "verdict": "VERIFIED",
+            "matched": 56,
+            "rows": 56,
+            "recalled": false,
+            "ok": true
+          },
+          "coverage": {
+            "key": "fema_state@CY2025Q1",
+            "verdict": "PARTIAL",
+            "matched": 7,
+            "rows": 8,
+            "orphans": [
+              "AK"
+            ]
+          }
+        },
+        "statements": 56,
+        "statements_with_cache_time": 54,
+        "skipped_chunks": 0,
+        "memo": {
+          "source": "template",
+          "words": 246
+        },
+        "checklist_complete": true,
+        "vram_mib_ollama_mid": 2881,
+        "smi": {
+          "samples": 539,
+          "mem_min": 8212,
+          "mem_median": 11366,
+          "mem_max": 11374,
+          "util_median": 74,
+          "util_max": 96,
+          "unload_dips": 3
+        }
+      },
+      {
+        "tag": "06-think_off-021231",
+        "setting": "think_off",
+        "exit": 0,
+        "shell_s": 213.2,
+        "run_id": "r20261026T0212327366",
+        "model": "nemotron-3-nano:4b",
+        "host_ram_free_mib_at_start": 3155,
+        "mode": "cold",
+        "quarter": "CY2025Q1",
+        "wall_s": 211.7,
+        "chunks": 10,
+        "planner_calls": 28,
+        "planner_valid": 21,
+        "planner_valid_first_try": 20,
+        "planner_repaired": 1,
+        "planner_replies_rejected": 15,
+        "fallback_steps": 7,
+        "output_tokens": 14356,
+        "median_planner_tok_s": 135.3,
+        "model_proposals": {
+          "by": "planner",
+          "made": 2,
+          "verified": 1,
+          "partial": 0,
+          "rejected": 1,
+          "unmeasurable": 0,
+          "invalid_schema": 0,
+          "keys": [
+            "pair:cw.utility_states.state~cw.states.code|identity",
+            "pair:cw.utility_states.state~cw.states.fips|identity"
+          ]
+        },
+        "baseline_proposals": {
+          "made": 6,
+          "verified": 5,
+          "partial": 0,
+          "rejected": 1
+        },
+        "join_map": [
+          {
+            "id": "k1",
+            "key": "pair:cw.utility_states.state~cw.states.code|identity",
+            "left": "cw.utility_states.state",
+            "right": "cw.states.code",
+            "transform": "identity",
+            "verdict": "VERIFIED",
+            "matched_rows": 43,
+            "left_rows": 43,
+            "matched_keys": 43,
+            "left_keys": 43,
+            "by": [
+              "planner",
+              "baseline (queue)"
+            ],
+            "recalled": null
+          },
+          {
+            "id": "k2",
+            "key": "pair:cw.utility_states.state~cw.states.fips|identity",
+            "left": "cw.utility_states.state",
+            "right": "cw.states.fips",
+            "transform": "identity",
+            "verdict": "REJECTED",
+            "matched_rows": 0,
+            "left_rows": 43,
+            "matched_keys": 0,
+            "left_keys": 43,
+            "by": [
+              "planner"
+            ],
+            "recalled": null
+          },
+          {
+            "id": "b1",
+            "key": "pair:cw.frames_revenues_cy2025q1.cik~cw.utility_states.cik|lpad10",
+            "left": "cw.frames_Revenues_CY2025Q1.cik",
+            "right": "cw.utility_states.cik",
+            "transform": "lpad10",
+            "verdict": "REJECTED",
+            "matched_rows": 34,
+            "left_rows": 1937,
+            "matched_keys": 34,
+            "left_keys": 1937,
+            "by": [
+              "baseline"
+            ],
+            "recalled": null
+          },
+          {
+            "id": "b6",
+            "key": "pair:cw.utility_states.state~cw.seed_stations.state|identity",
+            "left": "cw.utility_states.state",
+            "right": "cw.seed_stations.state",
+            "transform": "identity",
+            "verdict": "VERIFIED",
+            "matched_rows": 43,
+            "left_rows": 43,
+            "matched_keys": 43,
+            "left_keys": 43,
+            "by": [
+              "baseline"
+            ],
+            "recalled": null
+          },
+          {
+            "id": "b13",
+            "key": "fema_state@CY2025Q1",
+            "left": "cw.fema_declarations_dr_2025q1.state",
+            "right": "cw.utility_states.state",
+            "transform": "identity",
+            "verdict": "PARTIAL",
+            "matched_rows": 7,
+            "left_rows": 8,
+            "matched_keys": 7,
+            "left_keys": 8,
+            "by": [
+              "baseline (queue)"
+            ],
+            "recalled": null
+          },
+          {
+            "id": "b17",
+            "key": "fema_fips@CY2025Q1",
+            "left": "cw.fema_declarations_dr_2025q1.fips_state_code",
+            "right": "cw.states.fips",
+            "transform": "identity",
+            "verdict": "VERIFIED",
+            "matched_rows": 8,
+            "left_rows": 8,
+            "matched_keys": 8,
+            "left_keys": 8,
+            "by": [
+              "baseline (queue)"
+            ],
+            "recalled": null
+          },
+          {
+            "id": "b2",
+            "key": "cik@CY2025Q1",
+            "left": "cw.seed_submissions_snapshot.cik10",
+            "right": "cw.frames_*_CY2025Q1.cik",
+            "transform": "lpad10",
+            "verdict": "VERIFIED",
+            "matched_rows": 42,
+            "left_rows": 43,
+            "matched_keys": 42,
+            "left_keys": 43,
+            "by": [
+              "baseline"
+            ],
+            "recalled": null
+          },
+          {
+            "id": "b4",
+            "key": "pair:cw.seed_submissions_snapshot.cik10~cw.utility_states.cik|identity",
+            "left": "cw.seed_submissions_snapshot.cik10",
+            "right": "cw.utility_states.cik",
+            "transform": "identity",
+            "verdict": "VERIFIED",
+            "matched_rows": 43,
+            "left_rows": 43,
+            "matched_keys": 43,
+            "left_keys": 43,
+            "by": [
+              "baseline"
+            ],
+            "recalled": null
+          },
+          {
+            "id": "b3",
+            "key": "station@all",
+            "left": "cw.seed_stations.id",
+            "right": "cw.stations.id",
+            "transform": "identity",
+            "verdict": "VERIFIED",
+            "matched_rows": 56,
+            "left_rows": 56,
+            "matched_keys": 56,
+            "left_keys": 56,
+            "by": [
+              "baseline"
+            ],
+            "recalled": null
+          },
+          {
+            "id": "b5",
+            "key": "sic@all",
+            "left": "cw.seed_submissions_snapshot.sic",
+            "right": "cw.sic_codes.code",
+            "transform": "identity",
+            "verdict": "VERIFIED",
+            "matched_rows": 42,
+            "left_rows": 43,
+            "matched_keys": 3,
+            "left_keys": 4,
+            "by": [
+              "baseline"
+            ],
+            "recalled": null
+          },
+          {
+            "id": "b8",
+            "key": "loc@CY2025Q1",
+            "left": "cw.frames_*_CY2025Q1.loc",
+            "right": "cw.seed_submissions_snapshot.hq_state",
+            "transform": "substr(4,2)",
+            "verdict": "VERIFIED",
+            "matched_rows": 42,
+            "left_rows": 42,
+            "matched_keys": 42,
+            "left_keys": 42,
+            "by": [
+              "baseline (queue)"
+            ],
+            "recalled": null
+          },
+          {
+            "id": "c1",
+            "key": "cik_control@CY2025Q1",
+            "left": "cw.seed_submissions_snapshot.cik10",
+            "right": "cw.frames_*_CY2025Q1.cik",
+            "transform": "identity",
+            "verdict": "REJECTED",
+            "matched_rows": 0,
+            "left_rows": 43,
+            "matched_keys": 0,
+            "left_keys": 43,
+            "by": [
+              "control"
+            ],
+            "recalled": null
+          }
+        ],
+        "verified_keys": 8,
+        "answer_rows": 12,
+        "weather": "measured",
+        "answer_identical_to_ref": true,
+        "gate": {
+          "fema": {
+            "key": "fema_fips@CY2025Q1",
+            "verdict": "VERIFIED",
+            "matched": 8,
+            "rows": 8,
+            "recalled": false,
+            "ok": true
+          },
+          "revenue": {
+            "key": "cik@CY2025Q1",
+            "verdict": "VERIFIED",
+            "matched": 42,
+            "rows": 43,
+            "recalled": false,
+            "ok": true
+          },
+          "weather": {
+            "key": "station@all",
+            "verdict": "VERIFIED",
+            "matched": 56,
+            "rows": 56,
+            "recalled": false,
+            "ok": true
+          },
+          "coverage": {
+            "key": "fema_state@CY2025Q1",
+            "verdict": "PARTIAL",
+            "matched": 7,
+            "rows": 8,
+            "orphans": [
+              "AK"
+            ]
+          }
+        },
+        "statements": 60,
+        "statements_with_cache_time": 58,
+        "skipped_chunks": 0,
+        "memo": {
+          "source": "model",
+          "words": 249
+        },
+        "checklist_complete": true,
+        "vram_mib_ollama_mid": 2881,
+        "smi": {
+          "samples": 417,
+          "mem_min": 8212,
+          "mem_median": 11367,
+          "mem_max": 11797,
+          "util_median": 57,
+          "util_max": 99,
+          "unload_dips": 2
+        }
+      },
+      {
+        "tag": "07-no_model-021604",
+        "setting": "no_model",
+        "exit": 0,
+        "shell_s": 88.5,
+        "run_id": "r20261026T0216053986",
+        "model": "none",
+        "host_ram_free_mib_at_start": 1967,
+        "mode": "cold",
+        "quarter": "CY2025Q1",
+        "wall_s": 87.1,
+        "chunks": 9,
+        "planner_calls": 0,
+        "planner_valid": 0,
+        "planner_valid_first_try": 0,
+        "planner_repaired": 0,
+        "planner_replies_rejected": 0,
+        "fallback_steps": 25,
+        "output_tokens": 0,
+        "median_planner_tok_s": null,
+        "model_proposals": {
+          "by": null,
+          "made": 0,
+          "verified": 0,
+          "partial": 0,
+          "rejected": 0,
+          "unmeasurable": 0,
+          "invalid_schema": 0,
+          "keys": []
+        },
+        "baseline_proposals": {
+          "made": 6,
+          "verified": 5,
+          "partial": 0,
+          "rejected": 1
+        },
+        "join_map": [
+          {
+            "id": "k1",
+            "key": "pair:cw.frames_revenues_cy2025q1.cik~cw.utility_states.cik|lpad10",
+            "left": "cw.frames_Revenues_CY2025Q1.cik",
+            "right": "cw.utility_states.cik",
+            "transform": "lpad10",
+            "verdict": "REJECTED",
+            "matched_rows": 34,
+            "left_rows": 1937,
+            "matched_keys": 34,
+            "left_keys": 1937,
+            "by": [
+              "baseline"
+            ],
+            "recalled": null
+          },
+          {
+            "id": "k2",
+            "key": "cik@CY2025Q1",
+            "left": "cw.seed_submissions_snapshot.cik10",
+            "right": "cw.frames_*_CY2025Q1.cik",
+            "transform": "lpad10",
+            "verdict": "VERIFIED",
+            "matched_rows": 42,
+            "left_rows": 43,
+            "matched_keys": 42,
+            "left_keys": 43,
+            "by": [
+              "baseline"
+            ],
+            "recalled": null
+          },
+          {
+            "id": "k3",
+            "key": "station@all",
+            "left": "cw.seed_stations.id",
+            "right": "cw.stations.id",
+            "transform": "identity",
+            "verdict": "VERIFIED",
+            "matched_rows": 56,
+            "left_rows": 56,
+            "matched_keys": 56,
+            "left_keys": 56,
+            "by": [
+              "baseline"
+            ],
+            "recalled": null
+          },
+          {
+            "id": "k4",
+            "key": "pair:cw.seed_submissions_snapshot.cik10~cw.utility_states.cik|identity",
+            "left": "cw.seed_submissions_snapshot.cik10",
+            "right": "cw.utility_states.cik",
+            "transform": "identity",
+            "verdict": "VERIFIED",
+            "matched_rows": 43,
+            "left_rows": 43,
+            "matched_keys": 43,
+            "left_keys": 43,
+            "by": [
+              "baseline"
+            ],
+            "recalled": null
+          },
+          {
+            "id": "k5",
+            "key": "sic@all",
+            "left": "cw.seed_submissions_snapshot.sic",
+            "right": "cw.sic_codes.code",
+            "transform": "identity",
+            "verdict": "VERIFIED",
+            "matched_rows": 42,
+            "left_rows": 43,
+            "matched_keys": 3,
+            "left_keys": 4,
+            "by": [
+              "baseline"
+            ],
+            "recalled": null
+          },
+          {
+            "id": "k6",
+            "key": "loc@CY2025Q1",
+            "left": "cw.frames_*_CY2025Q1.loc",
+            "right": "cw.seed_submissions_snapshot.hq_state",
+            "transform": "substr(4,2)",
+            "verdict": "VERIFIED",
+            "matched_rows": 42,
+            "left_rows": 42,
+            "matched_keys": 42,
+            "left_keys": 42,
+            "by": [
+              "baseline"
+            ],
+            "recalled": null
+          },
+          {
+            "id": "b11",
+            "key": "fema_state@CY2025Q1",
+            "left": "cw.fema_declarations_dr_2025q1.state",
+            "right": "cw.utility_states.state",
+            "transform": "identity",
+            "verdict": "PARTIAL",
+            "matched_rows": 7,
+            "left_rows": 8,
+            "matched_keys": 7,
+            "left_keys": 8,
+            "by": [
+              "baseline (queue)"
+            ],
+            "recalled": null
+          },
+          {
+            "id": "b17",
+            "key": "fema_fips@CY2025Q1",
+            "left": "cw.fema_declarations_dr_2025q1.fips_state_code",
+            "right": "cw.states.fips",
+            "transform": "identity",
+            "verdict": "VERIFIED",
+            "matched_rows": 8,
+            "left_rows": 8,
+            "matched_keys": 8,
+            "left_keys": 8,
+            "by": [
+              "baseline (queue)"
+            ],
+            "recalled": null
+          },
+          {
+            "id": "c1",
+            "key": "cik_control@CY2025Q1",
+            "left": "cw.seed_submissions_snapshot.cik10",
+            "right": "cw.frames_*_CY2025Q1.cik",
+            "transform": "identity",
+            "verdict": "REJECTED",
+            "matched_rows": 0,
+            "left_rows": 43,
+            "matched_keys": 0,
+            "left_keys": 43,
+            "by": [
+              "control"
+            ],
+            "recalled": null
+          }
+        ],
+        "verified_keys": 6,
+        "answer_rows": 12,
+        "weather": "measured",
+        "answer_identical_to_ref": true,
+        "gate": {
+          "fema": {
+            "key": "fema_fips@CY2025Q1",
+            "verdict": "VERIFIED",
+            "matched": 8,
+            "rows": 8,
+            "recalled": false,
+            "ok": true
+          },
+          "revenue": {
+            "key": "cik@CY2025Q1",
+            "verdict": "VERIFIED",
+            "matched": 42,
+            "rows": 43,
+            "recalled": false,
+            "ok": true
+          },
+          "weather": {
+            "key": "station@all",
+            "verdict": "VERIFIED",
+            "matched": 56,
+            "rows": 56,
+            "recalled": false,
+            "ok": true
+          },
+          "coverage": {
+            "key": "fema_state@CY2025Q1",
+            "verdict": "PARTIAL",
+            "matched": 7,
+            "rows": 8,
+            "orphans": [
+              "AK"
+            ]
+          }
+        },
+        "statements": 56,
+        "statements_with_cache_time": 54,
+        "skipped_chunks": 0,
+        "memo": {
+          "source": "template",
+          "words": 247
+        },
+        "checklist_complete": true,
+        "vram_mib_ollama_mid": null,
+        "smi": {
+          "samples": 173,
+          "mem_min": 11527,
+          "mem_median": 11528,
+          "mem_max": 11795,
+          "util_median": 10,
+          "util_max": 12,
+          "unload_dips": 0
+        }
+      },
+      {
+        "tag": "08-q8-021733",
+        "setting": "q8",
+        "exit": 0,
+        "shell_s": 401.4,
+        "run_id": "r20261026T0217334649",
+        "model": "nemotron-3-nano:4b-q8_0",
+        "host_ram_free_mib_at_start": 1892,
+        "mode": "cold",
+        "quarter": "CY2025Q1",
+        "wall_s": 400,
+        "chunks": 9,
+        "planner_calls": 27,
+        "planner_valid": 21,
+        "planner_valid_first_try": 20,
+        "planner_repaired": 1,
+        "planner_replies_rejected": 13,
+        "fallback_steps": 6,
+        "output_tokens": 25926,
+        "median_planner_tok_s": 101.2,
+        "model_proposals": {
+          "by": "planner",
+          "made": 2,
+          "verified": 1,
+          "partial": 0,
+          "rejected": 1,
+          "unmeasurable": 0,
+          "invalid_schema": 0,
+          "keys": [
+            "pair:cw.utility_states.cik~cw.frames_revenues_cy2025q1.cik|identity",
+            "pair:cw.utility_states.state~cw.states.code|identity"
+          ]
+        },
+        "baseline_proposals": {
+          "made": 6,
+          "verified": 5,
+          "partial": 0,
+          "rejected": 1
+        },
+        "join_map": [
+          {
+            "id": "k1",
+            "key": "pair:cw.utility_states.cik~cw.frames_revenues_cy2025q1.cik|identity",
+            "left": "cw.utility_states.cik",
+            "right": "cw.frames_Revenues_CY2025Q1.cik",
+            "transform": "identity",
+            "verdict": "REJECTED",
+            "matched_rows": 0,
+            "left_rows": 43,
+            "matched_keys": 0,
+            "left_keys": 43,
+            "by": [
+              "planner"
+            ],
+            "recalled": null
+          },
+          {
+            "id": "k2",
+            "key": "pair:cw.utility_states.state~cw.states.code|identity",
+            "left": "cw.utility_states.state",
+            "right": "cw.states.code",
+            "transform": "identity",
+            "verdict": "VERIFIED",
+            "matched_rows": 43,
+            "left_rows": 43,
+            "matched_keys": 43,
+            "left_keys": 43,
+            "by": [
+              "planner",
+              "baseline (queue)"
+            ],
+            "recalled": null
+          },
+          {
+            "id": "b2",
+            "key": "cik@CY2025Q1",
+            "left": "cw.seed_submissions_snapshot.cik10",
+            "right": "cw.frames_*_CY2025Q1.cik",
+            "transform": "lpad10",
+            "verdict": "VERIFIED",
+            "matched_rows": 42,
+            "left_rows": 43,
+            "matched_keys": 42,
+            "left_keys": 43,
+            "by": [
+              "baseline"
+            ],
+            "recalled": null
+          },
+          {
+            "id": "b1",
+            "key": "pair:cw.frames_revenues_cy2025q1.cik~cw.utility_states.cik|lpad10",
+            "left": "cw.frames_Revenues_CY2025Q1.cik",
+            "right": "cw.utility_states.cik",
+            "transform": "lpad10",
+            "verdict": "REJECTED",
+            "matched_rows": 34,
+            "left_rows": 1937,
+            "matched_keys": 34,
+            "left_keys": 1937,
+            "by": [
+              "baseline"
+            ],
+            "recalled": null
+          },
+          {
+            "id": "b4",
+            "key": "pair:cw.seed_submissions_snapshot.cik10~cw.utility_states.cik|identity",
+            "left": "cw.seed_submissions_snapshot.cik10",
+            "right": "cw.utility_states.cik",
+            "transform": "identity",
+            "verdict": "VERIFIED",
+            "matched_rows": 43,
+            "left_rows": 43,
+            "matched_keys": 43,
+            "left_keys": 43,
+            "by": [
+              "baseline"
+            ],
+            "recalled": null
+          },
+          {
+            "id": "b6",
+            "key": "loc@CY2025Q1",
+            "left": "cw.frames_*_CY2025Q1.loc",
+            "right": "cw.seed_submissions_snapshot.hq_state",
+            "transform": "substr(4,2)",
+            "verdict": "VERIFIED",
+            "matched_rows": 42,
+            "left_rows": 42,
+            "matched_keys": 42,
+            "left_keys": 42,
+            "by": [
+              "baseline"
+            ],
+            "recalled": null
+          },
+          {
+            "id": "b3",
+            "key": "station@all",
+            "left": "cw.seed_stations.id",
+            "right": "cw.stations.id",
+            "transform": "identity",
+            "verdict": "VERIFIED",
+            "matched_rows": 56,
+            "left_rows": 56,
+            "matched_keys": 56,
+            "left_keys": 56,
+            "by": [
+              "baseline"
+            ],
+            "recalled": null
+          },
+          {
+            "id": "b5",
+            "key": "sic@all",
+            "left": "cw.seed_submissions_snapshot.sic",
+            "right": "cw.sic_codes.code",
+            "transform": "identity",
+            "verdict": "VERIFIED",
+            "matched_rows": 42,
+            "left_rows": 43,
+            "matched_keys": 3,
+            "left_keys": 4,
+            "by": [
+              "baseline"
+            ],
+            "recalled": null
+          },
+          {
+            "id": "b13",
+            "key": "fema_state@CY2025Q1",
+            "left": "cw.fema_declarations_dr_2025q1.state",
+            "right": "cw.utility_states.state",
+            "transform": "identity",
+            "verdict": "PARTIAL",
+            "matched_rows": 7,
+            "left_rows": 8,
+            "matched_keys": 7,
+            "left_keys": 8,
+            "by": [
+              "baseline (queue)"
+            ],
+            "recalled": null
+          },
+          {
+            "id": "c1",
+            "key": "cik_control@CY2025Q1",
+            "left": "cw.seed_submissions_snapshot.cik10",
+            "right": "cw.frames_*_CY2025Q1.cik",
+            "transform": "identity",
+            "verdict": "REJECTED",
+            "matched_rows": 0,
+            "left_rows": 43,
+            "matched_keys": 0,
+            "left_keys": 43,
+            "by": [
+              "control"
+            ],
+            "recalled": null
+          },
+          {
+            "id": "b17",
+            "key": "fema_fips@CY2025Q1",
+            "left": "cw.fema_declarations_dr_2025q1.fips_state_code",
+            "right": "cw.states.fips",
+            "transform": "identity",
+            "verdict": "VERIFIED",
+            "matched_rows": 8,
+            "left_rows": 8,
+            "matched_keys": 8,
+            "left_keys": 8,
+            "by": [
+              "baseline (queue)"
+            ],
+            "recalled": null
+          }
+        ],
+        "verified_keys": 7,
+        "answer_rows": 12,
+        "weather": "measured",
+        "answer_identical_to_ref": true,
+        "gate": {
+          "fema": {
+            "key": "fema_fips@CY2025Q1",
+            "verdict": "VERIFIED",
+            "matched": 8,
+            "rows": 8,
+            "recalled": false,
+            "ok": true
+          },
+          "revenue": {
+            "key": "cik@CY2025Q1",
+            "verdict": "VERIFIED",
+            "matched": 42,
+            "rows": 43,
+            "recalled": false,
+            "ok": true
+          },
+          "weather": {
+            "key": "station@all",
+            "verdict": "VERIFIED",
+            "matched": 56,
+            "rows": 56,
+            "recalled": false,
+            "ok": true
+          },
+          "coverage": {
+            "key": "fema_state@CY2025Q1",
+            "verdict": "PARTIAL",
+            "matched": 7,
+            "rows": 8,
+            "orphans": [
+              "AK"
+            ]
+          }
+        },
+        "statements": 59,
+        "statements_with_cache_time": 57,
+        "skipped_chunks": 0,
+        "memo": {
+          "source": "template",
+          "words": 243
+        },
+        "checklist_complete": true,
+        "vram_mib_ollama_mid": 4066,
+        "smi": {
+          "samples": 783,
+          "mem_min": 7189,
+          "mem_median": 11526,
+          "mem_max": 11530,
+          "util_median": 85,
+          "util_max": 100,
+          "unload_dips": 6
+        }
+      },
+      {
+        "tag": "09-think_on-022414",
+        "setting": "think_on",
+        "exit": 0,
+        "shell_s": 319.3,
+        "run_id": "r20261026T02241541a4",
+        "model": "nemotron-3-nano:4b",
+        "host_ram_free_mib_at_start": 1802,
+        "mode": "cold",
+        "quarter": "CY2025Q1",
+        "wall_s": 317.9,
+        "chunks": 9,
+        "planner_calls": 26,
+        "planner_valid": 19,
+        "planner_valid_first_try": 17,
+        "planner_repaired": 2,
+        "planner_replies_rejected": 16,
+        "fallback_steps": 8,
+        "output_tokens": 28690,
+        "median_planner_tok_s": 137.3,
+        "model_proposals": {
+          "by": "planner",
+          "made": 2,
+          "verified": 2,
+          "partial": 0,
+          "rejected": 0,
+          "unmeasurable": 0,
+          "invalid_schema": 0,
+          "keys": [
+            "pair:cw.utility_states.state~cw.states.code|identity",
+            "fema_fips@CY2025Q1"
+          ]
+        },
+        "baseline_proposals": {
+          "made": 6,
+          "verified": 5,
+          "partial": 0,
+          "rejected": 1
+        },
+        "join_map": [
+          {
+            "id": "k1",
+            "key": "pair:cw.utility_states.state~cw.states.code|identity",
+            "left": "cw.utility_states.state",
+            "right": "cw.states.code",
+            "transform": "identity",
+            "verdict": "VERIFIED",
+            "matched_rows": 43,
+            "left_rows": 43,
+            "matched_keys": 43,
+            "left_keys": 43,
+            "by": [
+              "planner",
+              "baseline (queue)"
+            ],
+            "recalled": null
+          },
+          {
+            "id": "k2",
+            "key": "fema_fips@CY2025Q1",
+            "left": "cw.fema_declarations_dr_2025q1.fips_state_code",
+            "right": "cw.states.fips",
+            "transform": "identity",
+            "verdict": "VERIFIED",
+            "matched_rows": 8,
+            "left_rows": 8,
+            "matched_keys": 8,
+            "left_keys": 8,
+            "by": [
+              "planner",
+              "baseline (queue)"
+            ],
+            "recalled": null
+          },
+          {
+            "id": "b2",
+            "key": "cik@CY2025Q1",
+            "left": "cw.seed_submissions_snapshot.cik10",
+            "right": "cw.frames_*_CY2025Q1.cik",
+            "transform": "lpad10",
+            "verdict": "VERIFIED",
+            "matched_rows": 42,
+            "left_rows": 43,
+            "matched_keys": 42,
+            "left_keys": 43,
+            "by": [
+              "baseline"
+            ],
+            "recalled": null
+          },
+          {
+            "id": "b1",
+            "key": "pair:cw.frames_revenues_cy2025q1.cik~cw.utility_states.cik|lpad10",
+            "left": "cw.frames_Revenues_CY2025Q1.cik",
+            "right": "cw.utility_states.cik",
+            "transform": "lpad10",
+            "verdict": "REJECTED",
+            "matched_rows": 34,
+            "left_rows": 1937,
+            "matched_keys": 34,
+            "left_keys": 1937,
+            "by": [
+              "baseline"
+            ],
+            "recalled": null
+          },
+          {
+            "id": "b3",
+            "key": "station@all",
+            "left": "cw.seed_stations.id",
+            "right": "cw.stations.id",
+            "transform": "identity",
+            "verdict": "VERIFIED",
+            "matched_rows": 56,
+            "left_rows": 56,
+            "matched_keys": 56,
+            "left_keys": 56,
+            "by": [
+              "baseline"
+            ],
+            "recalled": null
+          },
+          {
+            "id": "b4",
+            "key": "pair:cw.seed_submissions_snapshot.cik10~cw.utility_states.cik|identity",
+            "left": "cw.seed_submissions_snapshot.cik10",
+            "right": "cw.utility_states.cik",
+            "transform": "identity",
+            "verdict": "VERIFIED",
+            "matched_rows": 43,
+            "left_rows": 43,
+            "matched_keys": 43,
+            "left_keys": 43,
+            "by": [
+              "baseline"
+            ],
+            "recalled": null
+          },
+          {
+            "id": "b5",
+            "key": "sic@all",
+            "left": "cw.seed_submissions_snapshot.sic",
+            "right": "cw.sic_codes.code",
+            "transform": "identity",
+            "verdict": "VERIFIED",
+            "matched_rows": 42,
+            "left_rows": 43,
+            "matched_keys": 3,
+            "left_keys": 4,
+            "by": [
+              "baseline"
+            ],
+            "recalled": null
+          },
+          {
+            "id": "b6",
+            "key": "loc@CY2025Q1",
+            "left": "cw.frames_*_CY2025Q1.loc",
+            "right": "cw.seed_submissions_snapshot.hq_state",
+            "transform": "substr(4,2)",
+            "verdict": "VERIFIED",
+            "matched_rows": 42,
+            "left_rows": 42,
+            "matched_keys": 42,
+            "left_keys": 42,
+            "by": [
+              "baseline"
+            ],
+            "recalled": null
+          },
+          {
+            "id": "b11",
+            "key": "fema_state@CY2025Q1",
+            "left": "cw.fema_declarations_dr_2025q1.state",
+            "right": "cw.utility_states.state",
+            "transform": "identity",
+            "verdict": "PARTIAL",
+            "matched_rows": 7,
+            "left_rows": 8,
+            "matched_keys": 7,
+            "left_keys": 8,
+            "by": [
+              "baseline (queue)"
+            ],
+            "recalled": null
+          },
+          {
+            "id": "c1",
+            "key": "cik_control@CY2025Q1",
+            "left": "cw.seed_submissions_snapshot.cik10",
+            "right": "cw.frames_*_CY2025Q1.cik",
+            "transform": "identity",
+            "verdict": "REJECTED",
+            "matched_rows": 0,
+            "left_rows": 43,
+            "matched_keys": 0,
+            "left_keys": 43,
+            "by": [
+              "control"
+            ],
+            "recalled": null
+          }
+        ],
+        "verified_keys": 7,
+        "answer_rows": 12,
+        "weather": "measured",
+        "answer_identical_to_ref": true,
+        "gate": {
+          "fema": {
+            "key": "fema_fips@CY2025Q1",
+            "verdict": "VERIFIED",
+            "matched": 8,
+            "rows": 8,
+            "recalled": false,
+            "ok": true
+          },
+          "revenue": {
+            "key": "cik@CY2025Q1",
+            "verdict": "VERIFIED",
+            "matched": 42,
+            "rows": 43,
+            "recalled": false,
+            "ok": true
+          },
+          "weather": {
+            "key": "station@all",
+            "verdict": "VERIFIED",
+            "matched": 56,
+            "rows": 56,
+            "recalled": false,
+            "ok": true
+          },
+          "coverage": {
+            "key": "fema_state@CY2025Q1",
+            "verdict": "PARTIAL",
+            "matched": 7,
+            "rows": 8,
+            "orphans": [
+              "AK"
+            ]
+          }
+        },
+        "statements": 57,
+        "statements_with_cache_time": 55,
+        "skipped_chunks": 0,
+        "memo": {
+          "source": "model",
+          "words": 180
+        },
+        "checklist_complete": true,
+        "vram_mib_ollama_mid": 2881,
+        "smi": {
+          "samples": 624,
+          "mem_min": 8213,
+          "mem_median": 11519,
+          "mem_max": 11541,
+          "util_median": 81.5,
+          "util_max": 100,
+          "unload_dips": 4
+        }
+      },
+      {
+        "tag": "10-think_off-023004",
+        "setting": "think_off",
+        "exit": 0,
+        "shell_s": 217.4,
+        "run_id": "r20261026T0230040c8d",
+        "model": "nemotron-3-nano:4b",
+        "host_ram_free_mib_at_start": 3570,
+        "mode": "cold",
+        "quarter": "CY2025Q1",
+        "wall_s": 216,
+        "chunks": 10,
+        "planner_calls": 28,
+        "planner_valid": 21,
+        "planner_valid_first_try": 21,
+        "planner_repaired": 0,
+        "planner_replies_rejected": 14,
+        "fallback_steps": 7,
+        "output_tokens": 14733,
+        "median_planner_tok_s": 137,
+        "model_proposals": {
+          "by": "planner",
+          "made": 2,
+          "verified": 1,
+          "partial": 0,
+          "rejected": 1,
+          "unmeasurable": 0,
+          "invalid_schema": 0,
+          "keys": [
+            "pair:cw.utility_states.state~cw.states.code|identity",
+            "pair:cw.utility_states.state~cw.states.fips|identity"
+          ]
+        },
+        "baseline_proposals": {
+          "made": 6,
+          "verified": 5,
+          "partial": 0,
+          "rejected": 1
+        },
+        "join_map": [
+          {
+            "id": "k1",
+            "key": "pair:cw.utility_states.state~cw.states.code|identity",
+            "left": "cw.utility_states.state",
+            "right": "cw.states.code",
+            "transform": "identity",
+            "verdict": "VERIFIED",
+            "matched_rows": 43,
+            "left_rows": 43,
+            "matched_keys": 43,
+            "left_keys": 43,
+            "by": [
+              "planner",
+              "baseline (queue)"
+            ],
+            "recalled": null
+          },
+          {
+            "id": "k2",
+            "key": "pair:cw.utility_states.state~cw.states.fips|identity",
+            "left": "cw.utility_states.state",
+            "right": "cw.states.fips",
+            "transform": "identity",
+            "verdict": "REJECTED",
+            "matched_rows": 0,
+            "left_rows": 43,
+            "matched_keys": 0,
+            "left_keys": 43,
+            "by": [
+              "planner"
+            ],
+            "recalled": null
+          },
+          {
+            "id": "b6",
+            "key": "pair:cw.utility_states.state~cw.seed_stations.state|identity",
+            "left": "cw.utility_states.state",
+            "right": "cw.seed_stations.state",
+            "transform": "identity",
+            "verdict": "VERIFIED",
+            "matched_rows": 43,
+            "left_rows": 43,
+            "matched_keys": 43,
+            "left_keys": 43,
+            "by": [
+              "baseline"
+            ],
+            "recalled": null
+          },
+          {
+            "id": "b13",
+            "key": "fema_state@CY2025Q1",
+            "left": "cw.fema_declarations_dr_2025q1.state",
+            "right": "cw.utility_states.state",
+            "transform": "identity",
+            "verdict": "PARTIAL",
+            "matched_rows": 7,
+            "left_rows": 8,
+            "matched_keys": 7,
+            "left_keys": 8,
+            "by": [
+              "baseline (queue)"
+            ],
+            "recalled": null
+          },
+          {
+            "id": "b17",
+            "key": "fema_fips@CY2025Q1",
+            "left": "cw.fema_declarations_dr_2025q1.fips_state_code",
+            "right": "cw.states.fips",
+            "transform": "identity",
+            "verdict": "VERIFIED",
+            "matched_rows": 8,
+            "left_rows": 8,
+            "matched_keys": 8,
+            "left_keys": 8,
+            "by": [
+              "baseline (queue)"
+            ],
+            "recalled": null
+          },
+          {
+            "id": "b1",
+            "key": "pair:cw.frames_revenues_cy2025q1.cik~cw.utility_states.cik|lpad10",
+            "left": "cw.frames_Revenues_CY2025Q1.cik",
+            "right": "cw.utility_states.cik",
+            "transform": "lpad10",
+            "verdict": "REJECTED",
+            "matched_rows": 34,
+            "left_rows": 1937,
+            "matched_keys": 34,
+            "left_keys": 1937,
+            "by": [
+              "baseline"
+            ],
+            "recalled": null
+          },
+          {
+            "id": "b2",
+            "key": "cik@CY2025Q1",
+            "left": "cw.seed_submissions_snapshot.cik10",
+            "right": "cw.frames_*_CY2025Q1.cik",
+            "transform": "lpad10",
+            "verdict": "VERIFIED",
+            "matched_rows": 42,
+            "left_rows": 43,
+            "matched_keys": 42,
+            "left_keys": 43,
+            "by": [
+              "baseline"
+            ],
+            "recalled": null
+          },
+          {
+            "id": "b4",
+            "key": "pair:cw.seed_submissions_snapshot.cik10~cw.utility_states.cik|identity",
+            "left": "cw.seed_submissions_snapshot.cik10",
+            "right": "cw.utility_states.cik",
+            "transform": "identity",
+            "verdict": "VERIFIED",
+            "matched_rows": 43,
+            "left_rows": 43,
+            "matched_keys": 43,
+            "left_keys": 43,
+            "by": [
+              "baseline"
+            ],
+            "recalled": null
+          },
+          {
+            "id": "b3",
+            "key": "station@all",
+            "left": "cw.seed_stations.id",
+            "right": "cw.stations.id",
+            "transform": "identity",
+            "verdict": "VERIFIED",
+            "matched_rows": 56,
+            "left_rows": 56,
+            "matched_keys": 56,
+            "left_keys": 56,
+            "by": [
+              "baseline"
+            ],
+            "recalled": null
+          },
+          {
+            "id": "b5",
+            "key": "sic@all",
+            "left": "cw.seed_submissions_snapshot.sic",
+            "right": "cw.sic_codes.code",
+            "transform": "identity",
+            "verdict": "VERIFIED",
+            "matched_rows": 42,
+            "left_rows": 43,
+            "matched_keys": 3,
+            "left_keys": 4,
+            "by": [
+              "baseline"
+            ],
+            "recalled": null
+          },
+          {
+            "id": "b8",
+            "key": "loc@CY2025Q1",
+            "left": "cw.frames_*_CY2025Q1.loc",
+            "right": "cw.seed_submissions_snapshot.hq_state",
+            "transform": "substr(4,2)",
+            "verdict": "VERIFIED",
+            "matched_rows": 42,
+            "left_rows": 42,
+            "matched_keys": 42,
+            "left_keys": 42,
+            "by": [
+              "baseline (queue)"
+            ],
+            "recalled": null
+          },
+          {
+            "id": "c1",
+            "key": "cik_control@CY2025Q1",
+            "left": "cw.seed_submissions_snapshot.cik10",
+            "right": "cw.frames_*_CY2025Q1.cik",
+            "transform": "identity",
+            "verdict": "REJECTED",
+            "matched_rows": 0,
+            "left_rows": 43,
+            "matched_keys": 0,
+            "left_keys": 43,
+            "by": [
+              "control"
+            ],
+            "recalled": null
+          }
+        ],
+        "verified_keys": 8,
+        "answer_rows": 12,
+        "weather": "measured",
+        "answer_identical_to_ref": true,
+        "gate": {
+          "fema": {
+            "key": "fema_fips@CY2025Q1",
+            "verdict": "VERIFIED",
+            "matched": 8,
+            "rows": 8,
+            "recalled": false,
+            "ok": true
+          },
+          "revenue": {
+            "key": "cik@CY2025Q1",
+            "verdict": "VERIFIED",
+            "matched": 42,
+            "rows": 43,
+            "recalled": false,
+            "ok": true
+          },
+          "weather": {
+            "key": "station@all",
+            "verdict": "VERIFIED",
+            "matched": 56,
+            "rows": 56,
+            "recalled": false,
+            "ok": true
+          },
+          "coverage": {
+            "key": "fema_state@CY2025Q1",
+            "verdict": "PARTIAL",
+            "matched": 7,
+            "rows": 8,
+            "orphans": [
+              "AK"
+            ]
+          }
+        },
+        "statements": 60,
+        "statements_with_cache_time": 58,
+        "skipped_chunks": 0,
+        "memo": {
+          "source": "template",
+          "words": 245
+        },
+        "checklist_complete": true,
+        "vram_mib_ollama_mid": 2881,
+        "smi": {
+          "samples": 425,
+          "mem_min": 8212,
+          "mem_median": 11363,
+          "mem_max": 11371,
+          "util_median": 60,
+          "util_max": 100,
+          "unload_dips": 2
+        }
+      },
+      {
+        "tag": "11-no_model-023341",
+        "setting": "no_model",
+        "exit": 0,
+        "shell_s": 88.9,
+        "run_id": "r20261026T023342b706",
+        "model": "none",
+        "host_ram_free_mib_at_start": 2670,
+        "mode": "cold",
+        "quarter": "CY2025Q1",
+        "wall_s": 87.5,
+        "chunks": 9,
+        "planner_calls": 0,
+        "planner_valid": 0,
+        "planner_valid_first_try": 0,
+        "planner_repaired": 0,
+        "planner_replies_rejected": 0,
+        "fallback_steps": 25,
+        "output_tokens": 0,
+        "median_planner_tok_s": null,
+        "model_proposals": {
+          "by": null,
+          "made": 0,
+          "verified": 0,
+          "partial": 0,
+          "rejected": 0,
+          "unmeasurable": 0,
+          "invalid_schema": 0,
+          "keys": []
+        },
+        "baseline_proposals": {
+          "made": 6,
+          "verified": 5,
+          "partial": 0,
+          "rejected": 1
+        },
+        "join_map": [
+          {
+            "id": "k1",
+            "key": "pair:cw.frames_revenues_cy2025q1.cik~cw.utility_states.cik|lpad10",
+            "left": "cw.frames_Revenues_CY2025Q1.cik",
+            "right": "cw.utility_states.cik",
+            "transform": "lpad10",
+            "verdict": "REJECTED",
+            "matched_rows": 34,
+            "left_rows": 1937,
+            "matched_keys": 34,
+            "left_keys": 1937,
+            "by": [
+              "baseline"
+            ],
+            "recalled": null
+          },
+          {
+            "id": "k2",
+            "key": "cik@CY2025Q1",
+            "left": "cw.seed_submissions_snapshot.cik10",
+            "right": "cw.frames_*_CY2025Q1.cik",
+            "transform": "lpad10",
+            "verdict": "VERIFIED",
+            "matched_rows": 42,
+            "left_rows": 43,
+            "matched_keys": 42,
+            "left_keys": 43,
+            "by": [
+              "baseline"
+            ],
+            "recalled": null
+          },
+          {
+            "id": "k3",
+            "key": "station@all",
+            "left": "cw.seed_stations.id",
+            "right": "cw.stations.id",
+            "transform": "identity",
+            "verdict": "VERIFIED",
+            "matched_rows": 56,
+            "left_rows": 56,
+            "matched_keys": 56,
+            "left_keys": 56,
+            "by": [
+              "baseline"
+            ],
+            "recalled": null
+          },
+          {
+            "id": "k4",
+            "key": "pair:cw.seed_submissions_snapshot.cik10~cw.utility_states.cik|identity",
+            "left": "cw.seed_submissions_snapshot.cik10",
+            "right": "cw.utility_states.cik",
+            "transform": "identity",
+            "verdict": "VERIFIED",
+            "matched_rows": 43,
+            "left_rows": 43,
+            "matched_keys": 43,
+            "left_keys": 43,
+            "by": [
+              "baseline"
+            ],
+            "recalled": null
+          },
+          {
+            "id": "k5",
+            "key": "sic@all",
+            "left": "cw.seed_submissions_snapshot.sic",
+            "right": "cw.sic_codes.code",
+            "transform": "identity",
+            "verdict": "VERIFIED",
+            "matched_rows": 42,
+            "left_rows": 43,
+            "matched_keys": 3,
+            "left_keys": 4,
+            "by": [
+              "baseline"
+            ],
+            "recalled": null
+          },
+          {
+            "id": "k6",
+            "key": "loc@CY2025Q1",
+            "left": "cw.frames_*_CY2025Q1.loc",
+            "right": "cw.seed_submissions_snapshot.hq_state",
+            "transform": "substr(4,2)",
+            "verdict": "VERIFIED",
+            "matched_rows": 42,
+            "left_rows": 42,
+            "matched_keys": 42,
+            "left_keys": 42,
+            "by": [
+              "baseline"
+            ],
+            "recalled": null
+          },
+          {
+            "id": "b11",
+            "key": "fema_state@CY2025Q1",
+            "left": "cw.fema_declarations_dr_2025q1.state",
+            "right": "cw.utility_states.state",
+            "transform": "identity",
+            "verdict": "PARTIAL",
+            "matched_rows": 7,
+            "left_rows": 8,
+            "matched_keys": 7,
+            "left_keys": 8,
+            "by": [
+              "baseline (queue)"
+            ],
+            "recalled": null
+          },
+          {
+            "id": "b17",
+            "key": "fema_fips@CY2025Q1",
+            "left": "cw.fema_declarations_dr_2025q1.fips_state_code",
+            "right": "cw.states.fips",
+            "transform": "identity",
+            "verdict": "VERIFIED",
+            "matched_rows": 8,
+            "left_rows": 8,
+            "matched_keys": 8,
+            "left_keys": 8,
+            "by": [
+              "baseline (queue)"
+            ],
+            "recalled": null
+          },
+          {
+            "id": "c1",
+            "key": "cik_control@CY2025Q1",
+            "left": "cw.seed_submissions_snapshot.cik10",
+            "right": "cw.frames_*_CY2025Q1.cik",
+            "transform": "identity",
+            "verdict": "REJECTED",
+            "matched_rows": 0,
+            "left_rows": 43,
+            "matched_keys": 0,
+            "left_keys": 43,
+            "by": [
+              "control"
+            ],
+            "recalled": null
+          }
+        ],
+        "verified_keys": 6,
+        "answer_rows": 12,
+        "weather": "measured",
+        "answer_identical_to_ref": true,
+        "gate": {
+          "fema": {
+            "key": "fema_fips@CY2025Q1",
+            "verdict": "VERIFIED",
+            "matched": 8,
+            "rows": 8,
+            "recalled": false,
+            "ok": true
+          },
+          "revenue": {
+            "key": "cik@CY2025Q1",
+            "verdict": "VERIFIED",
+            "matched": 42,
+            "rows": 43,
+            "recalled": false,
+            "ok": true
+          },
+          "weather": {
+            "key": "station@all",
+            "verdict": "VERIFIED",
+            "matched": 56,
+            "rows": 56,
+            "recalled": false,
+            "ok": true
+          },
+          "coverage": {
+            "key": "fema_state@CY2025Q1",
+            "verdict": "PARTIAL",
+            "matched": 7,
+            "rows": 8,
+            "orphans": [
+              "AK"
+            ]
+          }
+        },
+        "statements": 56,
+        "statements_with_cache_time": 54,
+        "skipped_chunks": 0,
+        "memo": {
+          "source": "template",
+          "words": 247
+        },
+        "checklist_complete": true,
+        "vram_mib_ollama_mid": null,
+        "smi": {
+          "samples": 174,
+          "mem_min": 11365,
+          "mem_median": 11367,
+          "mem_max": 11393,
+          "util_median": 10,
+          "util_max": 12,
+          "unload_dips": 0
+        }
+      },
+      {
+        "tag": "12-q8-023510",
+        "setting": "q8",
+        "exit": 0,
+        "shell_s": 298.8,
+        "run_id": "r20261026T0235116875",
+        "model": "nemotron-3-nano:4b-q8_0",
+        "host_ram_free_mib_at_start": 2610,
+        "mode": "cold",
+        "quarter": "CY2025Q1",
+        "wall_s": 297.5,
+        "chunks": 9,
+        "planner_calls": 25,
+        "planner_valid": 19,
+        "planner_valid_first_try": 19,
+        "planner_repaired": 0,
+        "planner_replies_rejected": 12,
+        "fallback_steps": 6,
+        "output_tokens": 17750,
+        "median_planner_tok_s": 100.9,
+        "model_proposals": {
+          "by": "planner",
+          "made": 1,
+          "verified": 0,
+          "partial": 1,
+          "rejected": 0,
+          "unmeasurable": 0,
+          "invalid_schema": 0,
+          "keys": [
+            "fema_state@CY2025Q1"
+          ]
+        },
+        "baseline_proposals": {
+          "made": 6,
+          "verified": 5,
+          "partial": 0,
+          "rejected": 1
+        },
+        "join_map": [
+          {
+            "id": "k1",
+            "key": "fema_state@CY2025Q1",
+            "left": "cw.fema_declarations_dr_2025q1.state",
+            "right": "cw.utility_states.state",
+            "transform": "identity",
+            "verdict": "PARTIAL",
+            "matched_rows": 7,
+            "left_rows": 8,
+            "matched_keys": 7,
+            "left_keys": 8,
+            "by": [
+              "planner",
+              "baseline (queue)"
+            ],
+            "recalled": null
+          },
+          {
+            "id": "b1",
+            "key": "pair:cw.frames_revenues_cy2025q1.cik~cw.utility_states.cik|lpad10",
+            "left": "cw.frames_Revenues_CY2025Q1.cik",
+            "right": "cw.utility_states.cik",
+            "transform": "lpad10",
+            "verdict": "REJECTED",
+            "matched_rows": 34,
+            "left_rows": 1937,
+            "matched_keys": 34,
+            "left_keys": 1937,
+            "by": [
+              "baseline"
+            ],
+            "recalled": null
+          },
+          {
+            "id": "b3",
+            "key": "station@all",
+            "left": "cw.seed_stations.id",
+            "right": "cw.stations.id",
+            "transform": "identity",
+            "verdict": "VERIFIED",
+            "matched_rows": 56,
+            "left_rows": 56,
+            "matched_keys": 56,
+            "left_keys": 56,
+            "by": [
+              "baseline"
+            ],
+            "recalled": null
+          },
+          {
+            "id": "b2",
+            "key": "cik@CY2025Q1",
+            "left": "cw.seed_submissions_snapshot.cik10",
+            "right": "cw.frames_*_CY2025Q1.cik",
+            "transform": "lpad10",
+            "verdict": "VERIFIED",
+            "matched_rows": 42,
+            "left_rows": 43,
+            "matched_keys": 42,
+            "left_keys": 43,
+            "by": [
+              "baseline"
+            ],
+            "recalled": null
+          },
+          {
+            "id": "b4",
+            "key": "pair:cw.seed_submissions_snapshot.cik10~cw.utility_states.cik|identity",
+            "left": "cw.seed_submissions_snapshot.cik10",
+            "right": "cw.utility_states.cik",
+            "transform": "identity",
+            "verdict": "VERIFIED",
+            "matched_rows": 43,
+            "left_rows": 43,
+            "matched_keys": 43,
+            "left_keys": 43,
+            "by": [
+              "baseline"
+            ],
+            "recalled": null
+          },
+          {
+            "id": "b5",
+            "key": "sic@all",
+            "left": "cw.seed_submissions_snapshot.sic",
+            "right": "cw.sic_codes.code",
+            "transform": "identity",
+            "verdict": "VERIFIED",
+            "matched_rows": 42,
+            "left_rows": 43,
+            "matched_keys": 3,
+            "left_keys": 4,
+            "by": [
+              "baseline"
+            ],
+            "recalled": null
+          },
+          {
+            "id": "b17",
+            "key": "fema_fips@CY2025Q1",
+            "left": "cw.fema_declarations_dr_2025q1.fips_state_code",
+            "right": "cw.states.fips",
+            "transform": "identity",
+            "verdict": "VERIFIED",
+            "matched_rows": 8,
+            "left_rows": 8,
+            "matched_keys": 8,
+            "left_keys": 8,
+            "by": [
+              "baseline (queue)"
+            ],
+            "recalled": null
+          },
+          {
+            "id": "b6",
+            "key": "loc@CY2025Q1",
+            "left": "cw.frames_*_CY2025Q1.loc",
+            "right": "cw.seed_submissions_snapshot.hq_state",
+            "transform": "substr(4,2)",
+            "verdict": "VERIFIED",
+            "matched_rows": 42,
+            "left_rows": 42,
+            "matched_keys": 42,
+            "left_keys": 42,
+            "by": [
+              "baseline"
+            ],
+            "recalled": null
+          },
+          {
+            "id": "c1",
+            "key": "cik_control@CY2025Q1",
+            "left": "cw.seed_submissions_snapshot.cik10",
+            "right": "cw.frames_*_CY2025Q1.cik",
+            "transform": "identity",
+            "verdict": "REJECTED",
+            "matched_rows": 0,
+            "left_rows": 43,
+            "matched_keys": 0,
+            "left_keys": 43,
+            "by": [
+              "control"
+            ],
+            "recalled": null
+          }
+        ],
+        "verified_keys": 6,
+        "answer_rows": 12,
+        "weather": "measured",
+        "answer_identical_to_ref": true,
+        "gate": {
+          "fema": {
+            "key": "fema_fips@CY2025Q1",
+            "verdict": "VERIFIED",
+            "matched": 8,
+            "rows": 8,
+            "recalled": false,
+            "ok": true
+          },
+          "revenue": {
+            "key": "cik@CY2025Q1",
+            "verdict": "VERIFIED",
+            "matched": 42,
+            "rows": 43,
+            "recalled": false,
+            "ok": true
+          },
+          "weather": {
+            "key": "station@all",
+            "verdict": "VERIFIED",
+            "matched": 56,
+            "rows": 56,
+            "recalled": false,
+            "ok": true
+          },
+          "coverage": {
+            "key": "fema_state@CY2025Q1",
+            "verdict": "PARTIAL",
+            "matched": 7,
+            "rows": 8,
+            "orphans": [
+              "AK"
+            ]
+          }
+        },
+        "statements": 56,
+        "statements_with_cache_time": 54,
+        "skipped_chunks": 0,
+        "memo": {
+          "source": "template",
+          "words": 246
+        },
+        "checklist_complete": true,
+        "vram_mib_ollama_mid": 4066,
+        "smi": {
+          "samples": 584,
+          "mem_min": 7002,
+          "mem_median": 11489,
+          "mem_max": 11769,
+          "util_median": 78,
+          "util_max": 100,
+          "unload_dips": 4
+        }
+      },
+      {
+        "tag": "13-warm-024009",
+        "setting": "warm",
+        "exit": 0,
+        "shell_s": 253.7,
+        "run_id": "r20261026T02401036cf",
+        "model": "nemotron-3-nano:4b",
+        "host_ram_free_mib_at_start": 2172,
+        "mode": "warm",
+        "quarter": "CY2024Q1",
+        "wall_s": 252.2,
+        "chunks": 8,
+        "planner_calls": 24,
+        "planner_valid": 16,
+        "planner_valid_first_try": 16,
+        "planner_repaired": 0,
+        "planner_replies_rejected": 16,
+        "fallback_steps": 8,
+        "output_tokens": 25581,
+        "median_planner_tok_s": 137.3,
+        "model_proposals": {
+          "by": "planner",
+          "made": 4,
+          "verified": 1,
+          "partial": 0,
+          "rejected": 3,
+          "unmeasurable": 0,
+          "invalid_schema": 0,
+          "keys": [
+            "pair:cw.utility_states.state~cw.states.code|identity",
+            "pair:cw.utility_states.state~cw.states.fips|substr(4,2)",
+            "fema_state@CY2024Q1",
+            "pair:cw.utility_states.state~cw.fema_declarations_dr_2024q1.fips_state_code|identity"
+          ]
+        },
+        "baseline_proposals": {
+          "made": 6,
+          "verified": 5,
+          "partial": 0,
+          "rejected": 1
+        },
+        "join_map": [
+          {
+            "id": "k1",
+            "key": "pair:cw.utility_states.state~cw.states.code|identity",
+            "left": "cw.utility_states.state",
+            "right": "cw.states.code",
+            "transform": "identity",
+            "verdict": "VERIFIED",
+            "matched_rows": 43,
+            "left_rows": 43,
+            "matched_keys": 43,
+            "left_keys": 43,
+            "by": [
+              "planner",
+              "baseline (queue)"
+            ],
+            "recalled": "mem-86"
+          },
+          {
+            "id": "b2",
+            "key": "cik@CY2024Q1",
+            "left": "cw.seed_submissions_snapshot.cik10",
+            "right": "cw.frames_*_CY2025Q1.cik",
+            "transform": "lpad10",
+            "verdict": "VERIFIED",
+            "matched_rows": 42,
+            "left_rows": 43,
+            "matched_keys": 42,
+            "left_keys": 43,
+            "by": [
+              "baseline"
+            ],
+            "recalled": "mem-77"
+          },
+          {
+            "id": "b3",
+            "key": "station@all",
+            "left": "cw.seed_stations.id",
+            "right": "cw.stations.id",
+            "transform": "identity",
+            "verdict": "VERIFIED",
+            "matched_rows": 56,
+            "left_rows": 56,
+            "matched_keys": 56,
+            "left_keys": 56,
+            "by": [
+              "baseline"
+            ],
+            "recalled": "mem-61"
+          },
+          {
+            "id": "b4",
+            "key": "pair:cw.seed_submissions_snapshot.cik10~cw.utility_states.cik|identity",
+            "left": "cw.seed_submissions_snapshot.cik10",
+            "right": "cw.utility_states.cik",
+            "transform": "identity",
+            "verdict": "VERIFIED",
+            "matched_rows": 43,
+            "left_rows": 43,
+            "matched_keys": 43,
+            "left_keys": 43,
+            "by": [
+              "baseline"
+            ],
+            "recalled": "mem-78"
+          },
+          {
+            "id": "b5",
+            "key": "sic@all",
+            "left": "cw.seed_submissions_snapshot.sic",
+            "right": "cw.sic_codes.code",
+            "transform": "identity",
+            "verdict": "VERIFIED",
+            "matched_rows": 42,
+            "left_rows": 43,
+            "matched_keys": 3,
+            "left_keys": 4,
+            "by": [
+              "baseline"
+            ],
+            "recalled": "mem-79"
+          },
+          {
+            "id": "b6",
+            "key": "loc@CY2024Q1",
+            "left": "cw.frames_*_CY2025Q1.loc",
+            "right": "cw.seed_submissions_snapshot.hq_state",
+            "transform": "substr(4,2)",
+            "verdict": "VERIFIED",
+            "matched_rows": 42,
+            "left_rows": 42,
+            "matched_keys": 42,
+            "left_keys": 42,
+            "by": [
+              "baseline"
+            ],
+            "recalled": "mem-80"
+          },
+          {
+            "id": "b11",
+            "key": "pair:cw.utility_states.state~cw.seed_stations.state|identity",
+            "left": "cw.utility_states.state",
+            "right": "cw.seed_stations.state",
+            "transform": "identity",
+            "verdict": "VERIFIED",
+            "matched_rows": 43,
+            "left_rows": 43,
+            "matched_keys": 43,
+            "left_keys": 43,
+            "by": [
+              "baseline (queue)"
+            ],
+            "recalled": "mem-90"
+          },
+          {
+            "id": "b17",
+            "key": "fema_fips@CY2024Q1",
+            "left": "cw.fema_declarations_dr_2025q1.fips_state_code",
+            "right": "cw.states.fips",
+            "transform": "identity",
+            "verdict": "VERIFIED",
+            "matched_rows": 8,
+            "left_rows": 8,
+            "matched_keys": 8,
+            "left_keys": 8,
+            "by": [
+              "baseline (queue)"
+            ],
+            "recalled": "mem-65"
+          },
+          {
+            "id": "k2",
+            "key": "pair:cw.utility_states.state~cw.states.fips|substr(4,2)",
+            "left": "cw.utility_states.state",
+            "right": "cw.states.fips",
+            "transform": "substr(4,2)",
+            "verdict": "REJECTED",
+            "matched_rows": 0,
+            "left_rows": 1,
+            "matched_keys": 0,
+            "left_keys": 1,
+            "by": [
+              "planner"
+            ],
+            "recalled": null
+          },
+          {
+            "id": "k3",
+            "key": "fema_state@CY2024Q1",
+            "left": "cw.fema_declarations_dr_2024q1.state",
+            "right": "cw.utility_states.state",
+            "transform": "identity",
+            "verdict": "REJECTED",
+            "matched_rows": 8,
+            "left_rows": 11,
+            "matched_keys": 8,
+            "left_keys": 11,
+            "by": [
+              "planner",
+              "baseline (queue)"
+            ],
+            "recalled": null
+          },
+          {
+            "id": "k4",
+            "key": "pair:cw.utility_states.state~cw.fema_declarations_dr_2024q1.fips_state_code|identity",
+            "left": "cw.utility_states.state",
+            "right": "cw.fema_declarations_dr_2024q1.fips_state_code",
+            "transform": "identity",
+            "verdict": "REJECTED",
+            "matched_rows": 0,
+            "left_rows": 43,
+            "matched_keys": 0,
+            "left_keys": 43,
+            "by": [
+              "planner"
+            ],
+            "recalled": null
+          },
+          {
+            "id": "b1",
+            "key": "pair:cw.frames_revenues_cy2024q1.cik~cw.utility_states.cik|lpad10",
+            "left": "cw.frames_Revenues_CY2024Q1.cik",
+            "right": "cw.utility_states.cik",
+            "transform": "lpad10",
+            "verdict": "REJECTED",
+            "matched_rows": 35,
+            "left_rows": 2095,
+            "matched_keys": 35,
+            "left_keys": 2095,
+            "by": [
+              "baseline"
+            ],
+            "recalled": null
+          },
+          {
+            "id": "c1",
+            "key": "cik_control@CY2024Q1",
+            "left": "cw.seed_submissions_snapshot.cik10",
+            "right": "cw.frames_*_CY2024Q1.cik",
+            "transform": "identity",
+            "verdict": "REJECTED",
+            "matched_rows": 0,
+            "left_rows": 43,
+            "matched_keys": 0,
+            "left_keys": 43,
+            "by": [
+              "control"
+            ],
+            "recalled": null
+          }
+        ],
+        "verified_keys": 8,
+        "answer_rows": 16,
+        "weather": "not_tested",
+        "answer_identical_to_ref": null,
+        "gate": {
+          "fema": {
+            "key": "fema_fips@CY2024Q1",
+            "verdict": "VERIFIED",
+            "matched": 8,
+            "rows": 8,
+            "recalled": true,
+            "ok": true
+          },
+          "revenue": {
+            "key": "cik@CY2024Q1",
+            "verdict": "VERIFIED",
+            "matched": 42,
+            "rows": 43,
+            "recalled": true,
+            "ok": true
+          },
+          "weather": {
+            "key": "station@all",
+            "verdict": "VERIFIED",
+            "matched": 56,
+            "rows": 56,
+            "recalled": true,
+            "ok": true
+          },
+          "coverage": {
+            "key": "fema_state@CY2024Q1",
+            "verdict": "REJECTED",
+            "matched": 8,
+            "rows": 11,
+            "orphans": [
+              "AK",
+              "ME",
+              "VT"
+            ]
+          }
+        },
+        "statements": 50,
+        "statements_with_cache_time": 48,
+        "skipped_chunks": 8,
+        "memo": {
+          "source": "template",
+          "words": 236
+        },
+        "checklist_complete": true,
+        "vram_mib_ollama_mid": 2881,
+        "smi": {
+          "samples": 495,
+          "mem_min": 8175,
+          "mem_median": 11331,
+          "mem_max": 11492,
+          "util_median": 90,
+          "util_max": 99,
+          "unload_dips": 4
+        }
+      }
+    ]
+  },
+  "opaque": {
+    "runs": [
+      {
+        "tag": "01-opq_model-024642",
+        "setting": "opq_model",
+        "exit": 0,
+        "shell_s": 321.9,
+        "run_id": "r20261026T024643e3e8",
+        "wall_s": 320.3,
+        "chunks": 7,
+        "planner_calls": 21,
+        "planner_valid": 16,
+        "fallback_steps": 5,
+        "probed": [
+          "cw.opq_seed_submissions_snapshot[6]",
+          "cw.opq_frames_revenues_cy2025q1[6]",
+          "cw.opq_fema_declarations_dr_2025q1[9]",
+          "cw.opq_states[3]",
+          "cw.opq_utility_states[2]",
+          "cw.opq_seed_stations[3]",
+          "cw.opq_stations[3]",
+          "cw.opq_sic_codes[6]"
+        ],
+        "menu_columns": 38,
+        "model": {
+          "by": "planner",
+          "made": 6,
+          "verified": 0,
+          "partial": 0,
+          "rejected": 6,
+          "unmeasurable": 0,
+          "invalid_schema": 0
+        },
+        "baseline": {
+          "made": 0,
+          "verified": 0
+        },
+        "measured": 6,
+        "join_map": [
+          {
+            "left": "cw.opq_states.c1",
+            "right": "cw.opq_fema_declarations_dr_2025q1.c2",
+            "transform": "identity",
+            "means": "cw.states.code ~ cw.fema_declarations_dr_2025q1.state",
+            "key": null,
+            "status": "measured",
+            "verdict": "REJECTED",
+            "matched_keys": 8,
+            "left_keys": 51,
+            "rate": 0.1568627450980392,
+            "by": [
+              "planner"
+            ]
+          },
+          {
+            "left": "cw.opq_utility_states.c1",
+            "right": "cw.opq_fema_declarations_dr_2025q1.c2",
+            "transform": "identity",
+            "means": "cw.utility_states.cik ~ cw.fema_declarations_dr_2025q1.state",
+            "key": null,
+            "status": "measured",
+            "verdict": "REJECTED",
+            "matched_keys": 0,
+            "left_keys": 43,
+            "rate": 0,
+            "by": [
+              "planner"
+            ]
+          },
+          {
+            "left": "cw.opq_states.c1",
+            "right": "cw.opq_fema_declarations_dr_2025q1.c7",
+            "transform": "substr(4,2)",
+            "means": "cw.states.code ~ cw.fema_declarations_dr_2025q1.fips_state_code",
+            "key": null,
+            "status": "measured",
+            "verdict": "REJECTED",
+            "matched_keys": 0,
+            "left_keys": 1,
+            "rate": 0,
+            "by": [
+              "planner"
+            ]
+          },
+          {
+            "left": "cw.opq_utility_states.c1",
+            "right": "cw.opq_fema_declarations_dr_2025q1.c7",
+            "transform": "substr(4,2)",
+            "means": "cw.utility_states.cik ~ cw.fema_declarations_dr_2025q1.fips_state_code",
+            "key": null,
+            "status": "measured",
+            "verdict": "REJECTED",
+            "matched_keys": 0,
+            "left_keys": 14,
+            "rate": 0,
+            "by": [
+              "planner"
+            ]
+          },
+          {
+            "left": "cw.opq_utility_states.c2",
+            "right": "cw.opq_fema_declarations_dr_2025q1.c2",
+            "transform": "identity",
+            "means": "cw.utility_states.state ~ cw.fema_declarations_dr_2025q1.state",
+            "key": "fema_state",
+            "status": "measured",
+            "verdict": "REJECTED",
+            "matched_keys": 7,
+            "left_keys": 43,
+            "rate": 0.16279069767441862,
+            "by": [
+              "planner"
+            ]
+          },
+          {
+            "left": "cw.opq_utility_states.c2",
+            "right": "cw.opq_fema_declarations_dr_2025q1.c7",
+            "transform": "substr(4,2)",
+            "means": "cw.utility_states.state ~ cw.fema_declarations_dr_2025q1.fips_state_code",
+            "key": null,
+            "status": "measured",
+            "verdict": "REJECTED",
+            "matched_keys": 0,
+            "left_keys": 1,
+            "rate": 0,
+            "by": [
+              "planner"
+            ]
+          }
+        ],
+        "model_keys_verified": [],
+        "baseline_keys_verified": [],
+        "answer_keys": {
+          "cik": {
+            "proposed": false,
+            "verified": false,
+            "best": []
+          },
+          "fema_fips": {
+            "proposed": false,
+            "verified": false,
+            "best": []
+          },
+          "station": {
+            "proposed": false,
+            "verified": false,
+            "best": []
+          }
+        },
+        "gate": {
+          "fema": false,
+          "revenue": false,
+          "weather": false,
+          "fema_note": "FEMA selection withheld: key fema_fips@CY2025Q1 is not measured in this run, and the answer needs it VERIFIED"
+        },
+        "answer_rows": 0,
+        "checklist": [
+          "sources_found:done",
+          "shapes_probed:done",
+          "keys_proposed:done",
+          "keys_measured:done",
+          "sources_registered:done",
+          "usl_built:done",
+          "dq_run:done",
+          "answered:done",
+          "not_tested_listed:done",
+          "note_written:done"
+        ]
+      },
+      {
+        "tag": "02-opq_none-025204",
+        "setting": "opq_none",
+        "exit": 0,
+        "shell_s": 124.3,
+        "run_id": "r20261026T025205b662",
+        "wall_s": 123.1,
+        "chunks": 5,
+        "planner_calls": 0,
+        "planner_valid": 0,
+        "fallback_steps": 13,
+        "probed": [
+          "cw.opq_seed_submissions_snapshot[6]",
+          "cw.opq_frames_revenues_cy2025q1[6]",
+          "cw.opq_fema_declarations_dr_2025q1[9]",
+          "cw.opq_utility_states[2]",
+          "cw.opq_states[3]",
+          "cw.opq_seed_stations[3]",
+          "cw.opq_stations[3]",
+          "cw.opq_sic_codes[6]"
+        ],
+        "menu_columns": 38,
+        "model": {
+          "by": null,
+          "made": 0,
+          "verified": 0,
+          "partial": 0,
+          "rejected": 0,
+          "unmeasurable": 0,
+          "invalid_schema": 0
+        },
+        "baseline": {
+          "made": 0,
+          "verified": 0
+        },
+        "measured": 0,
+        "join_map": [],
+        "model_keys_verified": [],
+        "baseline_keys_verified": [],
+        "answer_keys": {
+          "cik": {
+            "proposed": false,
+            "verified": false,
+            "best": []
+          },
+          "fema_fips": {
+            "proposed": false,
+            "verified": false,
+            "best": []
+          },
+          "station": {
+            "proposed": false,
+            "verified": false,
+            "best": []
+          }
+        },
+        "gate": null,
+        "answer_rows": 0,
+        "checklist": [
+          "sources_found:done",
+          "shapes_probed:done",
+          "keys_proposed:failed",
+          "keys_measured:failed",
+          "sources_registered:done",
+          "usl_built:failed",
+          "dq_run:failed",
+          "answered:failed",
+          "not_tested_listed:failed",
+          "note_written:done"
+        ]
+      },
+      {
+        "tag": "03-opq_model-025408",
+        "setting": "opq_model",
+        "exit": 0,
+        "shell_s": 292.1,
+        "run_id": "r20261026T02540929e9",
+        "wall_s": 290.9,
+        "chunks": 6,
+        "planner_calls": 16,
+        "planner_valid": 10,
+        "fallback_steps": 6,
+        "probed": [
+          "cw.opq_seed_submissions_snapshot[6]",
+          "cw.opq_frames_revenues_cy2025q1[6]",
+          "cw.opq_fema_declarations_dr_2025q1[9]",
+          "cw.opq_utility_states[2]",
+          "cw.opq_states[3]",
+          "cw.opq_sic_codes[6]",
+          "cw.opq_seed_stations[3]",
+          "cw.opq_stations[3]"
+        ],
+        "menu_columns": 38,
+        "model": {
+          "by": "planner",
+          "made": 1,
+          "verified": 0,
+          "partial": 0,
+          "rejected": 1,
+          "unmeasurable": 0,
+          "invalid_schema": 0
+        },
+        "baseline": {
+          "made": 0,
+          "verified": 0
+        },
+        "measured": 1,
+        "join_map": [
+          {
+            "left": "cw.opq_utility_states.c1",
+            "right": "cw.opq_fema_declarations_dr_2025q1.c1",
+            "transform": "identity",
+            "means": "cw.utility_states.cik ~ cw.fema_declarations_dr_2025q1.disaster_number",
+            "key": null,
+            "status": "measured",
+            "verdict": "REJECTED",
+            "matched_keys": 0,
+            "left_keys": 43,
+            "rate": 0,
+            "by": [
+              "planner"
+            ]
+          }
+        ],
+        "model_keys_verified": [],
+        "baseline_keys_verified": [],
+        "answer_keys": {
+          "cik": {
+            "proposed": false,
+            "verified": false,
+            "best": []
+          },
+          "fema_fips": {
+            "proposed": false,
+            "verified": false,
+            "best": []
+          },
+          "station": {
+            "proposed": false,
+            "verified": false,
+            "best": []
+          }
+        },
+        "gate": {
+          "fema": false,
+          "revenue": false,
+          "weather": false,
+          "fema_note": "FEMA selection withheld: key fema_fips@CY2025Q1 is not measured in this run, and the answer needs it VERIFIED"
+        },
+        "answer_rows": 0,
+        "checklist": [
+          "sources_found:done",
+          "shapes_probed:done",
+          "keys_proposed:done",
+          "keys_measured:failed",
+          "sources_registered:done",
+          "usl_built:done",
+          "dq_run:done",
+          "answered:done",
+          "not_tested_listed:done",
+          "note_written:done"
+        ]
+      },
+      {
+        "tag": "04-opq_none-025930",
+        "setting": "opq_none",
+        "exit": 0,
+        "shell_s": 125.4,
+        "run_id": "r20261026T025931bb46",
+        "wall_s": 124.3,
+        "chunks": 5,
+        "planner_calls": 0,
+        "planner_valid": 0,
+        "fallback_steps": 13,
+        "probed": [
+          "cw.opq_seed_submissions_snapshot[6]",
+          "cw.opq_frames_revenues_cy2025q1[6]",
+          "cw.opq_fema_declarations_dr_2025q1[9]",
+          "cw.opq_utility_states[2]",
+          "cw.opq_states[3]",
+          "cw.opq_seed_stations[3]",
+          "cw.opq_stations[3]",
+          "cw.opq_sic_codes[6]"
+        ],
+        "menu_columns": 38,
+        "model": {
+          "by": null,
+          "made": 0,
+          "verified": 0,
+          "partial": 0,
+          "rejected": 0,
+          "unmeasurable": 0,
+          "invalid_schema": 0
+        },
+        "baseline": {
+          "made": 0,
+          "verified": 0
+        },
+        "measured": 0,
+        "join_map": [],
+        "model_keys_verified": [],
+        "baseline_keys_verified": [],
+        "answer_keys": {
+          "cik": {
+            "proposed": false,
+            "verified": false,
+            "best": []
+          },
+          "fema_fips": {
+            "proposed": false,
+            "verified": false,
+            "best": []
+          },
+          "station": {
+            "proposed": false,
+            "verified": false,
+            "best": []
+          }
+        },
+        "gate": null,
+        "answer_rows": 0,
+        "checklist": [
+          "sources_found:done",
+          "shapes_probed:done",
+          "keys_proposed:failed",
+          "keys_measured:failed",
+          "sources_registered:done",
+          "usl_built:failed",
+          "dq_run:failed",
+          "answered:failed",
+          "not_tested_listed:failed",
+          "note_written:done"
+        ]
+      },
+      {
+        "tag": "05-opq_model-030136",
+        "setting": "opq_model",
+        "exit": 0,
+        "shell_s": 301.8,
+        "run_id": "r20261026T030137ddeb",
+        "wall_s": 300.7,
+        "chunks": 6,
+        "planner_calls": 16,
+        "planner_valid": 11,
+        "fallback_steps": 5,
+        "probed": [
+          "cw.opq_seed_submissions_snapshot[6]",
+          "cw.opq_frames_revenues_cy2025q1[6]",
+          "cw.opq_utility_states[2]",
+          "cw.opq_fema_declarations_dr_2025q1[9]",
+          "cw.opq_states[3]",
+          "cw.opq_sic_codes[6]",
+          "cw.opq_seed_stations[3]",
+          "cw.opq_stations[3]"
+        ],
+        "menu_columns": 38,
+        "model": {
+          "by": "planner",
+          "made": 1,
+          "verified": 0,
+          "partial": 0,
+          "rejected": 1,
+          "unmeasurable": 0,
+          "invalid_schema": 0
+        },
+        "baseline": {
+          "made": 0,
+          "verified": 0
+        },
+        "measured": 1,
+        "join_map": [
+          {
+            "left": "cw.opq_utility_states.c2",
+            "right": "cw.opq_fema_declarations_dr_2025q1.c2",
+            "transform": "identity",
+            "means": "cw.utility_states.state ~ cw.fema_declarations_dr_2025q1.state",
+            "key": "fema_state",
+            "status": "measured",
+            "verdict": "REJECTED",
+            "matched_keys": 7,
+            "left_keys": 43,
+            "rate": 0.16279069767441862,
+            "by": [
+              "planner"
+            ]
+          }
+        ],
+        "model_keys_verified": [],
+        "baseline_keys_verified": [],
+        "answer_keys": {
+          "cik": {
+            "proposed": false,
+            "verified": false,
+            "best": []
+          },
+          "fema_fips": {
+            "proposed": false,
+            "verified": false,
+            "best": []
+          },
+          "station": {
+            "proposed": false,
+            "verified": false,
+            "best": []
+          }
+        },
+        "gate": {
+          "fema": false,
+          "revenue": false,
+          "weather": false,
+          "fema_note": "FEMA selection withheld: key fema_fips@CY2025Q1 is not measured in this run, and the answer needs it VERIFIED"
+        },
+        "answer_rows": 0,
+        "checklist": [
+          "sources_found:done",
+          "shapes_probed:done",
+          "keys_proposed:done",
+          "keys_measured:failed",
+          "sources_registered:done",
+          "usl_built:done",
+          "dq_run:done",
+          "answered:done",
+          "not_tested_listed:done",
+          "note_written:done"
+        ]
+      },
+      {
+        "tag": "06-opq_none-030638",
+        "setting": "opq_none",
+        "exit": 0,
+        "shell_s": 126.2,
+        "run_id": "r20261026T03063911aa",
+        "wall_s": 125.1,
+        "chunks": 5,
+        "planner_calls": 0,
+        "planner_valid": 0,
+        "fallback_steps": 13,
+        "probed": [
+          "cw.opq_seed_submissions_snapshot[6]",
+          "cw.opq_frames_revenues_cy2025q1[6]",
+          "cw.opq_fema_declarations_dr_2025q1[9]",
+          "cw.opq_utility_states[2]",
+          "cw.opq_states[3]",
+          "cw.opq_seed_stations[3]",
+          "cw.opq_stations[3]",
+          "cw.opq_sic_codes[6]"
+        ],
+        "menu_columns": 38,
+        "model": {
+          "by": null,
+          "made": 0,
+          "verified": 0,
+          "partial": 0,
+          "rejected": 0,
+          "unmeasurable": 0,
+          "invalid_schema": 0
+        },
+        "baseline": {
+          "made": 0,
+          "verified": 0
+        },
+        "measured": 0,
+        "join_map": [],
+        "model_keys_verified": [],
+        "baseline_keys_verified": [],
+        "answer_keys": {
+          "cik": {
+            "proposed": false,
+            "verified": false,
+            "best": []
+          },
+          "fema_fips": {
+            "proposed": false,
+            "verified": false,
+            "best": []
+          },
+          "station": {
+            "proposed": false,
+            "verified": false,
+            "best": []
+          }
+        },
+        "gate": null,
+        "answer_rows": 0,
+        "checklist": [
+          "sources_found:done",
+          "shapes_probed:done",
+          "keys_proposed:failed",
+          "keys_measured:failed",
+          "sources_registered:done",
+          "usl_built:failed",
+          "dq_run:failed",
+          "answered:failed",
+          "not_tested_listed:failed",
+          "note_written:done"
+        ]
+      }
+    ],
+    "hand_match_rates_after_the_runs": [
+      {
+        "what": "FEMA state ~ state code",
+        "pair": "cw.opq_fema_declarations_dr_2025q1.c2 ~ cw.opq_states.c1 [identity]",
+        "matched_keys": 8,
+        "left_keys": 8,
+        "rate": 1,
+        "verdict": "VERIFIED",
+        "elapsed_ms": 696
+      },
+      {
+        "what": "FEMA state ~ served state (coverage)",
+        "pair": "cw.opq_fema_declarations_dr_2025q1.c2 ~ cw.opq_utility_states.c2 [identity]",
+        "matched_keys": 7,
+        "left_keys": 8,
+        "rate": 0.875,
+        "verdict": "PARTIAL",
+        "elapsed_ms": 642
+      },
+      {
+        "what": "FEMA FIPS ~ state FIPS (the gate key)",
+        "pair": "cw.opq_fema_declarations_dr_2025q1.c7 ~ cw.opq_states.c3 [identity]",
+        "matched_keys": 8,
+        "left_keys": 8,
+        "rate": 1,
+        "verdict": "VERIFIED",
+        "elapsed_ms": 700
+      },
+      {
+        "what": "seed station ~ inventory id (the gate key)",
+        "pair": "cw.opq_seed_stations.c1 ~ cw.opq_stations.c1 [identity]",
+        "matched_keys": 56,
+        "left_keys": 56,
+        "rate": 1,
+        "verdict": "VERIFIED",
+        "elapsed_ms": 23168
+      },
+      {
+        "what": "frames CIK padded ~ snapshot CIK (the gate key, frames counted)",
+        "pair": "cw.opq_frames_revenues_cy2025q1.c1 ~ cw.opq_seed_submissions_snapshot.c1 [lpad10]",
+        "matched_keys": 34,
+        "left_keys": 1937,
+        "rate": 0.0176,
+        "verdict": "REJECTED",
+        "elapsed_ms": 694
+      },
+      {
+        "what": "snapshot CIK ~ frames CIK (snapshot counted, no transform possible on the right)",
+        "pair": "cw.opq_seed_submissions_snapshot.c1 ~ cw.opq_frames_revenues_cy2025q1.c1 [identity]",
+        "matched_keys": 0,
+        "left_keys": 43,
+        "rate": 0,
+        "verdict": "REJECTED",
+        "elapsed_ms": 695
+      },
+      {
+        "what": "reversed: state code ~ FEMA state (the model's orientation)",
+        "pair": "cw.opq_states.c1 ~ cw.opq_fema_declarations_dr_2025q1.c2 [identity]",
+        "matched_keys": 8,
+        "left_keys": 51,
+        "rate": 0.1569,
+        "verdict": "REJECTED",
+        "elapsed_ms": 664
+      }
+    ]
+  }
+}

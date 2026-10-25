@@ -432,21 +432,22 @@
   <h2 class="title">Measured before use: 7 of 11 model keys REJECTED; it adds time, not keys</h2>
   <div class="body" style="display:flex; flex-direction:column; gap:18px">
     <table class="t">
-      <thead><tr><th>Cold question, same code</th><th class="n">Wall</th><th class="n">Chunks</th><th class="n">Planner replies valid / calls (first try)</th><th class="n">Host fallback steps</th><th class="n">Output tokens</th><th class="n">Median tok/s</th><th class="n">Model keys VERIFIED / made</th><th class="n">GPU util median</th><th>Answer</th></tr></thead>
+      <thead><tr><th>Cold question, 3 runs each (26 Oct)</th><th class="n">Wall, median (min to max)</th><th class="n">Output tokens, median</th><th class="n">Median tok/s</th><th class="n">Host fallback steps per run</th><th class="n">Model keys VERIFIED / made</th><th class="n">VRAM</th><th>Answer</th></tr></thead>
       <tbody>
-        <tr><td>Think on</td><td class="n">275.2 s</td><td class="n">9</td><td class="n">21 / 25 (19)</td><td class="n">4</td><td class="n">22,047</td><td class="n">132.9</td><td class="n">0 / 1</td><td class="n">81%</td><td>reference</td></tr>
-        <tr><td>Think off</td><td class="n">227.9 s</td><td class="n">10</td><td class="n">20 / 28 (19)</td><td class="n">8</td><td class="n">15,813</td><td class="n">133.1</td><td class="n">1 / 2</td><td class="n">73%</td><td>identical</td></tr>
-        <tr class="hi"><td>No model (host takes every step)</td><td class="n">88.4 s</td><td class="n">9</td><td class="n">0 / 0</td><td class="n">25</td><td class="n">0</td><td class="n">n/a</td><td class="n">n/a</td><td class="n">16%</td><td>identical</td></tr>
+        <tr><td>Think on, Q4_K_M (shipped)</td><td class="n">274.2 s (268.4&ndash;317.9)</td><td class="n">22,666</td><td class="n">136.5</td><td class="n">4, 4, 8</td><td class="n">3 / 6</td><td class="n">2,881 MiB</td><td>reference, 3 of 3</td></tr>
+        <tr><td>Think off, Q4_K_M</td><td class="n">216.0 s (211.7&ndash;219.1)</td><td class="n">14,733</td><td class="n">136.3</td><td class="n">8, 7, 7</td><td class="n">3 / 6</td><td class="n">2,881 MiB</td><td>identical, 3 of 3</td></tr>
+        <tr><td>Think on, Q8_0</td><td class="n">347.8 s (297.5&ndash;400.0)</td><td class="n">22,140</td><td class="n">100.9</td><td class="n">6, 6, 6</td><td class="n">1 / 5</td><td class="n">4,066 MiB</td><td>identical, 3 of 3</td></tr>
+        <tr class="hi"><td>No model (host takes every step)</td><td class="n">87.5 s (87.1&ndash;90.2)</td><td class="n">0</td><td class="n">n/a</td><td class="n">25, 25, 25</td><td class="n">n/a</td><td class="n">n/a</td><td>identical, 3 of 3</td></tr>
       </tbody>
     </table>
     <div class="row" style="gap:24px">
       <div class="card card--nv" style="flex:1">
         <h4>The model</h4>
-        <p><code>nemotron-3-nano:4b</code> through Ollama: 4.0B parameters, Q4_K_M, context 8,192, <b>2,881 MiB of VRAM</b>. JSON-schema replies: across the six runs with the model, 125 of 157 planner replies were valid; an empty reply cut by length is repaired once with thinking off. 0 cloud model calls.</p>
+        <p><code>nemotron-3-nano:4b</code> through Ollama: 4.0B parameters, Q4_K_M, context 8,192, <b>2,881 MiB of VRAM</b> (Q8_0: 4,066 MiB). JSON-schema replies, checked by the host; an empty reply cut by length is repaired once with thinking off. 0 cloud model calls.</p>
       </div>
       <div class="card card--bad" style="flex:1">
         <h4>What the numbers say, plainly</h4>
-        <p>Without the model the same answer and governed keys arrive in 32% of the think-on wall time. One run per setting: the four think-on cold runs spread over 38.1 s, so the 47.3 s think-off gap is not claimed as an effect. The model was unloaded and reloaded mid-run 3 times (think on) and 2 times (off); the likely cause, a host-RAM guard, is not verified.</p>
+        <p>Without the model the same answer and governed keys arrive in 32% of the think-on median. Every think-off run beat every think-on run with the same 3 of 6 model keys, so the shipped setting costs about a minute here; Q8_0 is slower and found fewer. The model reloaded 2 to 6 times per run; the likely cause, a host-RAM guard, is not verified.</p>
       </div>
     </div>
     <figure>
@@ -458,7 +459,7 @@
       <figcaption>Every screen carries the run's telemetry footer (cold run 16:00 SGT shown).</figcaption>
     </figure>
   </div>
-  <div class="foot"><span class="src">docs/eval-report.md section 5 and docs/eval/summary.json (7 of 11: the five cold runs with the model, l2.cold_totals): GPU sampled every 500 ms by nvidia-smi; VRAM as Ollama reports it; tokens and tok/s are Ollama's counts.</span><span class="pg">9 / 12</span></div>
+  <div class="foot"><span class="src">Table: docs/eval/round3.md, 26 Oct, twelve cold runs interleaved on one card. Title: docs/eval/summary.json (7 of 11: the five cold runs with the model on Day 2, l2.cold_totals). VRAM as Ollama reports it; tokens and tok/s are Ollama's counts.</span><span class="pg">9 / 12</span></div>
 </section>
 
 <!-- 10. Evaluation -->
@@ -469,7 +470,7 @@
     <div class="col" style="width:820px; gap:16px">
       <div class="card">
         <h4>Reproducibility</h4>
-        <p>6 cold runs of the demo question (think on, off, no model): the same 12-row answer in every field, and the same numbers and orphans for the 7 governed join-map keys in every pair. The report and its JSON are regenerated from the saved runs by one command, with no gateway or model call.</p>
+        <p>6 cold runs of the demo question on 25 Oct (think on, off, no model): the same 12-row answer in every field, and the same numbers and orphans for the 7 governed join-map keys in every pair. 12 more on 26 Oct (adding Q8_0), all through the answer gate: the same 12 rows in every field. The Day-2 report is regenerated from the saved runs by one command.</p>
       </div>
       <div class="card card--mid">
         <h4>Outside checks: numbers the agent did not compute</h4>
@@ -493,7 +494,7 @@
             <tr><td>By hand (pre-written SQL)</td><td class="n">27</td><td class="n">24</td><td class="n">179.5 s</td><td>the five keys and their orphans</td></tr>
             <tr><td>Agent, cold, median</td><td class="n">60</td><td class="n">0</td><td class="n">275.8 s</td><td>keys, cited answer, USL check, live DQ, checked note</td></tr>
             <tr><td>Agent, warm (Q1 2024)</td><td class="n">46</td><td class="n">0</td><td class="n">194.1 s</td><td>the same, verified keys recalled</td></tr>
-            <tr><td>Agent, cold, no model</td><td class="n">56</td><td class="n">0</td><td class="n">88.4 s</td><td>same answer and keys, template note</td></tr>
+            <tr><td>Agent, cold, no model (median of 3)</td><td class="n">56</td><td class="n">0</td><td class="n">87.5 s</td><td>same answer and keys, template note</td></tr>
           </tbody>
         </table>
         <p style="margin-top:10px">An expert who already knows the five keys is faster by hand. The agent asks for none of the 24 decisions and adds what the hand session does not produce: every key measured with its orphans, the governed USL and its DQ, the cited answer, and memory for the next question. A person's time to write and read that SQL is not measured.</p>
@@ -501,7 +502,7 @@
     </div>
   </div>
   <div class="row" style="position:absolute; left:96px; right:96px; bottom:96px; gap:24px">
-    <div class="stat" style="flex:1"><div class="v">6 of 6</div><div class="k">cold runs with the same answer in every field (think on, off, no model)</div></div>
+    <div class="stat" style="flex:1"><div class="v">18 of 18</div><div class="k">cold runs with the same answer in every field (25 and 26 Oct; think on, off, Q8_0, no model)</div></div>
     <div class="stat" style="flex:1"><div class="v">2 of 2</div><div class="k">FEMA quarters where the OpenFEMA API equals the Zetaris cached view</div></div>
     <div class="stat" style="flex:1"><div class="v">24 &rarr; 0</div><div class="k">decisions a person takes by hand to find the five keys, against one command</div></div>
     <div class="stat" style="flex:1"><div class="v">0 of 399</div><div class="k">question-path statements over 20 s; the slowest, 18,135 ms, is the weather statement</div></div>
@@ -516,7 +517,7 @@
   <div class="body row" style="gap:36px">
     <div class="col" style="width:1060px; gap:0">
       <div class="finding"><div class="n">1</div><div><h4>The model loses the key-proposal comparison</h4><p>11 proposals and 3 VERIFIED against the baseline's 30 and 25; every key it verified was also among the baseline's proposals. Some choices are pairs nobody would try (company number against FIPS code: 0 of 43); Lightning SQL rejects them, at the cost of a planner step and a statement each.</p></div></div>
-      <div class="finding"><div class="n">2</div><div><h4>Without the model, the same answer in about a third of the time</h4><p>88.4 s with no model against 247.7 to 285.8 s with it, same answer and governed keys: on this question the planner and the note add time, not keys.</p></div></div>
+      <div class="finding"><div class="n">2</div><div><h4>Without the model, the same answer in about a third of the time</h4><p>A median 87.5 s with no model against 274.2 s with it (three runs each), same answer and governed keys: on this question the planner and the note add time, not keys. Think off beat think on in every run; Q8_0 was slower and found fewer keys.</p></div></div>
       <div class="finding"><div class="n">3</div><div><h4>The planner's replies and the note</h4><p>125 of 157 planner replies valid; the host took 2 to 8 checklist steps itself per run. The model's note was replaced by the 250-word template in 3 of the 6 runs with the model; one early draft said revenue "held up" while EIX and POR fell, and the verifier rule was fixed afterwards.</p></div></div>
       <div class="finding"><div class="n">4</div><div><h4>A VERIFIED rate is containment, not meaning</h4><p>Two state-code lists overlap and measure VERIFIED (28 of 28, 43 of 43) though nobody would join on them.</p></div></div>
       <div class="finding"><div class="n">5</div><div><h4>The curated seed has a gap; the station inventory is slow</h4><p>PPL's 10-K also names Virginia, which the seed leaves out (no answer changes). Probing the 133,039-row station inventory costs about 27 s per cold run; each weather statement 18 s.</p></div></div>
@@ -535,7 +536,7 @@
         <h4>Not measured</h4>
         <ul class="b small">
           <li>A person's time for the manual baseline.</li>
-          <li>More than one run per ablation setting; a second quantisation.</li>
+          <li>Think off, no model or Q8_0 on the warm question.</li>
           <li>Revenue against the companies' own reports; 41 of the 43 seed service-territory lists.</li>
           <li>Live registration in the Day-2 runs (all already registered), and the full DQ run on Day 2.</li>
         </ul>
@@ -554,11 +555,11 @@
       <div class="card">
         <h4>Future work</h4>
         <ul class="b" style="font-size:18.5px">
-          <li>Give the model sources whose keys the column names do not reveal, and keep scoring it against the baseline on the same probes.</li>
+          <li>Column names hidden (26 Oct): neither proposer found a key. Next: measure both sides of a pair, and a value-based baseline.</li>
           <li>Flag VERIFIED keys that are only overlapping code lists.</li>
           <li>County-level geography: declaration counties against service territories.</li>
           <li>Like-for-like revenue with restatements, more quarters, the full DQ run on a schedule with its history.</li>
-          <li>A timed manual baseline with analysts; repeated ablation runs and a second quantisation.</li>
+          <li>A timed manual baseline with analysts; the ablation on the warm question.</li>
         </ul>
       </div>
       <div class="card card--model">
@@ -566,7 +567,7 @@
         <ul class="b small">
           <li>Meterless H-MEM, Markovian and World Model engines, vendored unchanged: 60 files, 13,189 lines (<code>git ls-files engines | xargs wc -l</code>).</li>
           <li><code>gateway/jdbc.py</code> (279 lines) adapted from the Zetaris getting-started repository.</li>
-          <li>Scaffolding adapted from the same author's Weather-or-Not (github.com/GitHubMoreLikeGitGud/weather-or-not) and ClearShelf (github.com/GitHubMoreLikeGitGud/clearshelf): 26 code files carry that header, 8,523 lines today, rewritten in part (<code>git grep -l "Adapted from Weather-or-Not"</code> over agent, gateway, ui, scripts, zetaris, seeds).</li>
+          <li>Scaffolding adapted from the same author's Weather-or-Not (github.com/GitHubMoreLikeGitGud/weather-or-not) and ClearShelf (github.com/GitHubMoreLikeGitGud/clearshelf): 26 code files carry that header, 8,598 lines today, rewritten in part (<code>git grep -l "Adapted from Weather-or-Not"</code> over agent, gateway, ui, scripts, zetaris, seeds).</li>
         </ul>
       </div>
     </div>

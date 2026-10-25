@@ -4,6 +4,20 @@ Every number below is measured and copied from a saved run file or a measured si
 
 Code: the agent loop and tools, the model client and prompts, memory, the gateway, seeds and the Zetaris SQL statements are the same at fc130bd (the last four runs) and at the commit that carries this report; after fc130bd only the UI, the server's view functions (agent/src/ops/cells.ts, agent/src/ops/usl.ts), the header labels of the CLI replay (agent/src/cli.ts), this report and its tools (agent/src/eval), tests, CI, the configuration example (one unused key dropped), comments in two Zetaris SQL files, one unused inherited script removed from scripts/ and the documentation changed. The first three runs used earlier Day-2 commits (6652e2f, ee04b0c) whose later changes touched the note, the memory context and the evidence labels, not the answer or the join-map statements.
 
+> **Round 3, 26 Oct 2026: added by hand. The Day-2 report below is unchanged and is still what `run.ts` generates.** Full tables and run ids are in [`eval/round3.md`](eval/round3.md), and the data in [`eval/round3.json`](eval/round3.json). In short:
+> - **The answer gate, live:** thirteen live runs went through the answer gate (code `f60fdb0`).
+>   - The twelve cold Q1 2025 runs passed on the FEMA FIPS key (8/8), the padded CIK key (42/43) and the station key (56/56), with coverage reported PARTIAL 7/8 (AK). Each answered the same 12 rows as the reference run in every field.
+>   - The warm Q1 2024 run passed on the three recalled keys, with coverage REJECTED 8/11 (AK, ME, VT) reported, and answered the same 16 rows as the Day-2 warm run.
+> - **Nemotron ablation at n = 3**, cold question, wall time as median (min to max). It replaces the single runs of section 5:
+>   - think on (Q4_K_M) 274.2 s (268.4 to 317.9)
+>   - think off 216.0 s (211.7 to 219.1)
+>   - Q8_0 with think on 347.8 s (297.5 to 400.0)
+>   - no model 87.5 s (87.1 to 90.2)
+>
+>   All twelve runs gave the same answer. Model keys VERIFIED of made over three runs: think on 3 of 6, think off 3 of 6, Q8_0 1 of 5. Planner tokens per second: about 136 for Q4_K_M, about 101 for Q8_0. VRAM (Ollama): 2,881 MiB for Q4_K_M, 4,066 MiB for Q8_0.
+> - **Opaque columns:** on copies of the eight question views with every column renamed `c1`, `c2`, ..., neither proposer found a key in three runs each. The model made 8 proposals and all were REJECTED (three paired the same state codes but counted the wider table); the name-based baseline proposed none. The answer was reached in none of the six runs. Through the generic statement the padded CIK key cannot be verified in either orientation (34 of 1,937, or 0 of 43).
+> - **The provenance drawer's cache time** is now reported. The gateway reported it all along; the agent dropped it until `f60fdb0`.
+
 ## Headline
 
 - **Reproducible:** 6 cold runs of the demo question (think on, think off, no model) give the same 12-row answer in every field (yes) and the same numbers and orphans for the 7 governed join-map keys (yes).

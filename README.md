@@ -14,7 +14,7 @@ Demo video (3:29): https://youtu.be/AJyT-ar1LBs · Deck (PDF): [`docs/deck/Cross
 
 **The problem.** An analyst at a state utility commission, with no data engineer on call, gets a question that crosses three agencies: *"Which investor-owned electric utilities served states with FEMA major-disaster declarations in Q1 2025, what did the weather at their stations do that quarter, and did their revenue hold up year on year?"* FEMA names states by two-letter code and by FIPS number, SEC EDGAR names a company by an unpadded integer CIK in one API and a ten-digit string in another, NOAA names weather by station id. Nobody has written down which columns join, under which transform, and which rows drop out. Crosswalk finds that out first, measures it, and only then answers.
 
-**The demo result.** The FEMA join selects 12 utilities in the 7 declared states that the seed utilities serve (CA, KY, MO, OK, OR, SC, WV): revenue rose for 9 of them against Q1 2024, fell for Edison International (-6.55%) and Portland General Electric (-0.11%), and is not compared for Sempra (it reported under a different tag a year earlier), while total degree days at their stations rose for all 12 (+1.13% to +22.89%). Before answering, the agent measured seven governed join keys in Lightning SQL: five VERIFIED, FEMA state to served state PARTIAL (Alaska has a declaration and no seed utility serves it), and the CIK control without zero-padding REJECTED (0 of 43 rows), with IDACORP (no Q1 2025 revenue fact) and MGE Energy (SIC 4900, a code on SEC's own SIC list that the third-party company_dns reference lacks) named as the orphans. The answer reads each column only after its key passes: revenue through the padded CIK key and weather through the station key, both VERIFIED. The FEMA selection joins FEMA's state codes to the states the seed utilities serve; before it runs, the gate checks that those codes join the state reference (the FEMA FIPS key, VERIFIED) and that the state join returns rows. That join is what the FEMA state key measures: how many declared states a seed utility serves is coverage, reported beside the answer, and it withholds the answer only when the join returns no rows. The gate was added after the evaluation runs: replayed offline under it, the six cold runs give the same 12-row answer and the warm Q1 2024 run the same 16-row answer ([Evaluation](#evaluation)).
+**The demo result.** The FEMA join selects 12 utilities in the 7 declared states that the seed utilities serve (CA, KY, MO, OK, OR, SC, WV): revenue rose for 9 of them against Q1 2024, fell for Edison International (-6.55%) and Portland General Electric (-0.11%), and is not compared for Sempra (it reported under a different tag a year earlier), while total degree days at their stations rose for all 12 (+1.13% to +22.89%). Before answering, the agent measured seven governed join keys in Lightning SQL: five VERIFIED, FEMA state to served state PARTIAL (Alaska has a declaration and no seed utility serves it), and the CIK control without zero-padding REJECTED (0 of 43 rows), with IDACORP (no Q1 2025 revenue fact) and MGE Energy (SIC 4900, a code on SEC's own SIC list that the third-party company_dns reference lacks) named as the orphans. The answer reads each column only after its key passes: revenue through the padded CIK key and weather through the station key, both VERIFIED. The FEMA selection joins FEMA's state codes to the states the seed utilities serve; before it runs, the gate checks that those codes join the state reference (the FEMA FIPS key, VERIFIED) and that the state join returns rows. That join is what the FEMA state key measures: how many declared states a seed utility serves is coverage, reported beside the answer, and it withholds the answer only when the join returns no rows. The gate was added after the evaluation runs: replayed offline under it, the six cold runs give the same 12-row answer and the warm Q1 2024 run the same 16-row answer. Live on 26 Oct, twelve cold runs of Q1 2025 and one warm run of Q1 2024 went through it and answered the same 12 and 16 rows in every field ([Evaluation](#evaluation)).
 
 *Words used here.* **VERIFIED**: at least 95% of the counted table's rows (of its distinct key values, for a pair measured by the generic `match_rate` statement) find a match under the key's transform; **PARTIAL**: 80% to 95%, usable with care; **REJECTED**: under 80%, the key does not join. An **orphan** is a row whose key value has no match on the other side. **DQ invalid** is a row that breaks a foreign-key rule when Zetaris runs the semantic layer's data-quality check. A **cold** run remembers nothing and measures every key; a **warm** run recalls the keys an earlier run VERIFIED and skips re-measuring them.
 
@@ -25,22 +25,22 @@ Demo video (3:29): https://youtu.be/AJyT-ar1LBs · Deck (PDF): [`docs/deck/Cross
 3. **Answer:** the 12-row table; click any number for the SQL that produced it, the rows, the time it took and the cache state.
 
 <details>
-<summary><b>Verify in 3 minutes</b> (no Zetaris, no GPU): 383 agent tests, 24 UI tests, 381 gateway tests and the three Meterless conformance suites on a fresh clone</summary>
+<summary><b>Verify in 3 minutes</b> (no Zetaris, no GPU): 388 agent tests, 24 UI tests, 382 gateway tests and the three Meterless conformance suites on a fresh clone</summary>
 
-Node 22.12 or newer, Python 3.12, git. Measured on a fresh clone of commit `c5901df`, Windows 11, Node 22.13.1, Python 3.12.0, Git Bash:
+Node 22.12 or newer, Python 3.12, git. Measured on a fresh clone of commit `5562457` (26 Oct), Windows 11, Node 22.13.1, Python 3.12.0, Git Bash:
 
 ```bash
-cd agent && npm ci && npm test && npm run typecheck && cd ..   # found 0 vulnerabilities; Test Files 27 passed (27), Tests 383 passed (383); tsc exit 0
+cd agent && npm ci && npm test && npm run typecheck && cd ..   # found 0 vulnerabilities; Test Files 27 passed (27), Tests 388 passed (388); tsc exit 0
 node --test ui/test/*.test.mjs                                 # tests 24, pass 24, fail 0
 (cd engines/hmem/reference && npm install && npx tsx ../conformance/runner.ts)          # 13/13 checks passed
 (cd engines/markovian/reference && npm install && npx tsx ../conformance/runner.ts)     # 8/8 checks passed
 (cd engines/world-model/reference && npm install && npx tsx ../conformance/runner.ts && npx tsx scripts/idempotency-check.ts)   # 8/8 checks passed; diff: empty
 git checkout -- engines                                        # npm install rewrites the licence field of the vendored lock files
 python -m venv .venv && .venv/Scripts/pip install -r gateway/requirements-dev.txt   # macOS/Linux: .venv/bin/
-.venv/Scripts/python -X utf8 -m pytest gateway/tests -q        # 381 passed, 2 skipped (the 2 need a live Zetaris)
+.venv/Scripts/python -X utf8 -m pytest gateway/tests -q        # 382 passed, 2 skipped (the 2 need a live Zetaris)
 ```
 
-Wall time on that clone: 56 s from `npm ci` to the last test, the Python package install included (the clone itself not timed); `git status` was clean afterwards. The same steps run in CI on `windows-latest` ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)), plus the agent and UI suites again with the clock moved forward 400 days (no test reads today's date); the CI run on `fd172e9`, the commit with the answer gate and the demo run, passed.
+Wall time on that clone: 54 s from `npm ci` to the last test, the Python package install included (the clone itself not timed); `git status` was clean afterwards. The same steps run in CI on `windows-latest` ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)), plus the agent and UI suites again with the clock moved forward 400 days (no test reads today's date); the CI run on `fd172e9`, the commit with the answer gate and the demo run, passed, and so did the runs on `f60fdb0` and `5562457` (26 Oct).
 
 </details>
 
@@ -129,6 +129,10 @@ npm run dev                                            # terminal 2: http://127.
 - `npm run onboard` took 501.5 s on 25 Oct (most of it the six `RUN DQ` statements); `npm run onboard -- --skip-dq` is the 32-second idempotency check. Onboarding and a question never run at the same time (a lock file).
 - Every statement the runner and the gateway send is checked against `gateway/allowlist.py` (hosts `www.fema.gov`, `data.sec.gov`, `company-dns.mediumroast.io` and the `noaa-ghcn-pds` bucket; only `CW_*` databases, the `cw` container and the `lightning.metastore.crosswalk` namespace) and logged with its sha256 to `data/evidence/sql_log.jsonl`.
 - The SQL files carry a User-Agent placeholder that is filled from `CW_USER_AGENT` on the wire only.
+- The opaque-column experiment ([Evaluation](#evaluation)) has three steps:
+  1. `.venv\Scripts\python -X utf8 -m gateway.run_sql zetaris\sql\11_cw_opaque_create.sql --skip-exists` creates and caches the `cw.opq_*` copies of the question's views, with columns renamed `c1`, `c2`, ...
+  2. Restart the gateway: it reads the list of copies, `zetaris/manifest-opaque.json`, at start.
+  3. `cmd /c "npm run ask -- --quarter CY2025Q1 --cold --opaque"` probes the copies instead of the originals, with no memory context.
 
 **Command line** (from `agent/`): `npm run replay -- <run_id>` prints a saved run without the model or the gateway; `npm run cli -- runs` lists runs; `npm run cli -- why <memory_id>` prints the ledger of one memory; `npm run cli -- known --left <object.column> --right <object.column>` answers "what did we know about this key, and since when" (a period-specific view is named by its family, for example `--left cw.seed_submissions_snapshot.cik10 --right "cw.frames_*_CY2025Q1.cik"`). The HTTP API the UI is built on is in [`docs/api.md`](docs/api.md).
 
@@ -172,6 +176,7 @@ Zetaris is Crosswalk's only runtime path to data. Instance: local Docker, Zetari
 | `CW_DNS.sic_codes_v4_raw` -> `cw.sic_codes` | company_dns SIC list | 1,005 codes |
 | `CW_GHCN.ghcn_<year>_<element>` -> `cw.ghcn_<year>_<element>` | GHCN-Daily parquet, 2024 and 2025, TMAX and TMIN, filtered to the seed stations plus one validation station | 57 stations each; degree days equal an independent parquet read to 0.01 |
 | `cw.states`, `cw.utility_states`, `cw.seed_stations`, `cw.seed_utility_names` | the committed seed files as inline `VALUES` views | 51, 97 pairs, 56, 43 rows |
+| `cw.opq_*` (8 views, created 26 Oct) | copies of the eight views the question probes, with every column renamed `c1`, `c2`, ..., for the opaque-column experiment (`zetaris/sql/11_cw_opaque_create.sql`, listed in `zetaris/manifest-opaque.json`) | each equal to its source: 43, 1,937, 116, 97, 51, 56, 133,039 and 1,005 rows (`11_cw_opaque_select.sql`) |
 
 Every view is cached; the gateway's warm-up keeps 63 cache targets (its `/health` reported 63 already cached on 25 Oct).
 
@@ -213,22 +218,28 @@ The engines come from [Meterless/Meterless](https://github.com/Meterless/Meterle
 
 ## NVIDIA: Nemotron 3 Nano 4B, locally
 
-**In one line:** every key the model proposed was measured in Lightning SQL before anything could use it, and the 7 of its 11 proposals that do not join were REJECTED there; on this question that guard, not the model, carries the result, since the deterministic baseline proposed more keys that join (25 of 30 VERIFIED against 3 of 11) and the no-model run reaches the same answer faster (below).
+**In one line:** every key the model proposed was measured in Lightning SQL before anything could use it, and the 7 of its 11 proposals that do not join were REJECTED there; on this question that guard, not the model, carries the result, since the deterministic baseline proposed more keys that join (25 of 30 VERIFIED against 3 of 11) and the no-model run reaches the same answer faster (below). With the column names hidden, the model found no key either (0 of 8 VERIFIED).
 
 `nemotron-3-nano:4b` (Q4_K_M) runs in local Ollama (tested with 0.40.7): temperature 0, seed 7, `num_ctx` 8192, JSON-schema output validated on the host, one call at a time. The model host must be a loopback address; any other host is refused and counted (0 in every run), so cloud model calls are 0 by construction. Nemotron does two jobs and computes nothing:
 
 1. **The planner** (think on): picks the next step among those the checklist allows, and in `propose_keys` chooses up to six `{left, right, transform}` pairs from an enumerated menu of the probed columns, so an invented view or column cannot be expressed. Every valid proposal is measured in Lightning SQL before anything uses it.
 2. **The note** (think off): 100 to 250 words from the tool outputs. Every number must match a tool output and the words are checked against the run's facts; a failing draft gets one repair, then the template note.
 
-Measured ([`docs/eval-report.md`](docs/eval-report.md), section 5; one run per setting on the same code):
+Measured on 26 Oct: the cold Q1 2025 question, three runs per setting, interleaved on one card, code `f60fdb0`. Details are in [`docs/eval/round3.md`](docs/eval/round3.md), section 1.
 
-| Setting | Wall | Output tokens | Median planner tokens/s | Model proposals: made / VERIFIED / PARTIAL / REJECTED | Answer |
-|---|---|---|---|---|---|
-| think on | 275.2 s | 22,047 | 132.9 | 1 / 0 / 1 / 0 | the 12-row answer |
-| think off | 227.9 s | 15,813 | 133.1 | 2 / 1 / 0 / 1 | identical |
-| no model (the baseline proposes, the host takes every step) | 88.4 s | 0 | n/a | n/a | identical |
+| Setting | Wall, median (min to max), n = 3 | Output tokens, median | Median planner tok/s | Model proposals over 3 runs: made / VERIFIED / PARTIAL / REJECTED | Host fallback steps per run | Answer |
+|---|---|---|---|---|---|---|
+| think on, Q4_K_M (the shipped setting) | 274.2 s (268.4 to 317.9) | 22,666 | 136.5 | 6 / 3 / 2 / 1 | 4, 4, 8 | the 12-row answer, 3 of 3 |
+| think off, Q4_K_M | 216.0 s (211.7 to 219.1) | 14,733 | 136.3 | 6 / 3 / 0 / 3 | 8, 7, 7 | identical, 3 of 3 |
+| think on, Q8_0 | 347.8 s (297.5 to 400.0) | 22,140 | 100.9 | 5 / 1 / 1 / 3 | 6, 6, 6 | identical, 3 of 3 |
+| no model (the baseline proposes, the host takes every step) | 87.5 s (87.1 to 90.2) | 0 | n/a | n/a | 25, 25, 25 | identical, 3 of 3 |
 
-The model holds 2,881 MiB of VRAM (Ollama's figure at context 8192). The 47.3 s gap between think on and think off is the size of the spread between the four think-on cold runs (38.1 s), so with one think-off run it is not claimed as an effect of thinking. The no-model run reaches the same answer and the same governed keys in 32% of the think-on wall time.
+The model holds 2,881 MiB of VRAM at Q4_K_M and 4,066 MiB at Q8_0 (Ollama's figures at context 8192). What the repeats say:
+- **No model is fastest.** The no-model runs reach the same answer and the same governed keys in 32% of the think-on median.
+- **Think off beats think on on time, with the same keys.** Every think-off run was faster than every think-on run, with a third fewer output tokens and the same 3 of 6 model keys VERIFIED, though with more replies rejected and more host fallback steps. On this question the shipped think-on setting therefore costs about a minute and buys no keys. That rests on three runs each, and the setting is not changed here.
+- **Q8_0 is worse on both counts:** slower (about 101 against 136 tok/s) and fewer keys (1 of 5 VERIFIED).
+- **The model reloads mid-run.** In every run with the model, the card memory dropped 2 to 6 times by the model's size (about 3,150 MiB at Q4_K_M, 4,330 MiB at Q8_0) and came back: the model was unloaded and reloaded. The slowest think-on run started with 1,802 MiB of free host RAM, under the agent's 2,048 MiB RAM guard.
+- **The Day-2 single runs** (think on 275.2 s, no model 88.4 s; [`docs/eval-report.md`](docs/eval-report.md) section 5) fall inside these ranges. The Day-2 think-off run, 227.9 s, is 8.8 s above this round's think-off range.
 
 ## How Cursor was used
 
@@ -236,9 +247,9 @@ Developed in Cursor; details in [docs/how-cursor-was-used.md](docs/how-cursor-wa
 
 ## Evaluation
 
-All numbers are measured unless labelled otherwise. Day 0, Day 1 and Day 2 are the three build sessions of 25 Oct 2026 (SGT); the evaluation runs are the Day-2 runs. The full report is [`docs/eval-report.md`](docs/eval-report.md), generated by `agent/src/eval/run.ts` from seven saved Day-2 runs; its summary JSON and the side files are indexed in [`docs/eval/README.md`](docs/eval/README.md). The runs used code `6652e2f`, `ee04b0c` and `fc130bd`; between `fc130bd` and `cc0ac3c`, the code outside `docs/` changed only in the server's view functions (`agent/src/ops/cells.ts`, `agent/src/ops/usl.ts`), the UI, the header labels of the CLI replay (`agent/src/cli.ts`), the evaluation tools (`agent/src/eval/`), tests and CI; besides that, the configuration example dropped one unused key, two Zetaris SQL files changed in comments only, and one unused inherited script was removed from `scripts/`. After `cc0ac3c`, the answer gate was added (`agent/src/tools/discovery.ts`, `agent/src/loop/tools.ts`), with the committed demo run's fallback in the run store and the server (`agent/src/ops/runStore.ts`, `agent/src/runtime.ts`, `agent/src/server.ts`) and its run label (`ui/lib.js`), the offline replay (`agent/src/eval/gateReplay.ts`) and two scripts (`scripts/make_demo_run.py`, `scripts/sic_outside_check.py`); no saved run used that code.
+All numbers are measured unless labelled otherwise. Day 0, Day 1 and Day 2 are the three build sessions of 25 Oct 2026 (SGT); the evaluation runs are the Day-2 runs. The full report is [`docs/eval-report.md`](docs/eval-report.md), generated by `agent/src/eval/run.ts` from seven saved Day-2 runs; its summary JSON and the side files are indexed in [`docs/eval/README.md`](docs/eval/README.md). The runs used code `6652e2f`, `ee04b0c` and `fc130bd`; between `fc130bd` and `cc0ac3c`, the code outside `docs/` changed only in the server's view functions (`agent/src/ops/cells.ts`, `agent/src/ops/usl.ts`), the UI, the header labels of the CLI replay (`agent/src/cli.ts`), the evaluation tools (`agent/src/eval/`), tests and CI; besides that, the configuration example dropped one unused key, two Zetaris SQL files changed in comments only, and one unused inherited script was removed from `scripts/`. After `cc0ac3c`, the answer gate was added (`agent/src/tools/discovery.ts`, `agent/src/loop/tools.ts`), with the committed demo run's fallback in the run store and the server (`agent/src/ops/runStore.ts`, `agent/src/runtime.ts`, `agent/src/server.ts`) and its run label (`ui/lib.js`), the offline replay (`agent/src/eval/gateReplay.ts`) and two scripts (`scripts/make_demo_run.py`, `scripts/sic_outside_check.py`); no saved run of 25 Oct used that code. The runs of 26 Oct did: they used `f60fdb0` (that code plus the evidence records' cache time) and `5562457` (plus the opt-in opaque-column path: `--opaque`, `zetaris/manifest-opaque.json`, `zetaris/sql/11_cw_opaque_*.sql`), [`docs/eval/round3.md`](docs/eval/round3.md).
 
-**Reproducible.** 6 cold runs of the demo question (think on, think off, no model) give the same 12-row answer in every field and the same numbers and orphans for the 7 governed join-map keys; all 7 Day-2 answers equal the Day-1 reference runs.
+**Reproducible.** 6 cold runs of the demo question (think on, think off, no model) give the same 12-row answer in every field and the same numbers and orphans for the 7 governed join-map keys; all 7 Day-2 answers equal the Day-1 reference runs. On 26 Oct, twelve more cold runs (three each of think on, think off, Q8_0 and no model, code `f60fdb0`) gave the same 12 rows in every field ([`docs/eval/round3.md`](docs/eval/round3.md)).
 
 **The join map** (every cold run):
 
@@ -263,6 +274,15 @@ In the warm Q1 2024 run the FEMA state key (coverage) measures 8 of 11 = 0.727, 
 
 The two runs recorded for the video, outside the evaluation, replay the same way: the cold Q1 2025 run gives its 12 rows and the warm Q1 2023 run its 16 rows unchanged (its join map has no FEMA state key for that quarter, so its coverage is reported as not measured). The weather statements are not replayed (a run keeps only the first 20 rows of each statement, and the weather statements return 28); the weather path runs unchanged when its key passes. The same replay runs in the unit tests on the committed redacted fixtures (`agent/test/answer-gate.test.ts`).
 
+**The answer gate, live (26 Oct).** Thirteen live runs went through the gate (code `f60fdb0`; each column's decision as the run file records it; run ids in [`docs/eval/round3.md`](docs/eval/round3.md), section 2):
+
+| Runs | FEMA FIPS key (form, gated) | FEMA state key (coverage, reported) | CIK key | Station key | Answer |
+|---|---|---|---|---|---|
+| 12 cold Q1 2025 runs (3 each: think on, think off, Q8_0, no model) | VERIFIED 8/8, passes | PARTIAL 7/8, orphan AK | VERIFIED 42/43, passes | VERIFIED 56/56, passes | the same 12 rows as the Day-2 reference in every field, 12 of 12 |
+| 1 warm Q1 2024 run (`r20261026T02401036cf`) | VERIFIED 8/8 (recalled), passes | REJECTED 8/11, orphans AK, ME, VT | VERIFIED 42/43 (recalled), passes | VERIFIED 56/56 (recalled), passes | the same 16 rows as the Day-2 warm run; weather Not-tested |
+
+The live result is the result of the offline replay. The warm run took 252.2 s (194.1 s on Day 2) and skipped 8 measure steps from memory.
+
 **The model against the deterministic baseline.** On the same probes, over the five cold runs with the model: the deterministic name-and-statistics baseline proposed 30 keys and 25 were VERIFIED; the model proposed 11 and 3 were VERIFIED (1 PARTIAL, 7 REJECTED, 0 unmeasurable). **The baseline wins.** Every key the model got VERIFIED (the FEMA FIPS key, `utility_states.state ~ states.code`, `hq_state ~ seed_stations.state`) was also measured from a baseline proposal (its scored six or its measure queue) in the same run, so the runs show no key the model found that the baseline missed. Counted as distinct keys over the five runs (`docs/eval/summary.json`, `l2.keys_found`), the baseline's scored proposals VERIFIED 6 distinct keys (cik, loc, station, sic and two generic pairs) and the model's 3, with no key in both: the model's three are the governed FEMA FIPS key and two generic state-code pairs, each outside the baseline's scored six but named on the same join-map row as a baseline proposal from its measure queue (ranks 7 to 24). The model is kept as a second proposer whose every proposal is measured in Lightning SQL before anything uses it; nothing it proposes is trusted unmeasured.
 
 | Cold run (setting) | Model: made / VERIFIED / PARTIAL / REJECTED | Baseline: made / VERIFIED / PARTIAL / REJECTED |
@@ -274,14 +294,30 @@ The two runs recorded for the video, outside the evaluation, replay the same way
 | `r20261025T161313168c` (think off) | 2 / 1 / 0 / 1 | 6 / 5 / 0 / 1 |
 | **Total** | **11 / 3 / 1 / 7** | **30 / 25 / 0 / 5** |
 
-**Against doing it by hand.** The five keys were also found and verified by hand through the same gateway, one statement at a time, each result read before choosing the next: 27 statements, 2 lookups, 24 decisions, 179.5 s from the first step to the last statement. The agent's cold run takes 247.7 to 285.8 s with the model (median 275.8 s, 60 statements), 194.1 s warm and 88.4 s with no model, and asks the user for none of the 24 decisions. **The 179.5 s is not a person's time:** the hand session ran statements prepared in advance as gateway templates, so it does not time writing or reading SQL, and no comparison of a person's speed with the agent's is made here. What the agent adds is everything after the keys: every key measured with its orphans, the governed USL and its DQ, the 12-row answer with a citation per number, a checked note, and memory that makes the next question skip the measured keys.
+**With the column names hidden (26 Oct).** Can the model find keys that the column names do not reveal? The setup:
+- The eight views the question probes were copied as `cw.opq_*` views with every column renamed `c1`, `c2`, ..., and the same rows (`zetaris/sql/11_cw_opaque_create.sql`).
+- `ask --opaque` probed the copies cold, with no memory context, and with every non-floating-point column on the menu: 38 columns, each with its distinct count and two sample values.
+- Three runs were made with the model and three without; details in [`docs/eval/round3.md`](docs/eval/round3.md), section 3.
+
+**Neither proposer found a key.**
+
+| | Runs | Proposals made | VERIFIED / PARTIAL / REJECTED | Answer | Wall, median |
+|---|---|---|---|---|---|
+| Model (think on, Q4_K_M) | 3 | 8 (6, 1, 1) | 0 / 0 / 8 | withheld by the gate in all 3 (no gate key measured) | 300.7 s |
+| Deterministic baseline (no model) | 3 | 0 | n/a | not reached: nothing to measure, the run stops after `propose_keys` | 124.3 s |
+
+- **The model:** three of its eight proposals paired columns that do hold the same two-letter state codes, but counted the wider table: 7 of 43 and 8 of 51. Counted from the FEMA side, the same pairs measure 7 of 8 and 8 of 8 (measured by hand afterwards). It never proposed the CIK, station or FIPS pairs the answer needs.
+- **The baseline** classifies columns by name, so it had nothing to propose.
+- **A limit of the measurement itself:** a perfect proposer could not have reached the revenue column through the generic statement. It applies the transform to the counted side only, so the padded CIK key measures 34 of 1,937 (frames counted) or 0 of 43 (snapshot counted). The FEMA FIPS and station keys would have measured 8 of 8 and 56 of 56.
+
+**Against doing it by hand.** The five keys were also found and verified by hand through the same gateway, one statement at a time, each result read before choosing the next: 27 statements, 2 lookups, 24 decisions, 179.5 s from the first step to the last statement. The agent's cold run takes 247.7 to 285.8 s with the model (median 275.8 s over four Day-2 runs, 60 statements; median 274.2 s over three runs on 26 Oct), 194.1 s warm and 87.5 s with no model (median of three runs on 26 Oct; 88.4 s on Day 2), and asks the user for none of the 24 decisions. **The 179.5 s is not a person's time:** the hand session ran statements prepared in advance as gateway templates, so it does not time writing or reading SQL, and no comparison of a person's speed with the agent's is made here. What the agent adds is everything after the keys: every key measured with its orphans, the governed USL and its DQ, the 12-row answer with a citation per number, a checked note, and memory that makes the next question skip the measured keys.
 
 | | Statements | Decisions asked of the user | Wall | Also produces |
 |---|---|---|---|---|
 | By hand (pre-written statements) | 27 | 24 | 179.5 s | the five keys and their orphans |
 | Agent, cold, think on (median) | 60 | 0 | 275.8 s | keys, answer with provenance, USL check, live DQ, checked note |
 | Agent, warm (Q1 2024) | 46 | 0 | 194.1 s | the same for Q1 2024, verified keys recalled (saved before the answer gate; replayed under it, the same 16 rows) |
-| Agent, cold, no model | 56 | 0 | 88.4 s | the same answer and governed keys, template note |
+| Agent, cold, no model (median of 3, 26 Oct) | 56 | 0 | 87.5 s | the same answer and governed keys, template note |
 
 **Outside checks.** OpenFEMA fetched over HTTPS outside Zetaris equals the cached views in both quarters (Q1 2025: 116 rows / 10 declarations / 8 states; Q1 2024: 72 / 14 / 11; per-state counts equal). Two utilities' FY2024 10-K service territories, read from SEC EDGAR: Evergy's (KS, MO) equals the seed; PPL's names Virginia as well, which the seed leaves out; no Virginia major-disaster declaration is dated in either quarter, so neither answer changes. SEC's own SIC code list against the company_dns list the SIC rule reads: 4900 (MGE Energy's code) is on SEC's list and not on company_dns's, one of 172 such codes ([`docs/eval/sic-check.json`](docs/eval/sic-check.json)).
 
@@ -293,7 +329,7 @@ The two runs recorded for the video, outside the evaluation, replay the same way
 - **A VERIFIED rate measures containment, not meaning.** Two lists of US state codes overlap, so `utility_states.state ~ seed_stations.state` (43 of 43) is VERIFIED although nobody would join on it; the join map shows such generic pairs beside the governed keys without saying so.
 - **Coverage is reported, not gated.** The gate asks whether the codes join, not how much of the question the seed utilities cover: a declared state that no seed utility serves drops out of the answer, and the answer card and the join map name it (AK in Q1 2025; AK, ME and VT in Q1 2024) instead of withholding the table. Only a state join that returns no rows at all (the FEMA state key at 0 matched rows) withholds the FEMA selection. The gate covers the three keys named above and that empty-join case, not the other pairs on the map.
 - **Recalled keys are not re-measured.** A warm run uses a recalled key with the numbers of the run that measured it, on that run's views (the CIK key measured on the CY2025Q1 frames is used for CY2024Q1); the join map marks it as recalled with the key it was measured as, and the gate accepts it.
-- **The model's proposals are weaker than the baseline's** on this data (above), and 2 to 8 checklist steps per run were taken by the host after invalid planner replies.
+- **The model's proposals are weaker than the baseline's** on this data (above), and 2 to 8 checklist steps per run were taken by the host after invalid planner replies. With the column names hidden, neither side found a key (the model 0 of 8 VERIFIED; the name-based baseline proposed none), and the generic match-rate statement cannot verify a key whose transform belongs on the side it does not count (the padded CIK).
 - **The live DQ covers two rules**; the other four and the MGE finding come from the onboarding file, dated on screen.
 - **Warm-run weather** is Not-tested when the year-earlier GHCN views are not among the objects the agent knows (its manifest and its own run-time registrations). The 2022 and 2023 views registered by an operator call before the video was recorded are therefore invisible to it, and the recorded Q1 2023 answer lists weather as Not-tested, saying the views are not registered.
 - **No least-privilege reader.** The gateway runs read templates on the admin login behind its reader allowlist; `/health` reports `admin_fallback`.
@@ -301,24 +337,25 @@ The two runs recorded for the video, outside the evaluation, replay the same way
 
 ## What did not go well
 
-- **The model loses the key-proposal comparison** (3 of 11 VERIFIED against 25 of 30), and the no-model run reaches the identical answer and governed keys in 88.4 s against 247.7 to 285.8 s with the model. On this question the planner and the note add time, not keys.
+- **The model loses the key-proposal comparison** (3 of 11 VERIFIED against 25 of 30), and the no-model runs reach the identical answer and governed keys in a median 87.5 s against 274.2 s with the model (three runs each, 26 Oct). On this question the planner and the note add time, not keys.
+- **The shipped setting is not the fastest one, and the second quantisation is worse.** In three runs each, think off was faster than think on in every run (median 216.0 s against 274.2 s) and got the same 3 of 6 model keys VERIFIED. Q8_0 was slower (median 347.8 s, about 101 tok/s against 136) and got 1 of 5 VERIFIED.
 - **Model choices nobody would try:** `utility_states.cik ~ states.fips` (0 of 43), `utility_states.state ~` the FEMA `fips_state_code` (0 of 43), the frames `cik ~ sic_codes.code` under lpad10 (0 of 1,937). Lightning SQL rejects each, which is the design, but each costs a planner step and a statement.
 - **Planner replies:** 125 of 157 planner calls were valid over the six runs with the model; the host took 2 to 8 checklist steps itself per run.
 - **The note:** the model's draft was replaced by the template in 3 of the 6 runs with the model. One earlier draft said revenue "held up" while EIX and POR fell and passed the verifier of that commit; the rule was fixed (`c090bc1`) and the later runs carry the fix.
-- **The model unloaded and reloaded mid-run** (the card memory fell by about 3,150 MiB for about two seconds, 3 times with think on and 2 with think off). The agent's host-RAM guard is the likely cause, but its events are not saved in the run file, so the cause is not verified.
+- **The model unloaded and reloaded mid-run** (the card memory fell by about 3,150 MiB for about two seconds, 3 times with think on and 2 with think off on Day 2; on 26 Oct 3 to 4 times per think-on run, 2 per think-off run and 4 to 6 per Q8_0 run). The agent's host-RAM guard is the likely cause: the slowest think-on run of 26 Oct (317.9 s) started with 1,802 MiB of free host RAM, under the guard's 2,048 MiB. The guard's events are not saved in the run file, so the cause is not verified.
 - **`cw.stations` is the slow object:** probing it costs about 27 s per cold run, and the two degree-day statements take about 18 s each.
-- **"Source cached at: not reported by the gateway"** in every provenance drawer of the saved runs. The gateway reports, per source object, the time of the last `CACHE TABLE` statement in its SQL log since the Zetaris driver started, and returned none (0 of 60 statements in the cold run `r20261025T1546471209`, 0 of 46 in the warm run); each statement's own cache state, `hit` or `miss`, is reported. Finding why needs the running gateway, so the drawer still says "not reported".
+- **"Source cached at: not reported by the gateway"** in every provenance drawer of the 25 Oct runs (0 of 60 statements in the cold run `r20261025T1546471209`, 0 of 46 in the warm run). The gateway did report it (per source object, the time of the last `CACHE TABLE` in its SQL log since the Zetaris driver started; checked live on 26 Oct), but the discovery tools dropped it on the way to the evidence record. Fixed on 26 Oct (`f60fdb0`, with a test that fails on the old code): the runs of 26 Oct carry it on every statement over a cached view, and the drawer reads, for example, "statement cache hit; source cached at 25 Oct 2026 08:32:10 SGT" (checked in a browser); the two live DQ statements read the semantic layer, not a cached view, and have none. The committed demo run was saved before the fix and still says "not reported".
 - **An earlier version read `cw.seed_utilities` on the question path** (about 17 s per statement, 11 statements per run, cold runs of 403 to 452 s on Day 1). The question path now reads a snapshot taken at onboarding; 0 such reads in the Day-2 runs.
 
 ## Not measured
 
 - A person's time to find, write and read the manual-baseline SQL (the 179.5 s session ran pre-written statements).
-- More than one run per ablation setting; think off or no model on the warm question; a second quantisation of the model.
+- Think off, no model or Q8_0 on the warm question (the repeated ablation of 26 Oct is on the cold question only); more than three runs per setting.
 - Revenue against the companies' own 10-Q figures; the served states of the other 41 seed utilities against their 10-Ks.
 - A run-time registration in the Day-2 runs (they all answered `already_registered`; the evidence is the Day-1 warm run and the warm run recorded for the video).
 - The full onboarding DQ pass on Day 2 (the DQ file is from 25 Oct 13:46 SGT), and statement times under concurrent questions.
 - A from-scratch install of the Zetaris objects on a new instance (Quickstart B is the order in which they were created on 25 Oct).
-- A live question under the answer gate: the gate is unit-tested and replayed offline on the saved runs (above), but no run with the live stack has gone through it.
+- A live run in which the gate withholds because a key was measured and REJECTED. The ordinary live runs of 26 Oct all passed it; the three opaque-column runs with the model were withheld because no gate key was measured at all. The REJECTED paths are unit-tested and replayed offline only.
 
 ## Responsible use
 
