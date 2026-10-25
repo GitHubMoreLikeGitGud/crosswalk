@@ -103,6 +103,7 @@ export const PARAM_PATTERNS = {
   cik_list: /^\d{10}(,\d{10}){0,59}$/u,
   dq_rule: /^(utility\.sic|utility_state\.cik|utility_state\.state|fema_declaration\.state|station\.state|revenue_quarter\.cik)$/u,
   catalogue_id: /^[a-z][a-z0-9_]{0,63}$/u,
+  transform: /^(identity|upper|lpad10|substr\([1-9]\d?,[1-9]\d?\)|strip_prefix\('US-'\)|yyyymmdd_to_date|iso_to_quarter)$/u,
 } as const;
 export type ParamKind = keyof typeof PARAM_PATTERNS;
 
@@ -161,6 +162,9 @@ export const TEMPLATE_PARAMS: Record<string, Record<string, ParamKind>> = {
   joinmap_station: {},
   joinmap_sic: {},
   joinmap_sic_orphans: {},
+  // Any proposed key (D16): C1's match-rate statement over two manifest views (columns checked against DESCRIBE), 60 s.
+  match_rate: { left_object: "cw_object", left_column: "column", right_object: "cw_object", right_column: "column", transform: "transform" },
+  match_rate_orphans: { left_object: "cw_object", left_column: "column", right_object: "cw_object", right_column: "column", transform: "transform" },
 };
 
 /** The templates gateway/templates.py marks onboarding_only (minutes-long DQ statements): the
@@ -178,6 +182,9 @@ export function isOnboardingOnly(templateId: string): boolean {
 export const TEMPLATE_TIMEOUT_MS: Record<string, number> = {
   dq_run: 930_000,
   dq_invalid: 930_000,
+  // 60 s statement bound, plus the first DESCRIBE of each view (cached per object by the gateway, up to 60 s each).
+  match_rate: 190_000,
+  match_rate_orphans: 190_000,
 };
 
 /** Parameter kinds per registrar action, mirroring gateway/templates.py REGISTRAR_PLANS. Each

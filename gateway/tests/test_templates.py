@@ -6,7 +6,9 @@ from gateway.templates import BadParams, Plan, Step, Template, render
 SAMPLES = {"cik10": "0001326160", "tag": "Revenues", "period": "CY2025Q1", "year": "2025", "quarter": "1",
            "station": "USW00013740", "station_list": "USW00013740,USW00013722", "element": "TMAX", "sic": "4931",
            "fema_quarter": "CY2025Q1", "cw_object": "cw.states", "column": "state", "cik_list": "0001326160,0000092122",
-           "dq_rule": "utility.sic", "catalogue_id": "sec_frames"}
+           "dq_rule": "utility.sic", "catalogue_id": "sec_frames", "transform": "lpad10"}
+# match_rate needs two different views (a view is referenced once per statement)
+SAMPLE_OVERRIDES = {"match_rate": {"right_object": "cw.utility_states"}, "match_rate_orphans": {"right_object": "cw.utility_states"}}
 USL = "lightning.metastore.crosswalk.crosswalk_usl"
 
 FRAMES_CREATE = Template(
@@ -24,7 +26,7 @@ def test_sample_params_cover_every_kind():
 @pytest.mark.parametrize("tid", sorted(templates.TEMPLATES))
 def test_every_template_renders_and_passes_its_role(tid):
     t = templates.TEMPLATES[tid]
-    params = {name: SAMPLES[kind] for name, kind in t.params.items()}
+    params = {name: SAMPLES[kind] for name, kind in t.params.items()} | SAMPLE_OVERRIDES.get(tid, {})
     _, sql = render(tid, params)
     assert "{" not in sql
     assert t.role in ("reader", "registrar")
@@ -251,7 +253,7 @@ def test_crosswalk_reader_templates_read_the_cached_views():
 def test_joinmap_templates_measure_distinct_left_keys_over_cached_views():
     _, a = render("joinmap_cik", {"period": "CY2025Q1"})
     assert a.startswith("SELECT COUNT(DISTINCT l.k) AS left_keys, COUNT(DISTINCT CASE WHEN r.k IS NOT NULL THEN l.k END) AS matched_keys")
-    assert "FROM (SELECT DISTINCT cik AS k FROM cw.seed_utilities) l LEFT JOIN (" in a
+    assert "FROM (SELECT DISTINCT cik10 AS k FROM cw.seed_submissions_snapshot) l LEFT JOIN (" in a
     assert a.count("LPAD(CAST(cik AS STRING), 10, '0')") == 3 and "cw.frames_Revenues_CY2025Q1" in a
     assert "cw.frames_RegulatedAndUnregulatedOperatingRevenue_CY2025Q1" in a and "CY2024" not in a
     _, b = render("joinmap_loc", {"period": "CY2024Q1"})
@@ -261,20 +263,23 @@ def test_joinmap_templates_measure_distinct_left_keys_over_cached_views():
     _, d = render("joinmap_station", {})
     assert "FROM cw.seed_stations) l LEFT JOIN cw.stations r ON r.id = l.k" in d and "state_equal" in d
     _, e = render("joinmap_sic", {})
-    assert "cw.seed_utilities" in e and "cw.sic_codes" in e and "left_rows" in e
+    assert "cw.seed_submissions_snapshot" in e and "cw.sic_codes" in e and "left_rows" in e
     for tid in ("joinmap_cik_orphans", "joinmap_fema_state_orphans", "joinmap_sic_orphans"):
         params = {name: SAMPLES[kind] for name, kind in templates.TEMPLATES[tid].params.items()}
         sql = render(tid, params)[1]
         assert sql.endswith("LIMIT 10") and "IS NULL" in sql
     _, ctl = render("joinmap_cik_control", {"period": "CY2025Q1"})
-    assert ctl.count("CAST(cik AS STRING) AS k") == 3 and "LPAD" not in ctl and ctl.count("cw.seed_utilities") == 1
+    assert ctl.count("CAST(cik AS STRING) AS k") == 3 and "LPAD" not in ctl and ctl.count("cw.seed_submissions_snapshot") == 1
     _, fips = render("joinmap_fema_fips", {"quarter": "CY2024Q1"})
     assert "SELECT DISTINCT fips_state_code AS k FROM cw.fema_declarations_dr_2024q1) l" in fips
     assert "LEFT JOIN (SELECT DISTINCT fips AS k FROM cw.states) r ON r.k = l.k" in fips
     for tid in ("joinmap_cik_control", "joinmap_fema_fips"):
         assert templates.TEMPLATES[tid].role == "reader" and "CW_" not in templates.TEMPLATES[tid].sql
-    # a view is referenced once per statement (a second reference to cw.seed_utilities fails to resolve on 2.4.3.1)
-    assert render("joinmap_cik_orphans", {"period": "CY2025Q1"})[1].count("cw.seed_utilities") == 1
+    # a view is referenced once per statement (a second reference to a view fails to resolve on 2.4.3.1)
+    assert render("joinmap_cik_orphans", {"period": "CY2025Q1"})[1].count("cw.seed_submissions_snapshot") == 1
+    # D15: no question-path template reads cw.seed_utilities (17 s per read); the onboarding snapshot replaces it
+    for tid, t in templates.TEMPLATES.items():
+        assert "cw.seed_utilities " not in t.sql + " " and "cw.seed_utilities)" not in t.sql, tid
     for tid in ("joinmap_cik", "joinmap_loc", "joinmap_fema_state", "joinmap_station", "joinmap_sic"):
         assert templates.TEMPLATES[tid].role == "reader" and "CW_" not in templates.TEMPLATES[tid].sql  # cached views only, never raw tables
 
@@ -417,3 +422,77 @@ def test_register_source_names_catalogue_entries_and_plans():
     assert set(templates.SOURCE_PLANS.values()) == {"register_fema", "register_stations", "register_frames", "register_submission", "register_ghcn"}
     assert "pudl" in entries and "pudl" not in templates.SOURCE_PLANS
     assert templates.registrar_actions()[-1] == "register_source" and "register_ghcn" in templates.registrar_actions()
+
+
+# -- match_rate (decision D16): any proposal, C1's statement, manifest views only, closed transform set ---------------
+C1_COUNTS = ("SELECT COUNT(DISTINCT l.k) AS left_keys, COUNT(DISTINCT CASE WHEN r.k IS NOT NULL THEN l.k END) AS matched_keys "
+             "FROM (SELECT DISTINCT LPAD(CAST(l.`cik` AS STRING), 10, '0') AS k FROM cw.frames_revenues_cy2025q1 l "
+             "WHERE LPAD(CAST(l.`cik` AS STRING), 10, '0') IS NOT NULL) l "
+             "LEFT JOIN (SELECT DISTINCT CAST(r.`cik10` AS STRING) AS k FROM cw.seed_submissions_snapshot r) r ON r.k = l.k")
+C1_ORPHANS = ("SELECT l.k AS orphan FROM (SELECT DISTINCT LPAD(CAST(l.`cik` AS STRING), 10, '0') AS k FROM cw.frames_revenues_cy2025q1 l "
+              "WHERE LPAD(CAST(l.`cik` AS STRING), 10, '0') IS NOT NULL) l "
+              "LEFT JOIN (SELECT DISTINCT CAST(r.`cik10` AS STRING) AS k FROM cw.seed_submissions_snapshot r) r ON r.k = l.k "
+              "WHERE r.k IS NULL AND l.k IS NOT NULL ORDER BY l.k LIMIT 10")
+MR = {"left_object": "cw.frames_revenues_cy2025q1", "left_column": "cik", "right_object": "cw.seed_submissions_snapshot",
+      "right_column": "cik10", "transform": "lpad10"}
+
+
+def test_match_rate_renders_c1_match_rate_sql():
+    # The same strings are asserted against agent/src/tools/matchRate.ts matchRateSql (agent/test/match-rate.test.ts).
+    from gateway import cache
+
+    t, sql = render("match_rate", MR)
+    assert sql == C1_COUNTS and allowlist.check(sql, "reader") == "read"
+    assert t.timeout_s == 60.0 and t.role == "reader" and not t.onboarding_only
+    assert t.describe_columns == (("left_object", "left_column"), ("right_object", "right_column"))
+    assert cache.resolve(t.raw_objects, MR) == ["cw.frames_revenues_cy2025q1", "cw.seed_submissions_snapshot"]
+    assert render("match_rate_orphans", MR)[1] == C1_ORPHANS
+
+
+@pytest.mark.parametrize("spec,expr", [
+    ("identity", "CAST(l.`c` AS STRING)"),
+    ("upper", "UPPER(CAST(l.`c` AS STRING))"),
+    ("lpad10", "LPAD(CAST(l.`c` AS STRING), 10, '0')"),
+    ("substr(4,2)", "SUBSTR(CAST(l.`c` AS STRING), 4, 2)"),
+    ("strip_prefix('US-')", "CASE WHEN CAST(l.`c` AS STRING) LIKE 'US-%' THEN SUBSTR(CAST(l.`c` AS STRING), 4) END"),
+    ("yyyymmdd_to_date", "CONCAT(SUBSTR(l.`c`, 1, 4), '-', SUBSTR(l.`c`, 5, 2), '-', SUBSTR(l.`c`, 7, 2))"),
+    ("iso_to_quarter", "CONCAT('CY', SUBSTR(l.`c`, 1, 4), 'Q', CAST(FLOOR((CAST(SUBSTR(l.`c`, 6, 2) AS INT) + 2) / 3) AS INT))"),
+])
+def test_transform_sql_is_the_closed_set_of_c1(spec, expr):
+    assert templates.transform_sql(spec, "l.`c`") == expr
+    _, sql = render("match_rate", {**MR, "left_column": "c", "transform": spec})
+    assert f"SELECT DISTINCT {expr} AS k FROM cw.frames_revenues_cy2025q1 l WHERE {expr} IS NOT NULL" in sql
+    assert allowlist.check(sql, "reader") == "read"
+
+
+@pytest.mark.parametrize("bad", ["trim", "lpad11", "substr(0,2)", "substr(4,2) ", "SUBSTR(4,2)", "strip_prefix('CA-')",
+                                 "identity; DROP TABLE x", "upper)", ""])
+def test_match_rate_refuses_a_transform_outside_the_closed_set(bad):
+    with pytest.raises(BadParams):
+        render("match_rate", {**MR, "transform": bad})
+
+
+@pytest.mark.parametrize("field,value", [
+    ("left_object", "won.ghcn_2025_tmax"), ("right_object", "cw.won_seed_utilities"), ("left_object", "cw.probe_values"),
+    ("right_object", "cw.clearshelf_products"), ("left_object", "CW_SEC.frames_Revenues_CY2025Q1"),
+    ("right_object", "cw.seed_utilities"),  # D15: onboarding only; the snapshot is read instead
+    ("left_column", "cik`) l --"), ("right_column", "cik10 AS k FROM cw.states"), ("left_column", "1cik"),
+    ("right_object", "cw.frames_revenues_cy2025q1"),  # the same view on both sides
+])
+def test_match_rate_refusals(field, value):
+    with pytest.raises(BadParams):
+        render("match_rate", {**MR, field: value})
+
+
+def test_match_rate_takes_exactly_its_five_parameters():
+    with pytest.raises(BadParams):
+        render("match_rate", {k: v for k, v in MR.items() if k != "transform"})
+    with pytest.raises(BadParams):
+        render("match_rate", {**MR, "sql": "SELECT 1"})
+
+
+def test_seed_utilities_is_refused_as_a_question_path_object():
+    for tid in ("describe_object", "sample_rows"):
+        with pytest.raises(BadParams, match="onboarding"):
+            render(tid, {"object": "cw.seed_utilities"})
+    assert render("describe_object", {"object": "cw.seed_submissions_snapshot"})[1] == "DESCRIBE cw.seed_submissions_snapshot"

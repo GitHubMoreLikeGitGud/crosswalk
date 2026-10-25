@@ -358,3 +358,70 @@ def test_reconnect_does_not_rewarm_the_same_driver(monkeypatch):
     n = len(conn.sql)
     gw.warmup()  # what start_warmup() runs after a reconnect
     assert conn.sql[n:] == []
+
+
+class DescribeConn(FakeConn):
+    """DESCRIBE answers the columns of two views; any other statement answers one count row."""
+
+    COLUMNS = {"cw.frames_revenues_cy2025q1": ["cik", "entityName", "loc"], "cw.seed_submissions_snapshot": ["cik10", "name", "sic"]}
+
+    def execute(self, sql, timeout_s=None, max_rows=None):
+        self.sql.append(sql)
+        if sql.startswith("DESCRIBE "):
+            cols = self.COLUMNS[sql.split()[1]]
+            return QueryResult(sql=sql, columns=["col_name", "data_type", "comment"], rows=[[c, "string", None] for c in cols] + [["", "", None], ["# Partitioning", "", None]],
+                               row_count=len(cols) + 2, elapsed_ms=3, executed_at="2026-10-24T17:00:00+0800")
+        return QueryResult(sql=sql, columns=["left_keys", "matched_keys"], rows=[[2000, 42]], row_count=1, elapsed_ms=5,
+                           executed_at="2026-10-24T17:00:00+0800")
+
+
+MATCH = {"left_object": "cw.frames_revenues_cy2025q1", "left_column": "cik", "right_object": "cw.seed_submissions_snapshot",
+         "right_column": "cik10", "transform": "lpad10"}
+
+
+def test_match_rate_checks_columns_against_describe_cached_per_object(temp_sql_log):
+    conn = DescribeConn()
+    c, _ = client(conn)
+    r = c.post("/sql/template", json={"template_id": "match_rate", "params": MATCH})
+    assert r.status_code == 200 and r.json()["rows"] == [[2000, 42]]
+    assert conn.sql[:2] == ["DESCRIBE cw.frames_revenues_cy2025q1", "DESCRIBE cw.seed_submissions_snapshot"]
+    assert conn.sql[2].startswith("SELECT COUNT(DISTINCT l.k) AS left_keys") and len(conn.sql) == 3
+    # a second call (the orphan statement) reuses the cached DESCRIBE output: one more statement, no DESCRIBE
+    r = c.post("/sql/template", json={"template_id": "match_rate_orphans", "params": MATCH})
+    assert r.status_code == 200 and len(conn.sql) == 4 and conn.sql[3].startswith("SELECT l.k AS orphan")
+    logged = [json.loads(line) for line in temp_sql_log.read_text(encoding="utf-8").splitlines()]
+    assert [e["sql"] for e in logged if e.get("source_file") == "gateway.describe_columns"] == conn.sql[:2]
+
+
+def test_match_rate_refuses_a_column_the_describe_output_lacks():
+    conn = DescribeConn()
+    c, _ = client(conn)
+    r = c.post("/sql/template", json={"template_id": "match_rate", "params": {**MATCH, "right_column": "cik"}})
+    assert r.status_code == 400 and "not a column of cw.seed_submissions_snapshot" in r.json()["error"]
+    assert not any(s.startswith("SELECT") for s in conn.sql)  # refused before the statement
+    r = c.post("/sql/template", json={"template_id": "match_rate", "params": {**MATCH, "left_column": "Partitioning"}})
+    assert r.status_code == 400  # DESCRIBE section rows are not columns
+
+
+def test_match_rate_refusals_before_any_statement():
+    conn = DescribeConn()
+    c, _ = client(conn)
+    for params in ({**MATCH, "transform": "trim"}, {**MATCH, "right_object": "cw.seed_utilities"}, {**MATCH, "left_object": "won.x"},
+                   {**MATCH, "right_object": "cw.frames_revenues_cy2025q1"}):
+        r = c.post("/sql/template", json={"template_id": "match_rate", "params": params})
+        assert r.status_code == 400
+    assert conn.sql == []
+
+
+def test_match_rate_describe_failure_is_a_502():
+    class Fails(DescribeConn):
+        def execute(self, sql, timeout_s=None, max_rows=None):
+            if sql.startswith("DESCRIBE"):
+                self.sql.append(sql)
+                raise ZetarisError("Table or view not found")
+            return super().execute(sql, timeout_s, max_rows)
+
+    conn = Fails()
+    c, _ = client(conn)
+    r = c.post("/sql/template", json={"template_id": "match_rate", "params": MATCH})
+    assert r.status_code == 502 and "DESCRIBE cw.frames_revenues_cy2025q1 failed" in r.json()["error"]

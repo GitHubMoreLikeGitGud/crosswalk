@@ -1,0 +1,316 @@
+{
+  "source_statement": "SELECT cik, name, ticker, sic, hq_state FROM cw.seed_utilities ORDER BY cik",
+  "snapshot_at": "2026-10-25T15:25:59+0800",
+  "elapsed_ms": 18074,
+  "rows_read": 43,
+  "columns": [
+    "cik10",
+    "name",
+    "ticker",
+    "sic",
+    "hq_state"
+  ],
+  "rows": [
+    [
+      "0000004904",
+      "AMERICAN ELECTRIC POWER CO INC",
+      "AEP",
+      "4911",
+      "OH"
+    ],
+    [
+      "0000065984",
+      "ENTERGY CORP /DE/",
+      "ETR",
+      "4911",
+      "LA"
+    ],
+    [
+      "0000066756",
+      "ALLETE INC",
+      "ALE",
+      "4931",
+      "MN"
+    ],
+    [
+      "0000072741",
+      "EVERSOURCE ENERGY",
+      "ES",
+      "4911",
+      "MA"
+    ],
+    [
+      "0000072903",
+      "XCEL ENERGY INC",
+      "XEL",
+      "4931",
+      "MN"
+    ],
+    [
+      "0000092122",
+      "SOUTHERN CO",
+      "SO",
+      "4911",
+      "GA"
+    ],
+    [
+      "0000096271",
+      "TAMPA ELECTRIC CO",
+      "",
+      "4911",
+      "FL"
+    ],
+    [
+      "0000100122",
+      "TUCSON ELECTRIC POWER CO",
+      "",
+      "4911",
+      "AZ"
+    ],
+    [
+      "0000104918",
+      "AVISTA CORP",
+      "AVA",
+      "4931",
+      "WA"
+    ],
+    [
+      "0000352541",
+      "ALLIANT ENERGY CORP",
+      "LNT",
+      "4931",
+      "WI"
+    ],
+    [
+      "0000354707",
+      "HAWAIIAN ELECTRIC INDUSTRIES INC",
+      "HE",
+      "4911",
+      "HI"
+    ],
+    [
+      "0000715957",
+      "DOMINION ENERGY, INC",
+      "D",
+      "4911",
+      "VA"
+    ],
+    [
+      "0000753308",
+      "NEXTERA ENERGY INC",
+      "NEE",
+      "4911",
+      "FL"
+    ],
+    [
+      "0000755001",
+      "UNITIL CORP",
+      "UTL",
+      "4931",
+      "NH"
+    ],
+    [
+      "0000764622",
+      "PINNACLE WEST CAPITAL CORP",
+      "PNW",
+      "4911",
+      "AZ"
+    ],
+    [
+      "0000783325",
+      "WEC ENERGY GROUP, INC.",
+      "WEC",
+      "4931",
+      "WI"
+    ],
+    [
+      "0000784977",
+      "PORTLAND GENERAL ELECTRIC CO /OR/",
+      "POR",
+      "4911",
+      "OR"
+    ],
+    [
+      "0000788784",
+      "PUBLIC SERVICE ENTERPRISE GROUP INC",
+      "PEG",
+      "4931",
+      "NJ"
+    ],
+    [
+      "0000811156",
+      "CMS ENERGY CORP",
+      "CMS",
+      "4931",
+      "MI"
+    ],
+    [
+      "0000827052",
+      "EDISON INTERNATIONAL",
+      "EIX",
+      "4911",
+      "CA"
+    ],
+    [
+      "0000922224",
+      "PPL Corp",
+      "PPL",
+      "4911",
+      "PA"
+    ],
+    [
+      "0000936340",
+      "DTE ENERGY CO",
+      "DTE",
+      "4911",
+      "MI"
+    ],
+    [
+      "0001002910",
+      "AMEREN CORP",
+      "AEE",
+      "4931",
+      "MO"
+    ],
+    [
+      "0001004980",
+      "PG&E Corp",
+      "PCG",
+      "4931",
+      "CA"
+    ],
+    [
+      "0001013871",
+      "NRG ENERGY, INC.",
+      "NRG",
+      "4911",
+      "TX"
+    ],
+    [
+      "0001021635",
+      "OGE ENERGY CORP.",
+      "OGE",
+      "4911",
+      "OK"
+    ],
+    [
+      "0001031296",
+      "FIRSTENERGY CORP",
+      "FE",
+      "4911",
+      "OH"
+    ],
+    [
+      "0001032208",
+      "SEMPRA",
+      "SRE",
+      "4932",
+      "CA"
+    ],
+    [
+      "0001047862",
+      "CONSOLIDATED EDISON INC",
+      "ED",
+      "4931",
+      "NY"
+    ],
+    [
+      "0001057877",
+      "IDACORP INC",
+      "IDA",
+      "4911",
+      "ID"
+    ],
+    [
+      "0001108426",
+      "TXNM ENERGY INC",
+      "TXNM",
+      "4911",
+      "NM"
+    ],
+    [
+      "0001109357",
+      "EXELON CORP",
+      "EXC",
+      "4931",
+      "IL"
+    ],
+    [
+      "0001111711",
+      "NISOURCE INC.",
+      "NI",
+      "4931",
+      "IN"
+    ],
+    [
+      "0001130310",
+      "CENTERPOINT ENERGY INC",
+      "CNP",
+      "4911",
+      "TX"
+    ],
+    [
+      "0001130464",
+      "BLACK HILLS CORP /SD/",
+      "BKH",
+      "4911",
+      "SD"
+    ],
+    [
+      "0001161728",
+      "MGE ENERGY INC",
+      "MGEE",
+      "4900",
+      "WI"
+    ],
+    [
+      "0001193311",
+      "ONCOR ELECTRIC DELIVERY CO LLC",
+      "",
+      "4911",
+      "TX"
+    ],
+    [
+      "0001326160",
+      "Duke Energy CORP",
+      "DUK",
+      "4931",
+      "NC"
+    ],
+    [
+      "0001466593",
+      "Otter Tail Corp",
+      "OTTR",
+      "4911",
+      "MN"
+    ],
+    [
+      "0001692819",
+      "Vistra Corp.",
+      "VST",
+      "4911",
+      "TX"
+    ],
+    [
+      "0001711269",
+      "Evergy, Inc.",
+      "EVRG",
+      "4931",
+      "MO"
+    ],
+    [
+      "0001868275",
+      "Constellation Energy Corp",
+      "CEG",
+      "4911",
+      "MD"
+    ],
+    [
+      "0001993004",
+      "NorthWestern Energy Group, Inc.",
+      "NWE",
+      "4931",
+      "SD"
+    ]
+  ]
+}

@@ -58,6 +58,7 @@ CACHE_TARGETS: tuple[str, ...] = templates.cache_targets_for(
     [(t, p) for t in SEC_TAGS for p in SEC_PERIODS], [], list(SEC_UTILITIES)) + (
     "cw.fema_declarations_dr_2025q1", "cw.fema_catalogue",
     "cw.states", "cw.utility_states", "cw.seed_stations", "cw.seed_utilities", "cw.seed_utility_names",
+    "cw.seed_submissions_snapshot",  # 10_cw_seed_snapshot (D15): the question path's copy of cw.seed_utilities
     "cw.stations",
 ) + templates.GHCN_VIEWS  # 09_cw_ghcn: the station-filtered parquet views, last (each CACHE scans 9 files, about 40 s)
 
@@ -92,6 +93,7 @@ class Gateway:
         self.last_app_id: str | None = None  # driver app whose warm-up left nothing failed or waiting
         self.last_warmup: dict | None = None
         self._retry: dict[str, tuple[int, float]] = {}  # target -> (failures so far, earliest next try)
+        self._columns: dict[str, set[str]] = {}  # cw.* view -> its DESCRIBE column names (match_rate's column check)
         self._clock: Callable[[], float] = time.monotonic
 
     # -- connections --------------------------------------------------------
@@ -228,6 +230,40 @@ class Gateway:
         out["last_warmup"] = self.last_warmup
         return out
 
+    def describe_columns(self, obj: str) -> set[str]:
+        """The column names (lower case) of a cw.* view from its DESCRIBE output, cached per object for the
+        gateway's lifetime (a SchemaStore view's columns do not change without a new name). ZetarisError if
+        the DESCRIBE fails."""
+        key = obj.lower()
+        if key not in self._columns:
+            sql = f"DESCRIBE {key}"
+            allowlist.check(sql, "reader")
+            entry = {"source_file": "gateway.describe_columns", "role": "reader", "sql": sql, "sql_sha256": sha256(sql), "timeout_s": QUERY_TIMEOUT_S}
+            try:
+                res = self._execute("reader", sql, timeout_s=QUERY_TIMEOUT_S)
+                entry.update(elapsed_ms=res.elapsed_ms, row_count=res.row_count, executed_at=res.executed_at, error=None)
+            except ZetarisError as e:
+                entry.update(error=str(e)[:1000])
+                log_statement(entry)
+                raise
+            log_statement(entry)
+            self._columns[key] = {str(r[0]).strip().lower() for r in res.rows
+                                  if r and r[0] is not None and str(r[0]).strip() and not str(r[0]).strip().startswith("#")}
+        return self._columns[key]
+
+    def check_columns(self, t: templates.Template, params: dict[str, str]) -> tuple[int, str | None]:
+        """(400, reason) when a column parameter is not in its object's DESCRIBE output; (502, reason) when the
+        DESCRIBE fails; (200, None) when every pair checks out."""
+        for obj_param, col_param in t.describe_columns:
+            obj, col = params[obj_param], params[col_param]
+            try:
+                cols = self.describe_columns(obj)
+            except ZetarisError as e:
+                return 502, f"DESCRIBE {obj} failed: {str(e)[:300]}"
+            if col.lower() not in cols:
+                return 400, f"refused: column {col!r} is not a column of {obj} (DESCRIBE lists {', '.join(sorted(cols)[:12])})"
+        return 200, None
+
     def run_template(self, req: TemplateRequest) -> tuple[int, dict]:
         out: dict = {
             "template_id": req.template_id, "role": req.role, "columns": [], "rows": [], "row_count": 0,
@@ -246,6 +282,12 @@ class Gateway:
         out.update(sql=sql, sql_sha256=sha256(sql), objects=cache.resolve(t.objects, params), raw_objects=cache.resolve(t.raw_objects, params))
         log = {"source_file": "gateway.template", "template_id": t.id, "role": req.role, "params": req.params,
                "sql": sql, "sql_sha256": out["sql_sha256"], "timeout_s": t.timeout_s or QUERY_TIMEOUT_S}
+        if t.describe_columns:
+            status, problem = self.check_columns(t, req.params)
+            if problem:
+                out["error"] = problem
+                log_statement({**log, "error": problem, "refused": status == 400, "sent": False})
+                return status, out
         try:
             kind = allowlist.check(sql, req.role)
         except allowlist.Refused as e:

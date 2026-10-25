@@ -134,6 +134,27 @@
         "views": ["cw.ghcn_2025_tmax", "cw.ghcn_2025_tmin", "cw.ghcn_2024_tmax", "cw.ghcn_2024_tmin"],
         "runtime_views": ["cw.ghcn_<year>_<element>"]
       }
+    },
+    {
+      "id": "cw_seed_snapshot",
+      "kind": "values-views",
+      "script": "zetaris/sql/10_cw_seed_snapshot_create.sql",
+      "select": "zetaris/sql/10_cw_seed_snapshot_select.sql",
+      "status": "verified",
+      "requires": ["cw_seeds"],
+      "hosts": [],
+      "summary": "cw.seed_submissions_snapshot: the SEC submissions profile of the 43 seed utilities (cik10, name, ticker, sic, hq_state, snapshot_at) read once from cw.seed_utilities at onboarding and kept as a cached VALUES view (scripts/make_cw_snapshot.py); the question path's probe and the cik, loc, sic and control join-map statements read it instead of cw.seed_utilities (decision D15)",
+      "snapshot": {
+        "source_statement": "SELECT cik, name, ticker, sic, hq_state FROM cw.seed_utilities ORDER BY cik",
+        "snapshot_at": "2026-10-25T15:25:59+0800",
+        "rows": 43,
+        "read_elapsed_ms": 18074,
+        "file": "zetaris/snapshots/seed_submissions_snapshot.json"
+      },
+      "objects": {
+        "container": "cw",
+        "views": ["cw.seed_submissions_snapshot"]
+      }
     }
   ]
 }

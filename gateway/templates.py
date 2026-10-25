@@ -37,6 +37,7 @@ import json
 import re
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Callable
 
 SEEDS_PATH = Path(__file__).resolve().parent.parent / "seeds" / "utilities.json"
 
@@ -144,7 +145,41 @@ PARAM_PATTERNS = {
     "cik_list": re.compile(r"^\d{10}(,\d{10}){0,59}$"),  # 1 to 60 ten-digit CIKs, comma-separated (43 seed utilities)
     "dq_rule": re.compile(r"^(utility\.sic|utility_state\.cik|utility_state\.state|fema_declaration\.state|station\.state|revenue_quarter\.cik)$"),
     "catalogue_id": re.compile(r"^[a-z][a-z0-9_]{0,63}$"),  # an entry id of seeds/catalogue.json (register_source)
+    # The closed transform set (agent/src/tools/transforms.ts), canonical spelling only.
+    "transform": re.compile(r"^(identity|upper|lpad10|substr\([1-9]\d?,[1-9]\d?\)|strip_prefix\('US-'\)|yyyymmdd_to_date|iso_to_quarter)$"),
 }
+
+
+def transform_sql(spec: str, x: str) -> str:
+    """The Lightning SQL of one closed-set transform applied to the expression x: the same text as
+    agent/src/tools/transforms.ts Transform.sql (C1), so the gateway renders C1's matchRateSql."""
+    if spec == "identity":
+        return f"CAST({x} AS STRING)"
+    if spec == "upper":
+        return f"UPPER(CAST({x} AS STRING))"
+    if spec == "lpad10":
+        return f"LPAD(CAST({x} AS STRING), 10, '0')"
+    m = re.fullmatch(r"substr\(([1-9]\d?),([1-9]\d?)\)", spec)
+    if m:
+        return f"SUBSTR(CAST({x} AS STRING), {m.group(1)}, {m.group(2)})"
+    if spec == "strip_prefix('US-')":
+        return f"CASE WHEN CAST({x} AS STRING) LIKE 'US-%' THEN SUBSTR(CAST({x} AS STRING), 4) END"
+    if spec == "yyyymmdd_to_date":
+        return f"CONCAT(SUBSTR({x}, 1, 4), '-', SUBSTR({x}, 5, 2), '-', SUBSTR({x}, 7, 2))"
+    if spec == "iso_to_quarter":
+        return f"CONCAT('CY', SUBSTR({x}, 1, 4), 'Q', CAST(FLOOR((CAST(SUBSTR({x}, 6, 2) AS INT) + 2) / 3) AS INT))"
+    raise BadParams(f"not a transform: {spec!r}")
+
+
+def match_rate_parts(values: dict[str, str]) -> dict[str, str]:
+    """{left_key} and {right_key} of the match_rate templates: the transform on the left column, CAST AS STRING on the right
+    (C1's matchRateSql). Left and right must be two different views (a view is referenced once per statement on 2.4.3.1)."""
+    if values["left_object"].lower() == values["right_object"].lower():
+        raise BadParams("left_object and right_object must be two different views")
+    return {
+        "left_key": transform_sql(values["transform"], f"l.`{values['left_column']}`"),
+        "right_key": f"CAST(r.`{values['right_column']}` AS STRING)",
+    }
 
 # How a validated value is written into the SQL. A kind not listed here is substituted as is;
 # a station_list or cik_list becomes a quoted IN list ('USW00013740', 'USW00013722'); a column is back-quoted.
@@ -155,7 +190,14 @@ RENDERERS = {
 }
 
 
+# Manifest views the question path never reads: cw.seed_utilities resolves the 43 submission views on every read
+# (about 17 s); its onboarding snapshot cw.seed_submissions_snapshot is read instead (decision D15).
+QUESTION_PATH_REFUSED = frozenset({"cw.seed_utilities"})
+
+
 def _manifest_check(value: str) -> None:
+    if value.lower() in QUESTION_PATH_REFUSED:
+        raise BadParams(f"cw_object {value!r} is read once at onboarding only; read {SNAPSHOT_VIEW} instead")
     if not in_manifest(value):
         raise BadParams(f"cw_object {value!r} is not a view zetaris/manifest.json lists")
 
@@ -206,6 +248,10 @@ class Template:
     role: str = "reader"  # reader templates run via /sql/template; registrar templates only inside a plan
     timeout_s: float | None = None  # bounded wait for this template; None = the gateway's default (60 s)
     onboarding_only: bool = False  # minutes-long DQ: the onboarding path only, refused on the agent's question path
+    # Placeholders computed from all validated values together (match_rate: the transform applied to the left column).
+    compose: Callable[[dict[str, str]], dict[str, str]] | None = None
+    # (object parameter, column parameter) pairs the gateway checks against the object's DESCRIBE output before running.
+    describe_columns: tuple[tuple[str, str], ...] = ()
 
 
 @dataclass(frozen=True)
@@ -224,8 +270,9 @@ class Plan:
 
 
 def _t(id: str, sql: str, params: dict[str, str], objects: tuple[str, ...], raw: tuple[str, ...],
-       description: str, role: str = "reader", timeout_s: float | None = None, onboarding_only: bool = False) -> Template:
-    return Template(id, " ".join(sql.split()), params, objects, raw, description, role, timeout_s, onboarding_only)
+       description: str, role: str = "reader", timeout_s: float | None = None, onboarding_only: bool = False,
+       compose: Callable[[dict[str, str]], dict[str, str]] | None = None, describe_columns: tuple[tuple[str, str], ...] = ()) -> Template:
+    return Template(id, " ".join(sql.split()), params, objects, raw, description, role, timeout_s, onboarding_only, compose, describe_columns)
 
 
 # RUN DQ / SHOW DQ INVALID RECORD on a USL table whose parent is utility re-read the 43 submission views
@@ -269,6 +316,10 @@ UTILITY_STATES_VIEW = "cw.utility_states"
 SEED_STATIONS_VIEW = "cw.seed_stations"
 STATES_VIEW = "cw.states"
 SEED_NAMES_VIEW = "cw.seed_utility_names"  # zetaris/sql/08_cw_seed_names_create.sql: cik, name, ticker, sic of the 43 seeds
+# zetaris/sql/10_cw_seed_snapshot_create.sql (decision D15): cik10, name, ticker, sic, hq_state, snapshot_at, read once
+# from cw.seed_utilities at onboarding (scripts/make_cw_snapshot.py). The question path reads this view, never
+# cw.seed_utilities (the 43 submission views are resolved on every read of it, about 17 s per statement).
+SNAPSHOT_VIEW = "cw.seed_submissions_snapshot"
 GHCN_RAW = "CW_GHCN.ghcn_{year}_{element_lc}"
 GHCN_VIEW = "cw.ghcn_{year}_{element_lc}"
 GHCN_PATH = "s3a://noaa-ghcn-pds/parquet/by_year/YEAR={year}/ELEMENT={element}/"
@@ -292,6 +343,9 @@ _FRAMES_LOCS = " UNION ".join(
 _FRAMES_VIEWS_OF_PERIOD = tuple(
     f"cw.frames_{t}_{{period}}" for t in ("Revenues", "RevenueFromContractWithCustomerExcludingAssessedTax", "RegulatedAndUnregulatedOperatingRevenue"))
 _MATCH = "SELECT COUNT(DISTINCT l.k) AS left_keys, COUNT(DISTINCT CASE WHEN r.k IS NOT NULL THEN l.k END) AS matched_keys"
+# match_rate (D16): any proposal over two manifest views, its columns checked against DESCRIBE, bounded at 60 s.
+_MR = {"left_object": "cw_object", "left_column": "column", "right_object": "cw_object", "right_column": "column", "transform": "transform"}
+_MATCH_DESCRIBE = (("left_object", "left_column"), ("right_object", "right_column"))
 
 # GHCN and the USL (zetaris/sql/07_cw_usl_*.sql, 09_cw_ghcn_*.sql).
 USL = "lightning.metastore.crosswalk.crosswalk_usl"
@@ -415,21 +469,22 @@ TEMPLATES: dict[str, Template] = {
            {"ids": "station_list"}, (STATIONS_VIEW,), (STATIONS_VIEW,),
            "Station id, state (columns 39-40 of ghcnd-stations.txt), name and coordinates for up to 60 GHCN station ids "
            "(the cached one-column CSV parsed with SUBSTR; about 8 s of filestore resolution per call)."),
-        # -- the join map: match rate = matched distinct left keys / distinct left keys, over cached views only ------------
-        _t("joinmap_cik", f"{_MATCH} FROM (SELECT DISTINCT cik AS k FROM {SEED_UTILITIES_VIEW}) l LEFT JOIN ({_FRAMES_CIKS}) r ON r.k = l.k",
-           {"period": "period"}, (SEED_UTILITIES_VIEW,) + _FRAMES_VIEWS_OF_PERIOD, (SEED_UTILITIES_VIEW,) + _FRAMES_VIEWS_OF_PERIOD,
-           "Key (a): seed submissions cik (10-digit string) vs frames cik under lpad10, over the three frames views of one period."),
-        _t("joinmap_cik_orphans", f"SELECT u.cik AS orphan_cik, u.name FROM {SEED_UTILITIES_VIEW} u LEFT JOIN ({_FRAMES_CIKS}) r ON r.k = u.cik "
-           f"WHERE r.k IS NULL ORDER BY u.cik LIMIT 10",
-           {"period": "period"}, (SEED_UTILITIES_VIEW,) + _FRAMES_VIEWS_OF_PERIOD, (SEED_UTILITIES_VIEW,) + _FRAMES_VIEWS_OF_PERIOD,
+        # -- the join map over cached views only: matched rows over the left table's rows (D1; joinmap_sic returns both
+        # readings, the identity keys have one key per row), the distinct-key reading beside it ------------------------------
+        _t("joinmap_cik", f"{_MATCH} FROM (SELECT DISTINCT cik10 AS k FROM {SNAPSHOT_VIEW}) l LEFT JOIN ({_FRAMES_CIKS}) r ON r.k = l.k",
+           {"period": "period"}, (SNAPSHOT_VIEW,) + _FRAMES_VIEWS_OF_PERIOD, (SNAPSHOT_VIEW,) + _FRAMES_VIEWS_OF_PERIOD,
+           "Key (a): seed submissions cik10 (the onboarding snapshot) vs frames cik under lpad10, over the three frames views of one period."),
+        _t("joinmap_cik_orphans", f"SELECT u.cik10 AS orphan_cik, u.name FROM {SNAPSHOT_VIEW} u LEFT JOIN ({_FRAMES_CIKS}) r ON r.k = u.cik10 "
+           f"WHERE r.k IS NULL ORDER BY u.cik10 LIMIT 10",
+           {"period": "period"}, (SNAPSHOT_VIEW,) + _FRAMES_VIEWS_OF_PERIOD, (SNAPSHOT_VIEW,) + _FRAMES_VIEWS_OF_PERIOD,
            "Key (a) orphans: seed filers with no fact in the period under any of the three tags."),
-        _t("joinmap_cik_control", f"{_MATCH} FROM (SELECT DISTINCT cik AS k FROM {SEED_UTILITIES_VIEW}) l LEFT JOIN ({_FRAMES_CIKS_NO_LPAD}) r ON r.k = l.k",
-           {"period": "period"}, (SEED_UTILITIES_VIEW,) + _FRAMES_VIEWS_OF_PERIOD, (SEED_UTILITIES_VIEW,) + _FRAMES_VIEWS_OF_PERIOD,
+        _t("joinmap_cik_control", f"{_MATCH} FROM (SELECT DISTINCT cik10 AS k FROM {SNAPSHOT_VIEW}) l LEFT JOIN ({_FRAMES_CIKS_NO_LPAD}) r ON r.k = l.k",
+           {"period": "period"}, (SNAPSHOT_VIEW,) + _FRAMES_VIEWS_OF_PERIOD, (SNAPSHOT_VIEW,) + _FRAMES_VIEWS_OF_PERIOD,
            "Key (a) control: the same pair under identity (CAST(cik AS STRING), no LPAD); the integer cik never equals the zero-padded string."),
         _t("joinmap_loc", f"SELECT COUNT(DISTINCT l.cik) AS left_keys, COUNT(DISTINCT CASE WHEN l.loc_state = r.hq_state THEN l.cik END) AS matched_keys "
-           f"FROM ({_FRAMES_LOCS}) l JOIN {SEED_UTILITIES_VIEW} r ON r.cik = l.cik",
-           {"period": "period"}, (SEED_UTILITIES_VIEW,) + _FRAMES_VIEWS_OF_PERIOD, (SEED_UTILITIES_VIEW,) + _FRAMES_VIEWS_OF_PERIOD,
-           "Key (b): frames loc US-XX under substr(4,2) vs the submissions business-address state, for the seed filers present in the period."),
+           f"FROM ({_FRAMES_LOCS}) l JOIN {SNAPSHOT_VIEW} r ON r.cik10 = l.cik",
+           {"period": "period"}, (SNAPSHOT_VIEW,) + _FRAMES_VIEWS_OF_PERIOD, (SNAPSHOT_VIEW,) + _FRAMES_VIEWS_OF_PERIOD,
+           "Key (b): frames loc US-XX under substr(4,2) vs the submissions business-address state (onboarding snapshot), for the seed filers present in the period."),
         _t("joinmap_fema_state", f"{_MATCH} FROM (SELECT DISTINCT state AS k FROM {FEMA_VIEW}) l "
            f"LEFT JOIN (SELECT DISTINCT state AS k FROM {UTILITY_STATES_VIEW}) r ON r.k = l.k",
            {"quarter": "fema_quarter"}, (FEMA_VIEW, UTILITY_STATES_VIEW), (FEMA_VIEW, UTILITY_STATES_VIEW),
@@ -448,13 +503,30 @@ TEMPLATES: dict[str, Template] = {
            {}, (SEED_STATIONS_VIEW, STATIONS_VIEW), (SEED_STATIONS_VIEW, STATIONS_VIEW),
            "Key (d): seed station id vs the stations inventory id under identity, with the count of matched stations whose state agrees."),
         _t("joinmap_sic", f"{_MATCH}, COUNT(DISTINCT l.cik) AS left_rows, COUNT(DISTINCT CASE WHEN r.k IS NOT NULL THEN l.cik END) AS matched_rows "
-           f"FROM (SELECT cik, sic AS k FROM {SEED_UTILITIES_VIEW}) l LEFT JOIN (SELECT DISTINCT code AS k FROM {SIC_VIEW}) r ON r.k = l.k",
-           {}, (SEED_UTILITIES_VIEW, SIC_VIEW), (SEED_UTILITIES_VIEW, SIC_VIEW),
-           "Key (e): submissions SIC vs sic_codes.code under identity, as distinct codes (left_keys) and as utilities (left_rows)."),
-        _t("joinmap_sic_orphans", f"SELECT l.sic AS orphan_sic, l.cik, l.name FROM {SEED_UTILITIES_VIEW} l "
-           f"LEFT JOIN (SELECT DISTINCT code AS k FROM {SIC_VIEW}) r ON r.k = l.sic WHERE r.k IS NULL ORDER BY l.sic, l.cik LIMIT 10",
-           {}, (SEED_UTILITIES_VIEW, SIC_VIEW), (SEED_UTILITIES_VIEW, SIC_VIEW),
+           f"FROM (SELECT cik10 AS cik, sic AS k FROM {SNAPSHOT_VIEW}) l LEFT JOIN (SELECT DISTINCT code AS k FROM {SIC_VIEW}) r ON r.k = l.k",
+           {}, (SNAPSHOT_VIEW, SIC_VIEW), (SNAPSHOT_VIEW, SIC_VIEW),
+           "Key (e): submissions SIC (onboarding snapshot) vs sic_codes.code under identity, as distinct codes (left_keys) and as utilities (left_rows)."),
+        _t("joinmap_sic_orphans", f"SELECT l.sic AS orphan_sic, l.cik10 AS cik, l.name FROM {SNAPSHOT_VIEW} l "
+           f"LEFT JOIN (SELECT DISTINCT code AS k FROM {SIC_VIEW}) r ON r.k = l.sic WHERE r.k IS NULL ORDER BY l.sic, l.cik10 LIMIT 10",
+           {}, (SNAPSHOT_VIEW, SIC_VIEW), (SNAPSHOT_VIEW, SIC_VIEW),
            "Key (e) orphans: seed utilities whose SIC the reference lacks (MGE Energy, 4900)."),
+        # -- any proposed key (decision D16): C1's match-rate statement over two manifest views, closed transform set ----
+        _t("match_rate",
+           "SELECT COUNT(DISTINCT l.k) AS left_keys, COUNT(DISTINCT CASE WHEN r.k IS NOT NULL THEN l.k END) AS matched_keys "
+           "FROM (SELECT DISTINCT {left_key} AS k FROM {left_object} l WHERE {left_key} IS NOT NULL) l "
+           "LEFT JOIN (SELECT DISTINCT {right_key} AS k FROM {right_object} r) r ON r.k = l.k",
+           _MR, ("{left_object}", "{right_object}"), ("{left_object}", "{right_object}"),
+           "Match rate of any proposed key: distinct left keys (the transform applied to the left column, nulls dropped) "
+           "and how many find a right key (CAST AS STRING). Both objects must be views zetaris/manifest.json lists and both "
+           "columns must be in their DESCRIBE output.", timeout_s=60.0, compose=match_rate_parts,
+           describe_columns=_MATCH_DESCRIBE),
+        _t("match_rate_orphans",
+           "SELECT l.k AS orphan FROM (SELECT DISTINCT {left_key} AS k FROM {left_object} l WHERE {left_key} IS NOT NULL) l "
+           "LEFT JOIN (SELECT DISTINCT {right_key} AS k FROM {right_object} r) r ON r.k = l.k "
+           "WHERE r.k IS NULL AND l.k IS NOT NULL ORDER BY l.k LIMIT 10",
+           _MR, ("{left_object}", "{right_object}"), ("{left_object}", "{right_object}"),
+           "The first ten left keys of a proposed key that find no right key (C1's orphan statement).",
+           timeout_s=60.0, compose=match_rate_parts, describe_columns=_MATCH_DESCRIBE),
         # -- registrar templates: only inside a plan (POST /registrar/<action>) ----------------------
         _t("registrar_ghcn_table",
            f'CREATE LIGHTNING FILESTORE TABLE ghcn_{{year}}_{{element_lc}} FROM CW_GHCN FORMAT PARQUET OPTIONS ( PATH "{GHCN_PATH}", '
@@ -607,10 +679,13 @@ def render(template_id: str, params: dict | None) -> tuple[Template, str]:
         raise BadParams(f"template {template_id} takes {sorted(t.params)}; missing {sorted(missing)}, unexpected {sorted(extra)}")
     values = {name: validate_param(kind, params[name]) for name, kind in t.params.items()}
     sql = t.sql
+    composed = t.compose(values) if t.compose else {}
     for name, value in values.items():
         sql = sql.replace("{" + name + "}", RENDERERS.get(t.params[name], lambda v: v)(value))
         for extra, rendered in DERIVED.get(t.params[name], lambda v: {})(value).items():
             sql = sql.replace("{" + extra + "}", rendered)
+    for extra, rendered in composed.items():
+        sql = sql.replace("{" + extra + "}", rendered)
     return t, sql
 
 
