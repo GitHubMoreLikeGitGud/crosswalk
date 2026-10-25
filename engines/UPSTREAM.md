@@ -20,7 +20,7 @@ Not vendored: the engine specs (`AGENTS.md`), examples, docs and workshops. Link
 
 ## Rules
 
-- Do not edit anything under `engines/`. ClearShelf extends the engines from `agent/src/` (for example a facade that subclasses `HMEM`).
+- Do not edit anything under `engines/`. Crosswalk extends the engines from `agent/src/` (for example a facade that subclasses `HMEM`).
 - After `npm install` in a `reference/` folder, npm rewrites the root `"license"` field of that folder's `package-lock.json` (upstream's lock file says `MIT`; its `package.json` says `Apache-2.0`). Dependency resolution is unaffected. Restore the vendored file with `git checkout -- engines/<engine>/reference/package-lock.json`.
 - To update: archive the same paths at a new upstream commit, rerun every check in `docs/conformance.md`, and update this file and `NOTICE`.
 

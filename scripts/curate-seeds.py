@@ -1,4 +1,4 @@
-"""Crosswalk seed curation. Dev-time curation, not part of the agent.
+"""Seed curation, inherited from Weather-or-Not with the 43-utility and 56-station seeds. Dev-time curation, not part of the agent.
 
 At run time the agent reads SEC EDGAR and NOAA GHCN only through Zetaris Lightning. This
 script is the documented exception: a developer runs it once to choose which utilities and

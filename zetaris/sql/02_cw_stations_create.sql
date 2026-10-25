@@ -22,7 +22,7 @@
 -- Caveats:
 --   1. CREATE LIGHTNING DATABASE accepts no IF NOT EXISTS on 2.4.3.1; rerun
 --      with --skip-exists. CW_GHCN is also the database of the GHCN parquet
---      tables when the Day-1 lane registers them.
+--      tables (09_cw_ghcn_create.sql, or register_source at run time).
 --   2. The STATE column is blank for stations outside the US and Canada; the
 --      view keeps every station and the join map filters on id LIKE 'US%'.
 --   3. Trailing spaces in NAME are trimmed in the view.

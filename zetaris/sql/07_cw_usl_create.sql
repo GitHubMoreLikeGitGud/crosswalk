@@ -24,9 +24,9 @@
 --   4. revenue_quarter keeps only the seed filers (FK cik -> utility). The frames
 --      endpoint serves one fact per filer and period, so PK cik + xbrl_tag + period
 --      is unique; val is cast to DOUBLE (frames infer bigint for some periods).
---   5. weather_quarter is not in this model: the GHCN parquet tables are not
---      registered under CW_GHCN on Day 0 (the Day-1 lane adds them if needed); the
---      weather read stays on the cached views.
+--   5. weather_quarter is not in this model: the GHCN parquet tables were not
+--      registered under CW_GHCN when the model was compiled (25 Oct, before them);
+--      the weather read stays on the cached views.
 --   6. A re-run of ACTIVATE with a changed query re-binds the table and keeps the
 --      DQ rules.
 -- =============================================================================

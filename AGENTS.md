@@ -30,7 +30,7 @@ Crosswalk answers a cross-agency question nobody has a data engineer for (Open A
 
 ## Inherited code (same author)
 
-The scaffold is Weather-or-Not's (gateway, engines, loop, memory, world, server, UI shell, evidence store), which in turn came from ClearShelf; files keep the header note "Adapted from Weather-or-Not and ClearShelf (same author, Apache-2.0)" and the lineage is declared under pre-existing code in `metadata.json` and the README. Modules that are specific to Weather-or-Not's question (degree-day attribution, like-for-like revenue, the recast rule, its planner and memo prompts, its reader templates in `gateway/templates.py` marked "inherited; Day-1 lane replaces") stay only until the Crosswalk agent lane replaces them; do not extend them.
+The scaffold is Weather-or-Not's (gateway, engines, loop, memory, world, server, UI shell, evidence store), which in turn came from ClearShelf; files keep the header note "Adapted from Weather-or-Not and ClearShelf (same author, Apache-2.0)" and the lineage is declared under pre-existing code in `metadata.json` and the README. The modules specific to Weather-or-Not's question (degree-day attribution, like-for-like revenue, the recast rule, its planner and memo prompts, its reader templates in `gateway/templates.py`) were deleted on 25 Oct; `agent/src/tools/degreeDays.ts` stays as the reference arithmetic the gateway's degree-day template is tested against. What remains of that question is labelled test fixtures in `agent/test/fixtures/` and the reference SQL in `zetaris/sql/won-reference/`; do not extend them.
 
 ## Commands
 
