@@ -25,7 +25,7 @@ import { parseJsonContent, type ChatMessage, type ChatResult, type OllamaClient 
 import { loadPrompt, render, toolLines } from "../llm/prompts.ts";
 import { plannerSchema, plannerSemanticErrors, validate, type JsonSchema, type PlannerOutput } from "../llm/schemas.ts";
 import { jobSettings } from "../llm/settings.ts";
-import { allowedTools, completeInput, fallbackStep, runTool, toolDef, type LoopToolDef, type QuestionContext, type ToolDeps, type ToolInput, type ToolOutcome } from "./tools.ts";
+import { allowedTools, completeInput, fallbackStep, measureQueue, runTool, toolDef, type LoopToolDef, type QuestionContext, type ToolDeps, type ToolInput, type ToolOutcome } from "./tools.ts";
 import { LoopTelemetry, NaiveHistory, sumMetrics, type ChunkRecord } from "./telemetry.ts";
 
 // ---------- typed markers ----------
@@ -58,9 +58,9 @@ export function chunkText(content: string, calls: { tool: string; input: Record<
 
 export interface LoopState {
   v: 1;
-  chain: "weather";
-  cik: string;
-  period: string;
+  chain: "discovery";
+  quarter: string;
+  focus: string;
   claim: string;
   chunk: number;
   checklist: Record<string, string>;
@@ -89,6 +89,7 @@ export function fitState(state: LoopState, budgetTokens: number): string {
   s.open_contradictions = clean(s.open_contradictions).slice(0, 5);
   s.next = neutralize(s.next).slice(0, 200);
   s.claim = neutralize(s.claim).slice(0, 120);
+  s.focus = neutralize(s.focus).slice(0, 80);
   s.checklist = Object.fromEntries(Object.entries(s.checklist).map(([k, v]) => [k, neutralize(v)]));
   s.evidence_ids = s.evidence_ids.slice(-8);
   let json = JSON.stringify(s);
@@ -113,10 +114,10 @@ export function fitState(state: LoopState, budgetTokens: number): string {
 
 const LOOP_PROTOCOL = `
 Loop protocol (Crosswalk host):
-- This is one chunk of a bounded chain. The user message holds the goal and, after the first chunk, the CARRYOVER STATE the host wrote at the end of the previous chunk: checklist status, one-line facts with their evidence ids, your earlier hypotheses and next step. Earlier tool results reach you only as those facts.
-- You get at most two steps per chunk. After your first step the host runs the tool and appends its result digest.
+- This is one chunk of a bounded chain. The user message holds the goal and, after the first chunk, the CARRYOVER STATE the host wrote at the end of the previous chunk: checklist status, one-line facts with their evidence ids, your earlier hypotheses and next step. Earlier tool results reach you only as those facts and the host context.
+- You get at most three steps per chunk. After each step the host runs the tool and appends its result digest.
 - The host owns the checklist. Copy the host checklist into state.checklist unchanged.
-- claim_tested and memo_written are checklist items too. While they are false the work is not done: when they are the only open items, choose finalize.
+- note_written is a checklist item too. When it is the only open item, choose finalize.
 - Choose action.tool only from the allowed tools above, and fill action.input with the identifiers it needs.
 - Reply with one JSON object only. The host writes the chunk markers.`;
 
@@ -138,14 +139,48 @@ export function loopPlannerSchema(tools: readonly string[], evidenceIds: readonl
   return plannerSchema(tools, evidenceIds);
 }
 
-export function hostBlock(ctx: QuestionContext, inChunk: string[]): string {
+/**
+ * What the allowed tools need to see beyond the carryover: the probed columns when propose_keys is
+ * allowed (the model's real decision), the measure queue, the registrations still needed. Bounded.
+ */
+export function toolContext(ctx: QuestionContext, tools: readonly LoopToolDef[]): string | null {
+  const names = new Set(tools.map((t) => t.name));
+  const out: string[] = [];
+  if (names.has("probe_source")) {
+    const left = ctx.targets.filter((t) => !ctx.probes.has(t) && !ctx.probeFailures.has(t));
+    out.push(`Views still to probe: ${left.join(", ") || "none"}`);
+  }
+  if (names.has("propose_keys")) {
+    out.push("Probed views and candidate key columns (column: distinct of rows; sample values):");
+    for (const p of ctx.probes.values()) {
+      const cands = p.candidates.map((c) => `${c.column}: ${c.distinct ?? "?"} of ${c.rows ?? "?"}; ${c.samples.slice(0, 2).join(", ")}`).join(" | ");
+      out.push(`- ${p.object}: ${neutralize(cands) || "no candidate key column"}`);
+    }
+    out.push("Propose up to six choices; each pairs a column of one view with a column of another and names one transform from the closed set.");
+  }
+  if (names.has("measure_key")) {
+    const q = measureQueue(ctx);
+    out.push(`Keys left to measure (input.key): ${q.slice(0, 8).map((x) => `${x.id} ${x.choice.left.object}.${x.choice.left.column} ~ ${x.choice.right.object}.${x.choice.right.column} (${x.choice.transform})`).join("; ") || "none"}`);
+  }
+  if (names.has("register_source")) {
+    const left = ctx.needs.filter((n) => !ctx.registrations.some((r) => r.object.toLowerCase() === n.object.toLowerCase()));
+    out.push(`Sources the question needs (input.catalogue_id plus params): ${left.map((n) => `${n.catalogue_id} ${JSON.stringify(n.params)} -> ${n.object}`).join("; ") || "none"}`);
+  }
+  if (!out.length) return null;
+  const text = out.join("\n");
+  return text.length > 2400 ? `${text.slice(0, 2399)}…` : text;
+}
+
+export function hostBlock(ctx: QuestionContext, inChunk: string[], tools: readonly LoopToolDef[] = []): string {
   const cl = ctx.checklist;
   const open = cl.pending().map((i) => i.id);
   const notes = cl.notes();
+  const tc = toolContext(ctx, tools);
   return [
     `Host checklist (owned by the host): ${JSON.stringify(cl.booleans())}`,
     `Open items in order: ${open.join(", ") || "none"}`,
     notes.length ? `Checklist notes: ${notes.join("; ")}` : null,
+    tc ? `Host context:\n${tc}` : null,
     inChunk.length ? `This chunk so far:\n${inChunk.join("\n\n")}` : null,
     "Choose the next step.",
   ]
@@ -154,6 +189,9 @@ export function hostBlock(ctx: QuestionContext, inChunk: string[]): string {
 }
 
 // ---------- the generator ----------
+
+/** Steps per chunk: a discovery run takes about 20 tool calls, which must fit 12 chunks (D10). */
+export const MAX_TOOL_CALLS_PER_CHUNK = 3;
 
 export interface TimelineEntry {
   chunk: number;
@@ -220,6 +258,7 @@ export class PlannerSession {
   private cited: string[] = [];
   private facts: string[] = [];
   private next = "";
+  private focus = "";
   private readonly think: boolean;
   private readonly numPredict: number;
   private readonly maxCalls: number;
@@ -233,7 +272,7 @@ export class PlannerSession {
     const s = jobSettings("planner");
     this.think = opts.think ?? s.think;
     this.numPredict = opts.numPredict ?? s.num_predict;
-    this.maxCalls = opts.maxToolCallsPerChunk ?? 2;
+    this.maxCalls = opts.maxToolCallsPerChunk ?? MAX_TOOL_CALLS_PER_CHUNK;
   }
 
   get chunks(): number {
@@ -247,13 +286,14 @@ export class PlannerSession {
 
   state(): LoopState {
     const ctx = this.ctx;
-    const host = ctx.conflicts.map((c) => `recast_comparative ${c.period}: ${c.own_filing.val} in ${c.own_filing.accn} vs ${c.later_filing.val} in ${c.later_filing.accn}, ${c.status} (${c.chosen})`.slice(0, 140));
+    // Host-side contradictions: keys measured below VERIFIED (the join map's "no" and "partly").
+    const host = [...ctx.measured.values()].filter((m) => m.status === "measured" && m.verdict !== "VERIFIED").map((m) => `${m.key}: ${m.verdict} ${m.matched_rows}/${m.left_rows}${m.orphans.length ? `, orphan ${m.orphans[0]}` : ""}`.slice(0, 140));
     return {
       v: 1,
-      chain: "weather",
-      cik: ctx.cik,
-      period: ctx.period,
-      claim: ctx.claim,
+      chain: "discovery",
+      quarter: ctx.quarter,
+      focus: this.focus,
+      claim: ctx.question,
       chunk: this.chunk,
       checklist: ctx.checklist.compact(),
       facts: [...this.facts],
@@ -263,7 +303,7 @@ export class PlannerSession {
       next: this.next,
       tool_calls: this.telemetry.toolCalls.length,
       fallback_steps: this.telemetry.toolCalls.filter((t) => t.source === "fallback").length,
-      verdict: ctx.verdict?.verdict ?? null,
+      verdict: ctx.answer ? `${ctx.answer.rows.length} utilities answered` : null,
     };
   }
 
@@ -280,7 +320,7 @@ export class PlannerSession {
     const cl = this.ctx.checklist;
     if (cl.complete() || allowedTools(this.ctx, this.deps).some((t) => !t.optional)) return;
     for (const item of cl.pending()) {
-      if (item.id === "claim_tested" || item.id === "memo_written") continue;
+      if (item.id === "note_written") continue;
       cl.set(item.id, "failed", "no tool could resolve it");
       this.ctx.gaps.push(`${item.id}: no tool could resolve this checklist item`);
     }
@@ -365,7 +405,7 @@ export class PlannerSession {
       const tools = allowedTools(ctx, this.deps);
       if (tools.length === 0) break;
       const system = plannerSystemPrompt(tools, this.opts.chainLabel);
-      const host = hostBlock(ctx, inChunk);
+      const host = hostBlock(ctx, inChunk, tools);
       const user = `${base}\n\n${host}`;
       const messages: ChatMessage[] = [
         { role: "system", content: system },
@@ -411,6 +451,7 @@ export class PlannerSession {
         this.modelContradictions = out.state.open_contradictions.slice(0, 2);
         this.cited = [...new Set([...this.cited, ...out.state.evidence_ids])].slice(-8);
         if (out.state.next) this.next = out.state.next;
+        if (out.state.focus) this.focus = out.state.focus.slice(0, 80);
       }
 
       let d: LoopToolDef | undefined;

@@ -117,7 +117,7 @@ const plannerInputSchema: JsonSchema = {
     query: { type: "string", minLength: 1, maxLength: 120 },
     object: { type: "string", pattern: OBJECT_PATTERN },
     choices: keyChoicesSchema,
-    key: { type: "string", pattern: "^[kb][0-9]{1,2}$" },
+    key: { type: "string", pattern: "^[kbc][0-9]{1,2}$" },
     catalogue_id: { type: "string", pattern: "^[a-z][a-z0-9_]{0,63}$" },
     quarter: { type: "string", pattern: "^CY[0-9]{4}Q[1-4]$" },
     tag: { enum: ["Revenues", "RevenueFromContractWithCustomerExcludingAssessedTax", "RegulatedAndUnregulatedOperatingRevenue"] },

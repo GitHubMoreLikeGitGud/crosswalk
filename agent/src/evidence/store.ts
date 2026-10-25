@@ -77,7 +77,9 @@ export const LICENCES = {
   sec: "SEC EDGAR (US government work, public domain); fair-access policy: at most 10 requests per second with a declared User-Agent; queried live, never redistributed",
   noaa: "NOAA GHCN-Daily on the AWS Open Data public bucket (US government work, public domain; cite NOAA NCEI)",
   dns: "company_dns (Apache-2.0) serving the US SIC code list",
-  usl: "Crosswalk USL (governed copies of the SEC and NOAA objects above)",
+  usl: "Crosswalk USL (governed copies of the SEC, FEMA, NOAA and seed objects above)",
+  fema: "OpenFEMA (US government work, public domain; FEMA cited as the source, not an endorsement)",
+  seeds: "Crosswalk seed files (Apache-2.0), curated from public records",
 } as const;
 
 const S3_GHCN = "s3a://noaa-ghcn-pds/parquet/by_year";
@@ -95,6 +97,13 @@ export function sourceFor(rawObject: string): { url: string; licence: string } {
   m = /^cw\.ghcn_(\d{4})_(tmax|tmin)$/u.exec(o);
   if (m) return { url: `${S3_GHCN}/YEAR=${m[1]}/ELEMENT=${m[2]!.toUpperCase()}/`, licence: LICENCES.noaa };
   if (o.startsWith("lightning.metastore.crosswalk.")) return { url: "zetaris-usl:crosswalk_usl", licence: LICENCES.usl };
+  m = /^cw\.fema_declarations_dr_(\d{4})q([1-4])$/iu.exec(o);
+  if (m) return { url: `https://www.fema.gov/api/open/v2/DisasterDeclarationsSummaries (declarationType DR, ${m[1]} Q${m[2]})`, licence: LICENCES.fema };
+  if (o.toLowerCase() === "cw.fema_catalogue") return { url: "https://www.fema.gov/api/open/v1/OpenFemaDataSets", licence: LICENCES.fema };
+  if (o.toLowerCase() === "cw.stations") return { url: "https://noaa-ghcn-pds.s3.amazonaws.com/ghcnd-stations.txt", licence: LICENCES.noaa };
+  if (["cw.seed_utilities", "cw.seed_utility_names", "cw.utility_states"].includes(o.toLowerCase())) return { url: "seeds/utilities.json (curated from public 10-K filings; cw.seed_utilities also reads the SEC submissions views)", licence: LICENCES.seeds };
+  if (o.toLowerCase() === "cw.seed_stations") return { url: "seeds/stations.json", licence: LICENCES.seeds };
+  if (o.toLowerCase() === "cw.states") return { url: "seeds/states.json (US Census FIPS codes)", licence: LICENCES.seeds };
   return { url: "unknown", licence: "unknown" };
 }
 

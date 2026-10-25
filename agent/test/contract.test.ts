@@ -50,7 +50,7 @@ describe("policy", () => {
   it("names the Crosswalk policy pack, surfaces and risk classes", () => {
     expect(POLICY_PACK_VERSION).toBe("crosswalk-scout-subset@1");
     expect([...SURFACES]).toEqual(["cw-ui", "cw-agent"]);
-    expect([...REGISTRAR_ACTIONS]).toEqual(["register_frames", "register_concept", "register_submission"]);
+    expect([...REGISTRAR_ACTIONS]).toEqual(["register_frames", "register_concept", "register_submission", "register_source"]);
     for (const a of REGISTRAR_ACTIONS) expect(riskOf(a)).toBe("medium");
     expect(riskOf("read")).toBe("low");
     expect(riskOf("override_recast")).toBe("high");

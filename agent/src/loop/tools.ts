@@ -23,12 +23,14 @@ import type { ChecklistItemId, PlannerAction, ToolName } from "../llm/schemas.ts
 import { TOOL_CATALOG } from "../llm/toolCatalog.ts";
 import type { Seeds } from "../seeds.ts";
 import { baselineProposals, type BaselineChoice, type KeyChoice } from "../tools/baselineKeys.ts";
+import type { KeyProposal } from "../tools/matchRate.ts";
 import {
   answer as answerTool,
   compileUsl,
   loadCatalogueInputs,
   measureKey,
   notTested,
+  NOT_TESTED_WEATHER,
   probeSource,
   probeSummary,
   proposeKeys,
@@ -66,10 +68,50 @@ export interface RegistrarPort {
   register(action: RegistrarAction, params: Record<string, string>): Promise<RegistrarResult>;
 }
 
-/** key_verified memories (H-MEM): a warm run recalls a verified key instead of measuring it again. */
+/**
+ * key_verified memories (H-MEM): a warm run recalls a VERIFIED key instead of measuring it again.
+ * The memory key is {left, right, transform} with period-specific view names generalised to their
+ * source family (memoryKeyOf): a key verified on cw.frames_Revenues_CY2025Q1 is the same column
+ * pairing on cw.frames_Revenues_CY2024Q1, and the recalled result names the period it was measured on.
+ */
 export interface KeyMemoryPort {
-  recall(key: string): { result: MeasureResult; memoryId: string } | null;
+  recall(memoryKey: string): { result: MeasureResult; memoryId: string } | null;
   remember(result: MeasureResult, evidenceIds: string[]): string | null;
+  /** Every remembered VERIFIED key; the warm run recalls those whose source families the question reads (D9). */
+  verified?(): { memoryKey: string; result: MeasureResult; memoryId: string }[];
+}
+
+const FRAMES_FAMILY = /^cw\.frames_([A-Za-z]+)_CY\d{4}Q[1-4]$/iu;
+const FEMA_FAMILY = /^cw\.fema_declarations_dr_\d{4}q[1-4]$/iu;
+
+/** A view name with its period or quarter generalised (cw.frames_Revenues_<period>, cw.fema_declarations_dr_<quarter>). */
+export function familyOf(object: string): string {
+  const f = FRAMES_FAMILY.exec(object);
+  if (f) return `cw.frames_${f[1]!.toLowerCase()}_<period>`;
+  if (FEMA_FAMILY.test(object)) return "cw.fema_declarations_dr_<quarter>";
+  return object.toLowerCase();
+}
+
+/** The memory key of a proposal: the unordered pair of family.column plus the transform. */
+export function memoryKeyOf(p: { leftObject: string; leftColumn: string; rightObject: string; rightColumn: string; transform: string }): string {
+  const a = `${familyOf(p.leftObject)}.${p.leftColumn.toLowerCase()}`;
+  const b = `${familyOf(p.rightObject)}.${p.rightColumn.toLowerCase()}`;
+  return `${a < b ? `${a}|${b}` : `${b}|${a}`}|${p.transform}`;
+}
+
+/** The remembered proposal re-instantiated on this question's views (the period of the frames, the quarter of FEMA); null when it does not apply. */
+export function instantiateFor(p: KeyProposal, quarter: string): KeyProposal | null {
+  const m = /^CY(\d{4})Q([1-4])$/u.exec(quarter);
+  if (!m) return null;
+  const one = (o: string): string | null => {
+    const f = FRAMES_FAMILY.exec(o);
+    if (f) return m[2] === "4" ? null : `cw.frames_${f[1]}_${quarter}`;
+    if (FEMA_FAMILY.test(o)) return `cw.fema_declarations_dr_${quarterSlug(quarter)}`;
+    return o;
+  };
+  const l = one(p.leftObject);
+  const r = one(p.rightObject);
+  return l && r ? { ...p, leftObject: l, rightObject: r } : null;
 }
 
 export interface ToolDeps {
@@ -172,7 +214,8 @@ export function newQuestionContext(question: string, quarter: string, evidence: 
     memoryIds: [],
     registered,
     search: null,
-    targets: questionSources(quarter),
+    // Only registered views can be probed; a view the question needs and the manifest lacks is registered later (register_source).
+    targets: questionSources(quarter).filter((o) => [...registered].some((r) => r.toLowerCase() === o.toLowerCase())),
     probes: new Map(),
     probeFailures: new Map(),
     proposals: { model: [], proposedBy: null, baseline: [], rejected: [] },
@@ -417,14 +460,26 @@ const proposeTool = def("propose_keys", {
     ctx.proposals.model = checked.accepted.map((a, i) => ({ ...a, id: `k${i + 1}` }));
     ctx.proposals.proposedBy = byBaseline ? "baseline" : "planner";
     const ids: string[] = [];
-    for (const a of ctx.proposals.model) {
-      if (!a.route) ctx.unmeasurable.set(a.id, "no gateway join-map statement measures this pair under this transform");
-      const mem = a.route ? deps.keyMemory?.recall(a.route) : null;
-      if (mem && !ctx.measured.has(a.route!)) {
-        ctx.measured.set(a.route!, { ...mem.result, from_memory: mem.memoryId });
-        ctx.memoryIds.push(mem.memoryId);
-        ctx.skipped.push({ item: "keys_measured", memoryId: mem.memoryId, note: `measure_key ${a.id} skipped: ${a.route} ${mem.result.verdict} recalled from memory` });
+    const recallInto = (id: string, p: KeyProposal, route: string, mem: { result: MeasureResult; memoryId: string }) => {
+      if (ctx.measured.has(route) || mem.result.verdict !== "VERIFIED") return;
+      ctx.measured.set(route, { ...mem.result, from_memory: mem.memoryId });
+      if (!ctx.memoryIds.includes(mem.memoryId)) ctx.memoryIds.push(mem.memoryId);
+      ctx.skipped.push({ item: "keys_measured", memoryId: mem.memoryId, note: `measure_key ${id} skipped: ${route} (${p.leftObject}.${p.leftColumn} ~ ${p.rightObject}.${p.rightColumn}, ${p.transform}) VERIFIED ${mem.result.matched_rows}/${mem.result.left_rows} as ${mem.result.key} recalled from memory` });
+    };
+    for (const a of [...ctx.proposals.model, ...ctx.proposals.baseline]) {
+      if (!a.route) {
+        if (a.id.startsWith("k")) ctx.unmeasurable.set(a.id, "no gateway join-map statement measures this pair under this transform");
+        continue;
       }
+      const p = toProposal(a);
+      const mem = deps.keyMemory?.recall(memoryKeyOf(p));
+      if (mem) recallInto(a.id, p, a.route, mem);
+    }
+    // D9: the keys verified in an earlier run whose source families this question reads are recalled too, re-instantiated on this question's views.
+    for (const v of deps.keyMemory?.verified?.() ?? []) {
+      const p = instantiateFor(v.result.proposal, ctx.quarter);
+      const r = p ? routeOf(p, known) : null;
+      if (p && r) recallInto(`m${ctx.skipped.length + 1}`, p, routeKey(r, p), v);
     }
     const ev = toolEvidence(deps, "propose_keys", `Key proposals by the ${ctx.proposals.proposedBy}: ${checked.accepted.length} accepted (${ctx.proposals.model.filter((a) => a.route).length} measurable by a join-map statement), ${checked.rejected.length} rejected; baseline proposed ${Math.min(base.length, BASELINE_SCORED)} (ranks 7-12 kept for the measure queue)`, [], {
       proposed_by: ctx.proposals.proposedBy,
@@ -455,22 +510,37 @@ export function measureQueue(ctx: QuestionContext): { id: string; choice: KeyCho
     seen.add(c.route);
     out.push({ id: c.id, choice: c, route: c.route });
   }
+  // L3 controls: a key that needed a transform is measured once more under identity, when a join-map statement exists for it.
+  const known = knownTemplates();
+  let n = 0;
+  for (const m of ctx.measured.values()) {
+    if (m.status !== "measured" || m.proposal.transform === "identity") continue;
+    const p = instantiateFor({ ...m.proposal, transform: "identity" }, ctx.quarter);
+    const r = p ? routeOf(p, known) : null;
+    if (!p || !r) continue;
+    n += 1;
+    const route = routeKey(r, p);
+    if (seen.has(route)) continue;
+    seen.add(route);
+    out.push({ id: `c${n}`, choice: { left: { object: p.leftObject, column: p.leftColumn }, right: { object: p.rightObject, column: p.rightColumn }, transform: "identity" }, route });
+  }
   return out;
 }
 
 const measuredCount = (ctx: QuestionContext) => [...ctx.measured.values()].filter((m) => m.status === "measured").length;
 
-/** keys_measured: done at MIN_MEASURED_KEYS measured keys; failed when nothing measurable is left below that. */
+/** keys_measured: done when every measurable proposal (and its control) is measured or recalled, with at least MIN_MEASURED_KEYS; failed below that. */
 function settleMeasured(ctx: QuestionContext): void {
   if (!pending(ctx, "keys_measured") || !ctx.checklist.isDone("keys_proposed")) return;
+  if (measureQueue(ctx).length > 0) return;
   const n = measuredCount(ctx);
-  if (n >= MIN_MEASURED_KEYS) ctx.checklist.set("keys_measured", "done", `${n} keys measured`);
-  else if (measureQueue(ctx).length === 0) ctx.checklist.set("keys_measured", "failed", `only ${n} keys measured; nothing measurable is left`);
+  if (n >= MIN_MEASURED_KEYS) ctx.checklist.set("keys_measured", "done", `${n} keys measured${ctx.skipped.length ? `, ${ctx.skipped.filter((s) => s.item === "keys_measured").length} of them recalled from memory` : ""}`);
+  else ctx.checklist.set("keys_measured", "failed", `only ${n} keys measured; nothing measurable is left`);
 }
 
 const measureTool = def("measure_key", {
   optional: false,
-  available: (ctx) => ctx.checklist.isDone("keys_proposed") && measureQueue(ctx).length > 0 && (pending(ctx, "keys_measured") || measuredCount(ctx) < 7),
+  available: (ctx) => ctx.checklist.isDone("keys_proposed") && measureQueue(ctx).length > 0 && pending(ctx, "keys_measured"),
   defaultInput: (ctx) => ({ key: measureQueue(ctx)[0]?.id }),
   checkInput(input, ctx) {
     if (input.key === undefined) return [];
@@ -486,7 +556,7 @@ const measureTool = def("measure_key", {
     ids.push(ev.id);
     ctx.measured.set(q.route, m);
     ctx.card.push({ text: ev.claim, evidenceIds: [ev.id] });
-    if (m.verdict === "VERIFIED" || m.verdict === "PARTIAL") {
+    if (m.status === "measured") {
       const memId = deps.keyMemory?.remember(m, ids) ?? null;
       if (memId) ctx.memoryIds.push(memId);
     }
@@ -545,16 +615,32 @@ const compileTool = def("compile_usl", {
   },
 });
 
+/** D3: weather is read only when the GHCN TMAX and TMIN views of both years are registered and cached. */
+export function weatherReady(ctx: QuestionContext, deps: Pick<ToolDeps, "weather">): boolean {
+  if (!deps.weather) return false;
+  const m = /^CY(\d{4})Q([1-4])$/u.exec(ctx.quarter);
+  if (!m) return false;
+  const reg = new Set([...ctx.registered].map((o) => o.toLowerCase()));
+  return [Number(m[1]), Number(m[1]) - 1].every((y) => reg.has(`cw.ghcn_${y}_tmax`) && reg.has(`cw.ghcn_${y}_tmin`));
+}
+
+/** Why the weather column is empty, for the Not-tested list. */
+export function weatherGap(ctx: QuestionContext, deps: Pick<ToolDeps, "weather">): string {
+  const m = /^CY(\d{4})Q([1-4])$/u.exec(ctx.quarter)!;
+  if (!deps.weather) return NOT_TESTED_WEATHER;
+  return `Weather at the utilities' stations: the GHCN TMAX and TMIN views of ${Number(m[1]) - 1} are not registered (only 2024 and 2025 are), so the year-on-year weather change for ${ctx.quarter} is not computed.`;
+}
+
 const answerToolDef = def("answer", {
   optional: false,
   available: (ctx) => resolved(ctx, "keys_measured") && resolved(ctx, "sources_registered") && pending(ctx, "answered"),
   defaultInput: (ctx) => ({ quarter: ctx.quarter }),
   checkInput: (input, ctx) => (input.quarter === undefined || input.quarter === ctx.quarter ? [] : [`action.input.quarter ${input.quarter} is not the quarter asked about (${ctx.quarter})`]),
   async run(_input, ctx, deps) {
-    const stationsByCik = deps.weather ? Object.fromEntries(deps.seeds.utilities.map((u) => [u.cik, u.station_ids])) : null;
+    const stationsByCik = weatherReady(ctx, deps) ? Object.fromEntries(deps.seeds.utilities.map((u) => [u.cik, u.station_ids])) : null;
     const r = await timed(ctx, "answer", () => answerTool({ quarter: ctx.quarter }, { gateway: questionPort(deps.gateway), runId: deps.evidence.runId, stationsByCik }));
     ctx.answer = r;
-    const ids = r.provenance.map((p) => statementEvidence(deps, p, `${p.template} ${JSON.stringify(p.params)}`, p.template === "answer_fema_utilities" ? `cw.fema_declarations_dr_${quarterSlug(ctx.quarter)}` : p.template === "answer_revenue" ? `cw.frames_Revenues_${p.params.period}` : "cw.ghcn").id);
+    const ids = r.provenance.map((p) => statementEvidence(deps, p, `${p.template} ${JSON.stringify(p.params)}`, p.template === "answer_fema_utilities" ? `cw.fema_declarations_dr_${quarterSlug(ctx.quarter)}` : p.template === "answer_revenue" ? `cw.frames_Revenues_${p.params.period}` : `cw.ghcn_${p.params.year}_tmax`).id);
     const ev = toolEvidence(deps, "answer", `Answer for ${ctx.quarter}: ${r.rows.length} utilities serve states with major-disaster declarations; revenue compared for ${r.rows.filter((x) => x.revenue?.change !== null && x.revenue?.change !== undefined).length}; weather ${r.weather_status}`, ids, { answer: r });
     ids.push(ev.id);
     ctx.card.push({ text: ev.claim, evidenceIds: [ev.id] });
@@ -564,13 +650,19 @@ const answerToolDef = def("answer", {
   },
 });
 
+function notTestedFor(ctx: QuestionContext, deps: ToolDeps): string[] {
+  const measured = ctx.answer?.weather_status === "measured";
+  const base = notTested({ weather: true });
+  return measured ? base : [...base, weatherGap(ctx, deps)];
+}
+
 const notTestedTool = def("not_tested", {
   optional: false,
   available: (ctx) => pending(ctx, "not_tested_listed"),
   defaultInput: () => ({}),
   checkInput: noCheck,
   async run(_input, ctx, deps) {
-    ctx.notTested = notTested({ weather: ctx.answer?.weather_status === "measured" });
+    ctx.notTested = notTestedFor(ctx, deps);
     const ev = toolEvidence(deps, "not_tested", `Not tested (${ctx.notTested.length} items): ${ctx.notTested.map((n) => n.split(":")[0]).join("; ")}`, [], { items: ctx.notTested });
     ctx.card.push({ text: ev.claim, evidenceIds: [ev.id] });
     ctx.checklist.set("not_tested_listed", "done", null, [ev.id]);
@@ -585,7 +677,7 @@ export function compareProposals(ctx: QuestionContext): { planner: SideScore; ba
 }
 
 /** The formatted numbers the note may quote and the findings it explains, all from tool outputs. */
-export function noteMaterial(ctx: QuestionContext): { allowed: AllowedNumber[]; findings: string[] } {
+export function noteMaterial(ctx: QuestionContext): { allowed: AllowedNumber[]; findings: string[]; dq: string } {
   const allowed: AllowedNumber[] = [];
   const add = (label: string, text: string) => {
     if (!allowed.some((a) => a.text === text)) allowed.push({ label, text });
@@ -600,8 +692,27 @@ export function noteMaterial(ctx: QuestionContext): { allowed: AllowedNumber[]; 
     add(`${k.route} matched`, String(k.matched_rows));
     add(`${k.route} left`, String(k.left_rows));
     add(`${k.route} rate`, num(k.rate, 3));
+    for (const o of k.orphans) for (const tok of o.match(/\d+/gu) ?? []) add(`${k.route} orphan identifier`, tok);
     findings.push(`Key ${k.label}: ${k.matched_rows} of ${k.left_rows} matched (${num(k.rate, 3)}), ${k.verdict}${k.orphans.length ? `; orphans ${k.orphans.join("; ")}` : ""}${k.from_memory ? " (recalled from memory)" : ""}.`);
   }
+  const dqParts: string[] = [];
+  const u = ctx.usl;
+  if (u?.dq) {
+    const invalid = u.dq.rules.reduce((s, r) => s + (r.invalid ?? 0), 0);
+    add("onboarding DQ rules", String(u.dq.rules.length));
+    add("onboarding DQ invalid rows", String(invalid));
+    const rows = u.invalid_rows.map((r) => JSON.stringify(r)).join("; ");
+    for (const tok of rows.match(/\d+/gu) ?? []) add("invalid row identifier", tok);
+    dqParts.push(`${u.dq.rules.length} foreign-key rules ran at onboarding with ${invalid} invalid row(s)${rows ? ` (${rows.replace(/[[\]"]/gu, "")})` : ""}`);
+  }
+  for (const r of u?.live_rules_run ?? []) {
+    if (r.error || r.total === null) continue;
+    add(`${r.rule} total`, String(r.total));
+    add(`${r.rule} invalid`, String(r.invalid ?? 0));
+    dqParts.push(`${r.rule} ran live: ${r.invalid ?? 0} invalid of ${r.total}`);
+  }
+  const dq = dqParts.join("; ") || "no DQ result";
+  findings.push(`Data quality: ${dq}.`);
   const c = ctx.comparison;
   if (c) {
     add("planner proposals", String(c.planner.proposals));
@@ -623,9 +734,13 @@ export function noteMaterial(ctx: QuestionContext): { allowed: AllowedNumber[]; 
       } else {
         findings.push(`${r.name}: ${r.declarations} declaration(s) in ${r.states.map((s) => s.state).join(", ")}; revenue not compared (${r.revenue?.note ?? r.revenue_note ?? "no value"}).`);
       }
+      if (r.weather) {
+        add(`${r.name} weather change`, pct(r.weather.change));
+        findings.push(`${r.name}: total degree days ${pct(r.weather.change)} year on year over ${r.weather.stations.length === 1 ? "one station" : "its stations"}.`);
+      }
     }
   }
-  return { allowed, findings };
+  return { allowed, findings, dq };
 }
 
 const finalizeTool = def("finalize", {
@@ -636,11 +751,9 @@ const finalizeTool = def("finalize", {
   async run(_input, ctx, deps) {
     ctx.comparison = compareProposals(ctx);
     const cev = toolEvidence(deps, "key_comparison", `Proposals scored by the measured join map: ${ctx.proposals.proposedBy ?? "planner"} ${ctx.comparison.planner.verified}/${ctx.comparison.planner.proposals} verified, baseline ${ctx.comparison.baseline.verified}/${ctx.comparison.baseline.proposals} verified`, [], { comparison: ctx.comparison, proposed_by: ctx.proposals.proposedBy });
-    if (!ctx.notTested.length) ctx.notTested = notTested({ weather: ctx.answer?.weather_status === "measured" });
-    const { allowed, findings } = noteMaterial(ctx);
-    const memo = await timed(ctx, "memo", () =>
-      writeMemo(deps.ollama, { utility: "Crosswalk", cik: "", period: ctx.quarter, claim: ctx.question, verdict: ctx.answer ? `${ctx.answer.rows.length} utilities` : "no answer", confidence: "n/a", dq: ctx.usl?.status ?? "not run", findings, notTested: ctx.notTested.map((n) => n.split(":")[0]!), allowed }),
-    );
+    if (!ctx.notTested.length) ctx.notTested = notTestedFor(ctx, deps);
+    const { allowed, findings, dq } = noteMaterial(ctx);
+    const memo = await timed(ctx, "memo", () => writeMemo(deps.ollama, { question: ctx.question, quarter: ctx.quarter, dq, findings, notTested: ctx.notTested.map((n) => n.split(":")[0]!), allowed }));
     ctx.memo = memo;
     const tokensIn = memo.attempts.reduce((s, x) => s + (x.metrics?.promptTokens ?? 0), 0);
     const tokensOut = memo.attempts.reduce((s, x) => s + (x.metrics?.evalTokens ?? 0), 0);

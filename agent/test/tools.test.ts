@@ -7,7 +7,7 @@ import { describe, expect, it } from "vitest";
 import { EvidenceStore } from "../src/evidence/store.ts";
 import { plannerSchema, validate } from "../src/llm/schemas.ts";
 import { TOOL_CATALOG } from "../src/llm/toolCatalog.ts";
-import { allowedTools, completeInput, fallbackStep, newQuestionContext, questionPort, runTool, toolDef, type KeyMemoryPort, type RegistrarPort, type ToolDeps } from "../src/loop/tools.ts";
+import { allowedTools, completeInput, fallbackStep, memoryKeyOf, newQuestionContext, questionPort, runTool, toolDef, type KeyMemoryPort, type RegistrarPort, type ToolDeps } from "../src/loop/tools.ts";
 import { loadSeeds } from "../src/seeds.ts";
 import type { MeasureResult } from "../src/tools/discovery.ts";
 import type { RegistrarResult } from "../src/zetaris/client.ts";
@@ -47,6 +47,10 @@ function resolve(id: string, p: Record<string, string>): Reply | undefined {
       return { columns: ["left_keys", "matched_keys"], rows: [[43, 42]] };
     case "joinmap_cik_orphans":
       return { columns: ["orphan_cik", "name"], rows: [["0009000043", "SYN Q"]] };
+    case "joinmap_cik_control":
+      return { columns: ["left_keys", "matched_keys"], rows: [[43, 0]] };
+    case "joinmap_fema_fips":
+      return { columns: ["left_keys", "matched_keys"], rows: [[8, 8]] };
     case "joinmap_loc":
       return { columns: ["left_keys", "matched_keys"], rows: [[42, 42]] };
     case "joinmap_fema_state":
@@ -111,9 +115,11 @@ describe("the discovery loop on the fallback alone", () => {
     expect(ctx.targets.slice(0, 8)).toEqual(["cw.seed_utilities", "cw.frames_Revenues_CY2025Q1", "cw.fema_declarations_dr_2025q1", "cw.utility_states", "cw.states", "cw.seed_stations", "cw.stations", "cw.sic_codes"]);
     expect(steps.filter((s) => s === "probe_source")).toHaveLength(ctx.targets.length);
     expect(ctx.probes.size).toBe(8);
-    expect(steps.filter((s) => s === "measure_key")).toHaveLength(5);
+    // Every measurable proposal is measured, plus the identity control of the lpad10 key (L3).
+    expect(steps.filter((s) => s === "measure_key")).toHaveLength(6);
     expect(ctx.proposals.proposedBy).toBe("baseline");
-    expect([...ctx.measured.keys()].sort()).toEqual(["cik@CY2025Q1", "fema_state@CY2025Q1", "loc@CY2025Q1", "sic@all", "station@all"]);
+    expect([...ctx.measured.keys()].sort()).toEqual(["cik@CY2025Q1", "cik_control@CY2025Q1", "fema_state@CY2025Q1", "loc@CY2025Q1", "sic@all", "station@all"]);
+    expect(ctx.measured.get("cik_control@CY2025Q1")!.verdict).toBe("REJECTED");
     expect(ctx.measured.get("fema_state@CY2025Q1")!.verdict).toBe("PARTIAL");
     expect(ctx.measured.get("sic@all")!.rate_distinct).toBe(0.75);
     expect(ctx.usl!.matches_governed).toBe(true);
@@ -135,20 +141,22 @@ describe("the discovery loop on the fallback alone", () => {
   it("a warm run recalls verified keys from memory and skips their measure steps", async () => {
     const memory = new Map<string, MeasureResult>();
     const port: KeyMemoryPort = {
-      recall: (k) => (memory.has(k) ? { result: memory.get(k)!, memoryId: `mem-${k}` } : null),
+      recall: (k) => (memory.has(k) && memory.get(k)!.verdict === "VERIFIED" ? { result: memory.get(k)!, memoryId: `mem-${memory.get(k)!.key}` } : null),
       remember: (m) => {
-        memory.set(m.key!, m);
+        memory.set(memoryKeyOf(m.proposal), m);
         return `mem-${m.key}`;
       },
     };
     await runFallback(deps({ keyMemory: port }));
-    expect([...memory.keys()].sort()).toEqual(["cik@CY2025Q1", "fema_state@CY2025Q1", "loc@CY2025Q1", "sic@all", "station@all"]);
+    expect([...memory.values()].map((m) => m.key).sort()).toEqual(["cik@CY2025Q1", "cik_control@CY2025Q1", "fema_state@CY2025Q1", "loc@CY2025Q1", "sic@all", "station@all"]);
+    expect(memory.has("cw.frames_revenues_<period>.cik|cw.seed_utilities.cik|lpad10")).toBe(true);
     const warm = deps({ keyMemory: port });
     const { ctx, steps } = await runFallback(warm);
     expect(ctx.checklist.complete()).toBe(true);
     const skipped = ctx.skipped.filter((s) => s.item === "keys_measured").length;
-    expect(skipped + steps.filter((s) => s === "measure_key").length).toBe(5);
-    expect(skipped).toBeGreaterThanOrEqual(4);
+    // VERIFIED keys are recalled; the PARTIAL FEMA key and the REJECTED control are measured again.
+    expect(skipped).toBe(4);
+    expect(steps.filter((s) => s === "measure_key")).toHaveLength(2);
     expect(ctx.measured.get("cik@CY2025Q1")!.from_memory).toBe("mem-cik@CY2025Q1");
   });
 
@@ -170,11 +178,12 @@ describe("the registry", () => {
     }
     const propose = toolDef("propose_keys")!;
     const c = (lo: string, lc: string, ro: string, rc: string, t: string) => ({ left: { object: lo, column: lc }, right: { object: ro, column: rc }, transform: t });
-    const out = await runTool(propose, { choices: [c("cw.fema_declarations_dr_2025q1", "state", "cw.utility_states", "state", "identity"), c("cw.seed_utilities", "cik", "cw.frames_Revenues_CY2025Q1", "cik", "identity"), c("won.x", "a", "cw.states", "code", "identity")] }, ctx, d);
+    const out = await runTool(propose, { choices: [c("cw.fema_declarations_dr_2025q1", "state", "cw.utility_states", "state", "identity"), c("cw.seed_utilities", "cik", "cw.frames_Revenues_CY2025Q1", "cik", "identity"), c("cw.states", "code", "cw.utility_states", "state", "identity"), c("won.x", "a", "cw.states", "code", "identity")] }, ctx, d);
     expect(out.ok).toBe(true);
     expect(ctx.proposals.proposedBy).toBe("planner");
-    expect(ctx.proposals.model.map((m) => m.route)).toEqual(["fema_state@CY2025Q1", null]);
-    expect(ctx.unmeasurable.get("k2")).toMatch(/no gateway join-map statement/u);
+    // The cik pair without lpad10 is measurable now: it is the control (joinmap_cik_control).
+    expect(ctx.proposals.model.map((m) => m.route)).toEqual(["fema_state@CY2025Q1", "cik_control@CY2025Q1", null]);
+    expect(ctx.unmeasurable.get("k3")).toMatch(/no gateway join-map statement/u);
     expect(ctx.proposals.rejected).toHaveLength(1);
     expect(allowedTools(ctx, d).map((t) => t.name)).toContain("measure_key");
     expect(completeInput(toolDef("measure_key")!, {}, ctx).key).toBe("k1");

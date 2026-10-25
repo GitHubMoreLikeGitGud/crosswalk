@@ -851,12 +851,16 @@ export function readDqFile(path: string | null | undefined): DqFileSummary | nul
 
 /** The RUN DQ reply: total, valid, invalid (named columns, else the first three values). */
 export function parseDqRun(reply: Pick<TemplateReply, "columns" | "rows">): { total: number | null; valid: number | null; invalid: number | null } {
-  const row = reply.rows[0];
+  // Lightning 2.4.3.1 answers RUN DQ with one row per constraint (name, table, type, total_record, valid_record,
+  // invalid_record): the primary-key row first, then the foreign-key row. The FK row is the rule's result.
+  const typeIdx = reply.columns.findIndex((c) => c.toLowerCase() === "type");
+  const fkRow = typeIdx >= 0 ? reply.rows.find((r) => /foreign/iu.test(String(r[typeIdx] ?? ""))) : undefined;
+  const row = fkRow ?? reply.rows[0];
   if (!row) return { total: null, valid: null, invalid: null };
   const obj = Object.fromEntries(reply.columns.map((c, i) => [c, row[i] ?? null]));
-  const total = num(pick(obj, ["total", "total_records", "total_count"]));
-  const valid = num(pick(obj, ["valid", "valid_records", "valid_count"]));
-  const invalid = num(pick(obj, ["invalid", "invalid_records", "invalid_count"]));
+  const total = num(pick(obj, ["total", "total_record", "total_records", "total_count"]));
+  const valid = num(pick(obj, ["valid", "valid_record", "valid_records", "valid_count"]));
+  const invalid = num(pick(obj, ["invalid", "invalid_record", "invalid_records", "invalid_count"]));
   if (total !== null || valid !== null || invalid !== null) return { total, valid, invalid };
   return { total: num(row[0]), valid: num(row[1]), invalid: num(row[2]) };
 }

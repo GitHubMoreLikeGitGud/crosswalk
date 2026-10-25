@@ -1,6 +1,6 @@
 // Saved runs: data/runs/<runId>/run.json (the whole RunResult: card, memo, chunks, evidence
 // ids and records, telemetry) and data/runs/index.json (every run and the latest per
-// utility and period). The CLI's replay and the server's /api/runs read from here.
+// quarter and mode). The CLI's replay and the server's /api/runs read from here.
 // Adapted from Weather-or-Not and ClearShelf (same author, Apache-2.0).
 
 import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
@@ -15,12 +15,12 @@ export interface RunOrigin {
 
 export interface RunIndexEntry {
   run_id: string;
-  cik: string;
-  period: string;
-  claim: string;
-  utility: string | null;
-  verdict: string | null;
-  confidence: string | null;
+  quarter: string;
+  mode: string;
+  question: string;
+  utilities: number;
+  keys: number;
+  skipped: number;
   started_at: string;
   wall_ms: number;
   chunks: number;
@@ -79,20 +79,20 @@ export class RunStore {
     this.reloadIndex();
     const entry: RunIndexEntry = {
       run_id: r.run_id,
-      cik: r.cik,
-      period: r.period,
-      claim: r.claim,
-      utility: r.card.utility?.name ?? null,
-      verdict: r.card.verdict?.verdict ?? null,
-      confidence: r.card.verdict?.confidence ?? null,
+      quarter: r.quarter,
+      mode: r.mode,
+      question: r.question,
+      utilities: r.answer?.rows.length ?? 0,
+      keys: r.join_map.length,
+      skipped: r.telemetry.skipped_chunks,
       started_at: r.started_at,
       wall_ms: r.wall_ms,
       chunks: r.markovian.chunks,
-      memo_source: r.card.memo?.source ?? null,
+      memo_source: r.memo?.source ?? null,
       source: origin.source,
     };
     this.index.runs = [...this.index.runs.filter((x) => x.run_id !== r.run_id), entry];
-    this.index.latest[`${r.cik}|${r.period}`] = r.run_id;
+    this.index.latest[`${r.quarter}|${r.mode}`] = r.run_id;
     if (this.dir) {
       mkdirSync(`${this.dir}/${r.run_id}`, { recursive: true });
       this.write(`${this.dir}/${r.run_id}/run.json`, `${JSON.stringify(run, null, 2)}\n`);
@@ -114,13 +114,13 @@ export class RunStore {
     return [...this.index.runs].sort((a, b) => b.started_at.localeCompare(a.started_at));
   }
 
-  latestId(cik: string, period: string): string | null {
+  latestId(quarter: string, mode = "cold"): string | null {
     this.reloadIndex();
-    return this.index.latest[`${cik}|${period}`] ?? null;
+    return this.index.latest[`${quarter}|${mode}`] ?? null;
   }
 
-  latest(cik: string, period: string): SavedRun | null {
-    const id = this.latestId(cik, period);
+  latest(quarter: string, mode = "cold"): SavedRun | null {
+    const id = this.latestId(quarter, mode);
     return id ? this.load(id) : null;
   }
 

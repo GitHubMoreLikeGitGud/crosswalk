@@ -24,56 +24,41 @@ const RUN = "r20260101T0000000001";
 const CIK = "0000000001";
 const CONFLICT = "rc-0123456789ab";
 
-function syntheticRun(id: string, over: Partial<Pick<RunResult, "cik" | "period" | "claim">> = {}): RunResult {
+function syntheticRun(id: string, over: Partial<Pick<RunResult, "quarter" | "mode">> = {}): RunResult {
   const ev1 = `ev-${id}-01`;
   const ev2 = `ev-${id}-02`;
   return {
     run_id: id,
-    cik: over.cik ?? CIK,
-    period: over.period ?? "CY2025Q1",
-    previous_period: "CY2024Q1",
-    claim: over.claim ?? "colder weather",
+    question: "Synthetic question about synthetic utilities",
+    quarter: over.quarter ?? "CY2025Q1",
+    previous_quarter: "CY2024Q1",
+    mode: over.mode ?? "cold",
     started_at: "2026-01-01T00:00:00.000Z",
     finished_at: "2026-01-01T00:01:00.000Z",
     wall_ms: 60000,
-    card: {
-      question: "Synthetic question about a synthetic utility",
-      utility: { cik: over.cik ?? CIK, name: "Synthetic Power Co", ticker: "SYN", sic: "4911", hq_state: "XX", states_served: ["XX"], stations: ["USW00000001"], flags: ["synthetic"] },
-      verdict: { claim: "colder weather", verdict: "supported", ratio: 0.5, confidence: "high", withheld_reason: null },
-      growth: { tag: "Revenues", g: 0.1, rev_current: 1100, rev_previous: 1000, current_accn: "0000000001-25-000001", current_filed: "2025-05-01", previous_original_accn: "0000000001-24-000001", previous_comparative_accn: "0000000001-25-000001", recast: false, tag_switch_note: null },
-      weather: { delta_w: 0.2, tdd_current: 1200, tdd_previous: 1000, coverage: 1, stations_used: ["USW00000001"], stations_missing: [] },
-      peers: { count: 1, by_tag: { Revenues: 1 }, with_weather: 1, excluded: [], list: [{ cik: "0000000002", name: "Synthetic Peer", tag: "Revenues", g: 0.05, dw: 0.1 }] },
-      attribution: {
-        weather: 0.05,
-        industry: 0.03,
-        remainder: 0.02,
-        beta: 0.5,
-        theil_sen: 0.4,
-        peers: 1,
-        confidence: "high",
-        ranges: { weather: { lo: 0.01, hi: 0.09 }, industry: { lo: -0.01, hi: 0.07 }, remainder: { lo: -0.05, hi: 0.09 }, beta: { lo: 0.1, hi: 0.9 } },
-        bootstrap: { valid: 300, resamples: 300, seed: 7 },
-        claim: { ratio: 0.5, verdict: "supported" },
-      },
-      dq: null,
-      recast_conflicts: [],
-      not_tested: ["synthetic item not tested"],
-      memo: { text: "Synthetic memo: revenue +10.0%, degree days +20.0%.", source: "template", words: 7, attempts: 0, attempts_detail: [] },
-      claims: [{ text: "Synthetic claim", evidenceIds: [ev1] }],
-      gaps: [],
-    },
+    chain: [],
+    tool_calls_detail: [],
+    join_map: [{ id: "b1", key: "cik@CY2025Q1", label: "(a) cik", left: "cw.seed_utilities.cik", right: "cw.frames_Revenues_CY2025Q1.cik", transform: "lpad10", proposed_by: ["baseline"], status: "measured", left_rows: 43, matched_rows: 42, rate: 42 / 43, left_keys: 43, matched_keys: 42, rate_distinct: 42 / 43, verdict: "VERIFIED", orphans: ["0000000009 (SYNTHETIC ORPHAN)"], extra: {}, measured_as: "cik@CY2025Q1", sql: "SELECT 1", sql_orphans: null, elapsed_ms: 10, from_memory: null, memory_key: "k" }],
+    model_proposals: { proposed_by: null, made: 0, verified: 0, partial: 0, rejected: 0, invalid_schema: 0, unmeasurable: 0, keys: [], choices: [] },
+    baseline_proposals: { proposed_by: "baseline", made: 1, verified: 1, partial: 0, rejected: 0, invalid_schema: 0, unmeasurable: 0, keys: ["cik@CY2025Q1"], choices: [] },
+    verdict_mix: [],
+    registrations: [],
+    usl: null,
+    answer: null,
+    memo: { text: "Synthetic note: 42 of 43 matched.", source: "template", words: 6, attempts: 0, attempts_detail: [] },
+    not_tested: ["synthetic item not tested"],
+    card: { claims: [{ text: "Synthetic claim", evidenceIds: [ev1] }], gaps: [] },
     checklist: [],
     checklist_complete: true,
     skipped_steps: [],
-    timeline: [],
-    markovian: { run_id: "m-1", status: "completed", error: null, chunk_config: { chunkSize: 3000, maxChunks: 10, carryoverTokens: 800, overlapTokens: 0 }, chunks: 2, engine_estimate: { total_tokens_used: 0, tokens_saved: 0, efficiency_percent: 0, label: "estimated" } },
+    markovian: { run_id: "m-1", status: "completed", error: null, chunk_config: { chunkSize: 3000, maxChunks: 12, carryoverTokens: 800, overlapTokens: 0 }, chunks: 2, engine_estimate: { total_tokens_used: 0, tokens_saved: 0, efficiency_percent: 0, label: "estimated" } },
     chunks: [],
     planner_calls: [],
     tool_calls: [],
     chart: [{ chunk: 0, measured: 1, estimated: 2 }],
     summary: { planner_calls: 2, planner_valid: 2 },
-    telemetry: { model: null, think: false, median_planner_tokens_per_s: null, memo_tokens_per_s: null, cloud_model_calls: 0, refused_model_hosts: 0, refused_gateway_hosts: 0, memory_context_chars: 0 },
-    memory: { ids: ["mem-1"], facts_total: 1, conflicts: 0, skipped_steps: 0 },
+    telemetry: { chunks: 2, skipped_chunks: 0, skipped_note: "", tokens: { planner_in: 0, planner_out: 0, memo_in: 0, memo_out: 0 }, wall_ms: 60000, model: null, think: false, median_planner_tokens_per_s: null, memo_tokens_per_s: null, cloud_model_calls: 0, refused_model_hosts: 0, refused_gateway_hosts: 0, memory_context_chars: 0 },
+    memory: { ids: ["mem-1"], facts_total: 1, skipped_steps: 0 },
     world: null,
     timings_ms: {},
     evidence_ids: [ev1, ev2],
@@ -97,7 +82,7 @@ function syntheticRun(id: string, over: Partial<Pick<RunResult, "cik" | "period"
         elapsed_ms: 12,
         cache_state: "hit",
       },
-      { id: ev2, run_id: id, kind: "tool", claim: "synthetic attribution", queried_at: "2026-01-01T00:00:02+00:00", derived_from: [ev1] },
+      { id: ev2, run_id: id, kind: "tool", claim: "synthetic key", queried_at: "2026-01-01T00:00:02+00:00", derived_from: [ev1] },
     ],
     evidence_file: null,
     quality: { e_cov: 1, claims: 1, e_complete: 1, records: 2, incomplete_records: {} },
@@ -155,7 +140,7 @@ function fakeRuntime(root: string) {
   const world = {
     exportGraph: () => ({ nodes: [{ id: `utility:sec:${CIK}`, type: "utility", name: "Synthetic Power Co", attrs: {} }], edges: [], events: 3, byType: { utility: 1, station: 1 }, edgeTypes: { serves: 1 } }),
     neighbourhood: (cik: string) => (cik === CIK ? { utility: { id: `utility:sec:${CIK}`, type: "utility", name: "Synthetic Power Co" }, edges: [{ type: "serves", dir: "out", other: "state:us:XX", otherType: "state", otherName: "XX", attrs: {}, validFrom: "2024-01-01" }] } : { utility: null, edges: [] }),
-    timeline: (cik: string) => (cik === CIK ? [{ seq: 1, at: "2024-01-01T00:00:00.000Z", kind: "upsertEntity", summary: "utility synthetic" }] : []),
+    utilityHistory: (cik: string) => (cik === CIK ? [{ type: "serves", from: "Synthetic Power Co", to: "XX", attrs: {}, validFrom: "2024-01-01T00:00:00.000Z", validTo: null, by: "seed", open: true }] : []),
   };
   const gateway = { baseUrl: "http://127.0.0.1:8803", health: async () => ({ ok: true, templates: Array.from({ length: 28 }, (_, i) => `t${i}`) }) };
   const seeds = {
@@ -181,7 +166,7 @@ function fakeAsk(opts: { fail?: boolean; delayMs?: number } = {}): AskFn {
     emit({ type: "tool", chunk: 0, seq: 1, tool: "get_weather", source: "model", fallback_reason: null, ok: true, fact: "synthetic fact", evidence_ids: [], latency_ms: 1 });
     emit({ type: "chunk_end", chunk: 0, state_tokens: 10, complete: true });
     if (opts.fail) throw new Error("synthetic failure");
-    const saved = rt.runs.save(syntheticRun(req.runId!, { cik: req.cik, period: req.period, claim: req.claim }), { source: "server" });
+    const saved = rt.runs.save(syntheticRun(req.runId!, { quarter: req.quarter, mode: req.mode }), { source: "server" });
     return { result: saved, evidence: null as never, seed: null };
   };
 }
@@ -298,12 +283,12 @@ describe("server: reads", () => {
     const list = await call(base, "/api/runs");
     expect(list.status).toBe(200);
     expect(list.body.runs).toHaveLength(1);
-    expect(list.body.runs[0]).toMatchObject({ run_id: RUN, cik: CIK, verdict: "supported", source: "test" });
+    expect(list.body.runs[0]).toMatchObject({ run_id: RUN, quarter: "CY2025Q1", mode: "cold", keys: 1, source: "test" });
     const run = await call(base, `/api/run/${RUN}`);
     expect(run.status).toBe(200);
     expect(run.body.run_id).toBe(RUN);
     expect(run.body.saved.source).toBe("test");
-    expect(run.body.card.memo.text).toContain("Synthetic memo");
+    expect(run.body.memo.text).toContain("Synthetic note");
     expect((await call(base, "/api/run/r20260101T0000009999")).status).toBe(404);
     expect((await call(base, "/api/run/not-a-run")).status).toBe(400);
     expect((await call(base, "/api/run/not-a-run")).body.error).toBeTypeOf("string");
@@ -326,12 +311,12 @@ describe("server: reads", () => {
     const r = await call(base, `/api/run/${RUN}/memo.md`);
     expect(r.status).toBe(200);
     expect(r.type).toContain("text/markdown");
-    expect(r.text).toContain("# Crosswalk memo: Synthetic Power Co");
-    expect(r.text).toContain("Synthetic memo: revenue +10.0%, degree days +20.0%.");
+    expect(r.text).toContain("# Crosswalk note: CY2025Q1 vs CY2024Q1");
+    expect(r.text).toContain("Synthetic note: 42 of 43 matched.");
+    expect(r.text).toContain("| cik@CY2025Q1 | cw.seed_utilities.cik | cw.frames_Revenues_CY2025Q1.cik | lpad10 | 42 / 43 | 0.977 | VERIFIED | 0000000009 (SYNTHETIC ORPHAN) |");
     expect(r.text).toContain("## Citations");
     expect(r.text).toContain(`| ev-${RUN}-01 | zetaris_sql | frames_fact | cw.frames_Revenues_CY2025Q1 | https://data.sec.gov/api/xbrl/frames/us-gaap/Revenues/USD/CY2025Q1.json | 2026-01-01T00:00:01+00:00 | 12 ms |`);
     expect(r.text).toContain(`| ev-${RUN}-02 | tool | from ev-${RUN}-01 |`);
-    expect(r.text).toContain("| Weather | +5.0% | [+1.0%, +9.0%] |");
     expect(r.text).toContain("- synthetic item not tested");
     expect(r.text).toContain("- synthetic licence text");
     expect(renderMemoMarkdown(syntheticRun(RUN))).toBe(r.text);
@@ -346,11 +331,10 @@ describe("server: reads", () => {
     expect((await call(base, "/api/why/mem-404")).status).toBe(404);
     expect((await call(base, "/api/why/evil")).status).toBe(400);
     const conflicts = await call(base, "/api/conflicts");
-    expect(conflicts.body.conflicts).toHaveLength(1);
-    expect(conflicts.body.conflicts[0].id).toBe(CONFLICT);
+    expect(conflicts.body.conflicts).toHaveLength(0);
   });
 
-  it("GET /api/world gives counts, /api/world/:cik the neighbourhood and timeline, 404 for a stranger", async () => {
+  it("GET /api/world gives counts, /api/world/:cik what we knew and since when, 404 for a stranger", async () => {
     const { base } = await start();
     const w = await call(base, "/api/world");
     expect(w.status).toBe(200);
@@ -359,9 +343,7 @@ describe("server: reads", () => {
     expect((await call(base, "/api/world?full=1")).body.graph.nodes).toHaveLength(1);
     const u = await call(base, `/api/world/${CIK}`);
     expect(u.status).toBe(200);
-    expect(u.body.neighbourhood.utility.name).toBe("Synthetic Power Co");
-    expect(u.body.neighbourhood.edges[0]).toMatchObject({ type: "serves", otherName: "XX" });
-    expect(u.body.timeline).toHaveLength(1);
+    expect(u.body.history[0]).toMatchObject({ type: "serves", from: "Synthetic Power Co", to: "XX", validFrom: "2024-01-01T00:00:00.000Z" });
     expect((await call(base, "/api/world/1")).status).toBe(200);
     expect((await call(base, "/api/world/0000000009")).status).toBe(404);
     expect((await call(base, "/api/world/abc")).status).toBe(400);
@@ -388,22 +370,22 @@ describe("server: reads", () => {
     expect(hit.body).toMatchObject({ file: "eval/report.json", report: { synthetic: true } });
   });
 
-  it("GET /api/seeds lists the seed utilities with their latest run per period", async () => {
+  it("GET /api/seeds lists the seed utilities", async () => {
     const { base } = await start();
     const r = await call(base, "/api/seeds");
     expect(r.status).toBe(200);
-    expect(r.body.utilities[0]).toMatchObject({ cik: CIK, ticker: "SYN", latest_run_id: { CY2025Q1: RUN } });
+    expect(r.body.utilities[0]).toMatchObject({ cik: CIK, ticker: "SYN" });
   });
 });
 
 describe("server: ask and the event stream", () => {
   it("POST /api/ask answers 202 {run_id}, 409 {busy_run_id} while running, then run_finished with every event carrying run_id", async () => {
     const { base, port } = await start({ ask: fakeAsk({ delayMs: 150 }) });
-    const a = await call(base, "/api/ask", { cik: "1", period: "CY2025Q1", claim: "colder weather" });
+    const a = await call(base, "/api/ask", { quarter: "CY2025Q1", mode: "cold" });
     expect(a.status).toBe(202);
     expect(a.body.run_id).toMatch(/^r\d{8}T\d{6}[0-9a-f]{4}$/u);
-    expect(a.body).toMatchObject({ cik: CIK, period: "CY2025Q1", claim: "colder weather", utility: "Synthetic Power Co" });
-    const b = await call(base, "/api/ask", { utility: "SYN", period: "CY2025Q1" });
+    expect(a.body).toMatchObject({ quarter: "CY2025Q1", mode: "cold" });
+    const b = await call(base, "/api/ask", { quarter: "CY2024Q1" });
     expect(b.status).toBe(409);
     expect(b.body).toMatchObject({ busy_run_id: a.body.run_id, code: "busy" });
     expect(b.body.error).toBeTypeOf("string");
@@ -413,44 +395,41 @@ describe("server: ask and the event stream", () => {
     expect(evs.map((e) => e.type)).toEqual(["run_started", "chunk_start", "planner", "tool", "chunk_end", "run_finished"]);
     for (const e of evs) expect(e.data.run_id).toBe(a.body.run_id);
     expect(evs[2]!.data).toMatchObject({ tool: "get_weather", thought: "synthetic plan", valid: true });
-    expect(evs[5]!.data).toMatchObject({ verdict: "supported", confidence: "high", chunks: 2, cik: CIK });
+    expect(evs[5]!.data).toMatchObject({ quarter: "CY2025Q1", mode: "cold", chunks: 2, keys: 1 });
     const runs = await call(base, "/api/runs");
     expect(runs.body.runs).toHaveLength(2);
     const mine = runs.body.runs.find((r: { run_id: string }) => r.run_id === a.body.run_id);
-    expect(mine).toMatchObject({ run_id: a.body.run_id, source: "server", verdict: "supported" });
+    expect(mine).toMatchObject({ run_id: a.body.run_id, source: "server", quarter: "CY2025Q1", mode: "cold" });
     expect((await call(base, `/api/run/${a.body.run_id}`)).status).toBe(200);
     // Idle again: the next question is accepted.
-    expect((await call(base, "/api/ask", { cik: CIK, period: "CY2025Q2" })).status).toBe(202);
+    expect((await call(base, "/api/ask", { quarter: "CY2025Q2" })).status).toBe(202);
     await waitIdle();
   });
 
   it("a failing run publishes run_failed and frees the server", async () => {
     const { base, port } = await start({ ask: fakeAsk({ fail: true }) });
-    const a = await call(base, "/api/ask", { cik: CIK, period: "CY2025Q1" });
+    const a = await call(base, "/api/ask", { quarter: "CY2025Q1" });
     expect(a.status).toBe(202);
     await waitIdle();
     const evs = eventsOf(await readSse(port, "/api/events", { "last-event-id": "0" }, 1500, "event: run_failed"));
     expect(evs.map((e) => e.type)).toEqual(["run_started", "chunk_start", "planner", "tool", "chunk_end", "run_failed"]);
     expect(evs[5]!.data).toMatchObject({ run_id: a.body.run_id, error: "synthetic failure" });
-    expect((await call(base, "/api/ask", { cik: CIK, period: "CY2025Q1" })).status).toBe(202);
+    expect((await call(base, "/api/ask", { quarter: "CY2025Q1" })).status).toBe(202);
     await waitIdle();
   });
 
-  it("validates the question: cik or utility, a CY period, max_chunks 1 to 10", async () => {
+  it("validates the question: a CY quarter, max_chunks 1 to 12", async () => {
     const { base } = await start();
-    expect((await call(base, "/api/ask", { period: "CY2025Q1" })).status).toBe(400);
-    expect((await call(base, "/api/ask", { cik: CIK })).status).toBe(400);
-    expect((await call(base, "/api/ask", { cik: CIK, period: "2025Q1" })).status).toBe(400);
-    expect((await call(base, "/api/ask", { cik: CIK, period: "CY2025Q4" })).status).toBe(400);
-    expect((await call(base, "/api/ask", { cik: "12345678901", period: "CY2025Q1" })).status).toBe(400);
-    expect((await call(base, "/api/ask", { utility: "Nobody Energy", period: "CY2025Q1" })).status).toBe(400);
-    expect((await call(base, "/api/ask", { cik: CIK, period: "CY2025Q1", max_chunks: 11 })).status).toBe(400);
+    expect((await call(base, "/api/ask", {})).status).toBe(400);
+    expect((await call(base, "/api/ask", { quarter: "2025Q1" })).status).toBe(400);
+    expect((await call(base, "/api/ask", { quarter: "CY2025Q5" })).status).toBe(400);
+    expect((await call(base, "/api/ask", { quarter: "CY2025Q1", max_chunks: 13 })).status).toBe(400);
     expect(app!.busy).toBeNull();
   });
 
   it("streams events over SSE; a new connection gets no history, Last-Event-ID and ?since replay the missed events", async () => {
     const { base, port } = await start();
-    await call(base, "/api/ask", { cik: CIK, period: "CY2025Q1" });
+    await call(base, "/api/ask", { quarter: "CY2025Q1" });
     await waitIdle();
     const fresh = await readSse(port, "/api/events", {}, 250);
     expect(fresh).toContain("retry: 3000");
@@ -484,34 +463,18 @@ describe("server: the signed override path", () => {
     expect((await call(base, "/api/override", { conflict_id: CONFLICT, chosen: "sideways", reason: "x" })).status).toBe(400);
   });
 
-  it("signs a high-risk override_recast contract for the analyst, then applies the override once", async () => {
-    const { base, port, overrides, conflict, usedLedger } = await start();
+  it("signs a high-risk override_recast contract for the analyst; a tampered one is refused and a valid one finds no recast conflict (Crosswalk keeps none)", async () => {
+    const { base, overrides } = await start();
     const params = { conflict_id: CONFLICT, chosen: "later_filing", reason: "the later filing corrects a typo" };
     const signed = await call(base, "/api/approvals/sign", { action: "override_recast", params });
     expect(signed.status).toBe(200);
     const contract = signed.body.contract;
     expect(contract).toMatchObject({ intent: { primary: "override_recast", parameters: params }, risk: { level: "high" }, scope: { user: "analyst", surface: "cw-ui" }, signedBy: "scout" });
-    expect(contract.risk.approvals[0]).toMatchObject({ kind: "analyst-approval", by: "analyst", decision: "approve", reason: params.reason });
-    expect(contract.signature).toMatch(/^[0-9a-f]{64}$/u);
-    // A different chosen side than the contract names: parameter mismatch, nothing written.
     const tampered = await call(base, "/api/override", { ...params, chosen: "own_filing", contract });
     expect(tampered.status).toBe(403);
     expect(tampered.body.code).toBe("parameter_mismatch");
+    expect((await call(base, "/api/override", { ...params, contract })).status).toBe(404);
     expect(overrides).toHaveLength(0);
-    const ok = await call(base, "/api/override", { ...params, contract });
-    expect(ok.status).toBe(200);
-    expect(ok.body.conflict).toMatchObject({ id: CONFLICT, status: "overridden", chosen: "later_filing", chosen_val: 1101, override: { by: "analyst", contract_id: contract.contractId } });
-    expect(ok.body.contract_id).toBe(contract.contractId);
-    expect(overrides).toHaveLength(1);
-    expect(conflict.status).toBe("overridden");
-    const evs = eventsOf(await readSse(port, "/api/events", { "last-event-id": "0" }, 500));
-    expect(evs.map((e) => e.type)).toEqual(["override"]);
-    expect(evs[0]!.data).toMatchObject({ run_id: RUN, conflict_id: CONFLICT, chosen: "later_filing", by: "analyst", contract_id: contract.contractId });
-    const again = await call(base, "/api/override", { ...params, contract });
-    expect(again.status).toBe(403);
-    expect(again.body.code).toBe("replayed");
-    expect(overrides).toHaveLength(1);
-    expect(readFileSync(usedLedger, "utf8")).toContain(contract.contractId);
   });
 
   it("an unknown conflict is 404 even with a valid contract; sign rejects other actions and bad parameters", async () => {

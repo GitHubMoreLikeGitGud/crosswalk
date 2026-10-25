@@ -1,31 +1,35 @@
 // Crosswalk command line.
 //
-//   npm run ask -- --cik 0001031296 --period CY2025Q1 --claim "colder weather" [--json] [--out <file>]
-//                  [--utility FE|"FirstEnergy"] [--think on|off] [--max-chunks 10] [--no-model]
-//        one question through the Markovian chain with Nemotron planning, the deterministic tools,
-//        H-MEM provenance and the World Model; the run is saved under data/runs/<id>/run.json
+//   npm run onboard [-- --skip-dq]
+//        idempotent onboarding (never on the question path): register_source for every verified
+//        catalogue source the manifest lists, verify the governed USL, RUN DQ for the six FK
+//        rules (900 s bound each), SHOW DQ INVALID RECORD where a rule has invalid rows, and
+//        write <data>/dq/latest.json
+//   npm run ask -- --quarter CY2025Q1 [--cold] [--think on|off] [--max-chunks 12] [--no-model] [--json] [--out <file>]
+//        the demo question of SPEC D9 for the quarter through the Markovian chain; --cold never
+//        recalls key_verified memories (they are still written); the run is saved under
+//        <data>/runs/<id>/run.json
 //   npm run replay -- <run_id> [--json]          print a saved run (no model, no gateway)
-//   npm run warmup -- [--no-model] [--wait-s 180] gateway warm-up, model load, memory seed, store status
-//   npm run cli -- why <memory_id>               "why do you believe this?" ledger trace for one fact
 //   npm run cli -- runs                          list the saved runs
+//   npm run cli -- why <memory_id>               "why do you believe this?" for one memory
+//   npm run cli -- known --cik <cik> | --left <object.column> --right <object.column>
+//        "what did we know, and since when" from the World Model
 //
-// The commands that open data/hmem and data/world (ask, warmup, why) take data/agent.lock.
+// The commands that open <data>/hmem and <data>/world take <data>/agent.lock.
 // Adapted from Weather-or-Not and ClearShelf (same author, Apache-2.0).
 
 import { mkdirSync, writeFileSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { loadConfig, REPO_ROOT_URL } from "./config.ts";
+import { loadConfig } from "./config.ts";
 import type { EvidenceRecord } from "./evidence/store.ts";
-import { DEFAULT_OPTIONS, OllamaClient } from "./llm/ollama.ts";
+import { OllamaClient } from "./llm/ollama.ts";
 import type { RunResult } from "./loop/investigate.ts";
-import { pct, millions, num, int } from "./loop/tools.ts";
-import { seedMemory } from "./memory/seed.ts";
+import { int, millions, pct } from "./loop/tools.ts";
 import { RunStore } from "./ops/runStore.ts";
-import { findUtility, loadSeeds } from "./seeds.ts";
-import { ask, openRuntime } from "./runtime.ts";
-import { GatewayClient, validateParam } from "./zetaris/client.ts";
+import { ask, onboard, openRuntime } from "./runtime.ts";
+import { validateParam } from "./zetaris/client.ts";
 
 interface Args {
   cmd: string;
@@ -60,138 +64,104 @@ function short(s: string, n: number): string {
   return t.length > n ? `${t.slice(0, n - 1)}…` : t;
 }
 
-function bar(x: number, lo: number, hi: number, scale = 0.2): string {
-  const width = 24;
-  const cell = (v: number) => Math.max(0, Math.min(width, Math.round(((v + scale) / (2 * scale)) * width)));
-  const line = Array.from({ length: width + 1 }, () => " ");
-  for (let i = cell(lo); i <= cell(hi); i++) line[i] = "-";
-  line[cell(0)] = "|";
-  line[cell(x)] = "#";
-  return line.join("");
-}
+const r3 = (x: number | null | undefined) => (x === null || x === undefined ? "n/a" : x.toFixed(3));
 
 export function printRun(r: RunResult): string {
-  const c = r.card;
   const out: string[] = [];
-  out.push(`Crosswalk  ${c.utility?.name ?? r.cik} (CIK ${r.cik})  ${r.period} vs ${r.previous_period}  run ${r.run_id}`);
-  out.push(`Question: ${c.question}`);
+  out.push(`Crosswalk  ${r.quarter} vs ${r.previous_quarter}  run ${r.run_id}  (${r.mode})`);
+  out.push(`Question: ${r.question}`);
   out.push("");
-  const v = c.verdict;
-  out.push(`VERDICT on "${r.claim}": ${v ? v.verdict.toUpperCase() : "none"}${v?.confidence ? `  (confidence ${v.confidence})` : ""}${v?.withheld_reason ? `  ${v.withheld_reason}` : ""}`);
-  if (c.growth) {
-    const g = c.growth;
-    out.push(`Revenue (${g.tag}): ${millions(g.rev_previous)}M -> ${millions(g.rev_current)}M, like-for-like g ${pct(g.g)}  [current ${g.current_accn} filed ${g.current_filed}; previous ${g.recast ? "RECAST, comparative" : "comparative"} ${g.previous_comparative_accn ?? "none"}, original ${g.previous_original_accn ?? "none"}]`);
-    if (g.tag_switch_note) out.push(`  note: ${g.tag_switch_note}`);
+  out.push("Join map (rate = matched rows / left rows, D1; distinct-key reading beside it):");
+  for (const k of r.join_map) {
+    out.push(`  ${k.id.padEnd(4)} ${(k.verdict ?? k.status).padEnd(9)} ${String(k.matched_rows ?? "?").padStart(3)}/${String(k.left_rows ?? "?").padEnd(3)} = ${r3(k.rate)}  (distinct ${k.matched_keys ?? "?"}/${k.left_keys ?? "?"})  ${k.left} ~ ${k.right} [${k.transform}]  by ${k.proposed_by.join("+") || "?"}${k.from_memory ? `  RECALLED ${k.from_memory} (measured as ${k.measured_as})` : `  ${k.elapsed_ms} ms`}`);
+    if (k.orphans.length) out.push(`       orphans: ${k.orphans.join("; ")}`);
   }
-  if (c.weather) {
-    const w = c.weather;
-    out.push(`Weather: TDD ${int(w.tdd_previous)} -> ${int(w.tdd_current)} (${pct(w.delta_w)}) over ${w.stations_used.length} stations, coverage ${num(w.coverage)}${w.stations_missing.length ? `; no rows for ${w.stations_missing.join(", ")}` : ""}`);
+  const mp = r.model_proposals;
+  const bp = r.baseline_proposals;
+  out.push(`Key proposals (L2): model ${mp.proposed_by ?? "none (fallback to baseline)"} made ${mp.made}: ${mp.verified} verified, ${mp.partial} partial, ${mp.rejected} rejected, ${mp.unmeasurable} not measurable, ${mp.invalid_schema} invalid; baseline made ${bp.made}: ${bp.verified} verified, ${bp.partial} partial, ${bp.rejected} rejected, ${bp.unmeasurable} not measurable`);
+  out.push("Verdict mix (L3):");
+  for (const v of r.verdict_mix) out.push(`  ${v.kind.padEnd(12)} ${v.subject}: ${short(v.detail, 160)}`);
+  if (r.registrations.length) {
+    out.push("Registrations (register_source under a signed medium-risk contract):");
+    for (const g of r.registrations) out.push(`  ${g.status.padEnd(18)} ${g.catalogue_id} ${JSON.stringify(g.params)} -> ${g.object}${g.rows === null ? "" : ` (${g.rows} rows)`} ${g.elapsed_ms} ms, contract ${g.contract_id}`);
   }
-  if (c.attribution) {
-    const a = c.attribution;
-    const rr = a.ranges;
-    out.push(`Attribution (${a.peers} peers, beta ${num(a.beta, 3)} [${num(rr.beta.lo, 3)}, ${num(rr.beta.hi, 3)}], Theil-Sen ${a.theil_sen === null ? "n/a" : num(a.theil_sen, 3)}; bootstrap ${a.bootstrap.valid}/${a.bootstrap.resamples} seed ${a.bootstrap.seed}; ranges 10th-90th):`);
-    out.push(`  weather   ${pct(a.weather).padStart(7)}  [${pct(rr.weather.lo)}, ${pct(rr.weather.hi)}]  ${bar(a.weather, rr.weather.lo, rr.weather.hi)}`);
-    out.push(`  industry  ${pct(a.industry).padStart(7)}  [${pct(rr.industry.lo)}, ${pct(rr.industry.hi)}]  ${bar(a.industry, rr.industry.lo, rr.industry.hi)}`);
-    out.push(`  remainder ${pct(a.remainder).padStart(7)}  [${pct(rr.remainder.lo)}, ${pct(rr.remainder.hi)}]  ${bar(a.remainder, rr.remainder.lo, rr.remainder.hi)}`);
-    out.push(`  claim ratio |weather|/|g| = ${a.claim.ratio === null ? "n/a" : num(a.claim.ratio)} -> ${a.claim.verdict}`);
+  if (r.usl) {
+    const u = r.usl;
+    out.push(`USL: ${u.matches_governed ? "the plan from this run's keys MATCHES the governed crosswalk_usl" : `differs (${u.diff.missing_fks.join("; ")}); would compile as ${u.usl}`}`);
+    for (const f of u.fks) out.push(`  ${f.satisfied ? "kept   " : "DROPPED"} ${f.fk}: ${f.basis}`);
+    for (const l of u.live_rules_run) out.push(`  live DQ ${l.rule}: ${l.error ? `failed ${l.error}` : `${l.total} total, ${l.valid} valid, ${l.invalid} invalid, ${l.elapsed_ms} ms`}`);
+    if (u.dq) out.push(`  onboarding DQ (${u.dq.ran_at}): ${u.dq.rules.map((x) => `${x.rule} ${x.valid}/${x.total}`).join(", ")}; invalid rows ${JSON.stringify(u.invalid_rows).slice(0, 200)}`);
   }
-  if (c.peers) {
-    out.push(`Peers: ${c.peers.count} (${Object.entries(c.peers.by_tag).map(([t, n]) => `${n} ${t}`).join(", ")}), ${c.peers.with_weather} with weather`);
-    for (const x of c.peers.excluded) out.push(`  excluded: ${x.reason}`);
-  }
-  if (c.dq) out.push(`DQ gate: ${c.dq.label} (${c.dq.basis}) ${c.dq.note}`);
-  for (const k of c.recast_conflicts) {
-    out.push(`Recast conflict ${k.id} (${k.scope}, ${k.tag} ${k.period}): ${k.own_filing.val} in ${k.own_filing.accn} (filed ${k.own_filing.filed}) vs ${k.later_filing.val} in ${k.later_filing.accn} (filed ${k.later_filing.filed}); ${k.rule_text}; using ${k.chosen} = ${k.chosen_val}; ${k.status}${k.override ? ` by ${k.override.by}: ${k.override.reason}` : ""}`);
+  if (r.answer) {
+    const a = r.answer;
+    out.push("");
+    out.push(`Answer (${a.rows.length} utilities; weather ${a.weather_status}):`);
+    for (const row of a.rows) {
+      const rev = row.revenue;
+      const revText = rev?.change !== null && rev?.change !== undefined ? `${millions(rev.previous!)}M -> ${millions(rev.current)}M ${pct(rev.change)} (${rev.tag})` : `not compared: ${rev?.note ?? row.revenue_note ?? "n/a"}`;
+      const w = row.weather ? `TDD ${int(row.weather.tdd_previous)} -> ${int(row.weather.tdd_current)} (${pct(row.weather.change)}) over ${row.weather.stations.length} station(s)` : `weather ${row.weather_note ?? "n/a"}`;
+      out.push(`  ${row.name}${row.ticker ? ` (${row.ticker})` : ""}: ${row.declarations} declaration(s) in ${row.states.map((s) => `${s.state} ${s.declarations}`).join(", ")}; revenue ${revText}; ${w}`);
+    }
   }
   out.push("");
   out.push("Not tested:");
-  for (const n of c.not_tested) out.push(`  - ${n}`);
-  if (c.memo) {
+  for (const n of r.not_tested) out.push(`  - ${n}`);
+  if (r.memo) {
     out.push("");
-    out.push(`Memo (${c.memo.source}, ${c.memo.words} words, ${c.memo.attempts} model attempt(s)):`);
-    out.push(c.memo.text.split("\n").map((l) => `  ${l}`).join("\n"));
+    out.push(`Note (${r.memo.source}, ${r.memo.words} words, ${r.memo.attempts} model attempt(s)):`);
+    out.push(r.memo.text.split("\n").map((l) => `  ${l}`).join("\n"));
   }
   out.push("");
-  out.push(`Markovian chain: ${r.markovian.status}, ${r.markovian.chunks} chunk(s), checklist ${r.checklist_complete ? "complete" : "INCOMPLETE"}; config ${JSON.stringify(r.markovian.chunk_config)}; skipped from memory: ${r.skipped_steps.length ? r.skipped_steps.map((s) => `${s.item} (${s.memoryId})`).join(", ") : "none"}`);
-  for (const t of r.timeline) {
-    out.push(`  chunk ${t.chunk} #${t.seq} ${t.source === "model" ? "model   " : "FALLBACK"} ${t.tool} ${JSON.stringify(t.input)} ${t.latency_ms} ms${t.ok ? "" : "  (failed)"}`);
+  out.push(`Markovian chain: ${r.markovian.status}, ${r.markovian.chunks} chunk(s), checklist ${r.checklist_complete ? "complete" : "INCOMPLETE"}; skipped from memory: ${r.telemetry.skipped_chunks}`);
+  for (const t of r.chain) {
+    out.push(`  chunk ${t.chunk} #${t.seq} ${t.source === "model" ? "model   " : "FALLBACK"} ${t.tool} ${short(JSON.stringify(t.input), 140)} ${t.latency_ms} ms${t.ok ? "" : "  (failed)"}`);
     if (t.thought) out.push(`         thought: ${short(t.thought, 160)}`);
     if (t.fallback_reason) out.push(`         why: ${short(t.fallback_reason, 160)}`);
     out.push(`         -> ${short(t.fact, 200)}`);
   }
   out.push("");
   out.push("Checklist:");
-  for (const i of r.checklist) out.push(`  ${i.id.padEnd(22)} ${i.status}${i.note ? ` (${short(i.note, 90)})` : ""}`);
-  out.push("");
-  out.push("Per chunk (planner tokens measured by Ollama; baseline and carryover estimated chars/4):");
-  out.push("  chunk | calls | tools | fallback | prompt tok (1st call) | prompt tok (all) | eval tok | naive est. | carry in/out est. | tool ms");
-  for (const ch of r.chunks) {
-    out.push(
-      `  ${String(ch.chunk).padStart(5)} | ${String(ch.planner_calls).padStart(5)} | ${String(ch.tool_calls).padStart(5)} | ${String(ch.fallback_steps).padStart(8)} | ${String(ch.first_prompt_tokens).padStart(21)} | ${String(ch.prompt_tokens).padStart(16)} | ${String(ch.eval_tokens).padStart(8)} | ${String(ch.naive_prompt_tokens_estimated).padStart(10)} | ${`${ch.carryover_in_tokens}/${ch.carryover_out_tokens}`.padStart(17)} | ${String(ch.tool_latency_ms).padStart(7)}`,
-    );
-  }
+  for (const i of r.checklist) out.push(`  ${i.id.padEnd(20)} ${i.status}${i.note ? ` (${short(i.note, 100)})` : ""}`);
   const s = r.summary;
   out.push("");
-  out.push(
-    `Summary: planner calls ${s.planner_calls} (valid ${s.planner_valid}, first try ${s.planner_valid_first_try}, repaired ${s.planner_repaired}); tool calls ${s.tool_calls} (model ${s.tool_calls_by_model}, fallback ${s.fallback_steps}, failed ${s.tool_failures}); planner tokens in/out ${s.planner_prompt_tokens}/${s.planner_eval_tokens} (measured); memo tokens in/out ${s.tool_model_tokens_in}/${s.tool_model_tokens_out}; first-call prompts ${s.markovian_prompt_tokens_estimated} vs naive ${s.naive_prompt_tokens_estimated} (estimated), saving ${s.saving_vs_naive_estimated}; max carryover ${s.max_carryover_tokens_estimated} (estimated); median planner tok/s ${s.median_planner_tokens_per_s?.toFixed(1) ?? "n/a"}; memo tok/s ${r.telemetry.memo_tokens_per_s?.toFixed(1) ?? "n/a"}; model ${r.telemetry.model ?? "none"} think=${r.telemetry.think}; cloud model calls ${r.telemetry.cloud_model_calls} (refused hosts ${r.telemetry.refused_model_hosts}); wall ${r.wall_ms} ms`,
-  );
-  out.push(`Tool timings (ms, measured): ${Object.entries(r.timings_ms).map(([k, v]) => `${k} ${v}`).join(", ")}`);
-  if (r.memory) out.push(`H-MEM: ${r.memory.ids.length} memories touched this run, ${r.memory.facts_total} in store, ${r.memory.conflicts} recast conflict(s), ${r.memory.skipped_steps} step(s) skipped from memory`);
+  out.push(`Telemetry: chunks ${r.telemetry.chunks}, skipped_chunks ${r.telemetry.skipped_chunks}; planner calls ${s.planner_calls} (valid ${s.planner_valid}, first try ${s.planner_valid_first_try}, repaired ${s.planner_repaired}); tool calls ${s.tool_calls} (model ${s.tool_calls_by_model}, fallback ${s.fallback_steps}, failed ${s.tool_failures}); tokens planner ${r.telemetry.tokens.planner_in}/${r.telemetry.tokens.planner_out}, note ${r.telemetry.tokens.memo_in}/${r.telemetry.tokens.memo_out} (measured); median planner tok/s ${s.median_planner_tokens_per_s?.toFixed(1) ?? "n/a"}; model ${r.telemetry.model ?? "none"} think=${r.telemetry.think}; cloud model calls 0; wall ${r.wall_ms} ms`);
+  out.push(`Tool timings (ms): ${Object.entries(r.timings_ms).map(([k, v]) => `${k} ${v}`).join(", ")}`);
+  if (r.memory) out.push(`H-MEM: ${r.memory.facts_total} memories in store, ${r.memory.skipped_steps} step(s) skipped from memory`);
   if (r.world) out.push(`World Model: ${r.world.events} events; entities ${JSON.stringify(r.world.entities)}; edges ${JSON.stringify(r.world.edges)}`);
-  out.push(`E-cov ${c.claims.filter((x) => x.evidenceIds.length).length}/${r.quality.claims}; E-complete ${r.quality.records - Object.keys(r.quality.incomplete_records).length}/${r.quality.records}. Evidence: ${r.evidence_file ?? "(memory)"}`);
-  if (c.gaps.length) {
+  out.push(`E-cov ${r.card.claims.filter((x) => x.evidenceIds.length).length}/${r.quality.claims}; E-complete ${r.quality.records - Object.keys(r.quality.incomplete_records).length}/${r.quality.records}. Evidence: ${r.evidence_file ?? "(memory)"}`);
+  if (r.card.gaps.length) {
     out.push("Gaps:");
-    for (const g of c.gaps) out.push(`  - ${short(g, 220)}`);
+    for (const g of r.card.gaps) out.push(`  - ${short(g, 220)}`);
   }
   out.push("");
-  out.push("Evidence:");
-  for (const e of r.evidence) out.push(...evidenceLines(e));
+  out.push("Statements behind the answer:");
+  for (const e of r.evidence.filter((x) => x.kind === "zetaris_sql" && ["answer_fema_utilities", "answer_revenue", "weather_quarter"].includes(x.template_id ?? ""))) out.push(...evidenceLines(e));
   return out.join("\n");
 }
 
 function evidenceLines(e: EvidenceRecord): string[] {
-  if (e.kind === "zetaris_sql" || e.kind === "dq") {
-    return [
-      `  ${e.id} ${e.kind} ${e.template_id} ${JSON.stringify(e.params ?? {})}  ${e.zetaris_object}  rows ${e.row_count}  ${e.elapsed_ms} ms  cache ${e.cache_state}${e.reused ? " (reused)" : ""}`,
-      `      sql: ${short(e.sql ?? "", 180)}`,
-      `      sql_sha256 ${e.sql_sha256}  retrieved ${e.queried_at}  source cached ${e.source_cached_at ?? "n/a"}`,
-      `      endpoint ${short(e.source_url ?? "", 120)}  licence: ${short(e.licence ?? "", 100)}`,
-    ];
-  }
-  if (e.model) return [`  ${e.id} ${e.kind}  ${e.model.name} think=${e.model.think} tokens in/out ${e.model.tokens_in}/${e.model.tokens_out} (${e.model.label}, ${e.model.attempts} attempt(s), ${e.model.tokens_per_s?.toFixed(1) ?? "n/a"} tok/s)  ${short(e.claim, 140)}`];
-  return [`  ${e.id} ${e.kind}  from [${(e.derived_from ?? []).join(", ")}]  ${short(e.claim, 160)}`];
+  return [`  ${e.id} ${e.template_id} ${JSON.stringify(e.params ?? {}).slice(0, 120)}  rows ${e.row_count}  ${e.elapsed_ms} ms  cache ${e.cache_state}`, `      sql: ${short(e.sql ?? "", 400)}`];
 }
 
 const availableMiB = () => Math.round(os.freemem() / 1048576);
 
 async function cmdAsk(flags: Record<string, string | boolean>): Promise<number> {
   const cfg = loadConfig();
-  const seeds = loadSeeds();
-  let cik = typeof flags.cik === "string" ? flags.cik.padStart(10, "0") : "";
-  if (!cik && typeof flags.utility === "string") {
-    const u = findUtility(seeds, flags.utility);
-    if (!u) {
-      console.error(`no seed utility matches "${flags.utility}"`);
-      return 2;
-    }
-    cik = u.cik;
-  }
-  validateParam("cik10", cik);
-  const period = validateParam("period", String(flags.period ?? ""));
-  const claim = String(flags.claim ?? "the weather");
+  const quarter = String(flags.quarter ?? "CY2025Q1");
+  validateParam("fema_quarter", quarter);
   const think = flags.think === "off" ? false : flags.think === "on" ? true : undefined;
   const ollama = flags["no-model"] ? null : new OllamaClient({ baseUrl: cfg.ollamaUrl, model: cfg.model });
-  const rt = openRuntime({ command: `ask ${cik} ${period}`, ollama });
+  const mode = flags.cold ? "cold" : "warm";
+  const rt = openRuntime({ command: `ask ${quarter} ${mode}`, ollama });
   try {
-    process.stderr.write(`available RAM ${availableMiB()} MiB; model ${ollama ? ollama.model : "none (deterministic run)"}\n`);
+    process.stderr.write(`available RAM ${availableMiB()} MiB; model ${ollama ? ollama.model : "none (deterministic run)"}; mode ${mode}\n`);
     const o = await ask(rt, {
-      cik,
-      period,
-      claim,
+      quarter,
+      mode,
       think,
       maxChunks: typeof flags["max-chunks"] === "string" ? Number(flags["max-chunks"]) : undefined,
       onEvent: (e) => {
+        if (e.type === "chunk_start") process.stderr.write(`chunk ${e.chunk} (carryover ${e.carryover_tokens} tok)\n`);
         if (e.type === "tool") process.stderr.write(`  c${e.chunk} ${e.source === "model" ? "model   " : "FALLBACK"} ${e.tool} (${e.latency_ms} ms)${e.ok ? "" : " failed"}: ${short(e.fact, 140)}\n`);
         if (e.type === "planner") process.stderr.write(`  c${e.chunk}.${e.call} planner ${e.valid ? "valid" : "INVALID"} (${e.attempts} repl${e.attempts === 1 ? "y" : "ies"}, ${e.prompt_tokens}/${e.eval_tokens} tok, ${e.tokens_per_s?.toFixed(1) ?? "n/a"} tok/s) -> ${e.tool ?? "no action"}\n`);
       },
@@ -205,6 +175,24 @@ async function cmdAsk(flags: Record<string, string | boolean>): Promise<number> 
     console.log(flags.json ? JSON.stringify(r, null, 2) : printRun(r));
     console.log(`saved ${rt.runs.pathOf(r.run_id)}${typeof flags.out === "string" ? ` and ${flags.out}` : ""}`);
     return 0;
+  } finally {
+    rt.close();
+  }
+}
+
+async function cmdOnboard(flags: Record<string, string | boolean>): Promise<number> {
+  const rt = openRuntime({ command: "onboard", ollama: null });
+  try {
+    const t0 = performance.now();
+    console.log("onboarding (registrations, governed USL check, RUN DQ for the six FK rules; never on the question path)");
+    const r = await onboard(rt, { log: (l) => console.log(l), skipDq: !!flags["skip-dq"] });
+    const failed = r.registrations.filter((x) => "error" in x).length;
+    const invalid = r.dq.rules.reduce((s, x) => s + (x.invalid ?? 0), 0);
+    console.log(`registrations: ${r.registrations.length} (${r.registrations.filter((x) => "status" in x && x.status === "registered").length} registered, ${r.registrations.filter((x) => "status" in x && x.status === "already_registered").length} already registered, ${failed} failed)`);
+    console.log(`USL: ${r.usl.tables.length} tables, ${r.usl.rules} DQ rules, ok=${r.usl.ok}`);
+    console.log(`DQ: ${r.dq.rules.length} rules, ${r.dq.rules.filter((x) => x.error).length} failed, ${invalid} invalid row(s): ${JSON.stringify(r.dq.invalid_rows)}`);
+    console.log(`wrote ${r.dq_file}; wall ${Math.round(performance.now() - t0)} ms`);
+    return failed || !r.usl.ok || r.dq.rules.some((x) => x.error) ? 3 : 0;
   } finally {
     rt.close();
   }
@@ -230,7 +218,7 @@ function cmdRuns(): number {
   const runs = new RunStore();
   const list = runs.list();
   if (!list.length) console.log(`no saved runs under ${runs.dir}`);
-  for (const e of list) console.log(`${e.run_id}  ${e.cik} ${e.period}  ${(e.utility ?? "?").padEnd(28)} ${(e.verdict ?? "-").padEnd(16)} ${(e.confidence ?? "-").padEnd(6)} ${e.chunks} chunks  ${e.wall_ms} ms  memo ${e.memo_source ?? "-"}  ${e.started_at}`);
+  for (const e of list) console.log(`${e.run_id}  ${e.quarter} ${e.mode.padEnd(4)}  ${e.utilities} utilities  ${e.keys} keys  ${e.chunks} chunks  skipped ${e.skipped}  ${e.wall_ms} ms  note ${e.memo_source ?? "-"}  ${e.started_at}`);
   return 0;
 }
 
@@ -250,51 +238,24 @@ async function cmdWhy(positional: string[], flags: Record<string, string | boole
   }
 }
 
-async function cmdWarmup(flags: Record<string, string | boolean>): Promise<number> {
-  const cfg = loadConfig();
-  const gateway = new GatewayClient({ baseUrl: cfg.gatewayUrl });
-  const waitS = Number(typeof flags["wait-s"] === "string" ? flags["wait-s"] : 180);
-  let ok = true;
-  // 1. Gateway: Zetaris answers and the warm-up has cached every target.
-  const t0 = performance.now();
-  let h: Record<string, unknown> | null = null;
-  for (;;) {
-    try {
-      h = await gateway.health();
-    } catch (e) {
-      h = { ok: false, error: (e as Error).message.slice(0, 200) };
-    }
-    const lw = (h.last_warmup ?? null) as Record<string, unknown> | null;
-    const failed = !!lw?.failed && Object.keys(lw.failed as object).length > 0;
-    const warm = !!h.ok && !!lw && !failed;
-    if (warm || performance.now() - t0 > waitS * 1000) break;
-    await new Promise((r) => setTimeout(r, 5000));
-  }
-  const lw = (h?.last_warmup ?? null) as Record<string, unknown> | null;
-  console.log(`gateway ${gateway.baseUrl}: ok=${String(h?.ok)}; templates ${(h?.templates as unknown[] | undefined)?.length ?? "?"}; last warm-up ${JSON.stringify(lw)?.slice(0, 300)}`);
-  if (!h?.ok || (lw && lw.failed && Object.keys(lw.failed as object).length)) ok = false;
-  // 2. Model: loaded for 30 min.
-  const ollama = new OllamaClient({ baseUrl: cfg.ollamaUrl, model: cfg.model });
-  if (!flags["no-model"]) {
-    const free = availableMiB();
-    const r = await fetch(`${cfg.ollamaUrl}/api/generate`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ model: ollama.model, keep_alive: "30m", options: { num_ctx: DEFAULT_OPTIONS.num_ctx } }), signal: AbortSignal.timeout(180_000) });
-    const loaded = (await ollama.loaded()).find((m) => m.name === ollama.model);
-    console.log(`model ${ollama.model}: HTTP ${r.status}; loaded ${loaded ? `${Math.round(loaded.size / 1048576)} MiB (${Math.round(loaded.size_vram / 1048576)} MiB in VRAM), context ${loaded.context_length ?? "?"}` : "no"}; free RAM before ${free} MiB`);
-    if (!loaded) ok = false;
-  }
-  // 3. Memory and World Model: seeded and readable (seeding is idempotent).
-  const rt = openRuntime({ command: "warmup", ollama: null, gateway });
+async function cmdKnown(flags: Record<string, string | boolean>): Promise<number> {
+  const rt = openRuntime({ command: "known", ollama: null });
   try {
-    const seed = await seedMemory(rt.hmem, { log: () => {} });
-    console.log(`H-MEM ${rt.hmem.persistDir}: ${rt.hmem.store.all().length} memories; seed documents ${seed.documents.length} (${seed.documents.filter((d) => d.skipped).length} already seeded${seed.missing.length ? `; missing: ${seed.missing.join(", ")}` : ""}); ${rt.hmem.recasts.all().length} recast conflict(s) on record; ledger ${rt.hmem.ledger.all().length} entries`);
-    const g = rt.world.exportGraph();
-    console.log(`World Model ${rt.world.directory}: ${g.nodes.length} entities ${JSON.stringify(g.byType)}, ${g.edges.length} edges, ${g.events} events`);
-    console.log(`runs: ${rt.runs.list().length} saved under ${rt.runs.dir}`);
+    const split = (s: string) => {
+      const i = s.lastIndexOf(".");
+      return { object: s.slice(0, i), column: s.slice(i + 1) };
+    };
+    const lines = typeof flags.cik === "string" ? rt.world.utilityHistory(flags.cik.padStart(10, "0")) : typeof flags.left === "string" && typeof flags.right === "string" ? rt.world.keyHistory(split(flags.left), split(flags.right)) : null;
+    if (!lines) {
+      console.error("known needs --cik <cik> or --left <object.column> --right <object.column>");
+      return 2;
+    }
+    for (const l of lines) console.log(`${l.validFrom ?? "?"} -> ${l.validTo ?? "now"}  ${l.type}  ${l.from} -> ${l.to}  ${JSON.stringify(l.attrs).slice(0, 160)}  (${l.by ?? "?"})`);
+    if (!lines.length) console.log("nothing known");
+    return 0;
   } finally {
     rt.close();
   }
-  console.log(ok ? "warm-up OK" : "warm-up INCOMPLETE (see above)");
-  return ok ? 0 : 3;
 }
 
 async function main(): Promise<number> {
@@ -303,22 +264,25 @@ async function main(): Promise<number> {
   switch (cmd) {
     case "ask":
       return cmdAsk(flags);
+    case "onboard":
+      return cmdOnboard(flags);
     case "replay":
       return cmdReplay(positional, flags);
     case "runs":
       return cmdRuns();
     case "why":
       return cmdWhy(positional, flags);
-    case "warmup":
-      return cmdWarmup(flags);
+    case "known":
+      return cmdKnown(flags);
     default:
       console.log(
         [
-          'usage: cli.ts ask --cik 0001031296 --period CY2025Q1 --claim "colder weather" [--utility FE] [--json] [--out <file>] [--think on|off] [--max-chunks 10] [--no-model]',
+          "usage: cli.ts ask --quarter CY2025Q1 [--cold] [--json] [--out <file>] [--think on|off] [--max-chunks 12] [--no-model]",
+          "       cli.ts onboard [--skip-dq]",
           "       cli.ts replay <run_id> [--json]",
           "       cli.ts runs",
           "       cli.ts why <memory_id> [--json]",
-          "       cli.ts warmup [--no-model] [--wait-s 180]",
+          "       cli.ts known --cik <cik> | --left <object.column> --right <object.column>",
         ].join("\n"),
       );
       return cmd === "help" ? 0 : 2;

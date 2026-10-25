@@ -21,12 +21,11 @@ import http, { type IncomingMessage, type ServerResponse } from "node:http";
 import { extname, resolve, sep } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { DATA_DIR, DATA_PATHS, loadConfig, REPO_ROOT_URL } from "./config.ts";
-import { analystApproval, APPROVAL_SURFACE, APPROVER, ContractError, ContractVerifier, loadContractSecret } from "./contract/scout.ts";
+import { analystApproval, APPROVAL_SURFACE, APPROVER, ContractError, ContractVerifier, loadContractSecret, type RecastSide } from "./contract/scout.ts";
 import { newRunId, type EvidenceRecord } from "./evidence/store.ts";
 import type { LoopEvent } from "./loop/generator.ts";
 import type { RunResult } from "./loop/investigate.ts";
 import { num, pct } from "./loop/tools.ts";
-import type { RecastSide } from "./memory/recastConflicts.ts";
 import type { SavedRun } from "./ops/runStore.ts";
 import { ask as runAsk, openRuntime, type AskOutcome, type AskRequest, type Runtime } from "./runtime.ts";
 import { findUtility } from "./seeds.ts";
@@ -209,53 +208,27 @@ function cell(v: unknown): string {
  */
 export function renderMemoMarkdown(run: RunResult | SavedRun, records: EvidenceRecord[] = run.evidence ?? []): string {
   const c = run.card;
-  const u = c.utility;
   const out: string[] = [];
-  out.push(`# Crosswalk memo: ${u?.name ?? `CIK ${run.cik}`} (CIK ${run.cik}), ${run.period} vs ${run.previous_period}`);
+  out.push(`# Crosswalk note: ${run.quarter} vs ${run.previous_quarter}`);
   out.push("");
-  out.push(`Run \`${run.run_id}\`, started ${run.started_at}, ${run.wall_ms} ms wall, ${run.markovian.chunks} chunk(s); model ${run.telemetry.model ?? "none"}; memo ${c.memo ? `${c.memo.source}, ${c.memo.words} words` : "none"}.`);
+  out.push(`Run \`${run.run_id}\` (${run.mode}), started ${run.started_at}, ${run.wall_ms} ms wall, ${run.markovian.chunks} chunk(s); model ${run.telemetry.model ?? "none"}; note ${run.memo ? `${run.memo.source}, ${run.memo.words} words` : "none"}.`);
   out.push("");
-  out.push(`**Question.** ${c.question}`);
+  out.push(`**Question.** ${run.question}`);
   out.push("");
-  const v = c.verdict;
-  out.push(`**Verdict on "${run.claim}":** ${v ? v.verdict : "none"}${v?.confidence ? ` (confidence ${v.confidence})` : ""}${v?.withheld_reason ? `; ${v.withheld_reason}` : ""}`);
+  out.push("## Note");
   out.push("");
-  out.push("## Memo");
+  out.push(run.memo?.text ?? "_No note was written for this run._");
   out.push("");
-  out.push(c.memo?.text ?? "_No memo was written for this run._");
+  out.push("## Join map");
   out.push("");
-  if (c.growth) {
-    const g = c.growth;
-    out.push("## Revenue");
+  out.push("| Key | Left | Right | Transform | Matched / left | Rate | Verdict | Orphans |");
+  out.push("|---|---|---|---|---|---|---|---|");
+  for (const k of run.join_map) out.push(`| ${cell(k.key)} | ${cell(k.left)} | ${cell(k.right)} | ${cell(k.transform)} | ${k.matched_rows ?? "?"} / ${k.left_rows ?? "?"} | ${k.rate === null ? "n/a" : num(k.rate, 3)} | ${cell(k.verdict ?? k.status)}${k.from_memory ? " (recalled)" : ""} | ${cell(k.orphans.join("; "))} |`);
+  out.push("");
+  if (run.answer) {
+    out.push("## Answer");
     out.push("");
-    out.push(`${g.tag}: like-for-like change ${pct(g.g)} (current quarter from ${g.current_accn}, filed ${g.current_filed}; previous quarter as the ${g.recast ? "recast " : ""}comparative in ${g.previous_comparative_accn ?? "n/a"}${g.previous_original_accn ? `, original ${g.previous_original_accn}` : ""}).${g.tag_switch_note ? ` ${g.tag_switch_note}` : ""}`);
-    out.push("");
-  }
-  if (c.weather) {
-    const w = c.weather;
-    out.push("## Weather");
-    out.push("");
-    out.push(`Heating plus cooling degree days ${num(w.tdd_previous, 2)} to ${num(w.tdd_current, 2)} (${pct(w.delta_w)}) over ${w.stations_used.length} station(s), coverage ${num(w.coverage, 3)}${w.stations_missing.length ? `; no rows for ${w.stations_missing.join(", ")}` : ""}.`);
-    out.push("");
-  }
-  if (c.attribution) {
-    const a = c.attribution;
-    const r = a.ranges;
-    out.push(`## Attribution (${a.peers} peers; beta ${num(a.beta, 3)} [${num(r.beta.lo, 3)}, ${num(r.beta.hi, 3)}]; bootstrap ${a.bootstrap.valid}/${a.bootstrap.resamples}, seed ${a.bootstrap.seed}; ranges 10th to 90th percentile)`);
-    out.push("");
-    out.push("| Part | Point | Range |");
-    out.push("|---|---|---|");
-    out.push(`| Weather | ${pct(a.weather)} | [${pct(r.weather.lo)}, ${pct(r.weather.hi)}] |`);
-    out.push(`| Industry | ${pct(a.industry)} | [${pct(r.industry.lo)}, ${pct(r.industry.hi)}] |`);
-    out.push(`| Remainder | ${pct(a.remainder)} | [${pct(r.remainder.lo)}, ${pct(r.remainder.hi)}] |`);
-    out.push("");
-    out.push(`Claim ratio |weather| / |g| = ${a.claim.ratio === null ? "n/a" : num(a.claim.ratio, 3)}: ${a.claim.verdict}.`);
-    out.push("");
-  }
-  if (c.dq) {
-    out.push("## Data quality gate");
-    out.push("");
-    out.push(`${c.dq.label} (${c.dq.basis}${c.dq.ranAt ? `, onboarding run ${c.dq.ranAt}` : ""}): ${c.dq.note}`);
+    for (const r of run.answer.rows) out.push(`- ${r.name}${r.ticker ? ` (${r.ticker})` : ""}: ${r.declarations} declaration(s) in ${r.states.map((s) => s.state).join(", ")}; revenue ${r.revenue?.change !== null && r.revenue?.change !== undefined ? `${pct(r.revenue.change)} under ${r.revenue.tag}` : `not compared (${r.revenue?.note ?? r.revenue_note ?? "n/a"})`}${r.weather ? `; degree days ${pct(r.weather.change)}` : ""}`);
     out.push("");
   }
   if (c.claims.length) {
@@ -266,17 +239,9 @@ export function renderMemoMarkdown(run: RunResult | SavedRun, records: EvidenceR
   }
   out.push("## Not tested");
   out.push("");
-  if (c.not_tested.length) for (const n of c.not_tested) out.push(`- ${n}`);
+  if (run.not_tested.length) for (const n of run.not_tested) out.push(`- ${n}`);
   else out.push("- (none listed)");
   out.push("");
-  if (c.recast_conflicts.length) {
-    out.push("## Recast conflicts");
-    out.push("");
-    for (const k of c.recast_conflicts) {
-      out.push(`- ${k.id} (${k.scope}, ${k.tag} ${k.period}): ${k.own_filing.val} in ${k.own_filing.accn} (filed ${k.own_filing.filed}) vs ${k.later_filing.val} in ${k.later_filing.accn} (filed ${k.later_filing.filed}); ${k.rule_text}; using ${k.chosen} = ${k.chosen_val}; ${k.status}${k.override ? ` by ${k.override.by}: ${k.override.reason}` : ""}`);
-    }
-    out.push("");
-  }
   if (c.gaps.length) {
     out.push("## Gaps");
     out.push("");
@@ -361,26 +326,19 @@ export function createServer(deps: ServerDeps): CwServer {
   }
 
   function finishedSummary(r: RunResult): Record<string, unknown> {
-    const c = r.card;
     return {
       run_id: r.run_id,
-      cik: r.cik,
-      period: r.period,
-      claim: r.claim,
-      utility: c.utility?.name ?? null,
-      verdict: c.verdict?.verdict ?? null,
-      confidence: c.verdict?.confidence ?? null,
+      quarter: r.quarter,
+      mode: r.mode,
+      question: r.question,
+      utilities: r.answer?.rows.length ?? 0,
+      keys: r.join_map.length,
       wall_ms: r.wall_ms,
       chunks: r.markovian.chunks,
       checklist_complete: r.checklist_complete,
-      memo_source: c.memo?.source ?? null,
-      memo_words: c.memo?.words ?? null,
-      g: c.growth?.g ?? null,
-      weather: c.attribution?.weather ?? null,
-      industry: c.attribution?.industry ?? null,
-      remainder: c.attribution?.remainder ?? null,
-      ratio: c.attribution?.claim.ratio ?? null,
-      recast_conflicts: c.recast_conflicts.map((k) => k.id),
+      memo_source: r.memo?.source ?? null,
+      memo_words: r.memo?.words ?? null,
+      skipped_chunks: r.telemetry.skipped_chunks,
       skipped_steps: r.skipped_steps.length,
       evidence_records: r.evidence_ids.length,
       memory_ids: r.memory?.ids ?? [],
@@ -423,25 +381,13 @@ export function createServer(deps: ServerDeps): CwServer {
 
     if (m === "POST" && p === "/api/ask") {
       const b = await readJson(req);
-      let cik = typeof b.cik === "string" ? b.cik.trim() : typeof b.cik === "number" ? String(b.cik) : "";
-      let utilityName: string | null = null;
-      if (!cik && typeof b.utility === "string" && b.utility.trim()) {
-        const u = findUtility(rt.seeds, b.utility.trim());
-        if (!u) throw new HttpError(400, `no seed utility matches "${b.utility.trim().slice(0, 60)}"`, "unknown_utility");
-        cik = u.cik;
-        utilityName = u.name;
-      }
-      if (!cik) throw new HttpError(400, "cik or utility is required", "missing_field");
-      if (!CIK.test(cik)) throw new HttpError(400, "cik must be up to 10 digits", "bad_cik");
-      cik = cik.padStart(10, "0");
-      utilityName ??= rt.seeds.utilities.find((u) => u.cik === cik)?.name ?? null;
-      const period = s(b.period, "period");
-      if (!PARAM_PATTERNS.period.test(period)) throw new HttpError(400, "period must look like CY2025Q1 (Q1 to Q3)", "bad_period");
-      const claim = (s(b.claim, "claim", false) || "the weather").slice(0, 300);
+      const quarter = s(b.quarter, "quarter");
+      if (!PARAM_PATTERNS.fema_quarter.test(quarter)) throw new HttpError(400, "quarter must look like CY2025Q1", "bad_quarter");
+      const mode = b.mode === "cold" ? "cold" : "warm";
       let maxChunks: number | undefined;
       if (b.max_chunks !== undefined && b.max_chunks !== null && b.max_chunks !== "") {
         const n = Number(b.max_chunks);
-        if (!Number.isInteger(n) || n < 1 || n > 10) throw new HttpError(400, "max_chunks must be an integer from 1 to 10", "bad_field");
+        if (!Number.isInteger(n) || n < 1 || n > 12) throw new HttpError(400, "max_chunks must be an integer from 1 to 12", "bad_field");
         maxChunks = n;
       }
       const think = typeof b.think === "boolean" ? b.think : undefined;
@@ -449,35 +395,31 @@ export function createServer(deps: ServerDeps): CwServer {
       const runId = newRunId();
       busy = runId;
       const startedAt = new Date().toISOString();
-      bus.publish("run_started", { run_id: runId, cik, period, claim, utility: utilityName, max_chunks: maxChunks ?? null, think: think ?? null, started_at: startedAt });
-      log(`run ${runId} started: ${cik} ${period} "${claim}"`);
+      bus.publish("run_started", { run_id: runId, quarter, mode, max_chunks: maxChunks ?? null, think: think ?? null, started_at: startedAt });
+      log(`run ${runId} started: ${quarter} ${mode}`);
       void (async () => {
         try {
-          const o = await askFn(rt, { cik, period, claim, maxChunks, think, runId, onEvent: (e: LoopEvent) => bus.publish(e.type, { ...e, run_id: runId }) }, { source: "server" });
+          const o = await askFn(rt, { quarter, mode, maxChunks, think, runId, onEvent: (e: LoopEvent) => bus.publish(e.type, { ...e, run_id: runId }) }, { source: "server" });
           const summary = finishedSummary(o.result);
           if (o.result.run_id !== runId) summary.announced_run_id = runId;
           bus.publish("run_finished", summary);
-          log(`run ${o.result.run_id} finished: ${summary.verdict ?? "no verdict"} in ${o.result.wall_ms} ms, ${o.result.markovian.chunks} chunk(s)`);
+          log(`run ${o.result.run_id} finished in ${o.result.wall_ms} ms, ${o.result.markovian.chunks} chunk(s)`);
         } catch (e) {
           const error = (e as Error).message.slice(0, 500);
           log(`run ${runId} failed: ${error}`);
-          bus.publish("run_failed", { run_id: runId, cik, period, claim, error });
+          bus.publish("run_failed", { run_id: runId, quarter, mode, error });
         } finally {
           busy = null;
         }
       })();
-      return send(res, 202, { run_id: runId, cik, period, claim, utility: utilityName, started_at: startedAt, state: "running" });
+      return send(res, 202, { run_id: runId, quarter, mode, started_at: startedAt, state: "running" });
     }
 
     if (m === "GET" && p === "/api/runs") return send(res, 200, { runs: rt.runs.list(), busy_run_id: busy });
 
     if (m === "GET" && p === "/api/seeds") {
-      const list = rt.runs.list();
       return send(res, 200, {
-        utilities: rt.seeds.utilities.map((u) => {
-          const periods = [...new Set(list.filter((r) => r.cik === u.cik).map((r) => r.period))].sort();
-          return { cik: u.cik, name: u.name, ticker: u.ticker, sic: u.sic, hq_state: u.hq_state, states_served: u.states_served, station_ids: u.station_ids, flags: u.flags, latest_run_id: Object.fromEntries(periods.map((pd) => [pd, rt.runs.latestId(u.cik, pd)])) };
-        }),
+        utilities: rt.seeds.utilities.map((u) => ({ cik: u.cik, name: u.name, ticker: u.ticker, sic: u.sic, hq_state: u.hq_state, states_served: u.states_served, station_ids: u.station_ids, flags: u.flags })),
       });
     }
 
@@ -509,7 +451,7 @@ export function createServer(deps: ServerDeps): CwServer {
       return send(res, 200, { memory_id: wy[1], ...t });
     }
 
-    if (m === "GET" && p === "/api/conflicts") return send(res, 200, { conflicts: rt.hmem.recasts.all() });
+    if (m === "GET" && p === "/api/conflicts") return send(res, 200, { conflicts: [] });
 
     if (m === "GET" && p === "/api/world") {
       const g = rt.world.exportGraph();
@@ -521,9 +463,9 @@ export function createServer(deps: ServerDeps): CwServer {
     if (m === "GET" && wc) {
       if (!CIK.test(wc[1]!)) throw new HttpError(400, "bad cik", "bad_cik");
       const cik = wc[1]!.padStart(10, "0");
-      const neighbourhood = rt.world.neighbourhood(cik);
-      if (!neighbourhood.utility) throw new HttpError(404, `no utility with CIK ${cik} in the World Model`, "not_found");
-      return send(res, 200, { cik, neighbourhood, timeline: rt.world.timeline(cik) });
+      const history = rt.world.utilityHistory(cik);
+      if (!history.length) throw new HttpError(404, `no utility with CIK ${cik} in the World Model`, "not_found");
+      return send(res, 200, { cik, history });
     }
 
     if (m === "GET" && p === "/api/telemetry") {
@@ -534,8 +476,8 @@ export function createServer(deps: ServerDeps): CwServer {
         runs: list.length,
         busy_run_id: busy,
         run_id: latest?.run_id ?? null,
-        cik: latest?.cik ?? null,
-        period: latest?.period ?? null,
+        quarter: latest?.quarter ?? null,
+        mode: latest?.mode ?? null,
         started_at: latest?.started_at ?? null,
         wall_ms: latest?.wall_ms ?? null,
         chunks: latest?.markovian.chunks ?? null,
@@ -588,30 +530,8 @@ export function createServer(deps: ServerDeps): CwServer {
         log(`override of ${params.conflict_id} refused (${v.code}): ${v.reason}`);
         throw new HttpError(403, `refused: ${v.reason}`, v.code);
       }
-      if (!rt.hmem.recasts.get(params.conflict_id)) throw new HttpError(404, `no recast conflict ${params.conflict_id}`, "not_found");
-      let conflict;
-      try {
-        conflict = rt.hmem.recasts.override(params.conflict_id, { chosen: params.chosen as RecastSide, reason: params.reason, by: APPROVER, contractId: v.contract.contractId });
-      } catch (e) {
-        throw new HttpError(409, (e as Error).message, "not_applied");
-      }
-      verifierOf().consume(v.contract);
-      bus.publish("override", {
-        run_id: conflict.run_id,
-        conflict_id: conflict.id,
-        cik: conflict.cik,
-        tag: conflict.tag,
-        period: conflict.period,
-        chosen: conflict.chosen,
-        chosen_val: conflict.chosen_val,
-        status: conflict.status,
-        reason: params.reason,
-        by: APPROVER,
-        contract_id: v.contract.contractId,
-        overridden_at: conflict.override?.at ?? null,
-      });
-      log(`override of ${conflict.id} applied: ${conflict.chosen} = ${conflict.chosen_val} (contract ${v.contract.contractId})`);
-      return send(res, 200, { conflict, contract_id: v.contract.contractId });
+      // Crosswalk keeps no recast conflicts (the inherited route stays until the Day-2 server rewrite).
+      throw new HttpError(404, `no recast conflict ${params.conflict_id}`, "not_found");
     }
 
     if (p.startsWith("/api/")) throw new HttpError(404, `no route ${m} ${p}`, "not_found");

@@ -14,7 +14,9 @@ import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
 import { appendFileSync, existsSync, mkdirSync, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { DATA_DIR_URL, REPO_ROOT_URL } from "../config.ts";
-import type { RecastSide } from "../memory/recastConflicts.ts";
+
+/** The two sides of a restated comparative (the inherited override contract; Crosswalk's question path issues none). */
+export type RecastSide = "own_filing" | "later_filing";
 
 export const POLICY_PACK_VERSION = "crosswalk-scout-subset@1";
 export const CONTRACT_TTL_MS = 15 * 60_000;
@@ -37,6 +39,7 @@ export const RISK_CLASSES = {
   register_frames: "medium",
   register_concept: "medium",
   register_submission: "medium",
+  register_source: "medium",
   override_recast: "high",
 } as const satisfies Record<string, RiskLevel>;
 export type ContractAction = keyof typeof RISK_CLASSES;
@@ -72,7 +75,7 @@ export function overrideRecastParams(contract: ExecutionContract): OverrideRecas
 }
 
 /** The actions the gateway registrar runs (POST /registrar/<action>). */
-export const REGISTRAR_ACTIONS = ["register_frames", "register_concept", "register_submission"] as const satisfies readonly ContractAction[];
+export const REGISTRAR_ACTIONS = ["register_frames", "register_concept", "register_submission", "register_source"] as const satisfies readonly ContractAction[];
 
 export const SURFACES = ["cw-ui", "cw-agent"] as const;
 export type Surface = (typeof SURFACES)[number];

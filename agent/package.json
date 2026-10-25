@@ -12,7 +12,7 @@
     "dev": "tsx src/server.ts",
     "cli": "tsx src/cli.ts",
     "ask": "tsx src/cli.ts ask",
-    "warmup": "tsx src/cli.ts warmup",
+    "onboard": "tsx src/cli.ts onboard",
     "replay": "tsx src/cli.ts replay",
     "test": "vitest run",
     "typecheck": "tsc --noEmit"
