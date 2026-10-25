@@ -190,6 +190,14 @@ export function checkNoteWords(text: string, facts: NoteFacts): NoteIssue[] {
       for (const m of s.matchAll(DIRECTION_RE)) {
         const word = (m[1] ?? m[2]!).toLowerCase();
         let ui = before(ms, m.index!);
+        // Review correction: a direction word followed by several utilities ("held up ... with AAA, BBB and CCC") is a
+        // claim about each of them, not about the first one named; an uncompared one fails the word as it does alone.
+        const listed = ui === null ? [...new Set(ms.filter((x) => x.start > m.index!).map((x) => x.index))].sort((a, b) => a - b) : [];
+        if (listed.length >= 2) {
+          const bad = listed.filter((i) => !satisfies(word, utilities[i]!.revenue_change)).map((i) => label(utilities[i]!));
+          if (bad.length > 0) raw.push({ si, start: m.index!, kind: "direction", subject: "listed", claimed: word, expected: bad.join(", ") });
+          continue;
+        }
         if (ui === null) ui = after(ms, m.index!);
         if (ui !== null) {
           const u = utilities[ui]!;

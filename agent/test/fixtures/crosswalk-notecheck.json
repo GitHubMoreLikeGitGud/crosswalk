@@ -313,6 +313,37 @@
           "expected": "BBB, CCC, Foxtrot Light Co"
         }
       ]
+    },
+    {
+      "name": "listed_after_held",
+      "text": "Their revenue held up year on year with AAA +8.7%, BBB -6.6% and CCC -0.1%.",
+      "expected": [
+        {
+          "kind": "direction",
+          "sentence": 0,
+          "subject": "listed",
+          "claimed": "held",
+          "expected": "BBB, CCC"
+        }
+      ]
+    },
+    {
+      "name": "listed_after_all_true",
+      "text": "Revenue rose year on year at AAA (+8.7%) and Echo Energy Inc (+12.2%).",
+      "expected": []
+    },
+    {
+      "name": "listed_after_not_compared",
+      "text": "Revenue rose at AAA and DDD.",
+      "expected": [
+        {
+          "kind": "direction",
+          "sentence": 0,
+          "subject": "listed",
+          "claimed": "rose",
+          "expected": "DDD"
+        }
+      ]
     }
   ],
   "cap": [

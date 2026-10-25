@@ -119,6 +119,15 @@ def check_note_words(text: str, facts: dict) -> list[dict]:
             for m in DIRECTION_RE.finditer(s):
                 word = (m.group(1) or m.group(2)).lower()
                 ui = before(ms, m.start())
+                listed = sorted({i for st, i in ms if st > m.start()}) if ui is None else []
+                if ui is None and len(listed) >= 2:
+                    # Review correction: a direction word followed by several utilities ("held up ... with AAA, BBB
+                    # and CCC") is a claim about each of them, not about the first one named; a named utility whose
+                    # revenue was not compared fails the word, as it does when it is the only one attached.
+                    bad = [label(utilities[i]) for i in listed if not satisfies(word, utilities[i]["revenue_change"])]
+                    if bad:
+                        issues.append((si, m.start(), "direction", {"subject": "listed", "claimed": word, "expected": ", ".join(bad)}))
+                    continue
                 if ui is None:
                     ui = after(ms, m.start())
                 if ui is not None:
@@ -206,6 +215,10 @@ TEXTS = [
     ("utilities_always_total", "AAA is one of 6 utilities; BBB leads 9 utilities."),
     ("revenue_words_without_revenue", "AAA rose in the rankings."),
     ("mixed_kinds_same_sentence", "Three keys were verified across 5 utilities, and revenue rose."),
+    # Review correction (second pass): a direction word followed by several utilities is checked against each of them.
+    ("listed_after_held", "Their revenue held up year on year with AAA +8.7%, BBB -6.6% and CCC -0.1%."),
+    ("listed_after_all_true", "Revenue rose year on year at AAA (+8.7%) and Echo Energy Inc (+12.2%)."),
+    ("listed_after_not_compared", "Revenue rose at AAA and DDD."),
 ]
 
 CAP_CASES = [
