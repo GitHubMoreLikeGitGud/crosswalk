@@ -1,0 +1,254 @@
+{
+  "_comment": "The governed USL lightning.metastore.crosswalk.crosswalk_usl as compiled on 2026-10-25 (zetaris/sql/07_cw_usl_create.sql), written by agent/test/fixtures/make_discovery_fixtures.py. compile_usl diffs the plan rendered from a run's verified keys against it.",
+  "usl": "crosswalk_usl",
+  "namespace": "lightning.metastore.crosswalk",
+  "description": "Crosswalk model - US states, investor-owned electric utilities from SEC EDGAR with the states they serve, FEMA major-disaster declarations of Q1 2025, GHCN airport weather stations and quarterly revenue facts. Every foreign key is a join key that was measured in Lightning SQL before it was declared.",
+  "tables": [
+    {
+      "name": "state",
+      "source": "cw.states",
+      "description": "State reference - 50 states and DC with the two-letter postal code and the two-digit FIPS code. Territories are absent by design.",
+      "columns": [
+        {
+          "name": "code",
+          "type": "varchar(2)",
+          "nullable": false
+        },
+        {
+          "name": "name",
+          "type": "varchar(40)",
+          "nullable": true
+        },
+        {
+          "name": "fips",
+          "type": "varchar(2)",
+          "nullable": true
+        }
+      ],
+      "pk": [
+        "code"
+      ]
+    },
+    {
+      "name": "sic_code",
+      "source": "cw.sic_codes",
+      "description": "SIC code reference from company_dns V4. Electric utilities are 4911, 4931 and 4932.",
+      "columns": [
+        {
+          "name": "sic",
+          "type": "varchar(4)",
+          "nullable": false
+        },
+        {
+          "name": "division",
+          "type": "varchar(1)",
+          "nullable": true
+        },
+        {
+          "name": "description",
+          "type": "varchar(200)",
+          "nullable": true
+        }
+      ],
+      "pk": [
+        "sic"
+      ]
+    },
+    {
+      "name": "utility",
+      "source": "cw.seed_utilities",
+      "description": "One row per seed utility from the EDGAR submissions endpoint - cik as a zero padded 10-digit string, name, ticker, SIC. MGE Energy reports SIC 4900, which the reference lacks - the one known FK orphan.",
+      "columns": [
+        {
+          "name": "cik",
+          "type": "varchar(10)",
+          "nullable": false
+        },
+        {
+          "name": "name",
+          "type": "varchar(200)",
+          "nullable": true
+        },
+        {
+          "name": "ticker",
+          "type": "varchar(10)",
+          "nullable": true
+        },
+        {
+          "name": "sic",
+          "type": "varchar(4)",
+          "nullable": true
+        }
+      ],
+      "pk": [
+        "cik"
+      ]
+    },
+    {
+      "name": "utility_state",
+      "source": "cw.utility_states",
+      "description": "Service territory - one row per utility and state it serves, curated from the FY2024 Form 10-K service-territory descriptions, capped at 6 states per utility.",
+      "columns": [
+        {
+          "name": "cik",
+          "type": "varchar(10)",
+          "nullable": false
+        },
+        {
+          "name": "state",
+          "type": "varchar(2)",
+          "nullable": false
+        }
+      ],
+      "pk": [
+        "cik",
+        "state"
+      ]
+    },
+    {
+      "name": "fema_declaration",
+      "source": "cw.fema_declarations_dr_2025q1",
+      "description": "FEMA major-disaster declarations declared in Q1 2025 - one row per designated area, with the state, declaration date, incident type and title from OpenFEMA DisasterDeclarationsSummaries v2.",
+      "columns": [
+        {
+          "name": "disaster_number",
+          "type": "int",
+          "nullable": false
+        },
+        {
+          "name": "fips_county",
+          "type": "varchar(3)",
+          "nullable": false
+        },
+        {
+          "name": "state",
+          "type": "varchar(2)",
+          "nullable": true
+        },
+        {
+          "name": "fips_state",
+          "type": "varchar(2)",
+          "nullable": true
+        },
+        {
+          "name": "declaration_date",
+          "type": "varchar(24)",
+          "nullable": true
+        },
+        {
+          "name": "incident_type",
+          "type": "varchar(40)",
+          "nullable": true
+        },
+        {
+          "name": "title",
+          "type": "varchar(200)",
+          "nullable": true
+        },
+        {
+          "name": "designated_area",
+          "type": "varchar(120)",
+          "nullable": true
+        }
+      ],
+      "pk": [
+        "disaster_number",
+        "fips_county"
+      ]
+    },
+    {
+      "name": "station",
+      "source": "cw.stations",
+      "description": "GHCN-Daily first-order airport stations used as the weather proxy for a state - the 56 seed stations with the state parsed from ghcnd-stations.txt columns 39-40.",
+      "columns": [
+        {
+          "name": "id",
+          "type": "varchar(11)",
+          "nullable": false
+        },
+        {
+          "name": "state",
+          "type": "varchar(2)",
+          "nullable": true
+        },
+        {
+          "name": "name",
+          "type": "varchar(60)",
+          "nullable": true
+        }
+      ],
+      "pk": [
+        "id"
+      ]
+    },
+    {
+      "name": "revenue_quarter",
+      "source": "cw.frames_RegulatedAndUnregulatedOperatingRevenue_CY2024Q1, cw.frames_RegulatedAndUnregulatedOperatingRevenue_CY2025Q1, cw.frames_RevenueFromContractWithCustomerExcludingAssessedTax_CY2024Q1, cw.frames_RevenueFromContractWithCustomerExcludingAssessedTax_CY2025Q1, cw.frames_Revenues_CY2024Q1, cw.frames_Revenues_CY2025Q1",
+      "description": "Quarterly revenue facts of the seed utilities from SEC frames for CY2025Q1 and CY2024Q1 under three tags - val in US dollars, accn the filing the frames endpoint served.",
+      "columns": [
+        {
+          "name": "cik",
+          "type": "varchar(10)",
+          "nullable": false
+        },
+        {
+          "name": "xbrl_tag",
+          "type": "varchar(60)",
+          "nullable": false
+        },
+        {
+          "name": "period",
+          "type": "varchar(8)",
+          "nullable": false
+        },
+        {
+          "name": "val",
+          "type": "double",
+          "nullable": true
+        },
+        {
+          "name": "accn",
+          "type": "varchar(25)",
+          "nullable": true
+        }
+      ],
+      "pk": [
+        "cik",
+        "xbrl_tag",
+        "period"
+      ]
+    }
+  ],
+  "fks": [
+    {
+      "from": "utility.sic",
+      "to": "sic_code.sic",
+      "transform": "identity"
+    },
+    {
+      "from": "utility_state.cik",
+      "to": "utility.cik",
+      "transform": "identity"
+    },
+    {
+      "from": "utility_state.state",
+      "to": "state.code",
+      "transform": "identity"
+    },
+    {
+      "from": "fema_declaration.state",
+      "to": "state.code",
+      "transform": "identity"
+    },
+    {
+      "from": "station.state",
+      "to": "state.code",
+      "transform": "identity"
+    },
+    {
+      "from": "revenue_quarter.cik",
+      "to": "utility.cik",
+      "transform": "lpad10"
+    }
+  ]
+}

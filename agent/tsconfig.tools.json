@@ -3,13 +3,15 @@
   "include": [
     "src/tools/**/*.ts",
     "test/degree-days.test.ts",
-    "test/attribution.test.ts",
-    "test/recast.test.ts",
     "test/frames.test.ts",
     "test/transforms.test.ts",
     "test/match-rate.test.ts",
     "test/usl-plan.test.ts",
     "test/fema.test.ts",
-    "test/stations.test.ts"
+    "test/stations.test.ts",
+    "test/catalogue-search.test.ts",
+    "test/probe-heuristic.test.ts",
+    "test/baseline-keys.test.ts",
+    "test/discovery.test.ts"
   ]
 }

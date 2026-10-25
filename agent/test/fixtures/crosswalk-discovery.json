@@ -140,7 +140,7 @@
             "hosts": [
               "www.fema.gov"
             ],
-            "summary": "OpenFEMA DisasterDeclarationsSummaries v2 filtered to major disasters (DR) declared in Q1 2025 (116 designated areas, 10 declarations, 8 states; equals the response fetched outside Zetaris) and the OpenFemaDataSets v1 catalogue (44 rows, 43 distinct names); container cw created here; both views cached (2026-10-25)",
+            "summary": "OpenFEMA DisasterDeclarationsSummaries v2 filtered to major disasters (DR) declared in Q1 2025 (116 designated areas, 10 declarations, 8 states; equals the response fetched outside Zetaris) and the OpenFemaDataSets v1 catalogue (44 rows, 43 distinct names); container cw created here; both views cached (2026-10-25). CY2024Q1 registered at run time through the gateway's register_source (catalogue id openfema_disaster_declarations -> register_fema, signed contract): 72 designated areas, 14 declarations, 11 states, equal to the same URL fetched outside Zetaris; cached; registration 1.34 s wall (2026-10-25)",
             "objects": {
               "database": "CW_FEMA",
               "container": "cw",
@@ -151,6 +151,12 @@
               "views": [
                 "cw.fema_declarations_dr_2025q1",
                 "cw.fema_catalogue"
+              ],
+              "runtime_views": [
+                "cw.fema_declarations_dr_<quarter_slug>"
+              ],
+              "registered_at_run_time": [
+                "cw.fema_declarations_dr_2024q1"
               ]
             }
           },
@@ -281,6 +287,24 @@
               ],
               "dq": [
                 "primary and foreign key rules named after their columns (LIST DQ USL)"
+              ]
+            }
+          },
+          {
+            "id": "cw_seed_names",
+            "kind": "values-views",
+            "script": "zetaris/sql/08_cw_seed_names_create.sql",
+            "select": "zetaris/sql/08_cw_seed_names_select.sql",
+            "status": "verified",
+            "requires": [
+              "cw_seeds"
+            ],
+            "hosts": [],
+            "summary": "cw.seed_utility_names: cik (10-digit string), name, ticker, sic of the 43 seed utilities as a VALUES view generated from seeds/utilities.json by scripts/make_cw_sql.py; 43 rows, 43 CIKs, 40 tickers, 4 SIC codes, read in 0.24 s; cached. The answer path reads names here, never cw.seed_utilities (17 s per read) (2026-10-25)",
+            "objects": {
+              "container": "cw",
+              "views": [
+                "cw.seed_utility_names"
               ]
             }
           }
@@ -435,7 +459,7 @@
         "kind": "registered_view",
         "status": "verified",
         "licence": "",
-        "note": "OpenFEMA DisasterDeclarationsSummaries v2 filtered to major disasters (DR) declared in Q1 2025 (116 designated areas, 10 declarations, 8 states; equals the response fetched outside Zetaris) and the OpenFemaDataSets v1 catalogue (44 rows, 43 distinct names); container cw created here; both views cached (2026-10-25)"
+        "note": "OpenFEMA DisasterDeclarationsSummaries v2 filtered to major disasters (DR) declared in Q1 2025 (116 designated areas, 10 declarations, 8 states; equals the response fetched outside Zetaris) and the OpenFemaDataSets v1 catalogue (44 rows, 43 distinct names); container cw created here; both views cached (2026-10-25). CY2024Q1 registered at run time through the gateway's register_source (catalogue id openfema_disaster_declarations -> register_fema, signed contract): 72 designated areas, 14 declarations, 11 states, equal to the same URL fetched outside Zetaris; cached; registration 1.34 s wall (2026-10-25)"
       },
       {
         "id": "cw_fema:cw.fema_catalogue",
@@ -443,7 +467,7 @@
         "kind": "registered_view",
         "status": "verified",
         "licence": "",
-        "note": "OpenFEMA DisasterDeclarationsSummaries v2 filtered to major disasters (DR) declared in Q1 2025 (116 designated areas, 10 declarations, 8 states; equals the response fetched outside Zetaris) and the OpenFemaDataSets v1 catalogue (44 rows, 43 distinct names); container cw created here; both views cached (2026-10-25)"
+        "note": "OpenFEMA DisasterDeclarationsSummaries v2 filtered to major disasters (DR) declared in Q1 2025 (116 designated areas, 10 declarations, 8 states; equals the response fetched outside Zetaris) and the OpenFemaDataSets v1 catalogue (44 rows, 43 distinct names); container cw created here; both views cached (2026-10-25). CY2024Q1 registered at run time through the gateway's register_source (catalogue id openfema_disaster_declarations -> register_fema, signed contract): 72 designated areas, 14 declarations, 11 states, equal to the same URL fetched outside Zetaris; cached; registration 1.34 s wall (2026-10-25)"
       },
       {
         "id": "cw_stations:cw.stations",
@@ -524,6 +548,14 @@
         "status": "verified",
         "licence": "",
         "note": "USL crosswalk_usl in lightning.metastore.crosswalk: state, sic_code, utility, utility_state, fema_declaration, station, revenue_quarter with PK/FK and descriptions, each activated from a cached view (51 / 1,005 / 43 / 97 / 116 / 56 / 133 rows); RUN DQ per FK: utility.sic 43 / 42 / 1 (MGE Energy, SIC 4900 absent from company_dns), utility_state.cik 97 / 97 / 0, utility_state.state 97 / 97 / 0, fema_declaration.state 116 / 116 / 0, station.state 56 / 56 / 0, revenue_quarter.cik 133 / 133 / 0 on a second run after one refused SEC connection (2026-10-25); weather_quarter not in the model (no GHCN parquet registered on Day 0)"
+      },
+      {
+        "id": "cw_seed_names:cw.seed_utility_names",
+        "object": "cw.seed_utility_names",
+        "kind": "registered_view",
+        "status": "verified",
+        "licence": "",
+        "note": "cw.seed_utility_names: cik (10-digit string), name, ticker, sic of the 43 seed utilities as a VALUES view generated from seeds/utilities.json by scripts/make_cw_sql.py; 43 rows, 43 CIKs, 40 tickers, 4 SIC codes, read in 0.24 s; cached. The answer path reads names here, never cw.seed_utilities (17 s per read) (2026-10-25)"
       },
       {
         "id": "openfema:DisasterDeclarationsSummaries@v2",
@@ -790,12 +822,12 @@
             "negative": false
           },
           {
-            "id": "cw_seeds:cw.seed_stations",
-            "object": "cw.seed_stations",
+            "id": "cw_seed_names:cw.seed_utility_names",
+            "object": "cw.seed_utility_names",
             "kind": "registered_view",
             "status": "verified",
             "licence": "",
-            "note": "The committed seed files as SchemaStore views over inline VALUES: cw.states (51), cw.utility_states (97 pairs, 43 utilities, 43 states, 0 orphans against cw.states), cw.seed_stations (56), and cw.seed",
+            "note": "cw.seed_utility_names: cik (10-digit string), name, ticker, sic of the 43 seed utilities as a VALUES view generated from seeds/utilities.json by scripts/make_cw_sql.py; 43 rows, 43 CIKs, 40 tickers, 4",
             "score": 1,
             "negative": false
           }
@@ -2734,6 +2766,1094 @@
             "reasons": [
               "samples need substr(4,2)"
             ]
+          }
+        ]
+      }
+    ]
+  },
+  "tools": {
+    "governed": {
+      "plan_file": "seeds/usl-plan.json",
+      "compile_sql": "COMPILE USL IF NOT EXISTS crosswalk_usl DEPLOY NAMESPACE lightning.metastore.crosswalk DDL\nCREATE TABLE state (\n    code varchar(2) NOT NULL PRIMARY KEY,\n    name varchar(40),\n    fips varchar(2)\n);\nCREATE TABLE sic_code (\n    sic varchar(4) NOT NULL PRIMARY KEY,\n    division varchar(1),\n    description varchar(200)\n);\nCREATE TABLE utility (\n    cik varchar(10) NOT NULL PRIMARY KEY,\n    name varchar(200),\n    ticker varchar(10),\n    sic varchar(4) FOREIGN KEY REFERENCES sic_code(sic)\n);\nCREATE TABLE utility_state (\n    cik varchar(10) NOT NULL FOREIGN KEY REFERENCES utility(cik),\n    state varchar(2) NOT NULL FOREIGN KEY REFERENCES state(code),\n    PRIMARY KEY (cik, state)\n);\nCREATE TABLE fema_declaration (\n    disaster_number int NOT NULL,\n    fips_county varchar(3) NOT NULL,\n    state varchar(2) FOREIGN KEY REFERENCES state(code),\n    fips_state varchar(2),\n    declaration_date varchar(24),\n    incident_type varchar(40),\n    title varchar(200),\n    designated_area varchar(120),\n    PRIMARY KEY (disaster_number, fips_county)\n);\nCREATE TABLE station (\n    id varchar(11) NOT NULL PRIMARY KEY,\n    state varchar(2) FOREIGN KEY REFERENCES state(code),\n    name varchar(60)\n);\nCREATE TABLE revenue_quarter (\n    cik varchar(10) NOT NULL FOREIGN KEY REFERENCES utility(cik),\n    xbrl_tag varchar(60) NOT NULL,\n    period varchar(8) NOT NULL,\n    val double,\n    accn varchar(25),\n    PRIMARY KEY (cik, xbrl_tag, period)\n)",
+      "tables": 7,
+      "fks": 6
+    },
+    "registered_objects": [
+      "cw.fema_catalogue",
+      "cw.fema_declarations_dr_2025q1",
+      "cw.frames_RegulatedAndUnregulatedOperatingRevenue_CY2024Q1",
+      "cw.frames_RegulatedAndUnregulatedOperatingRevenue_CY2025Q1",
+      "cw.frames_RevenueFromContractWithCustomerExcludingAssessedTax_CY2024Q1",
+      "cw.frames_RevenueFromContractWithCustomerExcludingAssessedTax_CY2025Q1",
+      "cw.frames_Revenues_CY2024Q1",
+      "cw.frames_Revenues_CY2025Q1",
+      "cw.seed_stations",
+      "cw.seed_utilities",
+      "cw.seed_utility_names",
+      "cw.sic_codes",
+      "cw.states",
+      "cw.stations",
+      "cw.utility_states"
+    ],
+    "measure": [
+      {
+        "name": "cik_lpad10_frames_first",
+        "proposal": {
+          "left": {
+            "object": "cw.frames_Revenues_CY2025Q1",
+            "column": "cik"
+          },
+          "right": {
+            "object": "cw.seed_utilities",
+            "column": "cik"
+          },
+          "transform": "lpad10"
+        },
+        "known_templates": [
+          "joinmap_cik",
+          "joinmap_cik_orphans",
+          "joinmap_loc",
+          "joinmap_fema_state",
+          "joinmap_fema_state_orphans",
+          "joinmap_station",
+          "joinmap_sic",
+          "joinmap_sic_orphans"
+        ],
+        "replies": {
+          "counts": {
+            "columns": [
+              "left_keys",
+              "matched_keys"
+            ],
+            "rows": [
+              [
+                43,
+                42
+              ]
+            ]
+          },
+          "orphans": {
+            "columns": [
+              "orphan_cik",
+              "name"
+            ],
+            "rows": [
+              [
+                "0009000099",
+                "SYNTHETIC UTILITY A"
+              ]
+            ]
+          }
+        },
+        "expected": {
+          "status": "measured",
+          "route": "cik",
+          "key": "cik@CY2025Q1",
+          "left_rows": 43,
+          "matched_rows": 42,
+          "left_keys": 43,
+          "matched_keys": 42,
+          "rate": 0.9767441860465116,
+          "rate_distinct": 0.9767441860465116,
+          "verdict": "VERIFIED",
+          "orphans": [
+            "0009000099 (SYNTHETIC UTILITY A)"
+          ],
+          "extra": {}
+        }
+      },
+      {
+        "name": "sic_rows_and_codes",
+        "proposal": {
+          "left": {
+            "object": "cw.seed_utilities",
+            "column": "sic"
+          },
+          "right": {
+            "object": "cw.sic_codes",
+            "column": "code"
+          },
+          "transform": "identity"
+        },
+        "known_templates": [
+          "joinmap_cik",
+          "joinmap_cik_orphans",
+          "joinmap_loc",
+          "joinmap_fema_state",
+          "joinmap_fema_state_orphans",
+          "joinmap_station",
+          "joinmap_sic",
+          "joinmap_sic_orphans"
+        ],
+        "replies": {
+          "counts": {
+            "columns": [
+              "left_keys",
+              "matched_keys",
+              "left_rows",
+              "matched_rows"
+            ],
+            "rows": [
+              [
+                4,
+                3,
+                43,
+                42
+              ]
+            ]
+          },
+          "orphans": {
+            "columns": [
+              "orphan_sic",
+              "cik",
+              "name"
+            ],
+            "rows": [
+              [
+                "4900",
+                "0009000042",
+                "SYNTHETIC UTILITY B"
+              ]
+            ]
+          }
+        },
+        "expected": {
+          "status": "measured",
+          "route": "sic",
+          "key": "sic@all",
+          "left_rows": 43,
+          "matched_rows": 42,
+          "left_keys": 4,
+          "matched_keys": 3,
+          "rate": 0.9767441860465116,
+          "rate_distinct": 0.75,
+          "verdict": "VERIFIED",
+          "orphans": [
+            "4900 (0009000042, SYNTHETIC UTILITY B)"
+          ],
+          "extra": {}
+        }
+      },
+      {
+        "name": "fema_state_partial",
+        "proposal": {
+          "left": {
+            "object": "cw.fema_declarations_dr_2025q1",
+            "column": "state"
+          },
+          "right": {
+            "object": "cw.utility_states",
+            "column": "state"
+          },
+          "transform": "identity"
+        },
+        "known_templates": [
+          "joinmap_cik",
+          "joinmap_cik_orphans",
+          "joinmap_loc",
+          "joinmap_fema_state",
+          "joinmap_fema_state_orphans",
+          "joinmap_station",
+          "joinmap_sic",
+          "joinmap_sic_orphans"
+        ],
+        "replies": {
+          "counts": {
+            "columns": [
+              "left_keys",
+              "matched_keys"
+            ],
+            "rows": [
+              [
+                8,
+                7
+              ]
+            ]
+          },
+          "orphans": {
+            "columns": [
+              "orphan_state"
+            ],
+            "rows": [
+              [
+                "AK"
+              ]
+            ]
+          }
+        },
+        "expected": {
+          "status": "measured",
+          "route": "fema_state",
+          "key": "fema_state@CY2025Q1",
+          "left_rows": 8,
+          "matched_rows": 7,
+          "left_keys": 8,
+          "matched_keys": 7,
+          "rate": 0.875,
+          "rate_distinct": 0.875,
+          "verdict": "PARTIAL",
+          "orphans": [
+            "AK"
+          ],
+          "extra": {}
+        }
+      },
+      {
+        "name": "station_reversed",
+        "proposal": {
+          "left": {
+            "object": "cw.stations",
+            "column": "id"
+          },
+          "right": {
+            "object": "cw.seed_stations",
+            "column": "id"
+          },
+          "transform": "identity"
+        },
+        "known_templates": [
+          "joinmap_cik",
+          "joinmap_cik_orphans",
+          "joinmap_loc",
+          "joinmap_fema_state",
+          "joinmap_fema_state_orphans",
+          "joinmap_station",
+          "joinmap_sic",
+          "joinmap_sic_orphans"
+        ],
+        "replies": {
+          "counts": {
+            "columns": [
+              "left_keys",
+              "matched_keys",
+              "state_equal"
+            ],
+            "rows": [
+              [
+                56,
+                56,
+                55
+              ]
+            ]
+          }
+        },
+        "expected": {
+          "status": "measured",
+          "route": "station",
+          "key": "station@all",
+          "left_rows": 56,
+          "matched_rows": 56,
+          "left_keys": 56,
+          "matched_keys": 56,
+          "rate": 1.0,
+          "rate_distinct": 1.0,
+          "verdict": "VERIFIED",
+          "orphans": [],
+          "extra": {
+            "state_equal": 55
+          }
+        }
+      },
+      {
+        "name": "loc_substr",
+        "proposal": {
+          "left": {
+            "object": "cw.frames_Revenues_CY2025Q1",
+            "column": "loc"
+          },
+          "right": {
+            "object": "cw.seed_utilities",
+            "column": "hq_state"
+          },
+          "transform": "substr(4,2)"
+        },
+        "known_templates": [
+          "joinmap_cik",
+          "joinmap_cik_orphans",
+          "joinmap_loc",
+          "joinmap_fema_state",
+          "joinmap_fema_state_orphans",
+          "joinmap_station",
+          "joinmap_sic",
+          "joinmap_sic_orphans"
+        ],
+        "replies": {
+          "counts": {
+            "columns": [
+              "left_keys",
+              "matched_keys"
+            ],
+            "rows": [
+              [
+                42,
+                42
+              ]
+            ]
+          }
+        },
+        "expected": {
+          "status": "measured",
+          "route": "loc",
+          "key": "loc@CY2025Q1",
+          "left_rows": 42,
+          "matched_rows": 42,
+          "left_keys": 42,
+          "matched_keys": 42,
+          "rate": 1.0,
+          "rate_distinct": 1.0,
+          "verdict": "VERIFIED",
+          "orphans": [],
+          "extra": {}
+        }
+      },
+      {
+        "name": "cik_identity_no_control_template",
+        "proposal": {
+          "left": {
+            "object": "cw.seed_utilities",
+            "column": "cik"
+          },
+          "right": {
+            "object": "cw.frames_Revenues_CY2025Q1",
+            "column": "cik"
+          },
+          "transform": "identity"
+        },
+        "known_templates": [
+          "joinmap_cik",
+          "joinmap_cik_orphans",
+          "joinmap_loc",
+          "joinmap_fema_state",
+          "joinmap_fema_state_orphans",
+          "joinmap_station",
+          "joinmap_sic",
+          "joinmap_sic_orphans"
+        ],
+        "replies": {},
+        "expected": {
+          "status": "unmeasurable",
+          "route": null,
+          "key": null
+        }
+      },
+      {
+        "name": "cik_identity_control",
+        "proposal": {
+          "left": {
+            "object": "cw.seed_utilities",
+            "column": "cik"
+          },
+          "right": {
+            "object": "cw.frames_Revenues_CY2025Q1",
+            "column": "cik"
+          },
+          "transform": "identity"
+        },
+        "known_templates": [
+          "joinmap_cik",
+          "joinmap_cik_orphans",
+          "joinmap_loc",
+          "joinmap_fema_state",
+          "joinmap_fema_state_orphans",
+          "joinmap_station",
+          "joinmap_sic",
+          "joinmap_sic_orphans",
+          "joinmap_cik_control"
+        ],
+        "replies": {
+          "counts": {
+            "columns": [
+              "left_keys",
+              "matched_keys"
+            ],
+            "rows": [
+              [
+                43,
+                0
+              ]
+            ]
+          }
+        },
+        "expected": {
+          "status": "measured",
+          "route": "cik_control",
+          "key": "cik_control@CY2025Q1",
+          "left_rows": 43,
+          "matched_rows": 0,
+          "left_keys": 43,
+          "matched_keys": 0,
+          "rate": 0.0,
+          "rate_distinct": 0.0,
+          "verdict": "REJECTED",
+          "orphans": [],
+          "extra": {}
+        }
+      },
+      {
+        "name": "unrouted_pair",
+        "proposal": {
+          "left": {
+            "object": "cw.utility_states",
+            "column": "cik"
+          },
+          "right": {
+            "object": "cw.seed_utilities",
+            "column": "cik"
+          },
+          "transform": "identity"
+        },
+        "known_templates": [
+          "joinmap_cik",
+          "joinmap_cik_orphans",
+          "joinmap_loc",
+          "joinmap_fema_state",
+          "joinmap_fema_state_orphans",
+          "joinmap_station",
+          "joinmap_sic",
+          "joinmap_sic_orphans"
+        ],
+        "replies": {},
+        "expected": {
+          "status": "unmeasurable",
+          "route": null,
+          "key": null
+        }
+      },
+      {
+        "name": "loc_strip_prefix_not_routed",
+        "proposal": {
+          "left": {
+            "object": "cw.frames_Revenues_CY2025Q1",
+            "column": "loc"
+          },
+          "right": {
+            "object": "cw.seed_utilities",
+            "column": "hq_state"
+          },
+          "transform": "strip_prefix('US-')"
+        },
+        "known_templates": [
+          "joinmap_cik",
+          "joinmap_cik_orphans",
+          "joinmap_loc",
+          "joinmap_fema_state",
+          "joinmap_fema_state_orphans",
+          "joinmap_station",
+          "joinmap_sic",
+          "joinmap_sic_orphans"
+        ],
+        "replies": {},
+        "expected": {
+          "status": "unmeasurable",
+          "route": null,
+          "key": null
+        }
+      }
+    ],
+    "compile": [
+      {
+        "name": "all_keys_verified",
+        "verified_routes": [
+          "cik",
+          "loc",
+          "fema_state",
+          "station",
+          "sic"
+        ],
+        "live": {
+          "fema_declaration.state": {
+            "columns": [
+              "total",
+              "valid",
+              "invalid"
+            ],
+            "rows": [
+              [
+                116,
+                116,
+                0
+              ]
+            ]
+          },
+          "utility_state.state": {
+            "columns": [
+              "total",
+              "valid",
+              "invalid"
+            ],
+            "rows": [
+              [
+                97,
+                97,
+                0
+              ]
+            ]
+          }
+        },
+        "onboarding": {
+          "ran_at": "2026-10-25T10:00:00+08:00",
+          "rules": [
+            {
+              "rule": "utility.sic",
+              "total": 43,
+              "valid": 42,
+              "invalid": 1,
+              "elapsed_s": 1.5
+            },
+            {
+              "rule": "utility_state.cik",
+              "total": 97,
+              "valid": 97,
+              "invalid": 0,
+              "elapsed_s": 1.5
+            }
+          ],
+          "invalid_rows": [
+            {
+              "rule": "utility.sic",
+              "row": [
+                "0009000042",
+                "SYNTHETIC UTILITY B",
+                "SYN",
+                "4900"
+              ]
+            }
+          ]
+        },
+        "expected": {
+          "matches_governed": true,
+          "status": "matches_governed",
+          "usl": "crosswalk_usl",
+          "missing_fks": [],
+          "fks_in_ddl": 6
+        }
+      },
+      {
+        "name": "sic_key_not_measured",
+        "verified_routes": [
+          "cik",
+          "loc",
+          "fema_state",
+          "station"
+        ],
+        "live": {
+          "fema_declaration.state": {
+            "columns": [
+              "total",
+              "valid",
+              "invalid"
+            ],
+            "rows": [
+              [
+                116,
+                116,
+                0
+              ]
+            ]
+          },
+          "utility_state.state": {
+            "columns": [
+              "total",
+              "valid",
+              "invalid"
+            ],
+            "rows": [
+              [
+                97,
+                97,
+                0
+              ]
+            ]
+          }
+        },
+        "onboarding": {
+          "ran_at": "2026-10-25T10:00:00+08:00",
+          "rules": [
+            {
+              "rule": "utility.sic",
+              "total": 43,
+              "valid": 42,
+              "invalid": 1,
+              "elapsed_s": 1.5
+            },
+            {
+              "rule": "utility_state.cik",
+              "total": 97,
+              "valid": 97,
+              "invalid": 0,
+              "elapsed_s": 1.5
+            }
+          ],
+          "invalid_rows": [
+            {
+              "rule": "utility.sic",
+              "row": [
+                "0009000042",
+                "SYNTHETIC UTILITY B",
+                "SYN",
+                "4900"
+              ]
+            }
+          ]
+        },
+        "expected": {
+          "matches_governed": false,
+          "status": "new_version",
+          "usl": "crosswalk_usl_v2",
+          "missing_fks": [
+            "utility.sic -> sic_code.sic"
+          ],
+          "fks_in_ddl": 5
+        }
+      },
+      {
+        "name": "fema_rule_fails_no_onboarding_file",
+        "verified_routes": [
+          "cik",
+          "loc",
+          "fema_state",
+          "station",
+          "sic"
+        ],
+        "live": {
+          "fema_declaration.state": {
+            "columns": [
+              "total",
+              "valid",
+              "invalid"
+            ],
+            "rows": [
+              [
+                116,
+                100,
+                16
+              ]
+            ]
+          },
+          "utility_state.state": {
+            "columns": [
+              "total",
+              "valid",
+              "invalid"
+            ],
+            "rows": [
+              [
+                97,
+                97,
+                0
+              ]
+            ]
+          }
+        },
+        "onboarding": null,
+        "expected": {
+          "matches_governed": false,
+          "status": "new_version",
+          "usl": "crosswalk_usl_v2",
+          "missing_fks": [
+            "fema_declaration.state -> state.code"
+          ],
+          "fks_in_ddl": 5
+        }
+      }
+    ],
+    "answer": {
+      "quarter": "CY2025Q1",
+      "stations_by_cik": {
+        "0009000001": [
+          "USW00099001",
+          "USW00099002"
+        ],
+        "0009000002": [
+          "USW00099003"
+        ],
+        "0009000003": []
+      },
+      "replies": {
+        "fema": {
+          "columns": [
+            "cik",
+            "name",
+            "ticker",
+            "state",
+            "declarations",
+            "severe_storm",
+            "fire",
+            "flood",
+            "other_incidents"
+          ],
+          "rows": [
+            [
+              "0009000001",
+              "SYNTHETIC POWER A",
+              "SYA",
+              "KY",
+              1,
+              1,
+              0,
+              0,
+              0
+            ],
+            [
+              "0009000002",
+              "SYNTHETIC POWER B",
+              null,
+              "CA",
+              1,
+              0,
+              1,
+              0,
+              0
+            ],
+            [
+              "0009000002",
+              "SYNTHETIC POWER B",
+              null,
+              "OR",
+              1,
+              1,
+              0,
+              0,
+              0
+            ],
+            [
+              "0009000003",
+              "SYNTHETIC POWER C",
+              "SYC",
+              "WV",
+              1,
+              1,
+              0,
+              0,
+              0
+            ]
+          ]
+        },
+        "revenue_current": {
+          "columns": [
+            "cik",
+            "xbrl_tag",
+            "val",
+            "accn"
+          ],
+          "rows": [
+            [
+              "0009000001",
+              "Revenues",
+              1200.0,
+              "0009000001-25-000001"
+            ],
+            [
+              "0009000002",
+              "Revenues",
+              900.0,
+              "0009000002-25-000001"
+            ],
+            [
+              "0009000003",
+              "RegulatedAndUnregulatedOperatingRevenue",
+              500.0,
+              "0009000003-25-000001"
+            ]
+          ]
+        },
+        "revenue_previous": {
+          "columns": [
+            "cik",
+            "xbrl_tag",
+            "val",
+            "accn"
+          ],
+          "rows": [
+            [
+              "0009000001",
+              "Revenues",
+              1000.0,
+              "0009000001-24-000001"
+            ],
+            [
+              "0009000003",
+              "Revenues",
+              450.0,
+              "0009000003-24-000001"
+            ]
+          ]
+        },
+        "weather_current": {
+          "columns": [
+            "station_id",
+            "year",
+            "quarter",
+            "hdd",
+            "cdd",
+            "days_observed",
+            "days_in_quarter",
+            "coverage"
+          ],
+          "rows": [
+            [
+              "USW00099001",
+              2025,
+              1,
+              2000.0,
+              10.0,
+              90,
+              90,
+              1.0
+            ],
+            [
+              "USW00099002",
+              2025,
+              1,
+              1500.0,
+              30.0,
+              90,
+              90,
+              1.0
+            ],
+            [
+              "USW00099003",
+              2025,
+              1,
+              1800.0,
+              0.0,
+              70,
+              90,
+              0.7778
+            ]
+          ]
+        },
+        "weather_previous": {
+          "columns": [
+            "station_id",
+            "year",
+            "quarter",
+            "hdd",
+            "cdd",
+            "days_observed",
+            "days_in_quarter",
+            "coverage"
+          ],
+          "rows": [
+            [
+              "USW00099001",
+              2024,
+              1,
+              1800.0,
+              20.0,
+              91,
+              91,
+              1.0
+            ],
+            [
+              "USW00099002",
+              2024,
+              1,
+              1400.0,
+              20.0,
+              91,
+              91,
+              1.0
+            ],
+            [
+              "USW00099003",
+              2024,
+              1,
+              1700.0,
+              0.0,
+              91,
+              91,
+              1.0
+            ]
+          ]
+        }
+      },
+      "expected_order": [
+        "0009000002",
+        "0009000001",
+        "0009000003"
+      ],
+      "expected": [
+        {
+          "cik": "0009000002",
+          "name": "SYNTHETIC POWER B",
+          "ticker": null,
+          "states": [
+            {
+              "state": "CA",
+              "declarations": 1,
+              "by_incident_type": {
+                "severe_storm": 0,
+                "fire": 1,
+                "flood": 0,
+                "other_incidents": 0
+              }
+            },
+            {
+              "state": "OR",
+              "declarations": 1,
+              "by_incident_type": {
+                "severe_storm": 1,
+                "fire": 0,
+                "flood": 0,
+                "other_incidents": 0
+              }
+            }
+          ],
+          "declarations": 2,
+          "by_incident_type": {
+            "severe_storm": 1,
+            "fire": 1,
+            "flood": 0,
+            "other_incidents": 0
+          },
+          "revenue": {
+            "tag": "Revenues",
+            "current": 900.0,
+            "previous": null,
+            "change": null,
+            "current_accn": "0009000002-25-000001",
+            "previous_accn": null,
+            "note": "no fact a year earlier"
+          },
+          "weather": null
+        },
+        {
+          "cik": "0009000001",
+          "name": "SYNTHETIC POWER A",
+          "ticker": "SYA",
+          "states": [
+            {
+              "state": "KY",
+              "declarations": 1,
+              "by_incident_type": {
+                "severe_storm": 1,
+                "fire": 0,
+                "flood": 0,
+                "other_incidents": 0
+              }
+            }
+          ],
+          "declarations": 1,
+          "by_incident_type": {
+            "severe_storm": 1,
+            "fire": 0,
+            "flood": 0,
+            "other_incidents": 0
+          },
+          "revenue": {
+            "tag": "Revenues",
+            "current": 1200.0,
+            "previous": 1000.0,
+            "change": 0.19999999999999996,
+            "current_accn": "0009000001-25-000001",
+            "previous_accn": "0009000001-24-000001",
+            "note": null
+          },
+          "weather": {
+            "stations": [
+              "USW00099001",
+              "USW00099002"
+            ],
+            "tdd_current": 1770.0,
+            "tdd_previous": 1620.0,
+            "change": 0.09259259259259256
+          }
+        },
+        {
+          "cik": "0009000003",
+          "name": "SYNTHETIC POWER C",
+          "ticker": "SYC",
+          "states": [
+            {
+              "state": "WV",
+              "declarations": 1,
+              "by_incident_type": {
+                "severe_storm": 1,
+                "fire": 0,
+                "flood": 0,
+                "other_incidents": 0
+              }
+            }
+          ],
+          "declarations": 1,
+          "by_incident_type": {
+            "severe_storm": 1,
+            "fire": 0,
+            "flood": 0,
+            "other_incidents": 0
+          },
+          "revenue": {
+            "tag": "RegulatedAndUnregulatedOperatingRevenue",
+            "current": 500.0,
+            "previous": null,
+            "change": null,
+            "current_accn": "0009000003-25-000001",
+            "previous_accn": "0009000003-24-000001",
+            "note": "a year earlier the first available tag is Revenues, not RegulatedAndUnregulatedOperatingRevenue: not compared"
+          },
+          "weather": null
+        }
+      ]
+    },
+    "registrations": [
+      {
+        "quarter": "CY2025Q1",
+        "expected": [
+          {
+            "catalogue_id": "openfema_disaster_declarations",
+            "params": {
+              "quarter": "CY2025Q1"
+            },
+            "object": "cw.fema_declarations_dr_2025q1"
+          }
+        ]
+      },
+      {
+        "quarter": "CY2024Q1",
+        "expected": [
+          {
+            "catalogue_id": "openfema_disaster_declarations",
+            "params": {
+              "quarter": "CY2024Q1"
+            },
+            "object": "cw.fema_declarations_dr_2024q1"
+          },
+          {
+            "catalogue_id": "sec_frames",
+            "params": {
+              "tag": "Revenues",
+              "period": "CY2023Q1"
+            },
+            "object": "cw.frames_Revenues_CY2023Q1"
+          },
+          {
+            "catalogue_id": "sec_frames",
+            "params": {
+              "tag": "RevenueFromContractWithCustomerExcludingAssessedTax",
+              "period": "CY2023Q1"
+            },
+            "object": "cw.frames_RevenueFromContractWithCustomerExcludingAssessedTax_CY2023Q1"
+          },
+          {
+            "catalogue_id": "sec_frames",
+            "params": {
+              "tag": "RegulatedAndUnregulatedOperatingRevenue",
+              "period": "CY2023Q1"
+            },
+            "object": "cw.frames_RegulatedAndUnregulatedOperatingRevenue_CY2023Q1"
+          }
+        ]
+      },
+      {
+        "quarter": "CY2025Q4",
+        "expected": [
+          {
+            "catalogue_id": "openfema_disaster_declarations",
+            "params": {
+              "quarter": "CY2025Q4"
+            },
+            "object": "cw.fema_declarations_dr_2025q4"
           }
         ]
       }
