@@ -97,7 +97,7 @@
       "licence": "NOAA GHCN-Daily: CC0-1.0 / US Government work (Registry of Open Data on AWS, bucket noaa-ghcn-pds); attribution to NOAA NCEI requested.",
       "status": "verified",
       "note": "Fixed-width station list: id columns 1-11, latitude 13-20, longitude 22-30, elevation 32-37, state 39-40, name 42-71 (GSN flag 73-75, HCN/CRN flag 77-79, WMO id 81-85). Registered as a one-column CSV with a delimiter that never occurs in the file (for example '|' or U+0001) and parsed with SUBSTR in a view: SUBSTR(line, 1, 11) AS id, SUBSTR(line, 39, 2) AS state, SUBSTR(line, 42, 30) AS name. Key: id vs seeds station_ids (identity); state vs states.code.",
-      "verified_how": "not yet verified in Zetaris (gate G2, lane Z); fallback is seeds/stations.json (56 stations with state, verified by Weather-or-Not on 2026-10-24)",
+      "verified_how": "Zetaris lane, 2026-10-25 (gate G2 green): CW_GHCN.ghcnd_stations_txt registered as a one-column CSV and cw.stations cached; 133,039 rows equal the file line count, 56 of 56 seed stations present with the seed state; the seeds/stations.json fallback was not needed",
       "zetaris_object": "CW_GHCN.ghcnd_stations_txt -> cw.stations (one-column CSV, SUBSTR view, cached; 133,039 rows, 2026-10-25)"
     },
     {
@@ -116,7 +116,7 @@
       "licence": "Crosswalk's own semantic layer over the sources above (their licences apply to the data it exposes)",
       "status": "verified",
       "note": "The governed layer this project builds: tables utility, utility_state, state, fema_declaration, station, sic_code, revenue_quarter, weather_quarter with PK/FK, compiled from verified keys, activated from raw tables, DQ run bounded at 900 s. Gate G4 (lane Z) verifies it; the registered-object entries above are updated when lane Z writes zetaris/manifest.json.",
-      "verified_how": "not yet compiled (gate G4, lane Z)",
+      "verified_how": "Zetaris lane, 2026-10-25 (gate G4): COMPILE USL ok, seven tables activated from cached views (weather_quarter not in the model on Day 0), RUN DQ utility.sic 43 / 42 / 1 with MGE Energy the one invalid row",
       "zetaris_object": "lightning.metastore.crosswalk.crosswalk_usl (7 tables, PK/FK, activated 2026-10-25; RUN DQ sic on utility 43/42/1)"
     }
   ]
