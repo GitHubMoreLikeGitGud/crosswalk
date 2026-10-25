@@ -115,7 +115,7 @@ export const TOOL_WORDS = {
   propose_keys: "Propose join keys",
   measure_key: "Measure a key in Lightning SQL",
   register_source: "Register a source in Zetaris",
-  compile_usl: "Compile the USL and run live DQ",
+  compile_usl: "Check the USL and run live DQ",
   answer: "Answer from the cached views",
   not_tested: "List what was not tested",
   finalize: "Write the note",

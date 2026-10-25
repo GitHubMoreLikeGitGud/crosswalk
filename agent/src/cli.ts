@@ -71,15 +71,15 @@ export function printRun(r: RunResult): string {
   out.push(`Crosswalk  ${r.quarter} vs ${r.previous_quarter}  run ${r.run_id}  (${r.mode})`);
   out.push(`Question: ${r.question}`);
   out.push("");
-  out.push("Join map (rate = matched rows / left rows, D1; distinct-key reading beside it):");
+  out.push("Join map (rate = matched rows / left rows; distinct-key reading beside it):");
   for (const k of r.join_map) {
     out.push(`  ${k.id.padEnd(4)} ${(k.verdict ?? k.status).padEnd(9)} ${String(k.matched_rows ?? "?").padStart(3)}/${String(k.left_rows ?? "?").padEnd(3)} = ${r3(k.rate)}  (distinct ${k.matched_keys ?? "?"}/${k.left_keys ?? "?"})  ${k.left} ~ ${k.right} [${k.transform}]  by ${k.proposed_by.join("+") || "?"}${k.from_memory ? `  RECALLED ${k.from_memory} (measured as ${k.measured_as})` : `  ${k.elapsed_ms} ms`}`);
     if (k.orphans.length) out.push(`       orphans: ${k.orphans.join("; ")}`);
   }
   const mp = r.model_proposals;
   const bp = r.baseline_proposals;
-  out.push(`Key proposals (L2): model ${mp.proposed_by ?? "none (fallback to baseline)"} made ${mp.made}: ${mp.verified} verified, ${mp.partial} partial, ${mp.rejected} rejected, ${mp.unmeasurable} not measurable, ${mp.invalid_schema} invalid; baseline made ${bp.made}: ${bp.verified} verified, ${bp.partial} partial, ${bp.rejected} rejected, ${bp.unmeasurable} not measurable`);
-  out.push("Verdict mix (L3):");
+  out.push(`Key proposals: model ${mp.proposed_by ?? "none (fallback to baseline)"} made ${mp.made}: ${mp.verified} verified, ${mp.partial} partial, ${mp.rejected} rejected, ${mp.unmeasurable} not measurable, ${mp.invalid_schema} invalid; baseline made ${bp.made}: ${bp.verified} verified, ${bp.partial} partial, ${bp.rejected} rejected, ${bp.unmeasurable} not measurable`);
+  out.push("Verdict mix:");
   for (const v of r.verdict_mix) out.push(`  ${v.kind.padEnd(12)} ${v.subject}: ${short(v.detail, 160)}`);
   if (r.registrations.length) {
     out.push("Registrations (register_source under a signed medium-risk contract):");
