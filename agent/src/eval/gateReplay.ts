@@ -1,7 +1,8 @@
 // Saved runs replayed offline under the answer gate (agent/src/tools/discovery.ts answerGate): the gate is
 // computed from the run's own join map, and the answer's FEMA and revenue statements are served from the rows
 // the run saved, so no gateway or model is called. Prints, per run, the gate and whether the FEMA selection
-// and the revenue column come out as the run saved them (the weather path is not gated and not replayed).
+// and the revenue column come out as the run saved them. The weather column's station key is checked at the gate,
+// but the weather statements are not replayed: a run saves only the first 20 rows of each statement.
 // Usage (from agent/):  npx tsx src/eval/gateReplay.ts <run.json> [<run.json> ...]
 
 import { readFileSync } from "node:fs";
@@ -60,7 +61,7 @@ async function main(): Promise<void> {
     const run = JSON.parse(readFileSync(f, "utf8")) as SavedRunForGate & { mode?: string };
     const { gate, saved, replayed } = await replayAnswer(run);
     const same = JSON.stringify(saved) === JSON.stringify(replayed);
-    console.log(`${run.run_id} ${run.quarter} ${run.mode ?? ""}: FEMA ${gate.fema.ok ? "pass" : "WITHHELD"} (${gate.fema.verdict ?? "not measured"} ${gate.fema.matched_rows}/${gate.fema.left_rows}${gate.fema.recalled ? ", recalled" : ""}); revenue ${gate.revenue.ok ? "pass" : "WITHHELD"} (${gate.revenue.verdict ?? "not measured"} ${gate.revenue.matched_rows}/${gate.revenue.left_rows}${gate.revenue.recalled ? ", recalled" : ""}); saved ${saved.length} rows, replayed ${replayed.length}; ${same ? "identical" : "DIFFERENT"}`);
+    console.log(`${run.run_id} ${run.quarter} ${run.mode ?? ""}: FEMA ${gate.fema.ok ? "pass" : "WITHHELD"} (${gate.fema.verdict ?? "not measured"} ${gate.fema.matched_rows}/${gate.fema.left_rows}${gate.fema.recalled ? ", recalled" : ""}); revenue ${gate.revenue.ok ? "pass" : "WITHHELD"} (${gate.revenue.verdict ?? "not measured"} ${gate.revenue.matched_rows}/${gate.revenue.left_rows}${gate.revenue.recalled ? ", recalled" : ""}); weather ${gate.weather.ok ? "pass" : "WITHHELD"} (${gate.weather.verdict ?? "not measured"} ${gate.weather.matched_rows}/${gate.weather.left_rows}${gate.weather.recalled ? ", recalled" : ""}); saved ${saved.length} rows, replayed ${replayed.length}; ${same ? "identical" : "DIFFERENT"}`);
   }
 }
 

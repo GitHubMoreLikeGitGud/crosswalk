@@ -711,12 +711,12 @@ const answerToolDef = def("answer", {
   checkInput: (input, ctx) => (input.quarter === undefined || input.quarter === ctx.quarter ? [] : [`action.input.quarter ${input.quarter} is not the quarter asked about (${ctx.quarter})`]),
   async run(_input, ctx, deps) {
     const stationsByCik = weatherReady(ctx, deps) ? Object.fromEntries(deps.seeds.utilities.map((u) => [u.cik, u.station_ids])) : null;
-    // The answer's joins are gated on this run's join map: the FEMA selection on the FEMA state key, the revenue column on the CIK key.
+    // The answer's joins are gated on this run's join map: the FEMA selection on the FEMA state key, revenue on the CIK key, weather on the station key.
     const gate = answerGate(ctx.quarter, ctx.measured);
     const r = await timed(ctx, "answer", () => answerTool({ quarter: ctx.quarter }, { gateway: questionPort(deps.gateway), runId: deps.evidence.runId, stationsByCik, gate }));
     ctx.answer = r;
     const ids = r.provenance.map((p) => statementEvidence(deps, p, `${p.template} ${JSON.stringify(p.params)}`, p.template === "answer_fema_utilities" ? `cw.fema_declarations_dr_${quarterSlug(ctx.quarter)}` : p.template === "answer_revenue" ? `cw.frames_Revenues_${p.params.period}` : `cw.ghcn_${p.params.year}_tmax`).id);
-    const gateText = `Gate: ${gate.fema.note}; ${gate.revenue.note}`;
+    const gateText = `Gate: ${gate.fema.note}; ${gate.revenue.note}; ${gate.weather.note}`;
     const claim = gate.fema.ok
       ? `Answer for ${ctx.quarter}: ${r.rows.length} utilities serve states with major-disaster declarations; revenue compared for ${r.rows.filter((x) => x.revenue?.change !== null && x.revenue?.change !== undefined).length}; weather ${r.weather_status}. ${gateText}`
       : `Answer for ${ctx.quarter} withheld by the join map. ${gateText}`;
@@ -733,8 +733,8 @@ function notTestedFor(ctx: QuestionContext, deps: ToolDeps): string[] {
   const measured = ctx.answer?.weather_status === "measured";
   const base = notTested({ weather: true });
   const gate = ctx.answer?.gate;
-  const gated = gate ? [gate.fema, gate.revenue].filter((g) => !g.ok).map((g) => `${g.note}.`) : [];
-  if (gate && !gate.fema.ok) return [...base, ...gated];
+  const gated = gate ? [gate.fema, gate.revenue, gate.weather].filter((g) => !g.ok).map((g) => `${g.note}.`) : [];
+  if (gate && (!gate.fema.ok || !gate.weather.ok)) return [...base, ...gated];
   return measured ? [...base, ...gated] : [...base, ...gated, weatherGap(ctx, deps)];
 }
 

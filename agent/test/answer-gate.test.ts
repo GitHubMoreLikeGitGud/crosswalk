@@ -10,7 +10,7 @@ const RUN = "r-test";
 const Q = "CY2025Q1";
 
 function key(route: string, verdict: "VERIFIED" | "PARTIAL" | "REJECTED", matched: number, rows: number, fromMemory: string | null = null): [string, MeasureResult] {
-  const k = `${route}@${Q}`;
+  const k = `${route}@${route === "station" ? "all" : Q}`;
   return [k, { key: k, route, status: "measured", verdict, matched_rows: matched, left_rows: rows, from_memory: fromMemory } as unknown as MeasureResult];
 }
 
@@ -28,7 +28,9 @@ function port(resolve: (id: string, params: Record<string, string>) => { columns
     },
   };
 }
-const fixturePort = () => port((id, params) => (id === "answer_fema_utilities" ? FEMA_REPLY : id === "answer_revenue" ? REV(params.period!) : { columns: [], rows: [] }));
+const WX = (year: string) => ({ columns: ["station_id", "hdd", "cdd", "coverage"], rows: [["USW00099001", year === "2025" ? 1100 : 1000, 10, 1]] });
+const fixturePort = () => port((id, params) => (id === "answer_fema_utilities" ? FEMA_REPLY : id === "answer_revenue" ? REV(params.period!) : id === "weather_quarter" ? WX(params.year!) : { columns: [], rows: [] }));
+const STATIONS = { "0000000001": ["USW00099001"] };
 
 describe("answerGate", () => {
   it("passes a VERIFIED CIK key and a PARTIAL FEMA state key, the latter labelled usable with care", () => {
@@ -41,6 +43,10 @@ describe("answerGate", () => {
     const g = answerGate(Q, new Map([key("cik", "VERIFIED", 42, 43, "mem-59"), key("fema_state", "VERIFIED", 8, 8)]));
     expect(g.revenue).toMatchObject({ ok: true, recalled: true });
     expect(g.revenue.note).toContain("recalled from memory");
+  });
+  it("the weather column needs the station key VERIFIED", () => {
+    expect(answerGate(Q, new Map([key("station", "VERIFIED", 56, 56)])).weather).toMatchObject({ key: "station@all", ok: true });
+    expect(answerGate(Q, new Map([key("station", "PARTIAL", 50, 56)])).weather.ok).toBe(false);
   });
   it("a PARTIAL CIK key does not pass: the revenue column needs VERIFIED", () => {
     expect(answerGate(Q, new Map([key("cik", "PARTIAL", 40, 43)])).revenue.ok).toBe(false);
@@ -74,10 +80,18 @@ describe("answer under the gate", () => {
     expect(r.rows[0]!.revenue).toBeNull();
     expect(r.rows[0]!.revenue_note).toMatch(/^Revenue column withheld: key cik@CY2025Q1 is REJECTED \(0 of 43\)/u);
   });
-  it("with both keys passing, the answer equals the ungated answer", async () => {
-    const gated = await answer({ quarter: Q }, { gateway: fixturePort(), runId: RUN, gate: answerGate(Q, new Map([key("cik", "VERIFIED", 42, 43), key("fema_state", "PARTIAL", 7, 8)])) });
-    const plain = await answer({ quarter: Q }, { gateway: fixturePort(), runId: RUN });
+  it("a REJECTED station key withholds the weather column: no weather statement runs", async () => {
+    const g = fixturePort();
+    const r = await answer({ quarter: Q }, { gateway: g, runId: RUN, stationsByCik: STATIONS, gate: answerGate(Q, new Map([key("cik", "VERIFIED", 42, 43), key("fema_state", "VERIFIED", 8, 8), key("station", "REJECTED", 0, 56)])) });
+    expect(g.calls).toEqual(["answer_fema_utilities", "answer_revenue", "answer_revenue"]);
+    expect(r.weather_status).toBe("not_tested");
+    expect(r.rows[0]!.weather_note).toMatch(/^Weather column withheld: key station@all is REJECTED \(0 of 56\)/u);
+  });
+  it("with every key passing, the answer equals the ungated answer", async () => {
+    const gated = await answer({ quarter: Q }, { gateway: fixturePort(), runId: RUN, stationsByCik: STATIONS, gate: answerGate(Q, new Map([key("cik", "VERIFIED", 42, 43), key("fema_state", "PARTIAL", 7, 8), key("station", "VERIFIED", 56, 56)])) });
+    const plain = await answer({ quarter: Q }, { gateway: fixturePort(), runId: RUN, stationsByCik: STATIONS });
     expect(gated.rows).toEqual(plain.rows);
+    expect(gated.weather_status).toBe("measured");
     expect(gated.rows[0]!.revenue!.change).toBeCloseTo(0.1, 12);
   });
 });
@@ -89,6 +103,7 @@ describe("the redacted saved runs replayed under the gate", () => {
     const { gate, saved, replayed } = await replayAnswer(fixture("server-run-cold.json"));
     expect(gate.fema).toMatchObject({ ok: true, verdict: "PARTIAL", matched_rows: 7, left_rows: 8 });
     expect(gate.revenue).toMatchObject({ ok: true, verdict: "VERIFIED", matched_rows: 42, left_rows: 43 });
+    expect(gate.weather).toMatchObject({ ok: true, verdict: "VERIFIED", matched_rows: 56, left_rows: 56 });
     expect(saved).toHaveLength(12);
     expect(replayed).toEqual(saved);
   });

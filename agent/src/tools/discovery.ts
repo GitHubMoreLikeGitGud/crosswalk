@@ -1146,15 +1146,16 @@ export interface AnswerGateCheck {
   note: string;
 }
 
-/** The FEMA selection needs the FEMA state key at PARTIAL or better (PARTIAL is used with care); the revenue column needs the CIK key VERIFIED. */
+/** The FEMA selection needs the FEMA state key at PARTIAL or better (PARTIAL is used with care); the revenue column needs the CIK key VERIFIED; the weather column needs the station key VERIFIED. */
 export interface AnswerGate {
   fema: AnswerGateCheck;
   revenue: AnswerGateCheck;
+  weather: AnswerGateCheck;
 }
 
 export function answerGate(quarter: string, measured: ReadonlyMap<string, MeasureResult>): AnswerGate {
-  const check = (route: "fema_state" | "cik", need: AnswerGateCheck["need"], what: string): AnswerGateCheck => {
-    const key = `${route}@${quarter}`;
+  const check = (route: "fema_state" | "cik" | "station", need: AnswerGateCheck["need"], what: string): AnswerGateCheck => {
+    const key = `${route}@${route === "station" ? "all" : quarter}`;
     const m = measured.get(key);
     const verdict = m && m.status === "measured" ? m.verdict : null;
     const ok = verdict === "VERIFIED" || (need === "PARTIAL or better" && verdict === "PARTIAL");
@@ -1166,7 +1167,7 @@ export function answerGate(quarter: string, measured: ReadonlyMap<string, Measur
       : `${what} withheld: key ${key} is ${state}, and the answer needs it ${need}`;
     return { key, need, verdict, matched_rows: m?.matched_rows ?? null, left_rows: m?.left_rows ?? null, recalled, ok, note };
   };
-  return { fema: check("fema_state", "PARTIAL or better", "FEMA selection"), revenue: check("cik", "VERIFIED", "Revenue column") };
+  return { fema: check("fema_state", "PARTIAL or better", "FEMA selection"), revenue: check("cik", "VERIFIED", "Revenue column"), weather: check("station", "VERIFIED", "Weather column") };
 }
 
 const FEMA_BASE_COLUMNS = new Set(["cik", "name", "ticker", "state", "declarations"]);
@@ -1268,7 +1269,8 @@ export async function answer(params: { quarter: string }, opts: { gateway: Templ
   }
   let weatherStatus: AnswerResult["weather_status"] = "not_tested";
   const weatherRows: { cur: Record<string, unknown>[]; prev: Record<string, unknown>[]; prov: Provenance[] } = { cur: [], prev: [], prov: [] };
-  if (opts.stationsByCik && qn !== "4") {
+  const weatherGated = !!gate && !gate.weather.ok;
+  if (opts.stationsByCik && qn !== "4" && !weatherGated) {
     const union = [...new Set(ciks.flatMap((c) => opts.stationsByCik![c] ?? []))].sort();
     if (union.length > 0 && union.length <= 60) {
       const m = QUARTER_RE.exec(quarter)!;
@@ -1284,7 +1286,7 @@ export async function answer(params: { quarter: string }, opts: { gateway: Templ
   const rows: AnswerRow[] = grouped.map((g) => {
     const rv = revenue.get(g.cik) ?? {};
     const { cell, note } = qn === "4" ? { cell: null, note: "the frames API has no three-month fourth-quarter frame" } : revenueGated ? { cell: null, note: gate!.revenue.note } : revenueCell(rv.cur, rv.prev);
-    const w = weatherStatus === "measured" ? weatherCell(opts.stationsByCik![g.cik] ?? [], weatherRows.cur, weatherRows.prev) : { cell: null, note: "not tested" };
+    const w = weatherStatus === "measured" ? weatherCell(opts.stationsByCik![g.cik] ?? [], weatherRows.cur, weatherRows.prev) : { cell: null, note: weatherGated ? gate!.weather.note : "not tested" };
     return {
       ...g,
       revenue: cell,
