@@ -365,7 +365,8 @@ describe("server: USL and DQ", () => {
     expect(r.body.onboarding_dq).toMatchObject({ ran_at: "2026-10-25T05:46:21.146Z", ran_at_sgt: "2026-10-25 13:46:21 SGT", invalid_total: 1 });
     expect(r.body.onboarding_dq.rules).toHaveLength(6);
     expect(r.body.onboarding_dq.rules[0]).toMatchObject({ rule: "utility.sic", total: 43, valid: 42, invalid: 1, elapsed_ms: 135502 });
-    expect(r.body.live_rules).toMatchObject({ run_id: COLD, at_sgt: "2026-10-25 14:57:17 SGT", status: "matches_governed" });
+    // The time of the first live dq_run statement (the run itself started at 14:57:17 SGT).
+    expect(r.body.live_rules).toMatchObject({ run_id: COLD, at_sgt: "2026-10-25 15:03:05 SGT", status: "matches_governed" });
     expect(r.body.live_rules.rules.map((x: any) => [x.rule, x.total, x.valid, x.invalid])).toEqual([
       ["fema_declaration.state", 116, 116, 0],
       ["utility_state.state", 97, 97, 0],

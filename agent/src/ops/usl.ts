@@ -52,6 +52,13 @@ export function uslView(plan: UslPlanFile | null, dq: DqFile | null, liveRun: Ru
   const qualified = plan ? `${plan.namespace}.${plan.usl}` : null;
   const dqRules = (dq?.rules ?? []).map(ruleView);
   const liveRules = (liveRun?.usl?.live_rules_run ?? []).map(ruleView);
+  // When the live rules ran: the first dq_run statement of the run, else the run's start.
+  const liveStatementTimes = (liveRun?.usl?.provenance ?? [])
+    .filter((p) => p.template === "dq_run" && p.executed_at)
+    .map((p) => p.executed_at!)
+    .filter((t) => sgt(t) !== null)
+    .sort((a, b) => (sgt(a)! < sgt(b)! ? -1 : 1));
+  const liveAt = liveStatementTimes[0] ?? liveRun?.started_at ?? null;
   const tables = (plan?.tables ?? []).map((t) => ({
     name: t.name,
     source: t.source ?? null,
@@ -87,7 +94,7 @@ export function uslView(plan: UslPlanFile | null, dq: DqFile | null, liveRun: Ru
       ? { source: "dq/latest.json (written by npm run onboard)", ran_at: dq.ran_at ?? null, ran_at_sgt: sgt(dq.ran_at), rules: dqRules, invalid_total: dqRules.reduce((a, r) => a + (r.invalid ?? 0), 0) }
       : null,
     live_rules: liveRun
-      ? { source: `compile_usl in run ${liveRun.run_id}`, run_id: liveRun.run_id, at: liveRun.started_at ?? null, at_sgt: sgt(liveRun.started_at), status: liveRun.usl?.status ?? null, note: liveRun.usl?.note ?? null, rules: liveRules }
+      ? { source: `compile_usl in run ${liveRun.run_id}`, run_id: liveRun.run_id, at: liveAt, at_sgt: sgt(liveAt), status: liveRun.usl?.status ?? null, note: liveRun.usl?.note ?? null, rules: liveRules }
       : null,
     invalid_rows: invalid,
     definitions: USL_DEFINITIONS,

@@ -3,7 +3,8 @@
 // its cache state and the times. Cell ids:
 //   <cik10>.<field>   an answer value (declarations, revenue_current, revenue_previous, revenue_change,
 //                     weather_current, weather_previous, weather_change)
-//   key.<route>       a join-map row (key.cik@CY2025Q1)
+//   key.<route>       a join-map row (key.cik@CY2025Q1, or a generic pair measured through match_rate:
+//                     key.pair:cw.<view>.<column>~cw.<view>.<column>|<transform>)
 //   ev-<run>-<n>      one evidence record
 // When the saved run kept fewer rows than the statement returned, the drawer says so and names
 // what is missing for that cell instead of presenting a partial row set as complete.
@@ -16,7 +17,7 @@ export const ANSWER_FIELDS = ["declarations", "revenue_current", "revenue_previo
 export type AnswerField = (typeof ANSWER_FIELDS)[number];
 
 /** Accepted cell ids (checked before any lookup; nothing else reaches the run). */
-export const CELL_ID = /^(?:\d{10}\.(?:declarations|revenue_current|revenue_previous|revenue_change|weather_current|weather_previous|weather_change)|key\.[a-z_]+@[A-Za-z0-9]+|ev-r\d{8}T\d{6}[0-9a-f]{4}-\d{2,4})$/u;
+export const CELL_ID = /^(?:\d{10}\.(?:declarations|revenue_current|revenue_previous|revenue_change|weather_current|weather_previous|weather_change)|key\.[a-z_]+@[A-Za-z0-9]+|key\.pair:cw\.[a-z0-9_]+\.[a-z0-9_]+~cw\.[a-z0-9_]+\.[a-z0-9_]+\|(?:identity|upper|lpad10|substr\([1-9]\d?,[1-9]\d?\)|strip_prefix\('US-'\)|yyyymmdd_to_date|iso_to_quarter)|ev-r\d{8}T\d{6}[0-9a-f]{4}-\d{2,4})$/u;
 
 export interface StatementView {
   evidence_id: string | null;

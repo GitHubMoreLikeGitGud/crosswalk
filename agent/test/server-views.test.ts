@@ -103,6 +103,15 @@ describe("ops/cells", () => {
     expect(cellEvidence(asRun({ run_id: "r1" }), "0000000001.declarations")).toBeNull();
   });
 
+  it("accepts the join map's cell id of a generic pair key (match_rate) and refuses pairs outside cw. or the closed transform set", () => {
+    const pairs = ["key.pair:cw.utility_states.state~cw.states.code|identity", "key.pair:cw.frames_revenues_cy2025q1.cik~cw.utility_states.cik|lpad10", "key.pair:cw.a.b~cw.c.d|substr(4,2)", "key.pair:cw.a.b~cw.c.d|strip_prefix('US-')"];
+    for (const ok of pairs) expect(CELL_ID.test(ok), ok).toBe(true);
+    for (const bad of ["key.pair:won.a.b~cw.c.d|identity", "key.pair:cw.a.b~cw.c.d|drop", "key.pair:cw.a.b~cw.c.d|identity/..", "key.pair:cw.A.b~cw.c.d|identity"]) expect(CELL_ID.test(bad), bad).toBe(false);
+    const route = "pair:cw.utility_states.state~cw.states.code|identity";
+    const run = asRun({ run_id: "r1", join_map: [{ key: route, label: "synthetic pair", matched_rows: 43, left_rows: 43, rate: 1, verdict: "VERIFIED", orphans: [], sql: "SELECT 1" }] });
+    expect(cellEvidence(run, `key.${route}`)).toMatchObject({ kind: "join_key", label: `${route}: 43 of 43 rows matched`, value: { rate: 1, verdict: "VERIFIED" } });
+  });
+
   it("an answer value without a recorded statement says so instead of showing an empty drawer", () => {
     const run = asRun({ run_id: "r1", quarter: "CY2025Q1", answer: { quarter: "CY2025Q1", previous: "CY2024Q1", rows: [{ cik: "0000000001", name: "Synthetic Power Co", declarations: 1, provenance: {} }] } });
     const c = cellEvidence(run, "0000000001.declarations");
@@ -117,5 +126,13 @@ describe("ops/usl", () => {
     const v = uslView(null, { ran_at: "2026-01-01T00:00:00Z", rules: [{ rule: "t.c", total: 2, valid: 1, invalid: 1, elapsed_s: 1.5 }], invalid_rows: [{ rule: "t.c", row: ["a"] }] }, null);
     expect(v).toMatchObject({ usl: null, tables: [], fks: [], live_rules: null, onboarding_dq: { ran_at_sgt: "2026-01-01 08:00:00 SGT", invalid_total: 1, rules: [{ rule: "t.c", elapsed_ms: 1500 }] } });
     expect(v.invalid_rows).toEqual([{ rule: "t.c", table: "t", columns: [], row: ["a"], values: null }]);
+  });
+
+  it("dates the live rules by the run's first dq_run statement, else by the run's start", () => {
+    const rules = [{ rule: "t.c", total: 1, valid: 1, invalid: 0, elapsed_ms: 5 }];
+    const withStatements = asRun({ run_id: "r1", started_at: "2026-01-01T00:00:00Z", usl: { live_rules_run: rules, provenance: [{ template: "dq_run", executed_at: "2026-01-01T08:03:08+0800" }, { template: "dq_run", executed_at: "2026-01-01T08:03:05+0800" }, { template: "usl_model", executed_at: "2026-01-01T08:01:00+0800" }] } });
+    expect(uslView(null, null, withStatements).live_rules).toMatchObject({ at: "2026-01-01T08:03:05+0800", at_sgt: "2026-01-01 08:03:05 SGT" });
+    const without = asRun({ run_id: "r2", started_at: "2026-01-01T00:00:00Z", usl: { live_rules_run: rules } });
+    expect(uslView(null, null, without).live_rules).toMatchObject({ at_sgt: "2026-01-01 08:00:00 SGT" });
   });
 });
