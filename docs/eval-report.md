@@ -14,7 +14,7 @@ Code: the agent loop and tools, the model client and prompts, memory, the gatewa
 >   - Q8_0 with think on 347.8 s (297.5 to 400.0)
 >   - no model 87.5 s (87.1 to 90.2)
 >
->   All twelve runs gave the same answer. Model keys VERIFIED of made over three runs: think on 3 of 6, think off 3 of 6, Q8_0 1 of 5. Planner tokens per second: about 136 for Q4_K_M, about 101 for Q8_0. VRAM (Ollama): 2,881 MiB for Q4_K_M, 4,066 MiB for Q8_0.
+>   All twelve runs gave the same answer. Model keys VERIFIED of made over three runs: think on 3 of 6, think off 3 of 6, Q8_0 1 of 5. Planner tokens per second: about 136 for Q4_K_M, about 101 for Q8_0. VRAM (Ollama): 2,881 MiB for Q4_K_M, 4,066 MiB for Q8_0. The model's note was replaced by the 250-word template in 8 of the 10 runs with the model (the nine cold runs and the warm run; section 7 below counts 3 of 6 on Day 2).
 > - **Opaque columns:** on copies of the eight question views with every column renamed `c1`, `c2`, ..., neither proposer found a key in three runs each. The model made 8 proposals and all were REJECTED (three paired the same state codes but counted the wider table); the name-based baseline proposed none. The answer was reached in none of the six runs. Through the generic statement the padded CIK key cannot be verified in either orientation (34 of 1,937, or 0 of 43).
 > - **The provenance drawer's cache time** is now reported. The gateway reported it all along; the agent dropped it until `f60fdb0`.
 
