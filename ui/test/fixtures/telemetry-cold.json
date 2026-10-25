@@ -1,0 +1,37 @@
+{
+ "fixture": "synthetic: built by ui/test/make_ui_fixtures.ts from the redacted server fixtures",
+ "run_id": "r20261025T14571773a0",
+ "quarter": "CY2025Q1",
+ "mode": "cold",
+ "started_at": "2026-10-25T06:57:17.802Z",
+ "started_at_sgt": "2026-10-25 14:57:17 SGT",
+ "chunks": 8,
+ "max_chunks": 12,
+ "skipped_chunks": 0,
+ "skipped_note": "measure_key steps not run because the key was recalled as VERIFIED from key_verified memory (each is one planner step plus one or two Lightning statements)",
+ "tokens": {
+  "planner_in": 53429,
+  "planner_out": 14908,
+  "memo_in": 2015,
+  "memo_out": 343,
+  "total": 70695
+ },
+ "tokens_per_s": {
+  "planner_median": 133,
+  "memo": 137.9
+ },
+ "wall_ms": 402894,
+ "wall_s": 402.9,
+ "model": "nemotron-3-nano:4b",
+ "think": true,
+ "planner_calls": 23,
+ "planner_valid": 20,
+ "fallback_steps": 4,
+ "cloud_model_calls": 0,
+ "labels": {
+  "tokens": "measured (Ollama prompt_eval_count and eval_count, summed over the run)",
+  "tokens_per_s": "measured: median over the run's planner calls; the note's rate separately",
+  "wall": "measured: the loop's wall time, from the start of the run to its last step",
+  "skipped_chunks": "measure_key steps not run because the key was recalled as VERIFIED from memory"
+ }
+}

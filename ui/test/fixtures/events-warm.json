@@ -1,0 +1,971 @@
+{
+ "fixture": "synthetic: built by ui/test/make_ui_fixtures.ts from the redacted server fixtures",
+ "events": [
+  {
+   "type": "run_started",
+   "data": {
+    "run_id": "r20261025T145128a180",
+    "replay": true,
+    "quarter": "CY2024Q1",
+    "mode": "warm",
+    "started_at": "2026-10-25T06:51:28.897Z",
+    "started_at_sgt": "2026-10-25 14:51:28 SGT"
+   }
+  },
+  {
+   "type": "chunk_start",
+   "data": {
+    "run_id": "r20261025T145128a180",
+    "replay": true,
+    "chunk": 1,
+    "carryover_tokens": 0,
+    "recorded_at": "2026-10-25T06:51:28.899Z",
+    "recorded_at_sgt": "2026-10-25 14:51:28 SGT"
+   }
+  },
+  {
+   "type": "planner",
+   "data": {
+    "run_id": "r20261025T145128a180",
+    "replay": true,
+    "chunk": 1,
+    "call": 1,
+    "valid": true,
+    "attempts": 1,
+    "tool": "search_catalogue",
+    "thought": "We need to find the source openfema_...",
+    "prompt_tokens": 1936,
+    "eval_tokens": 222,
+    "tokens_per_s": 129.02085953464152
+   }
+  },
+  {
+   "type": "tool",
+   "data": {
+    "run_id": "r20261025T145128a180",
+    "replay": true,
+    "chunk": 1,
+    "seq": 1,
+    "tool": "search_catalogue",
+    "source": "model",
+    "fallback_reason": null,
+    "ok": true,
+    "fact": "search: 8 hits, top cw_fema:cw.fema_catalogue; 0 negative; 9 views to probe [ev-r20261025T145128a180-02]",
+    "evidence_ids": [
+     "ev-r20261025T145128a180-01",
+     "ev-r20261025T145128a180-02"
+    ],
+    "latency_ms": 215
+   }
+  },
+  {
+   "type": "planner",
+   "data": {
+    "run_id": "r20261025T145128a180",
+    "replay": true,
+    "chunk": 1,
+    "call": 2,
+    "valid": true,
+    "attempts": 1,
+    "tool": "probe_source",
+    "thought": "Probe the view cw.seed_utilities to get its columns and confirm shapes_verified.",
+    "prompt_tokens": 2359,
+    "eval_tokens": 1584,
+    "tokens_per_s": 135.3520267812442
+   }
+  },
+  {
+   "type": "tool",
+   "data": {
+    "run_id": "r20261025T145128a180",
+    "replay": true,
+    "chunk": 1,
+    "seq": 2,
+    "tool": "probe_source",
+    "source": "model",
+    "fallback_reason": null,
+    "ok": true,
+    "fact": "probe cw.seed_utilities: 5 cols, keys cik, sic, hq_state [ev-r20261025T145128a180-08]",
+    "evidence_ids": [
+     "ev-r20261025T145128a180-03",
+     "ev-r20261025T145128a180-04",
+     "ev-r20261025T145128a180-05",
+     "ev-r20261025T145128a180-06",
+     "ev-r20261025T145128a180-07",
+     "ev-r20261025T145128a180-08"
+    ],
+    "latency_ms": 79238
+   }
+  },
+  {
+   "type": "planner",
+   "data": {
+    "run_id": "r20261025T145128a180",
+    "replay": true,
+    "chunk": 1,
+    "call": 3,
+    "valid": true,
+    "attempts": 1,
+    "tool": "probe_source",
+    "thought": "Probe the next unprobed view: cw.frames_Revenues_CY2024Q1 to get its columns and candidate keys.",
+    "prompt_tokens": 2534,
+    "eval_tokens": 466,
+    "tokens_per_s": 122.90857606458344
+   }
+  },
+  {
+   "type": "tool",
+   "data": {
+    "run_id": "r20261025T145128a180",
+    "replay": true,
+    "chunk": 1,
+    "seq": 3,
+    "tool": "probe_source",
+    "source": "model",
+    "fallback_reason": null,
+    "ok": true,
+    "fact": "probe cw.frames_Revenues_CY2024Q1: 7 cols, keys cik, loc [ev-r20261025T145128a180-13]",
+    "evidence_ids": [
+     "ev-r20261025T145128a180-09",
+     "ev-r20261025T145128a180-10",
+     "ev-r20261025T145128a180-11",
+     "ev-r20261025T145128a180-12",
+     "ev-r20261025T145128a180-13"
+    ],
+    "latency_ms": 820
+   }
+  },
+  {
+   "type": "chunk_end",
+   "data": {
+    "run_id": "r20261025T145128a180",
+    "replay": true,
+    "chunk": 1,
+    "state_tokens": 293,
+    "complete": false
+   }
+  },
+  {
+   "type": "chunk_start",
+   "data": {
+    "run_id": "r20261025T145128a180",
+    "replay": true,
+    "chunk": 2,
+    "carryover_tokens": 293,
+    "recorded_at": "2026-10-25T06:53:07.429Z",
+    "recorded_at_sgt": "2026-10-25 14:53:07 SGT"
+   }
+  },
+  {
+   "type": "planner",
+   "data": {
+    "run_id": "r20261025T145128a180",
+    "replay": true,
+    "chunk": 2,
+    "call": 1,
+    "valid": true,
+    "attempts": 1,
+    "tool": "probe_source",
+    "thought": "Probe cw.utility_states to get its shape.",
+    "prompt_tokens": 2038,
+    "eval_tokens": 443,
+    "tokens_per_s": 132.7728301832505
+   }
+  },
+  {
+   "type": "tool",
+   "data": {
+    "run_id": "r20261025T145128a180",
+    "replay": true,
+    "chunk": 2,
+    "seq": 4,
+    "tool": "probe_source",
+    "source": "model",
+    "fallback_reason": null,
+    "ok": true,
+    "fact": "probe cw.utility_states: 2 cols, keys cik, state [ev-r20261025T145128a180-18]",
+    "evidence_ids": [
+     "ev-r20261025T145128a180-14",
+     "ev-r20261025T145128a180-15",
+     "ev-r20261025T145128a180-16",
+     "ev-r20261025T145128a180-17",
+     "ev-r20261025T145128a180-18"
+    ],
+    "latency_ms": 478
+   }
+  },
+  {
+   "type": "planner",
+   "data": {
+    "run_id": "r20261025T145128a180",
+    "replay": true,
+    "chunk": 2,
+    "call": 2,
+    "valid": true,
+    "attempts": 1,
+    "tool": "probe_source",
+    "thought": "Probe cw.fema_declarations_dr_2024q1 to get FEMA major disaster declarations for Q1 2024.",
+    "prompt_tokens": 2171,
+    "eval_tokens": 578,
+    "tokens_per_s": 132.68572903003056
+   }
+  },
+  {
+   "type": "tool",
+   "data": {
+    "run_id": "r20261025T145128a180",
+    "replay": true,
+    "chunk": 2,
+    "seq": 5,
+    "tool": "probe_source",
+    "source": "model",
+    "fallback_reason": null,
+    "ok": true,
+    "fact": "probe cw.fema_declarations_dr_2024q1: 9 cols, keys state, disaster_number, fips_state_code [ev-r20261025T145128a180-24]",
+    "evidence_ids": [
+     "ev-r20261025T145128a180-19",
+     "ev-r20261025T145128a180-20",
+     "ev-r20261025T145128a180-21",
+     "ev-r20261025T145128a180-22",
+     "ev-r20261025T145128a180-23",
+     "ev-r20261025T145128a180-24"
+    ],
+    "latency_ms": 981
+   }
+  },
+  {
+   "type": "planner",
+   "data": {
+    "run_id": "r20261025T145128a180",
+    "replay": true,
+    "chunk": 2,
+    "call": 3,
+    "valid": true,
+    "attempts": 1,
+    "tool": "probe_source",
+    "thought": "Probe cw.states to complete shapes_probed.",
+    "prompt_tokens": 2357,
+    "eval_tokens": 624,
+    "tokens_per_s": 134.44370040772637
+   }
+  },
+  {
+   "type": "tool",
+   "data": {
+    "run_id": "r20261025T145128a180",
+    "replay": true,
+    "chunk": 2,
+    "seq": 6,
+    "tool": "probe_source",
+    "source": "model",
+    "fallback_reason": null,
+    "ok": true,
+    "fact": "probe cw.states: 3 cols, keys code, fips [ev-r20261025T145128a180-29]",
+    "evidence_ids": [
+     "ev-r20261025T145128a180-25",
+     "ev-r20261025T145128a180-26",
+     "ev-r20261025T145128a180-27",
+     "ev-r20261025T145128a180-28",
+     "ev-r20261025T145128a180-29"
+    ],
+    "latency_ms": 463
+   }
+  },
+  {
+   "type": "chunk_end",
+   "data": {
+    "run_id": "r20261025T145128a180",
+    "replay": true,
+    "chunk": 2,
+    "state_tokens": 321,
+    "complete": false
+   }
+  },
+  {
+   "type": "chunk_start",
+   "data": {
+    "run_id": "r20261025T145128a180",
+    "replay": true,
+    "chunk": 3,
+    "carryover_tokens": 321,
+    "recorded_at": "2026-10-25T06:53:22.635Z",
+    "recorded_at_sgt": "2026-10-25 14:53:22 SGT"
+   }
+  },
+  {
+   "type": "planner",
+   "data": {
+    "run_id": "r20261025T145128a180",
+    "replay": true,
+    "chunk": 3,
+    "call": 1,
+    "valid": false,
+    "attempts": 2,
+    "tool": null,
+    "thought": null,
+    "prompt_tokens": 4525,
+    "eval_tokens": 1134,
+    "tokens_per_s": 138.16747347411015
+   }
+  },
+  {
+   "type": "tool",
+   "data": {
+    "run_id": "r20261025T145128a180",
+    "replay": true,
+    "chunk": 3,
+    "seq": 7,
+    "tool": "probe_source",
+    "source": "fallback",
+    "fallback_reason": "planner reply invalid after a repair round (action.input.object cw.seed_utilities is already probed)",
+    "ok": true,
+    "fact": "probe cw.seed_stations: 3 cols, keys state, id [ev-r20261025T145128a180-34]",
+    "evidence_ids": [
+     "ev-r20261025T145128a180-30",
+     "ev-r20261025T145128a180-31",
+     "ev-r20261025T145128a180-32",
+     "ev-r20261025T145128a180-33",
+     "ev-r20261025T145128a180-34"
+    ],
+    "latency_ms": 461
+   }
+  },
+  {
+   "type": "planner",
+   "data": {
+    "run_id": "r20261025T145128a180",
+    "replay": true,
+    "chunk": 3,
+    "call": 2,
+    "valid": true,
+    "attempts": 2,
+    "tool": "probe_source",
+    "thought": "Probe the cw.sic_codes view to complete shapes_probed.",
+    "prompt_tokens": 4866,
+    "eval_tokens": 1443,
+    "tokens_per_s": 138.21363931466578
+   }
+  },
+  {
+   "type": "tool",
+   "data": {
+    "run_id": "r20261025T145128a180",
+    "replay": true,
+    "chunk": 3,
+    "seq": 8,
+    "tool": "probe_source",
+    "source": "model",
+    "fallback_reason": null,
+    "ok": true,
+    "fact": "probe cw.sic_codes: 6 cols, keys code [ev-r20261025T145128a180-38]",
+    "evidence_ids": [
+     "ev-r20261025T145128a180-35",
+     "ev-r20261025T145128a180-36",
+     "ev-r20261025T145128a180-37",
+     "ev-r20261025T145128a180-38"
+    ],
+    "latency_ms": 594
+   }
+  },
+  {
+   "type": "planner",
+   "data": {
+    "run_id": "r20261025T145128a180",
+    "replay": true,
+    "chunk": 3,
+    "call": 3,
+    "valid": false,
+    "attempts": 2,
+    "tool": null,
+    "thought": null,
+    "prompt_tokens": 4952,
+    "eval_tokens": 2280,
+    "tokens_per_s": 136.53851250220364
+   }
+  },
+  {
+   "type": "tool",
+   "data": {
+    "run_id": "r20261025T145128a180",
+    "replay": true,
+    "chunk": 3,
+    "seq": 9,
+    "tool": "probe_source",
+    "source": "fallback",
+    "fallback_reason": "planner reply invalid after a repair round (action.input.catalogue_id openfema_ is not a source this question needs (openfema_disaster_declarations, sec_frames, sec_frames, sec_frames))",
+    "ok": true,
+    "fact": "probe cw.stations: 5 cols, keys state, id [ev-r20261025T145128a180-43]",
+    "evidence_ids": [
+     "ev-r20261025T145128a180-39",
+     "ev-r20261025T145128a180-40",
+     "ev-r20261025T145128a180-41",
+     "ev-r20261025T145128a180-42",
+     "ev-r20261025T145128a180-43"
+    ],
+    "latency_ms": 28239
+   }
+  },
+  {
+   "type": "chunk_end",
+   "data": {
+    "run_id": "r20261025T145128a180",
+    "replay": true,
+    "chunk": 3,
+    "state_tokens": 292,
+    "complete": false
+   }
+  },
+  {
+   "type": "chunk_start",
+   "data": {
+    "run_id": "r20261025T145128a180",
+    "replay": true,
+    "chunk": 4,
+    "carryover_tokens": 292,
+    "recorded_at": "2026-10-25T06:54:33.580Z",
+    "recorded_at_sgt": "2026-10-25 14:54:33 SGT"
+   }
+  },
+  {
+   "type": "planner",
+   "data": {
+    "run_id": "r20261025T145128a180",
+    "replay": true,
+    "chunk": 4,
+    "call": 1,
+    "valid": false,
+    "attempts": 2,
+    "tool": null,
+    "thought": null,
+    "prompt_tokens": 4437,
+    "eval_tokens": 1475,
+    "tokens_per_s": 136.79601088393377
+   }
+  },
+  {
+   "type": "tool",
+   "data": {
+    "run_id": "r20261025T145128a180",
+    "replay": true,
+    "chunk": 4,
+    "seq": 10,
+    "tool": "probe_source",
+    "source": "fallback",
+    "fallback_reason": "planner reply invalid after a repair round (action.input.object cw.fea_catalogue is not one of the views to probe (cw.seed_utilities, cw.frames_Revenues_CY2024Q1, cw.fema_declarations_dr_2024q1, cw.utility_states, cw.states, cw.seed_stations, cw.stations, cw.sic_codes, cw.fema_catalogue))",
+    "ok": true,
+    "fact": "probe cw.fema_catalogue: 6 cols, keys none [ev-r20261025T145128a180-46]",
+    "evidence_ids": [
+     "ev-r20261025T145128a180-44",
+     "ev-r20261025T145128a180-45",
+     "ev-r20261025T145128a180-46"
+    ],
+    "latency_ms": 357
+   }
+  },
+  {
+   "type": "planner",
+   "data": {
+    "run_id": "r20261025T145128a180",
+    "replay": true,
+    "chunk": 4,
+    "call": 2,
+    "valid": true,
+    "attempts": 2,
+    "tool": "propose_keys",
+    "thought": "Propose keys between cw.seed_utilities and cw.utility_states via state, and between cw.seed_utilities and cw.sic_ via code.",
+    "prompt_tokens": 5872,
+    "eval_tokens": 2870,
+    "tokens_per_s": 137.05143435943438
+   }
+  },
+  {
+   "type": "tool",
+   "data": {
+    "run_id": "r20261025T145128a180",
+    "replay": true,
+    "chunk": 4,
+    "seq": 11,
+    "tool": "propose_keys",
+    "source": "model",
+    "fallback_reason": null,
+    "ok": true,
+    "fact": "keys: 1 proposed by the planner, 1 rejected [ev-r20261025T145128a180-47]",
+    "evidence_ids": [
+     "ev-r20261025T145128a180-47"
+    ],
+    "latency_ms": 4
+   }
+  },
+  {
+   "type": "planner",
+   "data": {
+    "run_id": "r20261025T145128a180",
+    "replay": true,
+    "chunk": 4,
+    "call": 3,
+    "valid": true,
+    "attempts": 1,
+    "tool": "measure_key",
+    "thought": "Measure key b13 joining cw.utility_states to cw.fema_declarations_...",
+    "prompt_tokens": 2263,
+    "eval_tokens": 469,
+    "tokens_per_s": 133.55685834401459
+   }
+  },
+  {
+   "type": "tool",
+   "data": {
+    "run_id": "r20261025T145128a180",
+    "replay": true,
+    "chunk": 4,
+    "seq": 12,
+    "tool": "measure_key",
+    "source": "model",
+    "fallback_reason": null,
+    "ok": true,
+    "fact": "b13 fema_state@CY2024Q1: 0.727 REJECTED, orphan AK [ev-r20261025T145128a180-50]",
+    "evidence_ids": [
+     "ev-r20261025T145128a180-48",
+     "ev-r20261025T145128a180-49",
+     "ev-r20261025T145128a180-50"
+    ],
+    "latency_ms": 656
+   }
+  },
+  {
+   "type": "chunk_end",
+   "data": {
+    "run_id": "r20261025T145128a180",
+    "replay": true,
+    "chunk": 4,
+    "state_tokens": 295,
+    "complete": false
+   }
+  },
+  {
+   "type": "chunk_start",
+   "data": {
+    "run_id": "r20261025T145128a180",
+    "replay": true,
+    "chunk": 5,
+    "carryover_tokens": 295,
+    "recorded_at": "2026-10-25T06:55:11.586Z",
+    "recorded_at_sgt": "2026-10-25 14:55:11 SGT"
+   }
+  },
+  {
+   "type": "planner",
+   "data": {
+    "run_id": "r20261025T145128a180",
+    "replay": true,
+    "chunk": 5,
+    "call": 1,
+    "valid": true,
+    "attempts": 1,
+    "tool": "measure_key",
+    "thought": "measure key c1",
+    "prompt_tokens": 2077,
+    "eval_tokens": 477,
+    "tokens_per_s": 132.06455381838217
+   }
+  },
+  {
+   "type": "tool",
+   "data": {
+    "run_id": "r20261025T145128a180",
+    "replay": true,
+    "chunk": 5,
+    "seq": 13,
+    "tool": "measure_key",
+    "source": "model",
+    "fallback_reason": null,
+    "ok": true,
+    "fact": "c1 cik_control@CY2024Q1: 0.000 REJECTED [ev-r20261025T145128a180-52]",
+    "evidence_ids": [
+     "ev-r20261025T145128a180-51",
+     "ev-r20261025T145128a180-52"
+    ],
+    "latency_ms": 17971
+   }
+  },
+  {
+   "type": "planner",
+   "data": {
+    "run_id": "r20261025T145128a180",
+    "replay": true,
+    "chunk": 5,
+    "call": 2,
+    "valid": false,
+    "attempts": 2,
+    "tool": null,
+    "thought": null,
+    "prompt_tokens": 4630,
+    "eval_tokens": 3524,
+    "tokens_per_s": 137.2502615998028
+   }
+  },
+  {
+   "type": "tool",
+   "data": {
+    "run_id": "r20261025T145128a180",
+    "replay": true,
+    "chunk": 5,
+    "seq": 14,
+    "tool": "register_source",
+    "source": "fallback",
+    "fallback_reason": "planner reply invalid after a repair round (parse: empty content (output cut at num_predict))",
+    "ok": true,
+    "fact": "register cw.fema_declarations_dr_2024q1: already_registered [ev-r20261025T145128a180-53]",
+    "evidence_ids": [
+     "ev-r20261025T145128a180-53"
+    ],
+    "latency_ms": 399
+   }
+  },
+  {
+   "type": "planner",
+   "data": {
+    "run_id": "r20261025T145128a180",
+    "replay": true,
+    "chunk": 5,
+    "call": 3,
+    "valid": false,
+    "attempts": 2,
+    "tool": null,
+    "thought": null,
+    "prompt_tokens": 4745,
+    "eval_tokens": 3497,
+    "tokens_per_s": 137.4265570916532
+   }
+  },
+  {
+   "type": "tool",
+   "data": {
+    "run_id": "r20261025T145128a180",
+    "replay": true,
+    "chunk": 5,
+    "seq": 15,
+    "tool": "register_source",
+    "source": "fallback",
+    "fallback_reason": "planner reply invalid after a repair round (parse: empty content (output cut at num_predict))",
+    "ok": true,
+    "fact": "register cw.frames_Revenues_CY2023Q1: already_registered [ev-r20261025T145128a180-54]",
+    "evidence_ids": [
+     "ev-r20261025T145128a180-54"
+    ],
+    "latency_ms": 308
+   }
+  },
+  {
+   "type": "chunk_end",
+   "data": {
+    "run_id": "r20261025T145128a180",
+    "replay": true,
+    "chunk": 5,
+    "state_tokens": 323,
+    "complete": false
+   }
+  },
+  {
+   "type": "chunk_start",
+   "data": {
+    "run_id": "r20261025T145128a180",
+    "replay": true,
+    "chunk": 6,
+    "carryover_tokens": 323,
+    "recorded_at": "2026-10-25T06:56:26.488Z",
+    "recorded_at_sgt": "2026-10-25 14:56:26 SGT"
+   }
+  },
+  {
+   "type": "planner",
+   "data": {
+    "run_id": "r20261025T145128a180",
+    "replay": true,
+    "chunk": 6,
+    "call": 1,
+    "valid": false,
+    "attempts": 2,
+    "tool": null,
+    "thought": null,
+    "prompt_tokens": 4319,
+    "eval_tokens": 856,
+    "tokens_per_s": 133.29052412763548
+   }
+  },
+  {
+   "type": "tool",
+   "data": {
+    "run_id": "r20261025T145128a180",
+    "replay": true,
+    "chunk": 6,
+    "seq": 16,
+    "tool": "register_source",
+    "source": "fallback",
+    "fallback_reason": "planner reply invalid after a repair round (action.input.catalogue_id openfema_ is not a source this question needs (openfema_disaster_declarations, sec_frames, sec_frames, sec_frames))",
+    "ok": true,
+    "fact": "register cw.frames_RevenueFromContractWithCustomerExcludingAssessedTax_CY2023Q1: already_registered [ev-r20261025T145128a180-55]",
+    "evidence_ids": [
+     "ev-r20261025T145128a180-55"
+    ],
+    "latency_ms": 321
+   }
+  },
+  {
+   "type": "planner",
+   "data": {
+    "run_id": "r20261025T145128a180",
+    "replay": true,
+    "chunk": 6,
+    "call": 2,
+    "valid": true,
+    "attempts": 1,
+    "tool": "register_source",
+    "thought": "Register the SEC revenue source already present to mark sources_registered true.",
+    "prompt_tokens": 2073,
+    "eval_tokens": 798,
+    "tokens_per_s": 135.48331891347132
+   }
+  },
+  {
+   "type": "tool",
+   "data": {
+    "run_id": "r20261025T145128a180",
+    "replay": true,
+    "chunk": 6,
+    "seq": 17,
+    "tool": "register_source",
+    "source": "model",
+    "fallback_reason": null,
+    "ok": true,
+    "fact": "register cw.frames_RegulatedAndUnregulatedOperatingRevenue_CY2023Q1: already_registered [ev-r20261025T145128a180-56]",
+    "evidence_ids": [
+     "ev-r20261025T145128a180-56"
+    ],
+    "latency_ms": 323
+   }
+  },
+  {
+   "type": "planner",
+   "data": {
+    "run_id": "r20261025T145128a180",
+    "replay": true,
+    "chunk": 6,
+    "call": 3,
+    "valid": true,
+    "attempts": 1,
+    "tool": "compile_usl",
+    "thought": "Compile USL to build usl_built and run DQ rules",
+    "prompt_tokens": 2120,
+    "eval_tokens": 518,
+    "tokens_per_s": 132.52694863864377
+   }
+  },
+  {
+   "type": "tool",
+   "data": {
+    "run_id": "r20261025T145128a180",
+    "replay": true,
+    "chunk": 6,
+    "seq": 18,
+    "tool": "compile_usl",
+    "source": "model",
+    "fallback_reason": null,
+    "ok": true,
+    "fact": "usl: matches_governed; live DQ ok; 1 invalid rows on file [ev-r20261025T145128a180-59]",
+    "evidence_ids": [
+     "ev-r20261025T145128a180-57",
+     "ev-r20261025T145128a180-58",
+     "ev-r20261025T145128a180-59"
+    ],
+    "latency_ms": 3706
+   }
+  },
+  {
+   "type": "chunk_end",
+   "data": {
+    "run_id": "r20261025T145128a180",
+    "replay": true,
+    "chunk": 6,
+    "state_tokens": 431,
+    "complete": false
+   }
+  },
+  {
+   "type": "chunk_start",
+   "data": {
+    "run_id": "r20261025T145128a180",
+    "replay": true,
+    "chunk": 7,
+    "carryover_tokens": 431,
+    "recorded_at": "2026-10-25T06:56:48.133Z",
+    "recorded_at_sgt": "2026-10-25 14:56:48 SGT"
+   }
+  },
+  {
+   "type": "planner",
+   "data": {
+    "run_id": "r20261025T145128a180",
+    "replay": true,
+    "chunk": 7,
+    "call": 1,
+    "valid": true,
+    "attempts": 1,
+    "tool": "answer",
+    "thought": "Answer the question with fixed SQL over cached views for CY2024Q1",
+    "prompt_tokens": 1885,
+    "eval_tokens": 873,
+    "tokens_per_s": 135.6442893987229
+   }
+  },
+  {
+   "type": "tool",
+   "data": {
+    "run_id": "r20261025T145128a180",
+    "replay": true,
+    "chunk": 7,
+    "seq": 19,
+    "tool": "answer",
+    "source": "model",
+    "fallback_reason": null,
+    "ok": true,
+    "fact": "answer: 16 utilities; weather not_tested [ev-r20261025T145128a180-63]",
+    "evidence_ids": [
+     "ev-r20261025T145128a180-60",
+     "ev-r20261025T145128a180-61",
+     "ev-r20261025T145128a180-62",
+     "ev-r20261025T145128a180-63"
+    ],
+    "latency_ms": 1537
+   }
+  },
+  {
+   "type": "planner",
+   "data": {
+    "run_id": "r20261025T145128a180",
+    "replay": true,
+    "chunk": 7,
+    "call": 2,
+    "valid": true,
+    "attempts": 1,
+    "tool": "not_tested",
+    "thought": "List what answer cannot see: county geography, non-major declarations, fuel-cost pass-through, recasts, weather when station tables missing.",
+    "prompt_tokens": 2408,
+    "eval_tokens": 596,
+    "tokens_per_s": 136.7835531088538
+   }
+  },
+  {
+   "type": "tool",
+   "data": {
+    "run_id": "r20261025T145128a180",
+    "replay": true,
+    "chunk": 7,
+    "seq": 20,
+    "tool": "not_tested",
+    "source": "model",
+    "fallback_reason": null,
+    "ok": true,
+    "fact": "not tested: 5 items listed [ev-r20261025T145128a180-64]",
+    "evidence_ids": [
+     "ev-r20261025T145128a180-64"
+    ],
+    "latency_ms": 1
+   }
+  },
+  {
+   "type": "planner",
+   "data": {
+    "run_id": "r20261025T145128a180",
+    "replay": true,
+    "chunk": 7,
+    "call": 3,
+    "valid": true,
+    "attempts": 1,
+    "tool": "finalize",
+    "thought": "finalize",
+    "prompt_tokens": 2464,
+    "eval_tokens": 225,
+    "tokens_per_s": 126.29742538488439
+   }
+  },
+  {
+   "type": "tool",
+   "data": {
+    "run_id": "r20261025T145128a180",
+    "replay": true,
+    "chunk": 7,
+    "seq": 21,
+    "tool": "finalize",
+    "source": "model",
+    "fallback_reason": null,
+    "ok": true,
+    "fact": "note model; Proposals scored by the measured join map: planner 0/1 verified, baseline 4/6 verified [ev-r20261025T145128a180-65, ev-r20261025T145128a180-66]",
+    "evidence_ids": [
+     "ev-r20261025T145128a180-65",
+     "ev-r20261025T145128a180-66"
+    ],
+    "latency_ms": 2616
+   }
+  },
+  {
+   "type": "chunk_end",
+   "data": {
+    "run_id": "r20261025T145128a180",
+    "replay": true,
+    "chunk": 7,
+    "state_tokens": 349,
+    "complete": true
+   }
+  },
+  {
+   "type": "run_finished",
+   "data": {
+    "run_id": "r20261025T145128a180",
+    "replay": true,
+    "quarter": "CY2024Q1",
+    "mode": "warm",
+    "question": "Which investor-owned electric utilities served states with FEMA major-disaster declarations in Q1 2024, what did the weather at their stations do that quarter, and did their revenue hold up year on year?",
+    "utilities": 16,
+    "keys": 7,
+    "wall_ms": 337172,
+    "chunks": 7,
+    "checklist_complete": true,
+    "memo_source": "model",
+    "memo_words": 25,
+    "skipped_chunks": 5,
+    "skipped_steps": 5,
+    "evidence_records": 66,
+    "finished_at": "2026-10-25T06:57:06.068Z",
+    "finished_at_sgt": "2026-10-25 14:57:06 SGT"
+   }
+  }
+ ],
+ "skipped_steps": [
+  {
+   "item": "keys_measured",
+   "memoryId": "mem-59",
+   "note": "measure_key b1 skipped: cik@CY2024Q1 (cw.frames_Revenues_CY2024Q1.cik ~ cw.seed_utilities.cik, lpad10) VERIFIED 42/43 as cik@CY2025Q1 recalled from memory"
+  },
+  {
+   "item": "keys_measured",
+   "memoryId": "mem-61",
+   "note": "measure_key b4 skipped: station@all (cw.seed_stations.id ~ cw.stations.id, identity) VERIFIED 56/56 as station@all recalled from memory"
+  },
+  {
+   "item": "keys_measured",
+   "memoryId": "mem-60",
+   "note": "measure_key b5 skipped: sic@all (cw.seed_utilities.sic ~ cw.sic_codes.code, identity) VERIFIED 42/43 as sic@all recalled from memory"
+  },
+  {
+   "item": "keys_measured",
+   "memoryId": "mem-62",
+   "note": "measure_key b6 skipped: loc@CY2024Q1 (cw.frames_Revenues_CY2024Q1.loc ~ cw.seed_utilities.hq_state, substr(4,2)) VERIFIED 42/42 as loc@CY2025Q1 recalled from memory"
+  },
+  {
+   "item": "keys_measured",
+   "memoryId": "mem-65",
+   "note": "measure_key b17 skipped: fema_fips@CY2024Q1 (cw.fema_declarations_dr_2024q1.fips_state_code ~ cw.states.fips, identity) VERIFIED 8/8 as fema_fips@CY2025Q1 recalled from memory"
+  }
+ ]
+}

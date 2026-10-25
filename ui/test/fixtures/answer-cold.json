@@ -1,0 +1,704 @@
+{
+ "fixture": "synthetic: built by ui/test/make_ui_fixtures.ts from the redacted server fixtures",
+ "run_id": "r20261025T14571773a0",
+ "quarter": "CY2025Q1",
+ "previous": "CY2024Q1",
+ "weather_status": "measured",
+ "answered": true,
+ "rows": [
+  {
+   "cik": "0000004904",
+   "name": "AMERICAN ELECTRIC POWER CO INC",
+   "ticker": "AEP",
+   "states": [
+    {
+     "state": "OK",
+     "declarations": 1,
+     "by_incident_type": {
+      "severe_storm": 1,
+      "fire": 0,
+      "flood": 0,
+      "other_incidents": 0
+     }
+    },
+    {
+     "state": "WV",
+     "declarations": 1,
+     "by_incident_type": {
+      "severe_storm": 1,
+      "fire": 0,
+      "flood": 0,
+      "other_incidents": 0
+     }
+    }
+   ],
+   "declarations": 2,
+   "by_incident_type": {
+    "severe_storm": 2,
+    "fire": 0,
+    "flood": 0,
+    "other_incidents": 0
+   },
+   "revenue": {
+    "tag": "Revenues",
+    "current": 1040000000,
+    "previous": 1000000000,
+    "change": 0.040000000000000036,
+    "current_accn": "0000000000-26-000001",
+    "previous_accn": "0000000000-25-000001",
+    "note": null
+   },
+   "revenue_note": null,
+   "weather": {
+    "stations": [
+     "USW00014821",
+     "USW00014820",
+     "USW00003927",
+     "USW00012960",
+     "USW00013737",
+     "USW00013866",
+     "USW00093819",
+     "USW00093817",
+     "USW00013967"
+    ],
+    "tdd_current": 1515.1944444444443,
+    "tdd_previous": 1455.1944444444443,
+    "change": 0.0412316032603508
+   },
+   "weather_note": null,
+   "cells": {
+    "declarations": "0000004904.declarations",
+    "revenue_current": "0000004904.revenue_current",
+    "revenue_previous": "0000004904.revenue_previous",
+    "revenue_change": "0000004904.revenue_change",
+    "weather_current": "0000004904.weather_current",
+    "weather_previous": "0000004904.weather_previous",
+    "weather_change": "0000004904.weather_change"
+   }
+  },
+  {
+   "cik": "0001326160",
+   "name": "Duke Energy CORP",
+   "ticker": "DUK",
+   "states": [
+    {
+     "state": "KY",
+     "declarations": 1,
+     "by_incident_type": {
+      "severe_storm": 1,
+      "fire": 0,
+      "flood": 0,
+      "other_incidents": 0
+     }
+    },
+    {
+     "state": "SC",
+     "declarations": 1,
+     "by_incident_type": {
+      "severe_storm": 0,
+      "fire": 0,
+      "flood": 1,
+      "other_incidents": 0
+     }
+    }
+   ],
+   "declarations": 2,
+   "by_incident_type": {
+    "severe_storm": 1,
+    "fire": 0,
+    "flood": 1,
+    "other_incidents": 0
+   },
+   "revenue": {
+    "tag": "RegulatedAndUnregulatedOperatingRevenue",
+    "current": 1107000000,
+    "previous": 1025000000,
+    "change": 0.08000000000000007,
+    "current_accn": "0000000000-26-000002",
+    "previous_accn": "0000000000-25-000002",
+    "note": null
+   },
+   "revenue_note": null,
+   "weather": {
+    "stations": [
+     "USW00013722",
+     "USW00013883",
+     "USW00012839",
+     "USW00012842",
+     "USW00093819",
+     "USW00093817",
+     "USW00014821",
+     "USW00014820",
+     "USW00093821"
+    ],
+    "tdd_current": 1586.3055555555557,
+    "tdd_previous": 1526.3055555555557,
+    "change": 0.039310608404462544
+   },
+   "weather_note": null,
+   "cells": {
+    "declarations": "0001326160.declarations",
+    "revenue_current": "0001326160.revenue_current",
+    "revenue_previous": "0001326160.revenue_previous",
+    "revenue_change": "0001326160.revenue_change",
+    "weather_current": "0001326160.weather_current",
+    "weather_previous": "0001326160.weather_previous",
+    "weather_change": "0001326160.weather_change"
+   }
+  },
+  {
+   "cik": "0001002910",
+   "name": "AMEREN CORP",
+   "ticker": "AEE",
+   "states": [
+    {
+     "state": "MO",
+     "declarations": 1,
+     "by_incident_type": {
+      "severe_storm": 1,
+      "fire": 0,
+      "flood": 0,
+      "other_incidents": 0
+     }
+    }
+   ],
+   "declarations": 1,
+   "by_incident_type": {
+    "severe_storm": 1,
+    "fire": 0,
+    "flood": 0,
+    "other_incidents": 0
+   },
+   "revenue": {
+    "tag": "Revenues",
+    "current": 1176000000,
+    "previous": 1050000000,
+    "change": 0.1200000000000001,
+    "current_accn": "0000000000-26-000003",
+    "previous_accn": "0000000000-25-000003",
+    "note": null
+   },
+   "revenue_note": null,
+   "weather": {
+    "stations": [
+     "USW00013994",
+     "USW00094846",
+     "USW00014842"
+    ],
+    "tdd_current": 1777.4166666666667,
+    "tdd_previous": 1717.4166666666667,
+    "change": 0.03493619292542083
+   },
+   "weather_note": null,
+   "cells": {
+    "declarations": "0001002910.declarations",
+    "revenue_current": "0001002910.revenue_current",
+    "revenue_previous": "0001002910.revenue_previous",
+    "revenue_change": "0001002910.revenue_change",
+    "weather_current": "0001002910.weather_current",
+    "weather_previous": "0001002910.weather_previous",
+    "weather_change": "0001002910.weather_change"
+   }
+  },
+  {
+   "cik": "0000715957",
+   "name": "DOMINION ENERGY, INC",
+   "ticker": "D",
+   "states": [
+    {
+     "state": "SC",
+     "declarations": 1,
+     "by_incident_type": {
+      "severe_storm": 0,
+      "fire": 0,
+      "flood": 1,
+      "other_incidents": 0
+     }
+    }
+   ],
+   "declarations": 1,
+   "by_incident_type": {
+    "severe_storm": 0,
+    "fire": 0,
+    "flood": 1,
+    "other_incidents": 0
+   },
+   "revenue": {
+    "tag": "Revenues",
+    "current": 1118000000,
+    "previous": 1075000000,
+    "change": 0.040000000000000036,
+    "current_accn": "0000000000-26-000004",
+    "previous_accn": "0000000000-25-000004",
+    "note": null
+   },
+   "revenue_note": null,
+   "weather": {
+    "stations": [
+     "USW00013737",
+     "USW00013722",
+     "USW00013883"
+    ],
+    "tdd_current": 1297.4166666666667,
+    "tdd_previous": 1237.4166666666667,
+    "change": 0.04848811367768868
+   },
+   "weather_note": null,
+   "cells": {
+    "declarations": "0000715957.declarations",
+    "revenue_current": "0000715957.revenue_current",
+    "revenue_previous": "0000715957.revenue_previous",
+    "revenue_change": "0000715957.revenue_change",
+    "weather_current": "0000715957.weather_current",
+    "weather_previous": "0000715957.weather_previous",
+    "weather_change": "0000715957.weather_change"
+   }
+  },
+  {
+   "cik": "0000827052",
+   "name": "EDISON INTERNATIONAL",
+   "ticker": "EIX",
+   "states": [
+    {
+     "state": "CA",
+     "declarations": 1,
+     "by_incident_type": {
+      "severe_storm": 0,
+      "fire": 1,
+      "flood": 0,
+      "other_incidents": 0
+     }
+    }
+   ],
+   "declarations": 1,
+   "by_incident_type": {
+    "severe_storm": 0,
+    "fire": 1,
+    "flood": 0,
+    "other_incidents": 0
+   },
+   "revenue": {
+    "tag": "Revenues",
+    "current": 1012000000,
+    "previous": 1100000000,
+    "change": -0.07999999999999996,
+    "current_accn": "0000000000-26-000005",
+    "previous_accn": "0000000000-25-000005",
+    "note": null
+   },
+   "revenue_note": null,
+   "weather": {
+    "stations": [
+     "USW00023174",
+     "USW00023234"
+    ],
+    "tdd_current": 1770.75,
+    "tdd_previous": 1710.75,
+    "change": 0.03507233669443233
+   },
+   "weather_note": null,
+   "cells": {
+    "declarations": "0000827052.declarations",
+    "revenue_current": "0000827052.revenue_current",
+    "revenue_previous": "0000827052.revenue_previous",
+    "revenue_change": "0000827052.revenue_change",
+    "weather_current": "0000827052.weather_current",
+    "weather_previous": "0000827052.weather_previous",
+    "weather_change": "0000827052.weather_change"
+   }
+  },
+  {
+   "cik": "0001711269",
+   "name": "Evergy, Inc.",
+   "ticker": "EVRG",
+   "states": [
+    {
+     "state": "MO",
+     "declarations": 1,
+     "by_incident_type": {
+      "severe_storm": 1,
+      "fire": 0,
+      "flood": 0,
+      "other_incidents": 0
+     }
+    }
+   ],
+   "declarations": 1,
+   "by_incident_type": {
+    "severe_storm": 1,
+    "fire": 0,
+    "flood": 0,
+    "other_incidents": 0
+   },
+   "revenue": {
+    "tag": "Revenues",
+    "current": 1260000000,
+    "previous": 1125000000,
+    "change": 0.1200000000000001,
+    "current_accn": "0000000000-26-000006",
+    "previous_accn": "0000000000-25-000006",
+    "note": null
+   },
+   "revenue_note": null,
+   "weather": {
+    "stations": [
+     "USW00013996",
+     "USW00013994"
+    ],
+    "tdd_current": 1490.75,
+    "tdd_previous": 1430.75,
+    "change": 0.04193604752752056
+   },
+   "weather_note": null,
+   "cells": {
+    "declarations": "0001711269.declarations",
+    "revenue_current": "0001711269.revenue_current",
+    "revenue_previous": "0001711269.revenue_previous",
+    "revenue_change": "0001711269.revenue_change",
+    "weather_current": "0001711269.weather_current",
+    "weather_previous": "0001711269.weather_previous",
+    "weather_change": "0001711269.weather_change"
+   }
+  },
+  {
+   "cik": "0001031296",
+   "name": "FIRSTENERGY CORP",
+   "ticker": "FE",
+   "states": [
+    {
+     "state": "WV",
+     "declarations": 1,
+     "by_incident_type": {
+      "severe_storm": 1,
+      "fire": 0,
+      "flood": 0,
+      "other_incidents": 0
+     }
+    }
+   ],
+   "declarations": 1,
+   "by_incident_type": {
+    "severe_storm": 1,
+    "fire": 0,
+    "flood": 0,
+    "other_incidents": 0
+   },
+   "revenue": {
+    "tag": "Revenues",
+    "current": 1196000000,
+    "previous": 1150000000,
+    "change": 0.040000000000000036,
+    "current_accn": "0000000000-26-000007",
+    "previous_accn": "0000000000-25-000007",
+    "note": null
+   },
+   "revenue_note": null,
+   "weather": {
+    "stations": [
+     "USW00014821",
+     "USW00014820",
+     "USW00013739",
+     "USW00094823",
+     "USW00014734",
+     "USW00093730",
+     "USW00013866",
+     "USW00093721",
+     "USW00093720"
+    ],
+    "tdd_current": 1706.3055555555557,
+    "tdd_previous": 1646.3055555555557,
+    "change": 0.03644523934061117
+   },
+   "weather_note": null,
+   "cells": {
+    "declarations": "0001031296.declarations",
+    "revenue_current": "0001031296.revenue_current",
+    "revenue_previous": "0001031296.revenue_previous",
+    "revenue_change": "0001031296.revenue_change",
+    "weather_current": "0001031296.weather_current",
+    "weather_previous": "0001031296.weather_previous",
+    "weather_change": "0001031296.weather_change"
+   }
+  },
+  {
+   "cik": "0001021635",
+   "name": "OGE ENERGY CORP.",
+   "ticker": "OGE",
+   "states": [
+    {
+     "state": "OK",
+     "declarations": 1,
+     "by_incident_type": {
+      "severe_storm": 1,
+      "fire": 0,
+      "flood": 0,
+      "other_incidents": 0
+     }
+    }
+   ],
+   "declarations": 1,
+   "by_incident_type": {
+    "severe_storm": 1,
+    "fire": 0,
+    "flood": 0,
+    "other_incidents": 0
+   },
+   "revenue": {
+    "tag": "Revenues",
+    "current": 1269000000,
+    "previous": 1175000000,
+    "change": 0.08000000000000007,
+    "current_accn": "0000000000-26-000008",
+    "previous_accn": "0000000000-25-000008",
+    "note": null
+   },
+   "revenue_note": null,
+   "weather": {
+    "stations": [
+     "USW00013967"
+    ],
+    "tdd_current": 1430.75,
+    "tdd_previous": 1370.75,
+    "change": 0.043771657851541024
+   },
+   "weather_note": null,
+   "cells": {
+    "declarations": "0001021635.declarations",
+    "revenue_current": "0001021635.revenue_current",
+    "revenue_previous": "0001021635.revenue_previous",
+    "revenue_change": "0001021635.revenue_change",
+    "weather_current": "0001021635.weather_current",
+    "weather_previous": "0001021635.weather_previous",
+    "weather_change": "0001021635.weather_change"
+   }
+  },
+  {
+   "cik": "0001004980",
+   "name": "PG&E Corp",
+   "ticker": "PCG",
+   "states": [
+    {
+     "state": "CA",
+     "declarations": 1,
+     "by_incident_type": {
+      "severe_storm": 0,
+      "fire": 1,
+      "flood": 0,
+      "other_incidents": 0
+     }
+    }
+   ],
+   "declarations": 1,
+   "by_incident_type": {
+    "severe_storm": 0,
+    "fire": 1,
+    "flood": 0,
+    "other_incidents": 0
+   },
+   "revenue": {
+    "tag": "Revenues",
+    "current": 1344000000,
+    "previous": 1200000000,
+    "change": 0.1200000000000001,
+    "current_accn": "0000000000-26-000009",
+    "previous_accn": "0000000000-25-000009",
+    "note": null
+   },
+   "revenue_note": null,
+   "weather": {
+    "stations": [
+     "USW00023174",
+     "USW00023234"
+    ],
+    "tdd_current": 1770.75,
+    "tdd_previous": 1710.75,
+    "change": 0.03507233669443233
+   },
+   "weather_note": null,
+   "cells": {
+    "declarations": "0001004980.declarations",
+    "revenue_current": "0001004980.revenue_current",
+    "revenue_previous": "0001004980.revenue_previous",
+    "revenue_change": "0001004980.revenue_change",
+    "weather_current": "0001004980.weather_current",
+    "weather_previous": "0001004980.weather_previous",
+    "weather_change": "0001004980.weather_change"
+   }
+  },
+  {
+   "cik": "0000784977",
+   "name": "PORTLAND GENERAL ELECTRIC CO /OR/",
+   "ticker": "POR",
+   "states": [
+    {
+     "state": "OR",
+     "declarations": 1,
+     "by_incident_type": {
+      "severe_storm": 0,
+      "fire": 1,
+      "flood": 0,
+      "other_incidents": 0
+     }
+    }
+   ],
+   "declarations": 1,
+   "by_incident_type": {
+    "severe_storm": 0,
+    "fire": 1,
+    "flood": 0,
+    "other_incidents": 0
+   },
+   "revenue": {
+    "tag": "Revenues",
+    "current": 1176000000,
+    "previous": 1225000000,
+    "change": -0.040000000000000036,
+    "current_accn": "0000000000-26-000010",
+    "previous_accn": "0000000000-25-000010",
+    "note": null
+   },
+   "revenue_note": null,
+   "weather": {
+    "stations": [
+     "USW00024229"
+    ],
+    "tdd_current": 1830.75,
+    "tdd_previous": 1770.75,
+    "change": 0.03388394747988133
+   },
+   "weather_note": null,
+   "cells": {
+    "declarations": "0000784977.declarations",
+    "revenue_current": "0000784977.revenue_current",
+    "revenue_previous": "0000784977.revenue_previous",
+    "revenue_change": "0000784977.revenue_change",
+    "weather_current": "0000784977.weather_current",
+    "weather_previous": "0000784977.weather_previous",
+    "weather_change": "0000784977.weather_change"
+   }
+  },
+  {
+   "cik": "0000922224",
+   "name": "PPL Corp",
+   "ticker": "PPL",
+   "states": [
+    {
+     "state": "KY",
+     "declarations": 1,
+     "by_incident_type": {
+      "severe_storm": 1,
+      "fire": 0,
+      "flood": 0,
+      "other_incidents": 0
+     }
+    }
+   ],
+   "declarations": 1,
+   "by_incident_type": {
+    "severe_storm": 1,
+    "fire": 0,
+    "flood": 0,
+    "other_incidents": 0
+   },
+   "revenue": {
+    "tag": "Revenues",
+    "current": 1350000000,
+    "previous": 1250000000,
+    "change": 0.08000000000000007,
+    "current_accn": "0000000000-26-000011",
+    "previous_accn": "0000000000-25-000011",
+    "note": null
+   },
+   "revenue_note": null,
+   "weather": {
+    "stations": [
+     "USW00013739",
+     "USW00094823",
+     "USW00093821",
+     "USW00014765"
+    ],
+    "tdd_current": 1770.75,
+    "tdd_previous": 1710.75,
+    "change": 0.03507233669443233
+   },
+   "weather_note": null,
+   "cells": {
+    "declarations": "0000922224.declarations",
+    "revenue_current": "0000922224.revenue_current",
+    "revenue_previous": "0000922224.revenue_previous",
+    "revenue_change": "0000922224.revenue_change",
+    "weather_current": "0000922224.weather_current",
+    "weather_previous": "0000922224.weather_previous",
+    "weather_change": "0000922224.weather_change"
+   }
+  },
+  {
+   "cik": "0001032208",
+   "name": "SEMPRA",
+   "ticker": "SRE",
+   "states": [
+    {
+     "state": "CA",
+     "declarations": 1,
+     "by_incident_type": {
+      "severe_storm": 0,
+      "fire": 1,
+      "flood": 0,
+      "other_incidents": 0
+     }
+    }
+   ],
+   "declarations": 1,
+   "by_incident_type": {
+    "severe_storm": 0,
+    "fire": 1,
+    "flood": 0,
+    "other_incidents": 0
+   },
+   "revenue": {
+    "tag": "RevenueFromContractWithCustomerExcludingAssessedTax",
+    "current": 2275000000,
+    "previous": null,
+    "change": null,
+    "current_accn": "0000000000-26-000012",
+    "previous_accn": "0000000000-25-000012",
+    "note": "a year earlier the first available tag is Revenues, not RevenueFromContractWithCustomerExcludingAssessedTax: not compared"
+   },
+   "revenue_note": null,
+   "weather": {
+    "stations": [
+     "USW00023174",
+     "USW00023234"
+    ],
+    "tdd_current": 1770.75,
+    "tdd_previous": 1710.75,
+    "change": 0.03507233669443233
+   },
+   "weather_note": null,
+   "cells": {
+    "declarations": "0001032208.declarations",
+    "revenue_current": "0001032208.revenue_current",
+    "revenue_previous": "0001032208.revenue_previous",
+    "revenue_change": "0001032208.revenue_change",
+    "weather_current": "0001032208.weather_current",
+    "weather_previous": "0001032208.weather_previous",
+    "weather_change": "0001032208.weather_change"
+   }
+  }
+ ],
+ "not_tested": [
+  "County geography: declarations are joined to utilities by state; the counties a declaration names are not matched to service territories.",
+  "Non-major declarations: only major-disaster (DR) declarations are read; emergency (EM) and fire-management (FM) declarations are left out.",
+  "Fuel-cost pass-through: revenue moves with fuel and purchased-power clauses, so a revenue change is not a measure of disaster impact.",
+  "Recasts: frames serve the latest filed value for each quarter; restated comparatives are not reconciled, and each value names its tag."
+ ],
+ "definitions": {
+  "declarations": "Major-disaster (DR) declarations counted as distinct disaster numbers per served state, summed over the utility's served states.",
+  "revenue_current": "The value of the first available revenue tag (Revenues, then RevenueFromContractWithCustomerExcludingAssessedTax, then RegulatedAndUnregulatedOperatingRevenue) for this CIK in the asked quarter.",
+  "revenue_previous": "The same rule for the same quarter a year earlier.",
+  "revenue_change": "current / previous - 1, computed only when the first available tag is the same in both quarters.",
+  "weather_current": "Total degree days (HDD + CDD, base 65 F) averaged over the utility's seed stations that report both years with coverage of at least 0.9.",
+  "weather_previous": "The same average for the same quarter a year earlier.",
+  "weather_change": "current / previous - 1 of the station-average total degree days."
+ }
+}

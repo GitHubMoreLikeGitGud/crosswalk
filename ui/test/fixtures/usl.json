@@ -1,0 +1,571 @@
+{
+ "fixture": "synthetic: built by ui/test/make_ui_fixtures.ts from the redacted server fixtures",
+ "usl": "crosswalk_usl",
+ "namespace": "lightning.metastore.crosswalk",
+ "qualified": "lightning.metastore.crosswalk.crosswalk_usl",
+ "description": "Crosswalk model - US states, investor-owned electric utilities from SEC EDGAR with the states they serve, FEMA major-disaster declarations of Q1 2025, GHCN airport weather stations and quarterly revenue facts. Every foreign key is a join key that was measured in Lightning SQL before it was declared.",
+ "tables": [
+  {
+   "name": "state",
+   "source": "cw.states",
+   "description": "State reference - 50 states and DC with the two-letter postal code and the two-digit FIPS code. Territories are absent by design.",
+   "columns": [
+    {
+     "name": "code",
+     "type": "varchar(2)",
+     "nullable": false
+    },
+    {
+     "name": "name",
+     "type": "varchar(40)",
+     "nullable": true
+    },
+    {
+     "name": "fips",
+     "type": "varchar(2)",
+     "nullable": true
+    }
+   ],
+   "pk": [
+    "code"
+   ],
+   "fks": [],
+   "query_in_zetaris": "SELECT * FROM lightning.metastore.crosswalk.crosswalk_usl.state LIMIT 10"
+  },
+  {
+   "name": "sic_code",
+   "source": "cw.sic_codes",
+   "description": "SIC code reference from company_dns V4. Electric utilities are 4911, 4931 and 4932.",
+   "columns": [
+    {
+     "name": "sic",
+     "type": "varchar(4)",
+     "nullable": false
+    },
+    {
+     "name": "division",
+     "type": "varchar(1)",
+     "nullable": true
+    },
+    {
+     "name": "description",
+     "type": "varchar(200)",
+     "nullable": true
+    }
+   ],
+   "pk": [
+    "sic"
+   ],
+   "fks": [],
+   "query_in_zetaris": "SELECT * FROM lightning.metastore.crosswalk.crosswalk_usl.sic_code LIMIT 10"
+  },
+  {
+   "name": "utility",
+   "source": "cw.seed_utilities",
+   "description": "One row per seed utility from the EDGAR submissions endpoint - cik as a zero padded 10-digit string, name, ticker, SIC. MGE Energy reports SIC 4900, which the reference lacks - the one known FK orphan.",
+   "columns": [
+    {
+     "name": "cik",
+     "type": "varchar(10)",
+     "nullable": false
+    },
+    {
+     "name": "name",
+     "type": "varchar(200)",
+     "nullable": true
+    },
+    {
+     "name": "ticker",
+     "type": "varchar(10)",
+     "nullable": true
+    },
+    {
+     "name": "sic",
+     "type": "varchar(4)",
+     "nullable": true
+    }
+   ],
+   "pk": [
+    "cik"
+   ],
+   "fks": [
+    {
+     "column": "sic",
+     "references": "sic_code.sic",
+     "transform": "identity"
+    }
+   ],
+   "query_in_zetaris": "SELECT * FROM lightning.metastore.crosswalk.crosswalk_usl.utility LIMIT 10"
+  },
+  {
+   "name": "utility_state",
+   "source": "cw.utility_states",
+   "description": "Service territory - one row per utility and state it serves, curated from the FY2024 Form 10-K service-territory descriptions, capped at 6 states per utility.",
+   "columns": [
+    {
+     "name": "cik",
+     "type": "varchar(10)",
+     "nullable": false
+    },
+    {
+     "name": "state",
+     "type": "varchar(2)",
+     "nullable": false
+    }
+   ],
+   "pk": [
+    "cik",
+    "state"
+   ],
+   "fks": [
+    {
+     "column": "cik",
+     "references": "utility.cik",
+     "transform": "identity"
+    },
+    {
+     "column": "state",
+     "references": "state.code",
+     "transform": "identity"
+    }
+   ],
+   "query_in_zetaris": "SELECT * FROM lightning.metastore.crosswalk.crosswalk_usl.utility_state LIMIT 10"
+  },
+  {
+   "name": "fema_declaration",
+   "source": "cw.fema_declarations_dr_2025q1",
+   "description": "FEMA major-disaster declarations declared in Q1 2025 - one row per designated area, with the state, declaration date, incident type and title from OpenFEMA DisasterDeclarationsSummaries v2.",
+   "columns": [
+    {
+     "name": "disaster_number",
+     "type": "int",
+     "nullable": false
+    },
+    {
+     "name": "fips_county",
+     "type": "varchar(3)",
+     "nullable": false
+    },
+    {
+     "name": "state",
+     "type": "varchar(2)",
+     "nullable": true
+    },
+    {
+     "name": "fips_state",
+     "type": "varchar(2)",
+     "nullable": true
+    },
+    {
+     "name": "declaration_date",
+     "type": "varchar(24)",
+     "nullable": true
+    },
+    {
+     "name": "incident_type",
+     "type": "varchar(40)",
+     "nullable": true
+    },
+    {
+     "name": "title",
+     "type": "varchar(200)",
+     "nullable": true
+    },
+    {
+     "name": "designated_area",
+     "type": "varchar(120)",
+     "nullable": true
+    }
+   ],
+   "pk": [
+    "disaster_number",
+    "fips_county"
+   ],
+   "fks": [
+    {
+     "column": "state",
+     "references": "state.code",
+     "transform": "identity"
+    }
+   ],
+   "query_in_zetaris": "SELECT * FROM lightning.metastore.crosswalk.crosswalk_usl.fema_declaration LIMIT 10"
+  },
+  {
+   "name": "station",
+   "source": "cw.stations",
+   "description": "GHCN-Daily first-order airport stations used as the weather proxy for a state - the 56 seed stations with the state parsed from ghcnd-stations.txt columns 39-40.",
+   "columns": [
+    {
+     "name": "id",
+     "type": "varchar(11)",
+     "nullable": false
+    },
+    {
+     "name": "state",
+     "type": "varchar(2)",
+     "nullable": true
+    },
+    {
+     "name": "name",
+     "type": "varchar(60)",
+     "nullable": true
+    }
+   ],
+   "pk": [
+    "id"
+   ],
+   "fks": [
+    {
+     "column": "state",
+     "references": "state.code",
+     "transform": "identity"
+    }
+   ],
+   "query_in_zetaris": "SELECT * FROM lightning.metastore.crosswalk.crosswalk_usl.station LIMIT 10"
+  },
+  {
+   "name": "revenue_quarter",
+   "source": "cw.frames_RegulatedAndUnregulatedOperatingRevenue_CY2024Q1, cw.frames_RegulatedAndUnregulatedOperatingRevenue_CY2025Q1, cw.frames_RevenueFromContractWithCustomerExcludingAssessedTax_CY2024Q1, cw.frames_RevenueFromContractWithCustomerExcludingAssessedTax_CY2025Q1, cw.frames_Revenues_CY2024Q1, cw.frames_Revenues_CY2025Q1",
+   "description": "Quarterly revenue facts of the seed utilities from SEC frames for CY2025Q1 and CY2024Q1 under three tags - val in US dollars, accn the filing the frames endpoint served.",
+   "columns": [
+    {
+     "name": "cik",
+     "type": "varchar(10)",
+     "nullable": false
+    },
+    {
+     "name": "xbrl_tag",
+     "type": "varchar(60)",
+     "nullable": false
+    },
+    {
+     "name": "period",
+     "type": "varchar(8)",
+     "nullable": false
+    },
+    {
+     "name": "val",
+     "type": "double",
+     "nullable": true
+    },
+    {
+     "name": "accn",
+     "type": "varchar(25)",
+     "nullable": true
+    }
+   ],
+   "pk": [
+    "cik",
+    "xbrl_tag",
+    "period"
+   ],
+   "fks": [
+    {
+     "column": "cik",
+     "references": "utility.cik",
+     "transform": "lpad10"
+    }
+   ],
+   "query_in_zetaris": "SELECT * FROM lightning.metastore.crosswalk.crosswalk_usl.revenue_quarter LIMIT 10"
+  }
+ ],
+ "fks": [
+  {
+   "from": "utility.sic",
+   "to": "sic_code.sic",
+   "transform": "identity",
+   "from_table": "utility",
+   "to_table": "sic_code",
+   "onboarding": {
+    "rule": "utility.sic",
+    "total": 43,
+    "valid": 42,
+    "invalid": 1,
+    "elapsed_ms": 135502,
+    "sql": "RUN DQ sic TABLE lightning.metastore.crosswalk.crosswalk_usl.utility",
+    "error": null,
+    "attempts": 1
+   },
+   "live": null
+  },
+  {
+   "from": "utility_state.cik",
+   "to": "utility.cik",
+   "transform": "identity",
+   "from_table": "utility_state",
+   "to_table": "utility",
+   "onboarding": {
+    "rule": "utility_state.cik",
+    "total": 97,
+    "valid": 97,
+    "invalid": 0,
+    "elapsed_ms": 72009,
+    "sql": "RUN DQ cik TABLE lightning.metastore.crosswalk.crosswalk_usl.utility_state",
+    "error": null,
+    "attempts": 1
+   },
+   "live": null
+  },
+  {
+   "from": "utility_state.state",
+   "to": "state.code",
+   "transform": "identity",
+   "from_table": "utility_state",
+   "to_table": "state",
+   "onboarding": {
+    "rule": "utility_state.state",
+    "total": 97,
+    "valid": 97,
+    "invalid": 0,
+    "elapsed_ms": 885,
+    "sql": "RUN DQ state TABLE lightning.metastore.crosswalk.crosswalk_usl.utility_state",
+    "error": null,
+    "attempts": 1
+   },
+   "live": {
+    "rule": "utility_state.state",
+    "total": 97,
+    "valid": 97,
+    "invalid": 0,
+    "elapsed_ms": 856,
+    "sql": "RUN DQ state TABLE lightning.metastore.crosswalk.crosswalk_usl.utility_state",
+    "error": null,
+    "attempts": null
+   }
+  },
+  {
+   "from": "fema_declaration.state",
+   "to": "state.code",
+   "transform": "identity",
+   "from_table": "fema_declaration",
+   "to_table": "state",
+   "onboarding": {
+    "rule": "fema_declaration.state",
+    "total": 116,
+    "valid": 116,
+    "invalid": 0,
+    "elapsed_ms": 2931,
+    "sql": "RUN DQ state TABLE lightning.metastore.crosswalk.crosswalk_usl.fema_declaration",
+    "error": null,
+    "attempts": 1
+   },
+   "live": {
+    "rule": "fema_declaration.state",
+    "total": 116,
+    "valid": 116,
+    "invalid": 0,
+    "elapsed_ms": 2731,
+    "sql": "RUN DQ state TABLE lightning.metastore.crosswalk.crosswalk_usl.fema_declaration",
+    "error": null,
+    "attempts": null
+   }
+  },
+  {
+   "from": "station.state",
+   "to": "state.code",
+   "transform": "identity",
+   "from_table": "station",
+   "to_table": "state",
+   "onboarding": {
+    "rule": "station.state",
+    "total": 56,
+    "valid": 56,
+    "invalid": 0,
+    "elapsed_ms": 37652,
+    "sql": "RUN DQ state TABLE lightning.metastore.crosswalk.crosswalk_usl.station",
+    "error": null,
+    "attempts": 1
+   },
+   "live": null
+  },
+  {
+   "from": "revenue_quarter.cik",
+   "to": "utility.cik",
+   "transform": "lpad10",
+   "from_table": "revenue_quarter",
+   "to_table": "utility",
+   "onboarding": {
+    "rule": "revenue_quarter.cik",
+    "total": 133,
+    "valid": 133,
+    "invalid": 0,
+    "elapsed_ms": 84536,
+    "sql": "RUN DQ cik TABLE lightning.metastore.crosswalk.crosswalk_usl.revenue_quarter",
+    "error": null,
+    "attempts": 1
+   },
+   "live": null
+  }
+ ],
+ "erd": {
+  "nodes": [
+   "state",
+   "sic_code",
+   "utility",
+   "utility_state",
+   "fema_declaration",
+   "station",
+   "revenue_quarter"
+  ],
+  "edges": [
+   {
+    "from": "utility",
+    "to": "sic_code",
+    "label": "utility.sic -> sic_code.sic"
+   },
+   {
+    "from": "utility_state",
+    "to": "utility",
+    "label": "utility_state.cik -> utility.cik"
+   },
+   {
+    "from": "utility_state",
+    "to": "state",
+    "label": "utility_state.state -> state.code"
+   },
+   {
+    "from": "fema_declaration",
+    "to": "state",
+    "label": "fema_declaration.state -> state.code"
+   },
+   {
+    "from": "station",
+    "to": "state",
+    "label": "station.state -> state.code"
+   },
+   {
+    "from": "revenue_quarter",
+    "to": "utility",
+    "label": "revenue_quarter.cik -> utility.cik (lpad10)"
+   }
+  ]
+ },
+ "onboarding_dq": {
+  "source": "dq/latest.json (written by npm run onboard)",
+  "ran_at": "2026-10-25T05:46:21.146Z",
+  "ran_at_sgt": "2026-10-25 13:46:21 SGT",
+  "rules": [
+   {
+    "rule": "utility.sic",
+    "total": 43,
+    "valid": 42,
+    "invalid": 1,
+    "elapsed_ms": 135502,
+    "sql": "RUN DQ sic TABLE lightning.metastore.crosswalk.crosswalk_usl.utility",
+    "error": null,
+    "attempts": 1
+   },
+   {
+    "rule": "utility_state.cik",
+    "total": 97,
+    "valid": 97,
+    "invalid": 0,
+    "elapsed_ms": 72009,
+    "sql": "RUN DQ cik TABLE lightning.metastore.crosswalk.crosswalk_usl.utility_state",
+    "error": null,
+    "attempts": 1
+   },
+   {
+    "rule": "utility_state.state",
+    "total": 97,
+    "valid": 97,
+    "invalid": 0,
+    "elapsed_ms": 885,
+    "sql": "RUN DQ state TABLE lightning.metastore.crosswalk.crosswalk_usl.utility_state",
+    "error": null,
+    "attempts": 1
+   },
+   {
+    "rule": "fema_declaration.state",
+    "total": 116,
+    "valid": 116,
+    "invalid": 0,
+    "elapsed_ms": 2931,
+    "sql": "RUN DQ state TABLE lightning.metastore.crosswalk.crosswalk_usl.fema_declaration",
+    "error": null,
+    "attempts": 1
+   },
+   {
+    "rule": "station.state",
+    "total": 56,
+    "valid": 56,
+    "invalid": 0,
+    "elapsed_ms": 37652,
+    "sql": "RUN DQ state TABLE lightning.metastore.crosswalk.crosswalk_usl.station",
+    "error": null,
+    "attempts": 1
+   },
+   {
+    "rule": "revenue_quarter.cik",
+    "total": 133,
+    "valid": 133,
+    "invalid": 0,
+    "elapsed_ms": 84536,
+    "sql": "RUN DQ cik TABLE lightning.metastore.crosswalk.crosswalk_usl.revenue_quarter",
+    "error": null,
+    "attempts": 1
+   }
+  ],
+  "invalid_total": 1
+ },
+ "live_rules": {
+  "source": "compile_usl in run r20261025T14571773a0",
+  "run_id": "r20261025T14571773a0",
+  "at": "2026-10-25T06:57:17.802Z",
+  "at_sgt": "2026-10-25 14:57:17 SGT",
+  "status": "matches_governed",
+  "note": "the plan rendered from this run's verified keys equals the governed lightning.metastore.crosswalk.crosswalk_usl; nothing to compile",
+  "rules": [
+   {
+    "rule": "fema_declaration.state",
+    "total": 116,
+    "valid": 116,
+    "invalid": 0,
+    "elapsed_ms": 2731,
+    "sql": "RUN DQ state TABLE lightning.metastore.crosswalk.crosswalk_usl.fema_declaration",
+    "error": null,
+    "attempts": null
+   },
+   {
+    "rule": "utility_state.state",
+    "total": 97,
+    "valid": 97,
+    "invalid": 0,
+    "elapsed_ms": 856,
+    "sql": "RUN DQ state TABLE lightning.metastore.crosswalk.crosswalk_usl.utility_state",
+    "error": null,
+    "attempts": null
+   }
+  ]
+ },
+ "invalid_rows": [
+  {
+   "rule": "utility.sic",
+   "table": "utility",
+   "columns": [
+    "cik",
+    "name",
+    "ticker",
+    "sic"
+   ],
+   "row": [
+    "0001161728",
+    "MGE ENERGY INC",
+    "MGEE",
+    "4900"
+   ],
+   "values": {
+    "cik": "0001161728",
+    "name": "MGE ENERGY INC",
+    "ticker": "MGEE",
+    "sic": "4900"
+   }
+  }
+ ],
+ "definitions": {
+  "onboarding": "Run by the onboarding command (npm run onboard): it confirms the sources and the governed USL, then runs every DQ rule one at a time (each bounded at 900 s). The screen reads the saved results; no question re-runs them.",
+  "live": "Run live inside a question by compile_usl: only the two rules that finish in a few seconds.",
+  "dq_invalid": "A row whose foreign-key value has no match in the referenced table (for example a SIC code missing from the SIC reference).",
+  "governed": "The USL compiled on the Zetaris instance; compile_usl compares the plan rendered from a run's verified keys against it and compiles nothing when they match."
+ }
+}

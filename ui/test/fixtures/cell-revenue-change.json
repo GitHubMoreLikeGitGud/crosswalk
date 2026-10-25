@@ -1,0 +1,95 @@
+{
+ "fixture": "synthetic: built by ui/test/make_ui_fixtures.ts from the redacted server fixtures",
+ "run_id": "r20261025T14571773a0",
+ "cell": "0000004904.revenue_change",
+ "kind": "answer",
+ "subject": "AMERICAN ELECTRIC POWER CO INC (AEP)",
+ "field": "revenue_change",
+ "label": "Revenue change CY2024Q1 to CY2025Q1",
+ "value": 0.040000000000000036,
+ "derivation": "current / previous - 1, computed only when the first available tag is the same in both quarters.",
+ "statements": [
+  {
+   "evidence_id": "ev-r20261025T14571773a0-70",
+   "template": "answer_revenue",
+   "params": {
+    "period": "CY2025Q1",
+    "cik_list": "0000004904,0001326160,0001002910,0000715957,0000827052,0001711269,0001031296,0001021635,0001004980,0000784977,0000922224,0001032208"
+   },
+   "sql": "SELECT cik, xbrl_tag, val, accn FROM (SELECT cik, xbrl_tag, val, accn, ROW_NUMBER() OVER (PARTITION BY cik ORDER BY pri) AS rn FROM (SELECT LPAD(CAST(cik AS STRING), 10, '0') AS cik, 'Revenues' AS xbrl_tag, CAST(val AS DOUBLE) AS val, accn, 1 AS pri FROM cw.frames_Revenues_CY2025Q1 UNION ALL SELECT LPAD(CAST(cik AS STRING), 10, '0') AS cik, 'RevenueFromContractWithCustomerExcludingAssessedTax' AS xbrl_tag, CAST(val AS DOUBLE) AS val, accn, 2 AS pri FROM cw.frames_RevenueFromContractWithCustomerExcludingAssessedTax_CY2025Q1 UNION ALL SELECT LPAD(CAST(cik AS STRING), 10, '0') AS cik, 'RegulatedAndUnregulatedOperatingRevenue' AS xbrl_tag, CAST(val AS DOUBLE) AS val, accn, 3 AS pri FROM cw.frames_RegulatedAndUnregulatedOperatingRevenue_CY2025Q1) u WHERE u.cik IN ('0000004904', '0001326160', '0001002910', '0000715957', '0000827052', '0001711269', '0001031296', '0001021635', '0001004980', '0000784977', '0000922224', '0001032208')) r WHERE rn = 1 ORDER BY cik",
+   "sql_sha256": "75b395f139fa97f98051d7c0b64ffde1b2565845ce4986841e02960b9e355210",
+   "zetaris_object": "cw.frames_Revenues_CY2025Q1",
+   "zetaris_objects": [
+    "cw.frames_Revenues_CY2025Q1"
+   ],
+   "source_url": "https://data.sec.gov/api/xbrl/frames/us-gaap/Revenues/USD/CY2025Q1.json",
+   "licence": "SEC EDGAR (US government work, public domain); fair-access policy: at most 10 requests per second with a declared User-Agent; queried live, never redistributed",
+   "columns": [
+    "cik",
+    "xbrl_tag",
+    "val",
+    "accn"
+   ],
+   "rows": [
+    [
+     "0000004904",
+     "Revenues",
+     1040000000,
+     "0000000000-26-000001"
+    ]
+   ],
+   "row_count": 12,
+   "rows_in_run": 12,
+   "rows_truncated": false,
+   "elapsed_ms": 506,
+   "executed_at": "2026-10-25T15:03:12+0800",
+   "executed_at_sgt": "2026-10-25 15:03:12 SGT",
+   "cache_state": "hit",
+   "source_cached_at": null,
+   "source_cached_at_sgt": null,
+   "note": "the gateway did not report a cache time for this source; cache_state is the statement's"
+  },
+  {
+   "evidence_id": "ev-r20261025T14571773a0-71",
+   "template": "answer_revenue",
+   "params": {
+    "period": "CY2024Q1",
+    "cik_list": "0000004904,0001326160,0001002910,0000715957,0000827052,0001711269,0001031296,0001021635,0001004980,0000784977,0000922224,0001032208"
+   },
+   "sql": "SELECT cik, xbrl_tag, val, accn FROM (SELECT cik, xbrl_tag, val, accn, ROW_NUMBER() OVER (PARTITION BY cik ORDER BY pri) AS rn FROM (SELECT LPAD(CAST(cik AS STRING), 10, '0') AS cik, 'Revenues' AS xbrl_tag, CAST(val AS DOUBLE) AS val, accn, 1 AS pri FROM cw.frames_Revenues_CY2024Q1 UNION ALL SELECT LPAD(CAST(cik AS STRING), 10, '0') AS cik, 'RevenueFromContractWithCustomerExcludingAssessedTax' AS xbrl_tag, CAST(val AS DOUBLE) AS val, accn, 2 AS pri FROM cw.frames_RevenueFromContractWithCustomerExcludingAssessedTax_CY2024Q1 UNION ALL SELECT LPAD(CAST(cik AS STRING), 10, '0') AS cik, 'RegulatedAndUnregulatedOperatingRevenue' AS xbrl_tag, CAST(val AS DOUBLE) AS val, accn, 3 AS pri FROM cw.frames_RegulatedAndUnregulatedOperatingRevenue_CY2024Q1) u WHERE u.cik IN ('0000004904', '0001326160', '0001002910', '0000715957', '0000827052', '0001711269', '0001031296', '0001021635', '0001004980', '0000784977', '0000922224', '0001032208')) r WHERE rn = 1 ORDER BY cik",
+   "sql_sha256": "58d12c12f12811ecb030884f2405962fdf6f400e06a18cb9581f7c5abf9d6861",
+   "zetaris_object": "cw.frames_Revenues_CY2024Q1",
+   "zetaris_objects": [
+    "cw.frames_Revenues_CY2024Q1"
+   ],
+   "source_url": "https://data.sec.gov/api/xbrl/frames/us-gaap/Revenues/USD/CY2024Q1.json",
+   "licence": "SEC EDGAR (US government work, public domain); fair-access policy: at most 10 requests per second with a declared User-Agent; queried live, never redistributed",
+   "columns": [
+    "cik",
+    "xbrl_tag",
+    "val",
+    "accn"
+   ],
+   "rows": [
+    [
+     "0000004904",
+     "Revenues",
+     1000000000,
+     "0000000000-25-000001"
+    ]
+   ],
+   "row_count": 12,
+   "rows_in_run": 12,
+   "rows_truncated": false,
+   "elapsed_ms": 474,
+   "executed_at": "2026-10-25T15:03:13+0800",
+   "executed_at_sgt": "2026-10-25 15:03:13 SGT",
+   "cache_state": "hit",
+   "source_cached_at": null,
+   "source_cached_at_sgt": null,
+   "note": "the gateway did not report a cache time for this source; cache_state is the statement's"
+  }
+ ],
+ "cell_rows_complete": true,
+ "missing": []
+}
