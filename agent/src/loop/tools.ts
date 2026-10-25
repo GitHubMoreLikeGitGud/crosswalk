@@ -377,7 +377,8 @@ const searchTool = def("search_catalogue", {
     ctx.search = r;
     const ids: string[] = r.provenance.map((p) => statementEvidence(deps, p, `OpenFEMA dataset catalogue: ${r.sources.fema_catalogue ?? 0} datasets (cached cw.fema_catalogue)`, "cw.fema_catalogue").id);
     for (const h of r.hits) {
-      if (h.object && ctx.registered.has(h.object) && !ctx.targets.includes(h.object) && ctx.targets.length < 10) ctx.targets.push(h.object);
+      // GHCN parquet views are filestore reads (6-9 s per statement, about 40 s per probe); the answer's weather template reads them, so they are not probed.
+      if (h.object && ctx.registered.has(h.object) && !ctx.targets.includes(h.object) && !/^cw\.ghcn_/iu.test(h.object) && ctx.targets.length < 10) ctx.targets.push(h.object);
     }
     const negative = r.hits.filter((h) => h.negative);
     const ev = toolEvidence(deps, "search_catalogue", `Catalogue search "${query}": ${r.hits.length} hit(s) over ${r.sources.catalogue} curated, ${r.sources.registered} registered, ${r.sources.fema_catalogue ?? "no"} OpenFEMA${r.sources.getting_started === null ? "" : `, ${r.sources.getting_started} getting-started`} entries; ${negative.length} known_to_fail`, ids, { query, hits: r.hits, sources: r.sources, fema_catalogue_error: r.fema_catalogue_error, targets: ctx.targets });

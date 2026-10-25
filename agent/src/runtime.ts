@@ -193,7 +193,8 @@ async function declarationsOf(gateway: GatewayClient, quarter: string): Promise<
 export async function ask(rt: Runtime, req: AskRequest, origin: { source: "cli" | "server"; note?: string } = { source: "cli" }): Promise<AskOutcome> {
   const seed = req.noSeed ? null : await seedMemory(rt.hmem, { log: () => {} });
   const evidence = new EvidenceStore(req.runId);
-  const mode = req.mode ?? "warm";
+  // Cold when asked, or when no VERIFIED key is remembered yet; warm otherwise.
+  const mode = req.mode ?? (rt.hmem.keyRecords().some((k) => k.record.verdict === "VERIFIED") ? "warm" : "cold");
   const keyMemory = keyMemoryPort(rt.hmem, evidence.runId, { recall: mode === "warm", evidence });
   const deps: ToolDeps = { gateway: rt.gateway, ollama: rt.ollama, evidence, seeds: rt.seeds, registrar: rt.registrar, keyMemory, weather: true, dqFile: DQ_FILE, log: rt.log };
   const question = req.question ?? demoQuestion(req.quarter);

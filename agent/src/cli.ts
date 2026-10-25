@@ -151,10 +151,10 @@ async function cmdAsk(flags: Record<string, string | boolean>): Promise<number> 
   validateParam("fema_quarter", quarter);
   const think = flags.think === "off" ? false : flags.think === "on" ? true : undefined;
   const ollama = flags["no-model"] ? null : new OllamaClient({ baseUrl: cfg.ollamaUrl, model: cfg.model });
-  const mode = flags.cold ? "cold" : "warm";
-  const rt = openRuntime({ command: `ask ${quarter} ${mode}`, ollama });
+  const mode = flags.cold ? "cold" : flags.warm ? "warm" : undefined;
+  const rt = openRuntime({ command: `ask ${quarter} ${mode ?? "auto"}`, ollama });
   try {
-    process.stderr.write(`available RAM ${availableMiB()} MiB; model ${ollama ? ollama.model : "none (deterministic run)"}; mode ${mode}\n`);
+    process.stderr.write(`available RAM ${availableMiB()} MiB; model ${ollama ? ollama.model : "none (deterministic run)"}; mode ${mode ?? "auto (warm when a verified key is remembered)"}\n`);
     const o = await ask(rt, {
       quarter,
       mode,
