@@ -27,6 +27,7 @@ import { baselineProposals, type BaselineChoice, type KeyChoice } from "../tools
 import type { KeyProposal } from "../tools/matchRate.ts";
 import {
   answer as answerTool,
+  answerGate,
   compileUsl,
   loadCatalogueInputs,
   measureKey,
@@ -710,13 +711,19 @@ const answerToolDef = def("answer", {
   checkInput: (input, ctx) => (input.quarter === undefined || input.quarter === ctx.quarter ? [] : [`action.input.quarter ${input.quarter} is not the quarter asked about (${ctx.quarter})`]),
   async run(_input, ctx, deps) {
     const stationsByCik = weatherReady(ctx, deps) ? Object.fromEntries(deps.seeds.utilities.map((u) => [u.cik, u.station_ids])) : null;
-    const r = await timed(ctx, "answer", () => answerTool({ quarter: ctx.quarter }, { gateway: questionPort(deps.gateway), runId: deps.evidence.runId, stationsByCik }));
+    // The answer's joins are gated on this run's join map: the FEMA selection on the FEMA state key, the revenue column on the CIK key.
+    const gate = answerGate(ctx.quarter, ctx.measured);
+    const r = await timed(ctx, "answer", () => answerTool({ quarter: ctx.quarter }, { gateway: questionPort(deps.gateway), runId: deps.evidence.runId, stationsByCik, gate }));
     ctx.answer = r;
     const ids = r.provenance.map((p) => statementEvidence(deps, p, `${p.template} ${JSON.stringify(p.params)}`, p.template === "answer_fema_utilities" ? `cw.fema_declarations_dr_${quarterSlug(ctx.quarter)}` : p.template === "answer_revenue" ? `cw.frames_Revenues_${p.params.period}` : `cw.ghcn_${p.params.year}_tmax`).id);
-    const ev = toolEvidence(deps, "answer", `Answer for ${ctx.quarter}: ${r.rows.length} utilities serve states with major-disaster declarations; revenue compared for ${r.rows.filter((x) => x.revenue?.change !== null && x.revenue?.change !== undefined).length}; weather ${r.weather_status}`, ids, { answer: r });
+    const gateText = `Gate: ${gate.fema.note}; ${gate.revenue.note}`;
+    const claim = gate.fema.ok
+      ? `Answer for ${ctx.quarter}: ${r.rows.length} utilities serve states with major-disaster declarations; revenue compared for ${r.rows.filter((x) => x.revenue?.change !== null && x.revenue?.change !== undefined).length}; weather ${r.weather_status}. ${gateText}`
+      : `Answer for ${ctx.quarter} withheld by the join map. ${gateText}`;
+    const ev = toolEvidence(deps, "answer", claim, ids, { answer: r });
     ids.push(ev.id);
     ctx.card.push({ text: ev.claim, evidenceIds: [ev.id] });
-    ctx.checklist.set("answered", "done", r.rows.length ? null : "no utility serves a declared state", ids);
+    ctx.checklist.set("answered", "done", !gate.fema.ok ? gate.fema.note : r.rows.length ? null : "no utility serves a declared state", ids);
     const lines = r.rows.slice(0, 15).map((x) => `${x.name}${x.ticker ? ` (${x.ticker})` : ""}: ${x.declarations} declaration(s) in ${x.states.map((s) => s.state).join(", ")}; revenue ${x.revenue?.change === null || x.revenue?.change === undefined ? x.revenue_note ?? x.revenue?.note ?? "n/a" : `${pct(x.revenue.change)} under ${x.revenue.tag}`}`);
     return { ok: true, evidenceIds: ids, fact: fact(`answer: ${r.rows.length} utilities; weather ${r.weather_status}`, [ev.id]), digest: digest("answer", lines) };
   },
@@ -725,7 +732,10 @@ const answerToolDef = def("answer", {
 function notTestedFor(ctx: QuestionContext, deps: ToolDeps): string[] {
   const measured = ctx.answer?.weather_status === "measured";
   const base = notTested({ weather: true });
-  return measured ? base : [...base, weatherGap(ctx, deps)];
+  const gate = ctx.answer?.gate;
+  const gated = gate ? [gate.fema, gate.revenue].filter((g) => !g.ok).map((g) => `${g.note}.`) : [];
+  if (gate && !gate.fema.ok) return [...base, ...gated];
+  return measured ? [...base, ...gated] : [...base, ...gated, weatherGap(ctx, deps)];
 }
 
 const notTestedTool = def("not_tested", {

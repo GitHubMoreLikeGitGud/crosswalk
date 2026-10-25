@@ -1130,6 +1130,43 @@ export interface AnswerResult {
   weather_status: "measured" | "not_tested";
   provenance: Provenance[];
   elapsed_ms: number;
+  /** The join-map checks the answer was gated on (absent in runs saved before the gate). */
+  gate?: AnswerGate | null;
+}
+
+/** One join the answer depends on, checked against this run's join map (a key measured in this run, or recalled as VERIFIED). */
+export interface AnswerGateCheck {
+  key: string;
+  need: "VERIFIED" | "PARTIAL or better";
+  verdict: Verdict | null;
+  matched_rows: number | null;
+  left_rows: number | null;
+  recalled: boolean;
+  ok: boolean;
+  note: string;
+}
+
+/** The FEMA selection needs the FEMA state key at PARTIAL or better (PARTIAL is used with care); the revenue column needs the CIK key VERIFIED. */
+export interface AnswerGate {
+  fema: AnswerGateCheck;
+  revenue: AnswerGateCheck;
+}
+
+export function answerGate(quarter: string, measured: ReadonlyMap<string, MeasureResult>): AnswerGate {
+  const check = (route: "fema_state" | "cik", need: AnswerGateCheck["need"], what: string): AnswerGateCheck => {
+    const key = `${route}@${quarter}`;
+    const m = measured.get(key);
+    const verdict = m && m.status === "measured" ? m.verdict : null;
+    const ok = verdict === "VERIFIED" || (need === "PARTIAL or better" && verdict === "PARTIAL");
+    const counts = m && m.matched_rows !== null && m.left_rows !== null ? ` (${m.matched_rows} of ${m.left_rows})` : "";
+    const recalled = !!m?.from_memory;
+    const state = verdict ? `${verdict}${counts}${recalled ? ", recalled from memory" : ""}` : "not measured in this run";
+    const note = ok
+      ? `${what}: key ${key} ${state}${verdict === "PARTIAL" ? "; usable with care" : ""}`
+      : `${what} withheld: key ${key} is ${state}, and the answer needs it ${need}`;
+    return { key, need, verdict, matched_rows: m?.matched_rows ?? null, left_rows: m?.left_rows ?? null, recalled, ok, note };
+  };
+  return { fema: check("fema_state", "PARTIAL or better", "FEMA selection"), revenue: check("cik", "VERIFIED", "Revenue column") };
 }
 
 const FEMA_BASE_COLUMNS = new Set(["cik", "name", "ticker", "state", "declarations"]);
@@ -1202,12 +1239,14 @@ export function weatherCell(stations: readonly string[], current: Record<string,
   return { cell: { stations: used, tdd_current: mc, tdd_previous: mp, change: mc / mp - 1 }, note: null };
 }
 
-export async function answer(params: { quarter: string }, opts: { gateway: TemplatePort; runId: string; stationsByCik?: Record<string, string[]> | null }): Promise<AnswerResult> {
+export async function answer(params: { quarter: string }, opts: { gateway: TemplatePort; runId: string; stationsByCik?: Record<string, string[]> | null; gate?: AnswerGate | null }): Promise<AnswerResult> {
   const t0 = performance.now();
   const quarter = params.quarter;
   quarterSlug(quarter);
   const previous = previousYear(quarter);
   const provenance: Provenance[] = [];
+  const gate = opts.gate ?? null;
+  if (gate && !gate.fema.ok) return { quarter, previous, rows: [], weather_status: "not_tested", provenance, elapsed_ms: Math.round(performance.now() - t0), gate };
   const f = await call(opts.gateway, opts.runId, "answer_fema_utilities", { quarter });
   provenance.push(f.prov);
   const grouped = groupFemaRows(f.rows);
@@ -1216,7 +1255,8 @@ export async function answer(params: { quarter: string }, opts: { gateway: Templ
   let curProv: Provenance | null = null;
   let prevProv: Provenance | null = null;
   const qn = QUARTER_RE.exec(quarter)![2];
-  if (ciks.length && qn !== "4") {
+  const revenueGated = !!gate && !gate.revenue.ok;
+  if (ciks.length && qn !== "4" && !revenueGated) {
     const cikList = ciks.join(",");
     const c = await call(opts.gateway, opts.runId, "answer_revenue", { period: quarter, cik_list: cikList });
     const p = await call(opts.gateway, opts.runId, "answer_revenue", { period: previous, cik_list: cikList });
@@ -1243,7 +1283,7 @@ export async function answer(params: { quarter: string }, opts: { gateway: Templ
   }
   const rows: AnswerRow[] = grouped.map((g) => {
     const rv = revenue.get(g.cik) ?? {};
-    const { cell, note } = qn === "4" ? { cell: null, note: "the frames API has no three-month fourth-quarter frame" } : revenueCell(rv.cur, rv.prev);
+    const { cell, note } = qn === "4" ? { cell: null, note: "the frames API has no three-month fourth-quarter frame" } : revenueGated ? { cell: null, note: gate!.revenue.note } : revenueCell(rv.cur, rv.prev);
     const w = weatherStatus === "measured" ? weatherCell(opts.stationsByCik![g.cik] ?? [], weatherRows.cur, weatherRows.prev) : { cell: null, note: "not tested" };
     return {
       ...g,
@@ -1254,7 +1294,7 @@ export async function answer(params: { quarter: string }, opts: { gateway: Templ
       provenance: { declarations: f.prov, revenue_current: rv.cur ? curProv : null, revenue_previous: rv.prev ? prevProv : null, weather: weatherStatus === "measured" ? weatherRows.prov : [] },
     };
   });
-  return { quarter, previous, rows, weather_status: weatherStatus, provenance, elapsed_ms: Math.round(performance.now() - t0) };
+  return { quarter, previous, rows, weather_status: weatherStatus, provenance, elapsed_ms: Math.round(performance.now() - t0), ...(gate ? { gate } : {}) };
 }
 
 // ---------- not_tested ----------
