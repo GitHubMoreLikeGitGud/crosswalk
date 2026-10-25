@@ -266,6 +266,13 @@ def test_joinmap_templates_measure_distinct_left_keys_over_cached_views():
         params = {name: SAMPLES[kind] for name, kind in templates.TEMPLATES[tid].params.items()}
         sql = render(tid, params)[1]
         assert sql.endswith("LIMIT 10") and "IS NULL" in sql
+    _, ctl = render("joinmap_cik_control", {"period": "CY2025Q1"})
+    assert ctl.count("CAST(cik AS STRING) AS k") == 3 and "LPAD" not in ctl and ctl.count("cw.seed_utilities") == 1
+    _, fips = render("joinmap_fema_fips", {"quarter": "CY2024Q1"})
+    assert "SELECT DISTINCT fips_state_code AS k FROM cw.fema_declarations_dr_2024q1) l" in fips
+    assert "LEFT JOIN (SELECT DISTINCT fips AS k FROM cw.states) r ON r.k = l.k" in fips
+    for tid in ("joinmap_cik_control", "joinmap_fema_fips"):
+        assert templates.TEMPLATES[tid].role == "reader" and "CW_" not in templates.TEMPLATES[tid].sql
     # a view is referenced once per statement (a second reference to cw.seed_utilities fails to resolve on 2.4.3.1)
     assert render("joinmap_cik_orphans", {"period": "CY2025Q1"})[1].count("cw.seed_utilities") == 1
     for tid in ("joinmap_cik", "joinmap_loc", "joinmap_fema_state", "joinmap_station", "joinmap_sic"):

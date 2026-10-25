@@ -153,9 +153,11 @@ export const TEMPLATE_PARAMS: Record<string, Record<string, ParamKind>> = {
   // The join map (zetaris/sql/06_cw_joinmap_select.sql): left_keys and matched_keys per key, plus orphan samples.
   joinmap_cik: { period: "period" },
   joinmap_cik_orphans: { period: "period" },
+  joinmap_cik_control: { period: "period" },
   joinmap_loc: { period: "period" },
   joinmap_fema_state: { quarter: "fema_quarter" },
   joinmap_fema_state_orphans: { quarter: "fema_quarter" },
+  joinmap_fema_fips: { quarter: "fema_quarter" },
   joinmap_station: {},
   joinmap_sic: {},
   joinmap_sic_orphans: {},

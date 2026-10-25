@@ -283,6 +283,9 @@ _NONE = {}
 _FRAMES_CIKS = " UNION ".join(
     f"SELECT DISTINCT LPAD(CAST(cik AS STRING), 10, '0') AS k FROM cw.frames_{t}_{{period}}"
     for t in ("Revenues", "RevenueFromContractWithCustomerExcludingAssessedTax", "RegulatedAndUnregulatedOperatingRevenue"))
+_FRAMES_CIKS_NO_LPAD = " UNION ".join(
+    f"SELECT DISTINCT CAST(cik AS STRING) AS k FROM cw.frames_{t}_{{period}}"
+    for t in ("Revenues", "RevenueFromContractWithCustomerExcludingAssessedTax", "RegulatedAndUnregulatedOperatingRevenue"))
 _FRAMES_LOCS = " UNION ".join(
     f"SELECT DISTINCT LPAD(CAST(cik AS STRING), 10, '0') AS cik, loc, SUBSTR(loc, 4, 2) AS loc_state FROM cw.frames_{t}_{{period}}"
     for t in ("Revenues", "RevenueFromContractWithCustomerExcludingAssessedTax", "RegulatedAndUnregulatedOperatingRevenue"))
@@ -420,6 +423,9 @@ TEMPLATES: dict[str, Template] = {
            f"WHERE r.k IS NULL ORDER BY u.cik LIMIT 10",
            {"period": "period"}, (SEED_UTILITIES_VIEW,) + _FRAMES_VIEWS_OF_PERIOD, (SEED_UTILITIES_VIEW,) + _FRAMES_VIEWS_OF_PERIOD,
            "Key (a) orphans: seed filers with no fact in the period under any of the three tags."),
+        _t("joinmap_cik_control", f"{_MATCH} FROM (SELECT DISTINCT cik AS k FROM {SEED_UTILITIES_VIEW}) l LEFT JOIN ({_FRAMES_CIKS_NO_LPAD}) r ON r.k = l.k",
+           {"period": "period"}, (SEED_UTILITIES_VIEW,) + _FRAMES_VIEWS_OF_PERIOD, (SEED_UTILITIES_VIEW,) + _FRAMES_VIEWS_OF_PERIOD,
+           "Key (a) control: the same pair under identity (CAST(cik AS STRING), no LPAD); the integer cik never equals the zero-padded string."),
         _t("joinmap_loc", f"SELECT COUNT(DISTINCT l.cik) AS left_keys, COUNT(DISTINCT CASE WHEN l.loc_state = r.hq_state THEN l.cik END) AS matched_keys "
            f"FROM ({_FRAMES_LOCS}) l JOIN {SEED_UTILITIES_VIEW} r ON r.cik = l.cik",
            {"period": "period"}, (SEED_UTILITIES_VIEW,) + _FRAMES_VIEWS_OF_PERIOD, (SEED_UTILITIES_VIEW,) + _FRAMES_VIEWS_OF_PERIOD,
@@ -432,6 +438,10 @@ TEMPLATES: dict[str, Template] = {
            f"LEFT JOIN (SELECT DISTINCT state AS k FROM {UTILITY_STATES_VIEW}) r ON r.k = l.k WHERE r.k IS NULL ORDER BY l.k LIMIT 10",
            {"quarter": "fema_quarter"}, (FEMA_VIEW, UTILITY_STATES_VIEW), (FEMA_VIEW, UTILITY_STATES_VIEW),
            "Key (c) orphans: FEMA states no seed utility serves."),
+        _t("joinmap_fema_fips", f"{_MATCH} FROM (SELECT DISTINCT fips_state_code AS k FROM {FEMA_VIEW}) l "
+           f"LEFT JOIN (SELECT DISTINCT fips AS k FROM {STATES_VIEW}) r ON r.k = l.k",
+           {"quarter": "fema_quarter"}, (FEMA_VIEW, STATES_VIEW), (FEMA_VIEW, STATES_VIEW),
+           "Key (c, FIPS): FEMA fipsStateCode vs the state reference FIPS (two-digit strings) under identity."),
         _t("joinmap_station", f"SELECT COUNT(DISTINCT l.k) AS left_keys, COUNT(DISTINCT CASE WHEN r.id IS NOT NULL THEN l.k END) AS matched_keys, "
            f"COUNT(DISTINCT CASE WHEN r.state = l.state THEN l.k END) AS state_equal "
            f"FROM (SELECT DISTINCT id AS k, state FROM {SEED_STATIONS_VIEW}) l LEFT JOIN {STATIONS_VIEW} r ON r.id = l.k",
