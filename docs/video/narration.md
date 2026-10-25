@@ -42,7 +42,7 @@ Spoken by a synthetic text-to-speech voice. Times are the start of each line in 
 
 **3:07.4** On the same probes, the baseline verified 25 of 30 proposals, and the model verified 3 of 11. The baseline wins. By hand, an expert verified the five keys in 179.5 seconds, faster, but with 24 decisions. The agent asks for none.
 
-**3:24.9** Crosswalk. Every key measured before anything uses it.
+**3:24.7** Crosswalk. Every key measured before anything uses it.
 
 ## Where each spoken number comes from
 

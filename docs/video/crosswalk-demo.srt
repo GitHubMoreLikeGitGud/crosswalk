@@ -223,9 +223,9 @@ faster, but with 24 decisions.
 The agent asks for none.
 
 57
-00:03:24,900 --> 00:03:25,500
+00:03:24,733 --> 00:03:25,333
 Crosswalk.
 
 58
-00:03:25,700 --> 00:03:28,010
+00:03:25,533 --> 00:03:27,843
 Every key measured before anything uses it.
