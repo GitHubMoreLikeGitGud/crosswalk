@@ -1,17 +1,17 @@
 1
-00:00:00,300 --> 00:00:02,800
+00:00:00,300 --> 00:00:02,120
 One question, three agencies:
 
 2
-00:00:02,820 --> 00:00:04,880
+00:00:02,700 --> 00:00:04,480
 which utilities served states with FEMA
 
 3
-00:00:04,900 --> 00:00:07,260
+00:00:04,500 --> 00:00:07,980
 major-disaster declarations in Q1 2025,
 
 4
-00:00:07,280 --> 00:00:11,190
+00:00:08,600 --> 00:00:11,190
 what did the weather do, and did revenue hold up?
 
 5
@@ -95,7 +95,7 @@ Alaska is the orphan.
 The control, without the padding, matches none: rejected.
 
 25
-00:01:27,420 --> 00:01:30,600
+00:01:26,830 --> 00:01:30,600
 compile_usl renders the semantic layer from the verified keys.
 
 26
