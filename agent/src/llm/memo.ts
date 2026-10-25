@@ -1,4 +1,4 @@
-// The memo job (SPEC 2 step 12): Nemotron writes 150-250 words from the numbers the tools
+// The note job (finalize): Nemotron writes 150-250 words from the numbers the tools
 // computed, think off, JSON output. The host checks every number in the draft by string
 // match against the allowed numbers (the formatted tool outputs): a draft with any other
 // number is rejected and the model gets one retry that names the rejected numbers; a
@@ -19,19 +19,16 @@ export interface AllowedNumber {
 }
 
 export interface MemoInput {
-  utility: string;
-  cik: string;
-  period: string;
-  claim: string;
-  verdict: string;
-  confidence: string;
+  /** The question as asked (data, fenced in the request). */
+  question: string;
+  quarter: string;
+  /** One line naming the DQ result (onboarding rules and the two live rules). */
   dq: string;
-  /** Lines the model explains, each naming its number(s) exactly as in `allowed`. */
+  /** Lines the model explains, each naming its number(s) exactly as in `allowed`: join map verdicts with orphans, the DQ result, the answer. */
   findings: string[];
   notTested: string[];
   allowed: AllowedNumber[];
 }
-
 export interface MemoAttempt {
   attempt: number;
   ok: boolean;
@@ -90,10 +87,10 @@ export function unknownNumbers(memo: string, allowed: readonly AllowedNumber[]):
 /** Deterministic fallback: the same findings as prose, every number from the allowed list. */
 export function templateMemo(m: MemoInput): string {
   const paras = [
-    `Crosswalk checked ${m.utility}'s ${m.period} revenue change against management's claim of "${m.claim}". ${m.findings[0] ?? ""}`.trim(),
-    m.findings.slice(1, 4).join(" "),
-    m.findings.slice(4).join(" "),
-    `Verdict: the claim is ${m.verdict}; confidence ${m.confidence}; data-quality gate ${m.dq}. Not tested: ${m.notTested.join("; ")}.`,
+    `Crosswalk answered the ${m.quarter} question by discovering how the sources join before reading them. ${m.findings[0] ?? ""}`.trim(),
+    m.findings.slice(1, 5).join(" "),
+    m.findings.slice(5).join(" "),
+    `Data quality: ${m.dq}. Not tested: ${m.notTested.join("; ")}.`,
   ];
   return paras.filter((p) => p.trim().length > 0).join("\n\n");
 }
@@ -101,14 +98,13 @@ export function templateMemo(m: MemoInput): string {
 function requestText(m: MemoInput, feedback: string | null): string {
   const allowed = m.allowed.map((a) => `- ${a.label}: ${a.text}`).join("\n");
   return [
-    `Utility: ${fenceUntrusted(m.utility)} (CIK ${m.cik}), period ${m.period}.`,
-    `Management's claim: ${fenceUntrusted(m.claim)}`,
-    `Verdict (fixed, do not change): ${m.verdict}. Confidence label: ${m.confidence}. DQ gate: ${m.dq}.`,
+    `Question (${m.quarter}): ${fenceUntrusted(m.question)}`,
+    `DQ result (fixed, do not change): ${m.dq}`,
     `FINDINGS (explain these):\n${m.findings.map((f) => `- ${f}`).join("\n")}`,
     `ALLOWED NUMBERS (the only numbers you may write, copied exactly):\n${allowed}`,
     `NOT TESTED:\n${m.notTested.map((n) => `- ${n}`).join("\n")}`,
     feedback,
-    `Write the memo now as {"memo": "..."}: at least ${MEMO_WORDS.min + 20} words and at most ${MEMO_WORDS.max} words, one paragraph each for the revenue change and the weather, the peer sensitivity and the three parts with their ranges, the verdict with the confidence label and the DQ gate, and what was not tested.`,
+    `Write the note now as {"memo": "..."}: at least ${MEMO_WORDS.min + 20} words and at most ${MEMO_WORDS.max} words: one paragraph on the join map (each key's verdict and its orphans; a REJECTED, PARTIAL or orphan result is a finding, not a failure), one on the answer, one on the DQ result, and one sentence on what was not tested.`,
   ]
     .filter((x): x is string => x !== null)
     .join("\n\n");
@@ -157,7 +153,7 @@ export async function writeMemo(ollama: OllamaClient | null, input: MemoInput, o
       "Your previous draft was rejected:",
       ...(parseError ? [`- it was not valid JSON (${parseError})`] : []),
       ...schemaErrors.map((e) => `- ${e}`),
-      ...(memo && words < MEMO_WORDS.min ? [`- it had ${words} words; write at least ${MEMO_WORDS.min + 20} words this time, adding a paragraph on the industry-wide part and the remainder with their ranges and one on what was not tested, with the same numbers.`] : []),
+      ...(memo && words < MEMO_WORDS.min ? [`- it had ${words} words; write at least ${MEMO_WORDS.min + 20} words this time, adding a paragraph on the join map orphans and one on what was not tested, with the same numbers.`] : []),
       ...(memo && words > MEMO_WORDS.max ? [`- it had ${words} words; cut it to at most ${MEMO_WORDS.max} words.`] : []),
       ...(unknown.length ? [`- it contained numbers that are not in the ALLOWED NUMBERS list: ${unknown.join(", ")}. Remove them or replace them with listed numbers.`] : []),
     ].join("\n");

@@ -4,13 +4,9 @@ import { OllamaClient } from "../src/llm/ollama.ts";
 import { wordCount } from "../src/llm/schemas.ts";
 
 const input: MemoInput = {
-  utility: "Target Electric Corp",
-  cik: "0000000001",
-  period: "CY2025Q1",
-  claim: "colder weather",
-  verdict: "supported",
-  confidence: "high",
-  dq: "pass",
+  question: "Which utilities served states with declarations?",
+  quarter: "CY2025Q1",
+  dq: "MGE Energy is the one invalid row",
   findings: ["Revenue rose from 1,000.0 million to 1,150.0 million, a like-for-like change of +15.0%.", "The weather part is +9.0% [+2.0%, +14.0%]."],
   notTested: ["Fuel-cost pass-through inside revenue", "Rate cases"],
   allowed: [
@@ -56,7 +52,7 @@ describe("memo number check", () => {
   it("writes the template memo from the findings with the allowed numbers only", () => {
     const t = templateMemo(input);
     expect(unknownNumbers(t, input.allowed)).toEqual([]);
-    expect(t).toContain("supported");
+    expect(t).toContain("Data quality");
     expect(t).toContain("Not tested");
   });
 });
@@ -135,7 +131,7 @@ describe("writeMemo", () => {
       expect(r.attempts[0]!.ok).toBe(false);
       expect(r.attempts[0]!.schemaErrors[0]).toBe("memo: 99 words, wanted 100 to 250");
       expect(r.attempts[0]!.unknownNumbers).toEqual([]);
-      expect(seen[1]).toContain("it had 99 words; write at least 170 words this time, adding a paragraph on the industry-wide part and the remainder with their ranges and one on what was not tested, with the same numbers.");
+      expect(seen[1]).toContain("it had 99 words; write at least 170 words this time, adding a paragraph on the join map orphans and one on what was not tested, with the same numbers.");
       expect(r.attempts[1]!.ok).toBe(true);
       expect(r.wordCount).toBe(100);
     });
