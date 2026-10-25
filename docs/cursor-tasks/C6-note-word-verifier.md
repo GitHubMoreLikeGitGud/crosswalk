@@ -115,3 +115,9 @@ Calling the model, the retry loop and the choice between the draft and the templ
 `C6: note word verifier (Cursor Agent)`
 
 Do not commit; leave the changes in the working tree.
+
+## Run record
+
+- Run 2026-10-25 15:24:17 SGT, Cursor Agent CLI (model Auto): 148 s wall, exit 0, no commit (as asked), only the two deliverables added. Cursor reported `npx vitest run note-check` 39 passed and `npx tsc --noEmit` clean.
+- Reviewed by hand against this file (sentence split, number tokens and the `of` skip, the three checks with their attachment rules, the order, the feedback lines, the cap); checks re-run: 39 passed. Committed unchanged as `965f892` (`C6: note word verifier (Cursor Agent)`). No correction was needed.
+- Used by the host: `agent/src/llm/memo.ts` rejects a draft whose words contradict the run's facts, gives the model one repair with `repairFeedback`, then falls back to the template capped with `capWords`; `agent/src/loop/tools.ts` (`noteFacts`) builds the facts from the join map and the answer.
