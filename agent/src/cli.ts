@@ -145,9 +145,10 @@ function evidenceLines(e: EvidenceRecord): string[] {
 
 const availableMiB = () => Math.round(os.freemem() / 1048576);
 
-async function cmdAsk(flags: Record<string, string | boolean>): Promise<number> {
+async function cmdAsk(flags: Record<string, string | boolean>, positional: string[] = []): Promise<number> {
   const cfg = loadConfig();
-  const quarter = String(flags.quarter ?? "CY2025Q1");
+  // `npm run ask -- --quarter CY2024Q1`; a shell that eats the `--` leaves the quarter positional.
+  const quarter = String(typeof flags.quarter === "string" ? flags.quarter : positional.find((p) => /^CY\d{4}Q[1-4]$/u.test(p)) ?? "CY2025Q1");
   validateParam("fema_quarter", quarter);
   const think = flags.think === "off" ? false : flags.think === "on" ? true : undefined;
   const ollama = flags["no-model"] ? null : new OllamaClient({ baseUrl: cfg.ollamaUrl, model: cfg.model });
@@ -263,7 +264,7 @@ async function main(): Promise<number> {
   const { cmd, positional, flags } = parseArgs(process.argv.slice(2));
   switch (cmd) {
     case "ask":
-      return cmdAsk(flags);
+      return cmdAsk(flags, positional);
     case "onboard":
       return cmdOnboard(flags);
     case "replay":
