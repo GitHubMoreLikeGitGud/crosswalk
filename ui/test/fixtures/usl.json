@@ -511,8 +511,8 @@
  "live_rules": {
   "source": "compile_usl in run r20261025T14571773a0",
   "run_id": "r20261025T14571773a0",
-  "at": "2026-10-25T06:57:17.802Z",
-  "at_sgt": "2026-10-25 14:57:17 SGT",
+  "at": "2026-10-25T15:03:05+0800",
+  "at_sgt": "2026-10-25 15:03:05 SGT",
   "status": "matches_governed",
   "note": "the plan rendered from this run's verified keys equals the governed lightning.metastore.crosswalk.crosswalk_usl; nothing to compile",
   "rules": [
