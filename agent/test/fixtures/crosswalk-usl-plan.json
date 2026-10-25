@@ -313,9 +313,9 @@
     ],
     "ddl_statement_count_rule": "one statement: the CREATE TABLE parts are separated by ';' inside the DDL and the text has no trailing ';'",
     "description_statements": [
-      "UPDATE USL crosswalk_usl NAMESPACE lightning.metastore.crosswalk SET TABLE DESCRIPTION state The 50 states and DC with FIPS codes (seeds/states.json)",
-      "UPDATE USL crosswalk_usl NAMESPACE lightning.metastore.crosswalk SET COLUMN DESCRIPTION state.code USPS two-letter code",
-      "UPDATE USL crosswalk_usl NAMESPACE lightning.metastore.crosswalk SET COLUMN DESCRIPTION state.fips two-digit FIPS state code"
+      "UPDATE USL lightning.metastore.crosswalk.crosswalk_usl.state SET TABLE DESCRIPTION The 50 states and DC with FIPS codes (seeds/states.json)",
+      "UPDATE USL lightning.metastore.crosswalk.crosswalk_usl.state.code SET COLUMN DESCRIPTION USPS two-letter code",
+      "UPDATE USL lightning.metastore.crosswalk.crosswalk_usl.state.fips SET COLUMN DESCRIPTION two-digit FIPS state code"
     ],
     "description_rule": "unquoted text, no semicolon, no apostrophe (an apostrophe is dropped, a semicolon becomes a comma)"
   },

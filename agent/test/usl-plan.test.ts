@@ -165,4 +165,30 @@ describe("renderDescriptions and cleanDescription", () => {
     expect(stmts.slice(0, 3)).toEqual(fixture.expected.description_statements);
     expect(cleanDescription("It's a test; really  ")).toBe("Its a test, really");
   });
+
+  it("addresses the object by its dotted path, the grammar that compiled on 2.4.3.1", () => {
+    const plan = validatePlan(fixture.plan);
+    const stmts = renderDescriptions(plan);
+    expect(stmts[0]).toMatch(
+      /^UPDATE USL lightning\.metastore\.crosswalk\.crosswalk_usl\.state SET TABLE DESCRIPTION /,
+    );
+    expect(stmts[1]).toMatch(
+      /^UPDATE USL lightning\.metastore\.crosswalk\.crosswalk_usl\.state\.code SET COLUMN DESCRIPTION /,
+    );
+    for (const s of stmts) {
+      expect(s).not.toContain(" NAMESPACE ");
+      expect(s).not.toContain(";");
+      expect(s).not.toContain("'");
+    }
+  });
+
+  it("renders a model-level description first when the plan carries one", () => {
+    const input = { ...(fixture.plan as object), description: "Crosswalk's model; v1" };
+    const stmts = renderDescriptions(validatePlan(input));
+    expect(stmts[0]).toBe(
+      "UPDATE USL lightning.metastore.crosswalk.crosswalk_usl SET DESCRIPTION Crosswalks model, v1",
+    );
+    expect(stmts.slice(1, 4)).toEqual(fixture.expected.description_statements);
+    expect(validatePlan(fixture.plan).description).toBeUndefined();
+  });
 });

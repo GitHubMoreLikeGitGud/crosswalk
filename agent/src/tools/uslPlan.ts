@@ -57,6 +57,7 @@ export interface UslFk {
 export interface UslPlan {
   usl: string;
   namespace: string;
+  description?: string;
   tables: UslTable[];
   fks: UslFk[];
 }
@@ -262,12 +263,11 @@ export function validatePlan(input: unknown): UslPlan {
     outFks.push(fk);
   }
 
-  return deepFreeze({
-    usl,
-    namespace,
-    tables: outTables,
-    fks: outFks,
-  });
+  const plan: UslPlan = { usl, namespace, tables: outTables, fks: outFks };
+  if (typeof input.description === "string") {
+    plan.description = input.description;
+  }
+  return deepFreeze(plan);
 }
 
 function fksForTable(plan: UslPlan, tableName: string): Map<string, UslFk> {
@@ -327,19 +327,28 @@ export function cleanDescription(text: string): string {
     .trim();
 }
 
+/**
+ * The grammar Zetaris 2.4.3.1 accepted live (sister entry's 05_won_usl_create.sql): the
+ * object is addressed by its dotted path namespace.usl[.table[.column]], then SET
+ * [TABLE | COLUMN] DESCRIPTION and the unquoted text. "<usl> NAMESPACE <ns>" is LOAD USL's
+ * grammar, not UPDATE USL's.
+ */
 export function renderDescriptions(plan: UslPlan): string[] {
   const out: string[] = [];
-  const prefix = `UPDATE USL ${plan.usl} NAMESPACE ${plan.namespace}`;
+  const model = `${plan.namespace}.${plan.usl}`;
+  if (plan.description !== undefined) {
+    out.push(`UPDATE USL ${model} SET DESCRIPTION ${cleanDescription(plan.description)}`);
+  }
   for (const table of plan.tables) {
     if (table.description !== undefined) {
       out.push(
-        `${prefix} SET TABLE DESCRIPTION ${table.name} ${cleanDescription(table.description)}`,
+        `UPDATE USL ${model}.${table.name} SET TABLE DESCRIPTION ${cleanDescription(table.description)}`,
       );
     }
     for (const col of table.columns) {
       if (col.description !== undefined) {
         out.push(
-          `${prefix} SET COLUMN DESCRIPTION ${table.name}.${col.name} ${cleanDescription(col.description)}`,
+          `UPDATE USL ${model}.${table.name}.${col.name} SET COLUMN DESCRIPTION ${cleanDescription(col.description)}`,
         );
       }
     }

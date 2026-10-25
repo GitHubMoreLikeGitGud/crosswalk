@@ -7,6 +7,7 @@
     "test/recast.test.ts",
     "test/frames.test.ts",
     "test/transforms.test.ts",
-    "test/match-rate.test.ts"
+    "test/match-rate.test.ts",
+    "test/usl-plan.test.ts"
   ]
 }
