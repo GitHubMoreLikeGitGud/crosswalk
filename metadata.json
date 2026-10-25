@@ -92,7 +92,7 @@
     {"name": "Zetaris getting-started repository (manifest and known_to_fail notes)", "licence": "Apache-2.0", "attribution": "Zetaris", "access": "read at boot when ZETARIS_GETTING_STARTED_DIR is set; nothing redistributed"}
   ],
   "pre_existing_code": [
-    "Meterless reference engines H-MEM, Markovian and World Model (Apache-2.0), vendored unchanged in engines/: 60 files, 13,189 lines",
+    "Meterless reference engines H-MEM, Markovian and World Model (Apache-2.0), vendored unchanged in engines/: 60 files, 13,189 lines (59 files and 13,153 lines of engines plus the vendoring note engines/UPSTREAM.md)",
     "gateway/jdbc.py, adapted from scripts/zetaris_sql.py in the Zetaris getting-started repository (Apache-2.0)",
     "Scaffolding from the author's earlier entries Weather-or-Not (https://github.com/GitHubMoreLikeGitGud/weather-or-not, the starting copy) and ClearShelf (https://github.com/GitHubMoreLikeGitGud/clearshelf), Apache-2.0, same author: the gateway pattern, the agent server and SSE pattern, the Markovian generator and telemetry, the H-MEM facade and World Model wrapper patterns, the evidence store, the contract module and injection guard, the CLI and config, the UI shell, the utility and station seeds. At commit 078f890: 26 files carry the header 'Adapted from Weather-or-Not and ClearShelf' (8,523 lines, 7,698 non-blank); 109 of the 222 tracked files outside engines/ exist at the same path in Weather-or-Not (commit 0a7ea45), holding 28,744 lines of which 21,626 are unchanged, 25 files entirely; zetaris/sql/won-reference/ (14 files, 2,532 lines) is Weather-or-Not's SQL kept as a reference, never run. Commands in README.md, Pre-existing code"
   ]
