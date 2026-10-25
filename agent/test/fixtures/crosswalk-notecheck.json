@@ -1,0 +1,448 @@
+{
+  "synthetic": true,
+  "note": "every utility, ticker, name, count and change is synthetic; expected values computed by this generator from the C6 rules",
+  "max_words": 250,
+  "facts": {
+    "verdicts": {
+      "VERIFIED": 5,
+      "PARTIAL": 1,
+      "REJECTED": 1
+    },
+    "utilities": [
+      {
+        "ticker": "AAA",
+        "name": "Alpha Power Co",
+        "revenue_change": 0.087,
+        "declarations": 2,
+        "states": 2
+      },
+      {
+        "ticker": "BBB",
+        "name": "Bravo Electric Inc",
+        "revenue_change": -0.0655,
+        "declarations": 1,
+        "states": 1
+      },
+      {
+        "ticker": "CCC",
+        "name": "Charlie Utilities Corp",
+        "revenue_change": -0.0011,
+        "declarations": 1,
+        "states": 1
+      },
+      {
+        "ticker": "DDD",
+        "name": "Delta Grid Holdings",
+        "revenue_change": null,
+        "declarations": 1,
+        "states": 1
+      },
+      {
+        "ticker": "E",
+        "name": "Echo Energy Inc",
+        "revenue_change": 0.1222,
+        "declarations": 1,
+        "states": 1
+      },
+      {
+        "ticker": null,
+        "name": "Foxtrot Light Co",
+        "revenue_change": 0.0,
+        "declarations": 1,
+        "states": 1
+      }
+    ],
+    "totals": {
+      "utilities": 6,
+      "states": 4,
+      "declarations": 4
+    }
+  },
+  "sentences": [
+    {
+      "text": "AAA rose 8.7%. BBB fell 6.6%! Did CCC hold? Yes.",
+      "expected": [
+        "AAA rose 8.7%.",
+        "BBB fell 6.6%!",
+        "Did CCC hold?",
+        "Yes."
+      ]
+    },
+    {
+      "text": "Line one\nLine two.  Line three.",
+      "expected": [
+        "Line one",
+        "Line two.",
+        "Line three."
+      ]
+    },
+    {
+      "text": "Rate 0.977 and 1.000 stay in one sentence.",
+      "expected": [
+        "Rate 0.977 and 1.000 stay in one sentence."
+      ]
+    },
+    {
+      "text": "",
+      "expected": []
+    }
+  ],
+  "checks": [
+    {
+      "name": "clean",
+      "text": "The join map has five verified keys, one partial key and one rejected key. AAA revenue rose 8.7% and BBB revenue fell 6.6%. 6 utilities served 4 states with 4 declarations.",
+      "expected": []
+    },
+    {
+      "name": "verdict_count_wrong",
+      "text": "The join map shows four keys with verified results.",
+      "expected": [
+        {
+          "kind": "verdict_count",
+          "sentence": 0,
+          "subject": "VERIFIED",
+          "claimed": "four",
+          "expected": "5"
+        }
+      ]
+    },
+    {
+      "name": "verdict_count_digits",
+      "text": "5 keys were verified and 2 were rejected.",
+      "expected": [
+        {
+          "kind": "verdict_count",
+          "sentence": 0,
+          "subject": "REJECTED",
+          "claimed": "2",
+          "expected": "1"
+        }
+      ]
+    },
+    {
+      "name": "collective_held",
+      "text": "Their revenue held up year on year.",
+      "expected": [
+        {
+          "kind": "direction",
+          "sentence": 0,
+          "subject": "all",
+          "claimed": "held",
+          "expected": "BBB, CCC"
+        }
+      ]
+    },
+    {
+      "name": "served_states_wrong",
+      "text": "The answer lists the 12 served states.",
+      "expected": [
+        {
+          "kind": "count",
+          "sentence": 0,
+          "subject": "states",
+          "claimed": "12",
+          "expected": "4"
+        }
+      ]
+    },
+    {
+      "name": "per_utility_counts",
+      "text": "AAA had 2 declarations in two states. BBB had 3 declarations.",
+      "expected": [
+        {
+          "kind": "count",
+          "sentence": 1,
+          "subject": "BBB:declarations",
+          "claimed": "3",
+          "expected": "1"
+        }
+      ]
+    },
+    {
+      "name": "of_excluded",
+      "text": "The cik key matched 42 of 43 VERIFIED, and the control 0 of 43 rejected.",
+      "expected": []
+    },
+    {
+      "name": "decimal_excluded",
+      "text": "The SIC key reached a rate of 0.977 verified by rows.",
+      "expected": []
+    },
+    {
+      "name": "up_down",
+      "text": "AAA revenue up 8.7%, CCC revenue down 0.1%. BBB revenue up 6.6%.",
+      "expected": [
+        {
+          "kind": "direction",
+          "sentence": 1,
+          "subject": "BBB",
+          "claimed": "up",
+          "expected": "fell"
+        }
+      ]
+    },
+    {
+      "name": "weather_sentence_skipped",
+      "text": "BBB degree days rose 3.0% while its revenue fell.",
+      "expected": []
+    },
+    {
+      "name": "not_compared",
+      "text": "DDD revenue rose against a year earlier.",
+      "expected": [
+        {
+          "kind": "direction",
+          "sentence": 0,
+          "subject": "DDD",
+          "claimed": "rose",
+          "expected": "not compared"
+        }
+      ]
+    },
+    {
+      "name": "name_and_single_letter_ticker",
+      "text": "Echo Energy Inc revenue grew 12.2%. E revenue fell.",
+      "expected": [
+        {
+          "kind": "direction",
+          "sentence": 1,
+          "subject": "all",
+          "claimed": "fell",
+          "expected": "AAA, E, Foxtrot Light Co"
+        }
+      ]
+    },
+    {
+      "name": "nearest_after",
+      "text": "Revenue fell at BBB.",
+      "expected": []
+    },
+    {
+      "name": "number_word_states",
+      "text": "Declarations hit seven states.",
+      "expected": [
+        {
+          "kind": "count",
+          "sentence": 0,
+          "subject": "states",
+          "claimed": "seven",
+          "expected": "4"
+        }
+      ]
+    },
+    {
+      "name": "partially",
+      "text": "Two keys partially matched.",
+      "expected": [
+        {
+          "kind": "verdict_count",
+          "sentence": 0,
+          "subject": "PARTIAL",
+          "claimed": "two",
+          "expected": "1"
+        }
+      ]
+    },
+    {
+      "name": "second_sentence_index",
+      "text": "AAA revenue rose 8.7%. BBB revenue rose 6.6%.",
+      "expected": [
+        {
+          "kind": "direction",
+          "sentence": 1,
+          "subject": "BBB",
+          "claimed": "rose",
+          "expected": "fell"
+        }
+      ]
+    },
+    {
+      "name": "held_zero_change",
+      "text": "Foxtrot Light Co revenue held at the same level, and CCC revenue held too.",
+      "expected": [
+        {
+          "kind": "direction",
+          "sentence": 0,
+          "subject": "CCC",
+          "claimed": "held",
+          "expected": "fell"
+        }
+      ]
+    },
+    {
+      "name": "utilities_always_total",
+      "text": "AAA is one of 6 utilities; BBB leads 9 utilities.",
+      "expected": [
+        {
+          "kind": "count",
+          "sentence": 0,
+          "subject": "utilities",
+          "claimed": "9",
+          "expected": "6"
+        }
+      ]
+    },
+    {
+      "name": "revenue_words_without_revenue",
+      "text": "AAA rose in the rankings.",
+      "expected": []
+    },
+    {
+      "name": "mixed_kinds_same_sentence",
+      "text": "Three keys were verified across 5 utilities, and revenue rose.",
+      "expected": [
+        {
+          "kind": "verdict_count",
+          "sentence": 0,
+          "subject": "VERIFIED",
+          "claimed": "three",
+          "expected": "5"
+        },
+        {
+          "kind": "count",
+          "sentence": 0,
+          "subject": "utilities",
+          "claimed": "5",
+          "expected": "6"
+        },
+        {
+          "kind": "direction",
+          "sentence": 0,
+          "subject": "all",
+          "claimed": "rose",
+          "expected": "BBB, CCC, Foxtrot Light Co"
+        }
+      ]
+    }
+  ],
+  "cap": [
+    {
+      "name": "under_cap",
+      "paragraphs": [
+        "One two three. Four five.",
+        "Six seven eight."
+      ],
+      "max": 250,
+      "expected": "One two three. Four five.\n\nSix seven eight.",
+      "expected_words": 8
+    },
+    {
+      "name": "cut_at_sentence",
+      "paragraphs": [
+        "Alpha beta gamma delta. Epsilon zeta eta theta iota.",
+        "Kappa lambda mu nu xi omicron pi rho sigma tau."
+      ],
+      "max": 12,
+      "expected": "Alpha beta gamma delta. Epsilon zeta eta theta iota.",
+      "expected_words": 9
+    },
+    {
+      "name": "stop_after_first_misfit",
+      "paragraphs": [
+        "Short one. A much longer sentence that will not fit at all here. Tiny."
+      ],
+      "max": 6,
+      "expected": "Short one.",
+      "expected_words": 2
+    },
+    {
+      "name": "first_sentence_too_long",
+      "paragraphs": [
+        "one two three four five six seven eight nine ten eleven twelve."
+      ],
+      "max": 5,
+      "expected": "one two three four five",
+      "expected_words": 5
+    },
+    {
+      "name": "empty",
+      "paragraphs": [],
+      "max": 250,
+      "expected": "",
+      "expected_words": 0
+    },
+    {
+      "name": "blank_paragraph_dropped",
+      "paragraphs": [
+        "",
+        "Only this sentence."
+      ],
+      "max": 250,
+      "expected": "Only this sentence.",
+      "expected_words": 3
+    },
+    {
+      "name": "decimal_not_split",
+      "paragraphs": [
+        "AAA rose 8.7% to 5.4 billion. Next sentence here."
+      ],
+      "max": 7,
+      "expected": "AAA rose 8.7% to 5.4 billion.",
+      "expected_words": 6
+    },
+    {
+      "name": "default_cap_long",
+      "paragraphs": [
+        "Sentence number 1 has exactly seven words. Sentence number 2 has exactly seven words. Sentence number 3 has exactly seven words. Sentence number 4 has exactly seven words. Sentence number 5 has exactly seven words. Sentence number 6 has exactly seven words. Sentence number 7 has exactly seven words. Sentence number 8 has exactly seven words. Sentence number 9 has exactly seven words. Sentence number 10 has exactly seven words. Sentence number 11 has exactly seven words. Sentence number 12 has exactly seven words. Sentence number 13 has exactly seven words. Sentence number 14 has exactly seven words. Sentence number 15 has exactly seven words. Sentence number 16 has exactly seven words. Sentence number 17 has exactly seven words. Sentence number 18 has exactly seven words. Sentence number 19 has exactly seven words. Sentence number 20 has exactly seven words. Sentence number 21 has exactly seven words. Sentence number 22 has exactly seven words. Sentence number 23 has exactly seven words. Sentence number 24 has exactly seven words. Sentence number 25 has exactly seven words. Sentence number 26 has exactly seven words. Sentence number 27 has exactly seven words. Sentence number 28 has exactly seven words. Sentence number 29 has exactly seven words. Sentence number 30 has exactly seven words. Sentence number 31 has exactly seven words. Sentence number 32 has exactly seven words. Sentence number 33 has exactly seven words. Sentence number 34 has exactly seven words. Sentence number 35 has exactly seven words. Sentence number 36 has exactly seven words. Sentence number 37 has exactly seven words. Sentence number 38 has exactly seven words. Sentence number 39 has exactly seven words. Sentence number 40 has exactly seven words. Sentence number 41 has exactly seven words. Sentence number 42 has exactly seven words. Sentence number 43 has exactly seven words. Sentence number 44 has exactly seven words. Sentence number 45 has exactly seven words. Sentence number 46 has exactly seven words. Sentence number 47 has exactly seven words. Sentence number 48 has exactly seven words. Sentence number 49 has exactly seven words."
+      ],
+      "max": null,
+      "expected": "Sentence number 1 has exactly seven words. Sentence number 2 has exactly seven words. Sentence number 3 has exactly seven words. Sentence number 4 has exactly seven words. Sentence number 5 has exactly seven words. Sentence number 6 has exactly seven words. Sentence number 7 has exactly seven words. Sentence number 8 has exactly seven words. Sentence number 9 has exactly seven words. Sentence number 10 has exactly seven words. Sentence number 11 has exactly seven words. Sentence number 12 has exactly seven words. Sentence number 13 has exactly seven words. Sentence number 14 has exactly seven words. Sentence number 15 has exactly seven words. Sentence number 16 has exactly seven words. Sentence number 17 has exactly seven words. Sentence number 18 has exactly seven words. Sentence number 19 has exactly seven words. Sentence number 20 has exactly seven words. Sentence number 21 has exactly seven words. Sentence number 22 has exactly seven words. Sentence number 23 has exactly seven words. Sentence number 24 has exactly seven words. Sentence number 25 has exactly seven words. Sentence number 26 has exactly seven words. Sentence number 27 has exactly seven words. Sentence number 28 has exactly seven words. Sentence number 29 has exactly seven words. Sentence number 30 has exactly seven words. Sentence number 31 has exactly seven words. Sentence number 32 has exactly seven words. Sentence number 33 has exactly seven words. Sentence number 34 has exactly seven words. Sentence number 35 has exactly seven words.",
+      "expected_words": 245
+    }
+  ],
+  "feedback": [
+    {
+      "name": "none",
+      "issues": [],
+      "expected": ""
+    },
+    {
+      "name": "from_cases",
+      "issues": [
+        {
+          "kind": "verdict_count",
+          "sentence": 0,
+          "subject": "VERIFIED",
+          "claimed": "four",
+          "expected": "5"
+        },
+        {
+          "kind": "verdict_count",
+          "sentence": 0,
+          "subject": "REJECTED",
+          "claimed": "2",
+          "expected": "1"
+        },
+        {
+          "kind": "direction",
+          "sentence": 0,
+          "subject": "all",
+          "claimed": "held",
+          "expected": "BBB, CCC"
+        },
+        {
+          "kind": "count",
+          "sentence": 0,
+          "subject": "states",
+          "claimed": "12",
+          "expected": "4"
+        },
+        {
+          "kind": "count",
+          "sentence": 1,
+          "subject": "BBB:declarations",
+          "claimed": "3",
+          "expected": "1"
+        },
+        {
+          "kind": "direction",
+          "sentence": 1,
+          "subject": "BBB",
+          "claimed": "up",
+          "expected": "fell"
+        }
+      ],
+      "expected": "Your previous draft contradicts the tool outputs:\n- sentence 1: you wrote four VERIFIED keys; the join map has 5.\n- sentence 1: you wrote 2 REJECTED keys; the join map has 1.\n- sentence 1: \"held\" for all contradicts the revenue change (BBB, CCC).\n- sentence 1: you wrote 12 states; the answer has 4.\n- sentence 2: you wrote 3 BBB:declarations; the answer has 1.\n- sentence 2: \"up\" for BBB contradicts the revenue change (fell)."
+    }
+  ]
+}
