@@ -147,8 +147,6 @@ export function renderJoinGraph(data) {
     if (!a || !b) continue;
     const cls = verdictClass(r.verdict);
     const dash = r.verdict === "REJECTED" ? ` stroke-dasharray="6 4"` : "";
-    lines.push(`<line x1="${a.x.toFixed(1)}" y1="${a.y.toFixed(1)}" x2="${b.x.toFixed(1)}" y2="${b.y.toFixed(1)}" class="jm-edge jm-edge--${cls}" stroke="var(--${cls}-edge)" stroke-width="2.5"${dash}/>`);
-
     const pk = pairKey(r.left.object, r.right.object);
     const k = pairCount.get(pk) ?? 0;
     pairCount.set(pk, k + 1);
@@ -157,9 +155,14 @@ export function renderJoinGraph(data) {
     const len = Math.hypot(dx, dy) || 1;
     const ux = dx / len;
     const uy = dy / len;
+    const off = k * 7;
+    const px = -uy * off;
+    const py = ux * off;
+    lines.push(`<line x1="${(a.x + px).toFixed(1)}" y1="${(a.y + py).toFixed(1)}" x2="${(b.x + px).toFixed(1)}" y2="${(b.y + py).toFixed(1)}" class="jm-edge jm-edge--${cls}" stroke="var(--${cls}-edge)" stroke-width="2.5"${dash}/>`);
+
     const shift = k * 24;
-    const mx = (a.x + b.x) / 2 + ux * shift;
-    const my = (a.y + b.y) / 2 + uy * shift;
+    const mx = (a.x + b.x) / 2 + ux * shift + px;
+    const my = (a.y + b.y) / 2 + uy * shift + py;
     const num = i + 1;
     labels.push(`<g class="jm-edge-label"><circle cx="${mx.toFixed(1)}" cy="${my.toFixed(1)}" r="11" class="jm-edge-num jm-edge-num--${cls}"/><text x="${mx.toFixed(1)}" y="${(my + 4).toFixed(1)}" text-anchor="middle" class="jm-edge-num-t">${esc(String(num))}</text></g>`);
   }
@@ -230,7 +233,7 @@ function oneRow(row, index, definitions) {
   const proposers = proposerWords(row.proposed_by);
   return `<tr class="jm-row jm-row--${cls}">
     <td class="tnum jm-n">${esc(String(n))}</td>
-    <td class="jm-sides"><div class="jm-ref">${esc(row.left?.ref ?? "")}</div><div class="jm-ref jm-ref--right">${esc(row.right?.ref ?? "")}</div><span class="eng">${esc(row.id ?? "")}</span><span class="eng">${esc(row.key ?? "")}</span>${row.label ? `<div class="small muted jm-label">${esc(row.label)}</div>` : ""}</td>
+    <td class="jm-sides"><div class="jm-ref">${esc(row.left?.ref ?? "")}</div><div class="jm-ref jm-ref--right">${esc(row.right?.ref ?? "")}</div><span class="eng">${esc(row.id ?? "")}</span><span class="eng">${esc(row.key ?? "")}</span>${row.label && !String(row.label).includes(" ~ ") ? `<div class="small muted jm-label">${esc(row.label)}</div>` : ""}</td>
     <td class="jm-xform">${transformCell(row)}</td>
     <td class="jm-rate"><div class="jm-rate-rows tnum">${esc(rate)}</div><div class="jm-rate-dist tnum small muted">${esc(distinct)}</div></td>
     <td class="jm-verdict"><span class="chip chip--${cls}">${esc(v)}</span><span class="jm-verdict-def small">${esc(def)}</span></td>

@@ -45,8 +45,8 @@
 .jm-verdict { min-width: 12em; }
 .jm-verdict .chip { margin-right: 6px; vertical-align: middle; }
 .jm-verdict-def { display: block; margin-top: 4px; color: var(--ink-2); font-size: 12.5px; line-height: 1.35; overflow-wrap: anywhere; }
-.jm-orphans { list-style: none; margin: 0; padding: 0; }
-.jm-orphans li { margin: 0 0 2px; }
+.jm-orphans { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 2px 6px; max-width: 16rem; }
+.jm-orphans li { margin: 0; }
 .jm-orphans code { font-size: 12px; overflow-wrap: anywhere; }
 .jm-prov--recalled { color: var(--memory); font-weight: 600; }
 .jm-prov--measured { color: var(--ink-2); }

@@ -195,3 +195,17 @@ test("engineering ids stay inside .eng", () => {
     assert.match(html, new RegExp(`class="[^"]*\\beng\\b[^"]*"[^>]*>[^<]*${row.key.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&")}`, "u"));
   }
 });
+
+test("review: keys between the same two tables are drawn as separate lines, and a generic label is not repeated", () => {
+  const rows = [
+    { id: "a", key: "x@all", label: "(a) first", left: { object: "cw.l", column: "c", ref: "cw.l.c" }, right: { object: "cw.r", column: "c", ref: "cw.r.c" }, verdict: "VERIFIED", orphans: [] },
+    { id: "b", key: "y@all", label: "cw.l.c ~ cw.r.c under identity", left: { object: "cw.l", column: "c", ref: "cw.l.c" }, right: { object: "cw.r", column: "c", ref: "cw.r.c" }, verdict: "REJECTED", orphans: [] },
+  ];
+  const svg = renderJoinGraph({ rows });
+  const coords = [...svg.matchAll(/<line x1="([\d.-]+)" y1="([\d.-]+)" x2="([\d.-]+)" y2="([\d.-]+)"/gu)].map((m) => m.slice(1).join(","));
+  assert.equal(coords.length, 2);
+  assert.notEqual(coords[0], coords[1]);
+  const table = renderJoinTable({ rows, definitions: {} });
+  assert.ok(table.includes("(a) first"));
+  assert.ok(!table.includes("under identity"));
+});
