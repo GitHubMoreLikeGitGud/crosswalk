@@ -1,0 +1,94 @@
+Crosswalk
+Copyright 2026 Umar Mohktar
+
+Licensed under the Apache License, Version 2.0 (see LICENSE).
+
+
+Third-party software in this repository
+---------------------------------------
+
+Meterless reference engines: H-MEM, Markovian, World Model
+  Paths: engines/hmem, engines/markovian, engines/world-model
+  Source: https://github.com/Meterless/Meterless
+  Commit: 1742dec56a66e58eef9dda2d2b865823758ca8cd
+  Copyright 2026 Meterless
+  Licensed under the Apache License, Version 2.0. Vendored unchanged;
+  see engines/UPSTREAM.md. Each engine's LICENSE is kept alongside it.
+
+Zetaris getting-started helper (adapted)
+  Path: gateway/jdbc.py
+  Source: https://github.com/zetaris/getting-started, scripts/zetaris_sql.py
+  Licensed under the Apache License, Version 2.0. Adapted: the .env.local
+  loader, the SQL statement splitter and the JayDeBeApi channel. Modified
+  (Windows JDK discovery, column names and timings in results, a bounded
+  wait with statement cancel, one lock per connection).
+
+Weather-or-Not and ClearShelf scaffolding (same author)
+  Sources: https://github.com/GitHubMoreLikeGitGud/weather-or-not (the
+  starting copy of this repository) and
+  https://github.com/GitHubMoreLikeGitGud/clearshelf (where that scaffolding
+  began), the author's Open Agent Hackathon 2026 Track 2 and Track 3 entries
+  Paths: gateway/ (templates, allowlist, registrar, contracts, cache,
+  run_sql, sqllog, app), agent/src/ (server, config, cli, runtime,
+  loop/generator, investigate, checklist, tools and telemetry,
+  memory/hmemFacade and seed, world/world, evidence/store, contract/,
+  llm/ollama, prompts, schemas and toolCatalog, zetaris/client,
+  ops/runStore, tools/frames), ui/ (shell, lib.js, drawer), seeds/
+  (utilities.json, stations.json), zetaris/sql/won-reference/ (reference
+  SQL, never run)
+  Copyright 2026 Umar Mohktar
+  Licensed under the Apache License, Version 2.0. Adapted for Crosswalk;
+  each adapted file says so in its header. Declared as pre-existing code
+  and quantified in README.md (Pre-existing code).
+
+
+Data sources read at runtime
+----------------------------
+
+Crosswalk reads these sources only through Zetaris. No bulk data from them
+is distributed in this repository.
+
+OpenFEMA (Federal Emergency Management Agency)
+  DisasterDeclarationsSummaries (v2) and OpenFemaDataSets (v1) at
+  www.fema.gov/api/open. Public US federal data, no key. FEMA is cited as
+  the source; this project is not endorsed by FEMA.
+
+SEC EDGAR (U.S. Securities and Exchange Commission)
+  XBRL frames and submissions APIs at data.sec.gov. A work of the U.S.
+  government. Read live under the SEC fair-access policy (at most 10
+  requests per second, with a declared User-Agent), never redistributed.
+  The repository commits no extracted SEC values: the documentation cites
+  revenue only as year-on-year percentage changes. seeds/utilities.json
+  holds public identifiers only (CIK, name, ticker, SIC, headquarters
+  state) with the curated states served and station ids.
+
+NOAA GHCN-Daily (National Centers for Environmental Information)
+  Parquet files and ghcnd-stations.txt on the Registry of Open Data on AWS,
+  bucket noaa-ghcn-pds. CC0 1.0 (a work of the U.S. government). Cite:
+  Menne, M.J., I. Durre, B. Korzeniewski, S. McNeill, K. Thomas, X. Yin,
+  S. Anthony, R. Ray, R.S. Vose, B.E. Gleason, and T.G. Houston, 2012:
+  Global Historical Climatology Network - Daily (GHCN-Daily), Version 3.
+  NOAA National Centers for Environmental Information. seeds/stations.json
+  holds station ids, names and states from ghcnd-stations.txt.
+
+company_dns
+  SIC code list served at company-dns.mediumroast.io (V4). The service is
+  licensed under the Apache License, Version 2.0; the SIC codes and
+  descriptions are the SEC's. Called with an identifying User-Agent.
+
+Zetaris getting-started repository (optional, at boot)
+  https://github.com/zetaris/getting-started, Apache License, Version 2.0.
+  When ZETARIS_GETTING_STARTED_DIR is set, its open_data/manifest.json and
+  known_to_fail notes are read to seed the catalogue and H-MEM. Nothing
+  from it is redistributed here.
+
+
+Models and platforms (not redistributed)
+----------------------------------------
+
+NVIDIA Nemotron (nemotron-3-nano:4b) runs locally through Ollama under the
+NVIDIA Open Model License. The model weights are not redistributed in this
+repository.
+
+Zetaris Lightning 2.4.3.1 and its JDBC driver are installed from Zetaris
+under Zetaris's terms. Neither is redistributed in this repository.

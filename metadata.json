@@ -1,0 +1,99 @@
+{
+  "name": "Crosswalk",
+  "tagline": "Crosswalk works out how FEMA, SEC and NOAA data join before it answers a question that needs all three: it measures every join key in Zetaris Lightning SQL, names the rows that fall out, and leaves a governed semantic layer behind.",
+  "track": "Track 1: Solving Fragmented Intelligence",
+  "team": "Umar Mohktar, Singapore - solo",
+  "repository": "https://github.com/GitHubMoreLikeGitGud/crosswalk",
+  "demo_video": "",
+  "deck": "docs/deck/Crosswalk.pdf",
+  "licence": "Apache-2.0",
+  "demo_question": "Which investor-owned electric utilities served states with FEMA major-disaster declarations in Q1 2025, what did the weather at their stations do that quarter, and did their revenue hold up year on year?",
+  "demo_result": "12 utilities in the 7 declared states the seed utilities serve (CA, KY, MO, OK, OR, SC, WV), selected by the FEMA join; revenue against Q1 2024 rose for 9, fell for 2 (EIX -6.55%, POR -0.11%), not compared for 1 (SRE, a different tag a year earlier); degree days at their stations rose for all 12 (+1.13% to +22.89%). Join map: 7 governed keys, 5 VERIFIED, FEMA state to served state PARTIAL (AK), the unpadded CIK control REJECTED (0 of 43); orphans IDACORP (no CY2025Q1 fact) and MGE Energy (SIC 4900). Source: docs/eval-report.md sections 1 and 4.",
+  "meterless": {
+    "engines": ["hmem", "markovian", "world-model"],
+    "upstream": "https://github.com/Meterless/Meterless at commit 1742dec56a66e58eef9dda2d2b865823758ca8cd; H-MEM, Markovian and World Model vendored unchanged in engines/ (engines/UPSTREAM.md)",
+    "usage": {
+      "hmem": "Vendored reference implementation, unmodified, extended by subclass in agent/src/memory/hmemFacade.ts: key_verified memories {left, right, transform, rate, verdict, orphans, measuring SQL, run, time} keyed by the key with period-specific view names generalised to their family; source_access memories for views registered at run time (later runs may probe them); a warm run recalls VERIFIED keys whose families the question reads and skips their measure_key steps (6 skipped in the Day-2 warm run r20261025T155631f0a7); seeded at boot from the Zetaris getting-started manifest, its known_to_fail notes as negative memories, and the Day-0 prechecks; why(memoryId) prints the ledger",
+      "markovian": "Vendored reference orchestrator, unmodified (agent/src/loop/): one question is one chain with maxChunks 12, carryoverTokens 800, up to three tool calls per chunk; the generator asks local Nemotron for the next checklist step (one repair round, think off after an empty length-cut reply), a NEEDS_TOOL executor runs the host tool, and a 10-item checklist decides completion; after a second invalid reply the host takes the next checklist step itself and counts it as a fallback step. Day-2 cold runs used 9 or 10 chunks, the warm run 8",
+      "world-model": "Vendored reference implementation, unmodified, wrapped in agent/src/world/ (CrosswalkWorld): entities dataset, column, utility, state, declaration; edges has_column, crosswalks_to (transform, rate, verdict, valid from the measurement time), serves, declared_in (valid from the declaration date); keyHistory and utilityHistory answer 'what did we know, and since when' (npm run cli -- known)"
+    },
+    "scout_intent": "Partial reimplementation (no reference engine is vendored), labelled as such (agent/src/contract/, gateway/contracts.py): HMAC-signed single-use execution contracts expiring within 15 minutes; medium risk for every register_source call, verified by the Python gateway with a shared test vector; an integrity check, not cryptographic-grade security",
+    "conformance": {
+      "hmem": "13/13 on the vendored reference; 13/13 with the Crosswalk subclass loaded through the engine's own runner (HMEM_IMPL)",
+      "markovian": "8/8",
+      "world-model": "8/8; idempotency check diff: empty",
+      "run": "25 Oct 2026 on a fresh clone of commit 078f890, Windows 11, Node v22.13.1; vendored lock files restored with git checkout -- engines afterwards; full output in docs/conformance.md"
+    }
+  },
+  "zetaris": {
+    "role": "Federated data layer and the only runtime path to data: Lightning REST tables over OpenFEMA (DR declarations per quarter, the dataset catalogue), SEC EDGAR (XBRL frames, submissions) and the company_dns SIC list; filestore tables over the GHCN station inventory (one-column CSV parsed by SUBSTR) and GHCN-Daily parquet; cached SchemaStore views in the container cw; the Unified Semantic Layer crosswalk_usl (7 tables, 6 foreign keys) compiled and activated from the cached views at onboarding, where RUN DQ checks every foreign-key rule. On the question path every join key the agent proposes is measured as a match rate by Lightning SQL over cached views (one of 59 named gateway templates; the agent never writes SQL), compile_usl renders the model from the keys the run verified and compares it with the governed one, and two DQ rules (fema_declaration.state, utility_state.state) run live; the other four rules and the invalid row are read from the onboarding DQ file. register_source registers and caches a catalogue source at run time under a signed contract (three CY2023Q1 frames views in the Day-1 warm run r20261025T1413091c1c; every Day-2 registration answered already_registered)",
+    "instance": "local Docker, Zetaris Lightning 2.4.3.1, JDBC jdbc:zetaris:lightning@localhost:10000",
+    "where": "zetaris/sql/ (Lightning SQL create/select pairs 01 to 10), zetaris/README.md (verified counts and timings), zetaris/manifest.json, gateway/ (JDBC gateway, templates, allowlist, registrar, SQL runner), seeds/usl-plan.json (the governed USL plan)",
+    "lightning_databases": ["CW_FEMA", "CW_SEC", "CW_DNS", "CW_GHCN"],
+    "schemastore_container": "cw",
+    "objects": [
+      "CW_FEMA.declarations_dr_<quarter> -> cw.fema_declarations_dr_<quarter>: Q1 2025 116 rows / 10 declarations / 8 states; Q1 2024 72 / 14 / 11 (registered through register_source)",
+      "CW_FEMA.datasets_catalogue -> cw.fema_catalogue: 44 rows",
+      "CW_GHCN.ghcnd_stations_txt -> cw.stations: 133,039 rows; 56 of 56 seed stations present with the same state",
+      "CW_SEC.frames_<tag>_<period> -> cw.frames_<tag>_<period>: Revenues, RevenueFromContractWithCustomerExcludingAssessedTax, RegulatedAndUnregulatedOperatingRevenue x CY2025Q1, CY2024Q1 (1,937 / 2,095 / 2,546 / 2,654 / 20 / 22 facts) plus CY2023Q1 registered at run time",
+      "CW_SEC.submissions_<cik10> -> cw.submission_<cik10>: 43 seed utilities, read once at onboarding into cw.seed_submissions_snapshot (43 rows), which the question path reads",
+      "CW_DNS.sic_codes_v4_raw -> cw.sic_codes: 1,005 codes",
+      "CW_GHCN.ghcn_<year>_<element> -> cw.ghcn_<year>_<element>: 2024 and 2025 x TMAX, TMIN, 57 stations each",
+      "cw.states (51), cw.utility_states (97 pairs), cw.seed_stations (56), cw.seed_utility_names (43): inline VALUES views of the committed seeds"
+    ],
+    "cache_targets": 63,
+    "usl": "lightning.metastore.crosswalk.crosswalk_usl",
+    "usl_tables": ["state", "sic_code", "utility", "utility_state", "fema_declaration", "station", "revenue_quarter"],
+    "usl_rows": {"state": 51, "sic_code": 1005, "utility": 43, "utility_state": 97, "fema_declaration": 116, "station": 56, "revenue_quarter": 133},
+    "usl_foreign_keys": ["utility.sic -> sic_code", "utility_state.cik -> utility", "utility_state.state -> state", "fema_declaration.state -> state", "station.state -> state", "revenue_quarter.cik -> utility (lpad10)"],
+    "dq_measured": "Onboarding RUN DQ (25 Oct 2026 13:46 SGT, data/dq/latest.json): utility.sic 43 / 42 / 1 invalid in 135.5 s (MGE Energy, 0001161728, SIC 4900, absent from the SIC list); utility_state.cik 97 / 97 / 0 (72.0 s); utility_state.state 97 / 97 / 0 (0.9 s); fema_declaration.state 116 / 116 / 0 (2.9 s); station.state 56 / 56 / 0 (37.7 s); revenue_quarter.cik 133 / 133 / 0 (84.5 s). Live in every question run: fema_declaration.state 116 / 116 / 0 and utility_state.state 97 / 97 / 0",
+    "templates": "59 named gateway templates, 2 of them onboarding-only (dq_run, dq_invalid); 7 registrar actions (register_source and the plans register_fema, register_frames, register_submission, register_stations, register_ghcn, register_concept); gateway /health on 25 Oct 2026",
+    "join_map": "cik lpad10 42/43 VERIFIED (IDACORP); no-pad control 0/43 REJECTED; loc substr(4,2) 42/42 VERIFIED; FEMA state 7/8 PARTIAL (AK); FEMA FIPS 8/8 VERIFIED; station 56/56 VERIFIED; SIC 42/43 VERIFIED by utility rows, 3/4 distinct codes (MGE Energy 4900); identical in every Day-2 cold run (docs/eval-report.md)",
+    "least_privilege": "not configured: read templates run on the admin login behind the gateway's reader allowlist; /health reports admin_fallback"
+  },
+  "nvidia": {
+    "model": "nemotron-3-nano:4b (Q4_K_M) via Ollama 0.40.7, local GPU, loopback only",
+    "roles": [
+      "planner choosing the next step among those the checklist allows (think on, output budget 3,072 tokens; repair after an empty length-cut reply with think off)",
+      "propose_keys: up to six {left, right, transform} choices from an enumerated menu of the probed columns and the closed transform set; every valid proposal is measured in Lightning SQL before use",
+      "note of 100 to 250 words (think off, output budget 1,024 tokens); numbers string-matched against tool outputs and words checked against the run's facts; one repair, then the 250-word template"
+    ],
+    "decides": false,
+    "computes": false,
+    "settings": "temperature 0, seed 7, num_ctx 8192, JSON schema output validated on the host",
+    "measured": {
+      "model_vs_baseline_cold_runs": "5 cold runs with the model: model proposed 11 keys, 3 VERIFIED, 1 PARTIAL, 7 REJECTED, 0 unmeasurable; the deterministic baseline proposed 30, 25 VERIFIED, 5 REJECTED. Winner on VERIFIED keys: baseline; no key the model found VERIFIED was missing from the baseline's proposals in the same run",
+      "ablation_wall_seconds": "think on 275.2, think off 227.9, no model 88.4 (one run each, same answer)",
+      "cold_wall_seconds": "247.7 to 285.8 over four think-on cold runs, median 275.8; warm 194.1",
+      "planner_tokens_per_s_median": "132.9 think on, 133.1 think off",
+      "output_tokens": "22,047 think on, 15,813 think off",
+      "planner_calls_valid": "125 of 157 over the six runs with the model; 2 to 8 fallback steps per run",
+      "model_vram_mib": "2,881 (Ollama at context 8192)",
+      "note": "the model's draft was replaced by the template in 3 of the 6 runs with the model"
+    },
+    "cloud_model_calls": 0,
+    "cloud_model_calls_basis": "by construction: the model client accepts loopback URLs only and counts refused hosts (0 in every run)",
+    "source": "docs/eval-report.md sections 2 and 5, docs/eval/summary.json"
+  },
+  "cursor": "Crosswalk was developed in a Cursor workspace with project rules in .cursor/rules and AGENTS.md (Cursor Pro plan, CLI 2026.10.22, model Auto). Cursor Agent ran seven headless tasks on 25 Oct 2026, each exit 0 on the first attempt: C1 the closed transform set and match-rate SQL renderer (199.4 s), C2 the USL plan validator and DDL renderer (153.8 s), C3 the FEMA and station parsers with quarter bucketing (289.3 s), C4 the catalogue search ranking and probe key columns (119.7 s), C5 the deterministic key-proposal baseline (92.0 s), C6 the note word verifier (148 s), C7 the join map screen (234.7 s), each with tests against known-answer fixtures computed independently of the code. 3,208 of the 3,400 lines in the 17 files are Cursor Agent's at commit 078f890. Everything else was written outside Cursor Agent. See docs/how-cursor-was-used.md.",
+  "cursor_tasks": {
+    "run_by_cursor_agent": ["C1", "C2", "C3", "C4", "C5", "C6", "C7"],
+    "cursor_agent_commits": {"C1": "bf07fa5", "C2": "780d725", "C3": "2a8c52b", "C4": "4421365", "C5": "1cef0cb", "C6": "965f892", "C7": "d9c00d8"},
+    "reviewer_commits": {"C1": ["f5295cf"], "C2": ["92d0971"], "C3": ["5237c2a"], "C4": ["eb17ca9"], "C5": [], "C6": ["c090bc1"], "C7": ["d9901e9", "0895579"]},
+    "wall_seconds": {"C1": 199.4, "C2": 153.8, "C3": 289.3, "C4": 119.7, "C5": 92.0, "C6": 148, "C7": 234.7},
+    "not_run_by_cursor_agent": [],
+    "details": "docs/how-cursor-was-used.md"
+  },
+  "data_sources": [
+    {"name": "OpenFEMA DisasterDeclarationsSummaries and OpenFemaDataSets", "licence": "public US federal data, no key", "attribution": "Federal Emergency Management Agency, OpenFEMA; this project is not endorsed by FEMA", "access": "through Zetaris only (REST tables, cached views); counts compared with the API fetched outside Zetaris in docs/eval-report.md section 3"},
+    {"name": "SEC EDGAR XBRL frames and submissions", "licence": "US government work; SEC fair-access policy (at most 10 requests per second with a declared User-Agent)", "attribution": "U.S. Securities and Exchange Commission, EDGAR", "access": "queried live through Zetaris with the declared User-Agent; never redistributed; docs cite revenue only as year-on-year percentage changes"},
+    {"name": "NOAA GHCN-Daily (parquet and ghcnd-stations.txt, Registry of Open Data on AWS, bucket noaa-ghcn-pds)", "licence": "CC0-1.0; US government work", "attribution": "NOAA National Centers for Environmental Information, Global Historical Climatology Network daily", "access": "through Zetaris only (FILESTORE tables, anonymous public bucket); seeds/stations.json holds station ids, names and states"},
+    {"name": "company_dns SIC code list", "licence": "Apache-2.0 (the service); the SIC list is the SEC's", "attribution": "company_dns", "access": "through Zetaris only, with an identifying User-Agent"},
+    {"name": "Zetaris getting-started repository (manifest and known_to_fail notes)", "licence": "Apache-2.0", "attribution": "Zetaris", "access": "read at boot when ZETARIS_GETTING_STARTED_DIR is set; nothing redistributed"}
+  ],
+  "pre_existing_code": [
+    "Meterless reference engines H-MEM, Markovian and World Model (Apache-2.0), vendored unchanged in engines/: 60 files, 13,189 lines",
+    "gateway/jdbc.py, adapted from scripts/zetaris_sql.py in the Zetaris getting-started repository (Apache-2.0)",
+    "Scaffolding from the author's earlier entries Weather-or-Not (https://github.com/GitHubMoreLikeGitGud/weather-or-not, the starting copy) and ClearShelf (https://github.com/GitHubMoreLikeGitGud/clearshelf), Apache-2.0, same author: the gateway pattern, the agent server and SSE pattern, the Markovian generator and telemetry, the H-MEM facade and World Model wrapper patterns, the evidence store, the contract module and injection guard, the CLI and config, the UI shell, the utility and station seeds. At commit 078f890: 26 files carry the header 'Adapted from Weather-or-Not and ClearShelf' (8,523 lines, 7,698 non-blank); 109 of the 222 tracked files outside engines/ exist at the same path in Weather-or-Not (commit 0a7ea45), holding 28,744 lines of which 21,626 are unchanged, 25 files entirely; zetaris/sql/won-reference/ (14 files, 2,532 lines) is Weather-or-Not's SQL kept as a reference, never run. Commands in README.md, Pre-existing code"
+  ]
+}
