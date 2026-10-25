@@ -2,15 +2,15 @@
 
 Every number below is measured and copied from a saved run file or a measured side file; nothing is projected or estimated unless it says so. Runs were made on code `6652e2f`, `ee04b0c`, `fc130bd` with `nemotron-3-nano:4b` through local Ollama (0 cloud model calls) and Zetaris Lightning 2.4.3.1 through the gateway. The summary JSON is `docs/eval/summary.json`; both files are regenerated from the saved runs with `cd agent && npx tsx src/eval/run.ts --runs <dir of the ablation runs> --gpu <dir of its samples>` (no gateway or model call). Revenue appears only as the year-on-year change the answer shows.
 
-Code: the agent loop and tools, the model client and prompts, memory, the gateway, seeds and Zetaris SQL are the same at fc130bd (the last four runs) and at the commit that carries this report; after fc130bd only the UI, the server's view functions (agent/src/ops/cells.ts, agent/src/ops/usl.ts), this report and its tools (agent/src/eval), tests, CI and the documentation changed. The first three runs used earlier Day-2 commits (6652e2f, ee04b0c) whose later changes touched the note, the memory context and the evidence labels, not the answer or the join-map statements.
+Code: the agent loop and tools, the model client and prompts, memory, the gateway, seeds and the Zetaris SQL statements are the same at fc130bd (the last four runs) and at the commit that carries this report; after fc130bd only the UI, the server's view functions (agent/src/ops/cells.ts, agent/src/ops/usl.ts), the header labels of the CLI replay (agent/src/cli.ts), this report and its tools (agent/src/eval), tests, CI, the configuration example (one unused key dropped), comments in two Zetaris SQL files, one unused inherited script removed from scripts/ and the documentation changed. The first three runs used earlier Day-2 commits (6652e2f, ee04b0c) whose later changes touched the note, the memory context and the evidence labels, not the answer or the join-map statements.
 
 ## Headline
 
 - **Reproducible:** 6 cold runs of the demo question (think on, think off, no model) give the same 12-row answer in every field (yes) and the same numbers and orphans for the 7 governed join-map keys (yes).
-- **Model vs baseline (L2):** over 5 cold runs with the model, the model made 11 key proposals and 3 were VERIFIED; the deterministic baseline made 30 and 25 were VERIFIED. Winner on VERIFIED keys: baseline. Every key the model found VERIFIED was also measured from a baseline proposal (its scored six or its measure queue) in the same run.
-- **Outside checks (L4):** OpenFEMA over HTTPS equals the Zetaris cached views in 2 of 2 quarters (rows, declarations, states, per-state counts); 1 of 2 utilities' 10-K service states equal the seed (PPL: the filing also names VA).
-- **Manual baseline (L6):** finding and verifying the five keys by hand took 27 statements and 24 decisions (33.7 s of statement time); the agent asks the user for none of them and runs the whole question in 275.8 s (cold, median) or 194.1 s (warm). A person's time to write and read that SQL is not measured.
-- **Nemotron ablation (L12, one run each):** think on 275.2 s, think off 227.9 s, no model 88.4 s, all with the same answer; 132.9 / 133.1 tok/s; the model holds 2,881 MiB of VRAM (Ollama, Q4_K_M, context 8192).
+- **Model vs baseline:** over 5 cold runs with the model, the model made 11 key proposals and 3 were VERIFIED; the deterministic baseline made 30 and 25 were VERIFIED. Winner on VERIFIED keys: baseline. Every key the model found VERIFIED was also measured from a baseline proposal (its scored six or its measure queue) in the same run.
+- **Outside checks:** OpenFEMA over HTTPS equals the Zetaris cached views in 2 of 2 quarters (rows, declarations, states, per-state counts); 1 of 2 utilities' 10-K service states equal the seed (PPL: the filing also names VA).
+- **Manual baseline:** finding and verifying the five keys by hand took 27 statements and 24 decisions (33.7 s of statement time); the agent asks the user for none of them and runs the whole question in 275.8 s (cold, median) or 194.1 s (warm). A person's time to write and read that SQL is not measured.
+- **Nemotron ablation (one run each):** think on 275.2 s, think off 227.9 s, no model 88.4 s, all with the same answer; 132.9 / 133.1 tok/s; the model holds 2,881 MiB of VRAM (Ollama, Q4_K_M, context 8192).
 - **Statements:** 0 of 399 question-path statements took over 20 s (slowest: weather_quarter at 18,135 ms).
 
 ## Runs
@@ -70,7 +70,7 @@ The answer (run `r20261025T1546471209`, CY2025Q1 against CY2024Q1; weather measu
 | PPL | KY 1 | +8.68% (Revenues) | +13.99% (4) |
 | SRE | CA 1 | not compared (RFC now, a different tag a year earlier) | +2.96% (2) |
 
-## 2. The model's key proposals against the deterministic baseline (L2)
+## 2. The model's key proposals against the deterministic baseline
 
 Both sides propose join keys from the same probes in the same run, and every valid proposal is measured by the same Lightning SQL statement (a named join-map statement for the governed keys, the generic `match_rate` statement otherwise). The model chooses from an enumerated menu of the probed columns and the closed transform set; the baseline is the deterministic column-name heuristic (its top six are scored). Columns: made / valid / VERIFIED / PARTIAL / REJECTED / unmeasurable. In the warm run the baseline's VERIFIED keys are recalled from memory (measured in an earlier run), not re-measured.
 
@@ -88,7 +88,7 @@ Cold runs with the model (5): model made 11, valid 11, VERIFIED 3, PARTIAL 1, RE
 
 Distinct keys each side found VERIFIED by measuring them (runs with the model): model fema_fips, cw.seed_submissions_snapshot.hq_state ~ cw.seed_stations.state (identity), cw.utility_states.state ~ cw.states.code (identity); baseline cik, loc, cw.seed_submissions_snapshot.cik10 ~ cw.utility_states.cik (identity), cw.utility_states.state ~ cw.seed_stations.state (identity), sic, station. Model keys outside the baseline's scored six: fema_fips, cw.seed_submissions_snapshot.hq_state ~ cw.seed_stations.state (identity), cw.utility_states.state ~ cw.states.code (identity); of these, VERIFIED in a run where no baseline proposal (scored six or measure queue) named the same key: none.
 
-## 3. Outside checks (L4)
+## 3. Outside checks
 
 Numbers the agent did not compute, fetched over HTTPS outside Zetaris (`agent/src/eval/outside.ts`) and compared with the cached views read through the gateway (`docs/eval/outside-checks.json`). The OpenFEMA URL is the registrar's own (major-disaster filter, declaration date inside the quarter).
 
@@ -104,7 +104,7 @@ Served states: the seed notes cite each utility's FY2024 Form 10-K (Item 1, serv
 | EVRG (Evergy, Inc.) | 10-K for 2024-12-31, filed 2025-02-27 | KS, MO | KS, MO | none | yes | no |
 | PPL (PPL Corp) | 10-K for 2024-12-31, filed 2025-02-13 | KY, PA, RI | KY, PA, RI, VA | VA | no | no: VA has no major-disaster declaration in CY2025Q1 or CY2024Q1 |
 
-## 4. Manual baseline: the five keys by hand (L6)
+## 4. Manual baseline: the five keys by hand
 
 The statements a data person needs to find and verify the five keys (a cik, b loc, c FEMA state, d station, e SIC) on the same cached views were run one at a time through the gateway (127.0.0.1:8803) after the ablation runs finished, each result read before the next statement was chosen. Measured: the statements, their gateway elapsed_ms, and the decisions taken. The session time (first step to the end of the last statement) is reported for completeness but is NOT a measure of how long a person would take: the SQL was not typed from scratch (each statement is a gateway reader template: DESCRIBE, SELECT ... LIMIT 5, distinct counts, the match-rate count and its orphans, or a named join-map statement where the counted side needs a transform the generic statement does not apply), so the time to write that SQL and to read results at human speed is not measured. Steps 8, 9, 11, 23, 28 and 29 use the named join-map statements because the comparison needs LPAD or SUBSTR on the right-hand side, a three-view union or a per-utility row count.
 
@@ -160,7 +160,7 @@ Each verdict, count and orphan found by hand equals the agent's join-map row for
 | 28 | joinmap_sic |  | 326 | 1 | 42 of 43 utilities carry a SIC code the reference holds (3 of 4 distinct codes) | key e (SIC) VERIFIED at 0.977 by utility rows, the code reading beside it |
 | 29 | joinmap_sic_orphans |  | 264 | 1 | MGE Energy (0001161728) carries 4900, absent from the reference | keep MGE as the named orphan |
 
-## 5. Nemotron ablation on the cold question (L12)
+## 5. Nemotron ablation on the cold question
 
 The same cold CY2025Q1 question three times on the same code, one after another, with the GPU sampled every 500 ms by `nvidia-smi` (whole-card memory and utilisation) and Ollama's `/api/ps` read before, 60 s into and after each run. Think on and think off apply to the planner (the note is always written with think off). No model: the host takes every checklist step (the baseline's six proposals stand in for the model's) and the note is the template. Tokens and tok/s are Ollama's counts (`eval_count`, `eval_duration`).
 

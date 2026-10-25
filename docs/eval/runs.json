@@ -1,6 +1,6 @@
 {
-  "note": "The runs this evaluation reads. Day-2 runs only (after the D15-D18 fixes); the two Day-1 runs are references for the answer comparison. 'by' names the lane that ran it; 'code' is the commit the agent, gateway and prompts were at.",
-  "code_note": "Code: the agent loop and tools, the model client and prompts, memory, the gateway, seeds and Zetaris SQL are the same at fc130bd (the last four runs) and at the commit that carries this report; after fc130bd only the UI, the server's view functions (agent/src/ops/cells.ts, agent/src/ops/usl.ts), this report and its tools (agent/src/eval), tests, CI and the documentation changed. The first three runs used earlier Day-2 commits (6652e2f, ee04b0c) whose later changes touched the note, the memory context and the evidence labels, not the answer or the join-map statements.",
+  "note": "The runs this evaluation reads. Day-2 runs only (after the Day-2 fixes: the question path reads the onboarding snapshot, model proposals come from an enumerated menu, the note's words are checked, join-map rows are oriented by the counted table); the two Day-1 runs are references for the answer comparison. 'by' names the lane that ran it; 'code' is the commit the agent, gateway and prompts were at.",
+  "code_note": "Code: the agent loop and tools, the model client and prompts, memory, the gateway, seeds and the Zetaris SQL statements are the same at fc130bd (the last four runs) and at the commit that carries this report; after fc130bd only the UI, the server's view functions (agent/src/ops/cells.ts, agent/src/ops/usl.ts), the header labels of the CLI replay (agent/src/cli.ts), this report and its tools (agent/src/eval), tests, CI, the configuration example (one unused key dropped), comments in two Zetaris SQL files, one unused inherited script removed from scripts/ and the documentation changed. The first three runs used earlier Day-2 commits (6652e2f, ee04b0c) whose later changes touched the note, the memory context and the evidence labels, not the answer or the join-map statements.",
   "runs": [
     { "run_id": "r20261025T1546471209", "label": "cold 1", "by": "lane F", "code": "6652e2f", "setting": "think_on" },
     { "run_id": "r20261025T155141e122", "label": "cold 2", "by": "lane F", "code": "6652e2f", "setting": "think_on" },
@@ -11,8 +11,8 @@
     { "run_id": "r20261025T1617024020", "label": "ablation: no model", "by": "lane E", "code": "fc130bd", "setting": "no_model" }
   ],
   "references": [
-    { "run_id": "r20261025T14571773a0", "label": "Day-1 cold reference (before the D15-D18 fixes)" },
-    { "run_id": "r20261025T145128a180", "label": "Day-1 warm reference (before the D15-D18 fixes)" }
+    { "run_id": "r20261025T14571773a0", "label": "Day-1 cold reference (before the Day-2 fixes)" },
+    { "run_id": "r20261025T145128a180", "label": "Day-1 warm reference (before the Day-2 fixes)" }
   ],
   "did_not_go_well": [
     "The model loses the key-proposal comparison. Over the five cold runs with the model it made 11 proposals and 3 were VERIFIED; the deterministic baseline made 30 and 25 were VERIFIED. Every key the model got VERIFIED (the FEMA FIPS key, utility_states.state ~ states.code, hq_state ~ seed_stations.state) was also measured in the same run from the baseline's measure queue. On this data the runs do not show the model finding a key the baseline misses.",

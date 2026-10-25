@@ -852,14 +852,14 @@ export function renderMarkdown(r: EvalReport): string {
   out.push("");
   out.push(`- **Reproducible:** ${rp.cold_runs} cold runs of the demo question (think on, think off, no model) give the same ${r.answer?.rows.length ?? "n/a"}-row answer in every field (${yes(rp.all_answers_identical)}) and the same numbers and orphans for the ${rp.pairs[0]?.governed_compared ?? "n/a"} governed join-map keys (${yes(rp.governed_join_map_identical)}).`);
   out.push(
-    `- **Model vs baseline (L2):** over ${l2.cold_runs_counted} cold runs with the model, the model made ${l2.cold_totals.model.made} key proposals and ${l2.cold_totals.model.verified} were VERIFIED; the deterministic baseline made ${l2.cold_totals.baseline.made} and ${l2.cold_totals.baseline.verified} were VERIFIED. Winner on VERIFIED keys: ${l2.winner}. ${l2.keys_found.model_beyond_any_baseline.length ? `Keys only the model found VERIFIED: ${l2.keys_found.model_beyond_any_baseline.map(shortKey).join(", ")}.` : "Every key the model found VERIFIED was also measured from a baseline proposal (its scored six or its measure queue) in the same run."}`,
+    `- **Model vs baseline:** over ${l2.cold_runs_counted} cold runs with the model, the model made ${l2.cold_totals.model.made} key proposals and ${l2.cold_totals.model.verified} were VERIFIED; the deterministic baseline made ${l2.cold_totals.baseline.made} and ${l2.cold_totals.baseline.verified} were VERIFIED. Winner on VERIFIED keys: ${l2.winner}. ${l2.keys_found.model_beyond_any_baseline.length ? `Keys only the model found VERIFIED: ${l2.keys_found.model_beyond_any_baseline.map(shortKey).join(", ")}.` : "Every key the model found VERIFIED was also measured from a baseline proposal (its scored six or its measure queue) in the same run."}`,
   );
-  if (r.outside) out.push(`- **Outside checks (L4):** OpenFEMA over HTTPS equals the Zetaris cached views in ${r.outside.fema.filter((f) => f.equal).length} of ${r.outside.fema.length} quarters (rows, declarations, states, per-state counts); ${r.outside.ten_k.filter((k) => k.equal).length} of ${r.outside.ten_k.length} utilities' 10-K service states equal the seed (${r.outside.ten_k.filter((k) => !k.equal).map((k) => `${k.ticker}: the filing also names ${(k.in_filing_not_in_seed ?? []).join(", ")}`).join("; ") || "all equal"}).`);
-  if (a) out.push(`- **Manual baseline (L6):** finding and verifying the five keys by hand took ${a.manual_statements} statements and ${a.manual_decisions} decisions (${a.manual_statement_s} s of statement time); the agent asks the user for none of them and runs the whole question in ${a.cold_wall_s_median} s (cold, median) or ${a.warm_wall_s_median} s (warm). A person's time to write and read that SQL is not measured.`);
+  if (r.outside) out.push(`- **Outside checks:** OpenFEMA over HTTPS equals the Zetaris cached views in ${r.outside.fema.filter((f) => f.equal).length} of ${r.outside.fema.length} quarters (rows, declarations, states, per-state counts); ${r.outside.ten_k.filter((k) => k.equal).length} of ${r.outside.ten_k.length} utilities' 10-K service states equal the seed (${r.outside.ten_k.filter((k) => !k.equal).map((k) => `${k.ticker}: the filing also names ${(k.in_filing_not_in_seed ?? []).join(", ")}`).join("; ") || "all equal"}).`);
+  if (a) out.push(`- **Manual baseline:** finding and verifying the five keys by hand took ${a.manual_statements} statements and ${a.manual_decisions} decisions (${a.manual_statement_s} s of statement time); the agent asks the user for none of them and runs the whole question in ${a.cold_wall_s_median} s (cold, median) or ${a.warm_wall_s_median} s (warm). A person's time to write and read that SQL is not measured.`);
   const on = abl("think_on");
   const off = abl("think_off");
   const nm = abl("no_model");
-  if (on && off && nm) out.push(`- **Nemotron ablation (L12, one run each):** think on ${on.wall_s} s, think off ${off.wall_s} s, no model ${nm.wall_s} s, all with the same answer; ${on.median_tok_s ?? "n/a"} / ${off.median_tok_s ?? "n/a"} tok/s; the model holds ${intf(on.gpu?.ollama_size_vram_mib)} MiB of VRAM (Ollama, ${on.gpu?.quantization ?? "n/a"}, context ${on.gpu?.ollama_context ?? "n/a"}).`);
+  if (on && off && nm) out.push(`- **Nemotron ablation (one run each):** think on ${on.wall_s} s, think off ${off.wall_s} s, no model ${nm.wall_s} s, all with the same answer; ${on.median_tok_s ?? "n/a"} / ${off.median_tok_s ?? "n/a"} tok/s; the model holds ${intf(on.gpu?.ollama_size_vram_mib)} MiB of VRAM (Ollama, ${on.gpu?.quantization ?? "n/a"}, context ${on.gpu?.ollama_context ?? "n/a"}).`);
   out.push(`- **Statements:** ${r.timings.over_20s} of ${r.runs.reduce((s, l) => s + l.statements, 0)} question-path statements took over 20 s (slowest: ${r.timings.statements[0]?.name ?? "n/a"} at ${intf(r.timings.statements[0]?.max_ms)} ms).`);
   out.push("");
   out.push("## Runs");
@@ -941,7 +941,7 @@ export function renderMarkdown(r: EvalReport): string {
   }
 
   // 2. L2
-  out.push("## 2. The model's key proposals against the deterministic baseline (L2)");
+  out.push("## 2. The model's key proposals against the deterministic baseline");
   out.push("");
   out.push(
     "Both sides propose join keys from the same probes in the same run, and every valid proposal is measured by the same Lightning SQL statement (a named join-map statement for the governed keys, the generic `match_rate` statement otherwise). The model chooses from an enumerated menu of the probed columns and the closed transform set; the baseline is the deterministic column-name heuristic (its top six are scored). Columns: made / valid / VERIFIED / PARTIAL / REJECTED / unmeasurable. In the warm run the baseline's VERIFIED keys are recalled from memory (measured in an earlier run), not re-measured.",
@@ -974,7 +974,7 @@ export function renderMarkdown(r: EvalReport): string {
   out.push("");
 
   // 3. outside checks
-  out.push("## 3. Outside checks (L4)");
+  out.push("## 3. Outside checks");
   out.push("");
   if (r.outside) {
     out.push("Numbers the agent did not compute, fetched over HTTPS outside Zetaris (`agent/src/eval/outside.ts`) and compared with the cached views read through the gateway (`docs/eval/outside-checks.json`). The OpenFEMA URL is the registrar's own (major-disaster filter, declaration date inside the quarter).");
@@ -1021,7 +1021,7 @@ export function renderMarkdown(r: EvalReport): string {
   }
 
   // 4. manual baseline
-  out.push("## 4. Manual baseline: the five keys by hand (L6)");
+  out.push("## 4. Manual baseline: the five keys by hand");
   out.push("");
   if (r.manual && a) {
     const m = r.manual;
@@ -1060,7 +1060,7 @@ export function renderMarkdown(r: EvalReport): string {
   }
 
   // 5. ablation
-  out.push("## 5. Nemotron ablation on the cold question (L12)");
+  out.push("## 5. Nemotron ablation on the cold question");
   out.push("");
   out.push(
     "The same cold CY2025Q1 question three times on the same code, one after another, with the GPU sampled every 500 ms by `nvidia-smi` (whole-card memory and utilisation) and Ollama's `/api/ps` read before, 60 s into and after each run. Think on and think off apply to the planner (the note is always written with think off). No model: the host takes every checklist step (the baseline's six proposals stand in for the model's) and the note is the template. Tokens and tok/s are Ollama's counts (`eval_count`, `eval_duration`).",
