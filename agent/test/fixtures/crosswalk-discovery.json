@@ -1,0 +1,2742 @@
+{
+  "synthetic": true,
+  "note": "catalogue and manifest are copies of the committed seeds/catalogue.json and zetaris/manifest.json; every other value is synthetic",
+  "search": {
+    "inputs": {
+      "catalogue": {
+        "generated_at": "2026-10-25",
+        "generator": "scaffold lane; statuses copied from the getting-started manifest, from Weather-or-Not's verified registrations of 2026-10-24, or from the plain-HTTPS checks named in verified_how",
+        "fields": {
+          "id": "catalogue id the agent's search_catalogue tool returns",
+          "kind": "REST | FILESTORE | catalogue",
+          "url": "endpoint or path pattern ({tag}, {period}, {cik10}, {year}, {element} are template parameters)",
+          "licence": "licence and etiquette line shown in the evidence drawer",
+          "status": "verified | unverified | known_to_fail",
+          "note": "shape, keys and traps",
+          "verified_how": "what was checked, when and by which lane",
+          "zetaris_object": "the Lightning object once registered (planned names until zetaris/manifest.json lists them)"
+        },
+        "entries": [
+          {
+            "id": "getting_started_manifest",
+            "kind": "catalogue",
+            "url": "https://github.com/zetaris/getting-started/blob/main/open_data/manifest.json (read locally from ZETARIS_GETTING_STARTED_DIR/open_data/manifest.json)",
+            "licence": "Zetaris getting-started repository: Apache-2.0 (github.com/zetaris/getting-started).",
+            "status": "verified",
+            "note": "The vendor's onboarding manifest (version 1, 23 sources: kind rest | filestore | usl, status verified | unverified | known_to_fail | deprecated). Read at boot; the known_to_fail entries (pudl, nasa_donki, singapore_pm25, foursquare_places, overture_maps, ookla_speedtest, gbif) seed negative memories so the agent never proposes them.",
+            "verified_how": "read on 2026-10-25 from the local checkout; 23 sources listed"
+          },
+          {
+            "id": "openfema_catalogue",
+            "kind": "catalogue",
+            "url": "https://www.fema.gov/api/open/v1/OpenFemaDataSets",
+            "licence": "OpenFEMA: public US federal data, no API key; FEMA asks that OpenFEMA be cited as the source and that products not be presented as FEMA-endorsed (fema.gov/about/openfema/terms-conditions).",
+            "status": "verified",
+            "note": "The live OpenFEMA dataset catalogue: a `metadata` object and an `OpenFemaDataSets` array (name, identifier, version, title, landingPage, ...). $top / $select / $filter are OData-style query options and must be percent-encoded in a Zetaris REST endpoint ($ -> %24, space -> %20, quote -> %27).",
+            "verified_how": "plain HTTPS 2026-10-25 08:0x SGT: HTTP 200 with $top=2 (PublicAssistanceProjectsStatus v1, NfipResidentialPenetrationRates v1); registration in Zetaris is gate G1",
+            "zetaris_object": "CW_FEMA.datasets_catalogue -> cw.fema_catalogue (cached; 44 rows, 2026-10-25)"
+          },
+          {
+            "id": "openfema_disaster_declarations",
+            "kind": "REST",
+            "url": "https://www.fema.gov/api/open/v2/DisasterDeclarationsSummaries?%24filter=declarationType%20eq%20%27DR%27%20and%20declarationDate%20ge%20%272025-01-01T00%3A00%3A00.000Z%27%20and%20declarationDate%20lt%20%272025-04-01T00%3A00%3A00.000Z%27&%24top=1000",
+            "licence": "OpenFEMA: public US federal data, no API key; FEMA asks that OpenFEMA be cited as the source and that products not be presented as FEMA-endorsed (fema.gov/about/openfema/terms-conditions).",
+            "status": "verified",
+            "note": "Disaster Declarations Summaries v2: one row per declared county/area (disasterNumber, state, fipsStateCode, fipsCountyCode, declarationDate, incidentType, declarationType DR | EM | FM, ...). The array field is `DisasterDeclarationsSummaries`; the Q1-2025 DR filter returns one page. Keys: state (two letters) -> states.code; fipsStateCode (2-digit string) -> states.fips; declarationDate (ISO) -> quarter bucket.",
+            "verified_how": "plain HTTPS 2026-10-25 08:0x SGT: HTTP 200, 116 rows, 10 distinct disasterNumber, states AK CA KY MO OK OR SC WV, incidentType Severe Storm 107 / Fire 6 / Flood 3; metadata.count was 0 (not a row count); registration in Zetaris is gate G1",
+            "zetaris_object": "CW_FEMA.declarations_dr_2025q1 -> cw.fema_declarations_dr_2025q1 (cached; 116 rows, 2026-10-25)"
+          },
+          {
+            "id": "sec_frames",
+            "kind": "REST",
+            "url": "https://data.sec.gov/api/xbrl/frames/us-gaap/{tag}/USD/{period}.json",
+            "licence": "SEC EDGAR data: US Government work, public domain; SEC fair-access policy (declared User-Agent, at most 10 requests per second). Queried live through Zetaris, never redistributed.",
+            "status": "verified",
+            "note": "One XBRL fact per filer for one tag and calendar period (CY2025Q1, CY2024Q1) under us-gaap Revenues, RevenueFromContractWithCustomerExcludingAssessedTax, RegulatedAndUnregulatedOperatingRevenue. Facts: cik (integer: LPAD(CAST(cik AS STRING), 10, '0') is the key), entityName, loc ('US-XX': SUBSTR(loc, 4, 2) is the state), start, end, val (inferred double or bigint by period: CAST(val AS DOUBLE)), accn. Frames serve the most recently filed fact for the period.",
+            "verified_how": "Weather-or-Not registered and cached the six (tag, period) views on 2026-10-24; Crosswalk's CW_SEC copies are registered by lane Z",
+            "zetaris_object": "CW_SEC.frames_{tag}_{period} -> cw.frames_{tag}_{period} (cached; 3 tags x CY2025Q1, CY2024Q1, 2026-10-25)"
+          },
+          {
+            "id": "sec_submissions",
+            "kind": "REST",
+            "url": "https://data.sec.gov/submissions/CIK{cik10}.json",
+            "licence": "SEC EDGAR data: US Government work, public domain; SEC fair-access policy (declared User-Agent, at most 10 requests per second). Queried live through Zetaris, never redistributed.",
+            "status": "verified",
+            "note": "A filer's profile: cik, name, sic, sicDescription, addresses.business.stateOrCountry (the business-address state; street fields are never selected). One request per seed CIK (43).",
+            "verified_how": "Weather-or-Not registered the 43 seed profiles on 2026-10-24; Crosswalk's CW_SEC copies are registered by lane Z",
+            "zetaris_object": "CW_SEC.submissions_{cik10} -> cw.submission_{cik10} (cached; 43 seeds, 2026-10-25) and cw.seed_utilities"
+          },
+          {
+            "id": "sec_companyconcept",
+            "kind": "REST",
+            "url": "https://data.sec.gov/api/xbrl/companyconcept/CIK{cik10}/us-gaap/{tag}.json",
+            "licence": "SEC EDGAR data: US Government work, public domain; SEC fair-access policy (declared User-Agent, at most 10 requests per second). Queried live through Zetaris, never redistributed.",
+            "status": "verified",
+            "note": "A filer's full history for one tag (fy, fp, form, filed, accn, start, end, val). HTTP 404 for a tag the filer never used. Only if the answer needs a like-for-like value; Crosswalk reports frames values with the tag named.",
+            "verified_how": "Weather-or-Not registered ten (cik, tag) histories on 2026-10-24; not planned for Crosswalk unless needed"
+          },
+          {
+            "id": "company_dns_sic",
+            "kind": "REST",
+            "url": "https://company-dns.mediumroast.io/V4.0/na/sic/code/%25",
+            "licence": "company_dns: Apache-2.0 (github.com/miha42-github/company_dns); the SIC list is the SEC's public list. Called with an identifying User-Agent.",
+            "status": "verified",
+            "note": "The SIC hierarchy, 1,005 codes as a flat `data` array (section, division, group, class with descriptions). Key: class_id (4-digit string) vs submissions.sic (identity). MGE Energy's SIC 4900 is absent from V4: the expected orphan of the sic_code FK.",
+            "verified_how": "Weather-or-Not registered its sic_codes view (1,005 rows) on 2026-10-24; Crosswalk's CW_DNS copy is registered by lane Z (or the instance's COMPANY_DNS object is read if present)",
+            "zetaris_object": "CW_DNS.sic_codes_v4_raw -> cw.sic_codes (cached; 1,005 codes, 2026-10-25)"
+          },
+          {
+            "id": "noaa_ghcn_by_year",
+            "kind": "FILESTORE",
+            "url": "s3a://noaa-ghcn-pds/parquet/by_year/YEAR={year}/ELEMENT={element}/",
+            "licence": "NOAA GHCN-Daily: CC0-1.0 / US Government work (Registry of Open Data on AWS, bucket noaa-ghcn-pds); attribution to NOAA NCEI requested.",
+            "status": "verified",
+            "note": "GHCN-Daily parquet partitioned by year and element (ID, DATE yyyymmdd, DATA_VALUE in tenths of a degree C, M_FLAG, Q_FLAG, S_FLAG, OBS_TIME). Years 2024 and 2025, elements TMAX and TMIN; isS3BucketPublic true, endpoint s3.us-east-1.amazonaws.com, no credentials. Every read of a filestore table costs about 9 s per table per view level; the raw tables are never cached, the station-filtered views are. Days with a non-empty Q_FLAG on either element are dropped.",
+            "verified_how": "Weather-or-Not registered and cached the four year/element views on 2026-10-24 (pyarrow row counts matched); Crosswalk's CW_GHCN copies are registered by lane Z",
+            "zetaris_object": "CW_GHCN.ghcn_{year}_{element} -> cw.ghcn_{year}_{element} (planned)"
+          },
+          {
+            "id": "noaa_ghcn_stations",
+            "kind": "FILESTORE",
+            "url": "s3a://noaa-ghcn-pds/ghcnd-stations.txt",
+            "licence": "NOAA GHCN-Daily: CC0-1.0 / US Government work (Registry of Open Data on AWS, bucket noaa-ghcn-pds); attribution to NOAA NCEI requested.",
+            "status": "verified",
+            "note": "Fixed-width station list: id columns 1-11, latitude 13-20, longitude 22-30, elevation 32-37, state 39-40, name 42-71 (GSN flag 73-75, HCN/CRN flag 77-79, WMO id 81-85). Registered as a one-column CSV with a delimiter that never occurs in the file (for example '|' or U+0001) and parsed with SUBSTR in a view: SUBSTR(line, 1, 11) AS id, SUBSTR(line, 39, 2) AS state, SUBSTR(line, 42, 30) AS name. Key: id vs seeds station_ids (identity); state vs states.code.",
+            "verified_how": "Zetaris lane, 2026-10-25 (gate G2 green): CW_GHCN.ghcnd_stations_txt registered as a one-column CSV and cw.stations cached; 133,039 rows equal the file line count, 56 of 56 seed stations present with the seed state; the seeds/stations.json fallback was not needed",
+            "zetaris_object": "CW_GHCN.ghcnd_stations_txt -> cw.stations (one-column CSV, SUBSTR view, cached; 133,039 rows, 2026-10-25)"
+          },
+          {
+            "id": "pudl",
+            "kind": "FILESTORE",
+            "url": "Catalyst Cooperative PUDL (open_data/parquet_csv/sql/known_to_fail/03_pudl_create.sql in the getting-started repository)",
+            "licence": "PUDL data: CC-BY-4.0 (Catalyst Cooperative); not used here",
+            "status": "known_to_fail",
+            "note": "The vendor's own manifest marks the PUDL filestore registration known_to_fail. It is the obvious utility-data source an agent would reach for, so it is listed as a negative memory: the agent never proposes it.",
+            "verified_how": "status copied from the getting-started manifest; not attempted"
+          },
+          {
+            "id": "crosswalk_usl",
+            "kind": "catalogue",
+            "url": "lightning.metastore.crosswalk.crosswalk_usl",
+            "licence": "Crosswalk's own semantic layer over the sources above (their licences apply to the data it exposes)",
+            "status": "verified",
+            "note": "The governed layer this project builds: tables utility, utility_state, state, fema_declaration, station, sic_code, revenue_quarter, weather_quarter with PK/FK, compiled from verified keys, activated from raw tables, DQ run bounded at 900 s. Gate G4 (lane Z) verifies it; the registered-object entries above are updated when lane Z writes zetaris/manifest.json.",
+            "verified_how": "Zetaris lane, 2026-10-25 (gate G4): COMPILE USL ok, seven tables activated from cached views (weather_quarter not in the model on Day 0), RUN DQ utility.sic 43 / 42 / 1 with MGE Energy the one invalid row",
+            "zetaris_object": "lightning.metastore.crosswalk.crosswalk_usl (7 tables, PK/FK, activated 2026-10-25; RUN DQ sic on utility 43/42/1)"
+          }
+        ]
+      },
+      "manifest": {
+        "_comment": "Crosswalk Zetaris objects in onboarding order; each create script has a _select.sql verification pair. Status is from the Day-0 gate runs against Zetaris Lightning 2.4.3.1 (local Docker) on 2026-10-25; counts and timings in README.md. The user-agent placeholder in REST scripts is replaced from CW_USER_AGENT at run time. sql/won-reference/ is the sister entry's SQL, reference only, never run here.",
+        "version": 1,
+        "sources": [
+          {
+            "id": "cw_fema",
+            "kind": "rest",
+            "script": "zetaris/sql/01_cw_fema_create.sql",
+            "select": "zetaris/sql/01_cw_fema_select.sql",
+            "status": "verified",
+            "requires": [],
+            "hosts": [
+              "www.fema.gov"
+            ],
+            "summary": "OpenFEMA DisasterDeclarationsSummaries v2 filtered to major disasters (DR) declared in Q1 2025 (116 designated areas, 10 declarations, 8 states; equals the response fetched outside Zetaris) and the OpenFemaDataSets v1 catalogue (44 rows, 43 distinct names); container cw created here; both views cached (2026-10-25)",
+            "objects": {
+              "database": "CW_FEMA",
+              "container": "cw",
+              "raw": [
+                "CW_FEMA.declarations_dr_2025q1",
+                "CW_FEMA.datasets_catalogue"
+              ],
+              "views": [
+                "cw.fema_declarations_dr_2025q1",
+                "cw.fema_catalogue"
+              ]
+            }
+          },
+          {
+            "id": "cw_stations",
+            "kind": "filestore-csv",
+            "script": "zetaris/sql/02_cw_stations_create.sql",
+            "select": "zetaris/sql/02_cw_stations_select.sql",
+            "status": "verified",
+            "requires": [
+              "cw_fema"
+            ],
+            "hosts": [
+              "s3a://noaa-ghcn-pds/"
+            ],
+            "summary": "NOAA GHCN-Daily station inventory ghcnd-stations.txt as a one-column CSV (delimiter '|', never in the file) parsed with SUBSTR into id, state, name, latitude, longitude; 133,039 rows (= the file's line count), 78,568 US stations with a state, the 56 seed stations present with 56/56 states equal to seeds/stations.json; view cached (2026-10-25)",
+            "objects": {
+              "database": "CW_GHCN",
+              "raw": "CW_GHCN.ghcnd_stations_txt",
+              "view": "cw.stations"
+            }
+          },
+          {
+            "id": "cw_sec",
+            "kind": "rest",
+            "script": "zetaris/sql/03_cw_sec_create.sql",
+            "select": "zetaris/sql/03_cw_sec_select.sql",
+            "status": "verified",
+            "requires": [
+              "cw_fema"
+            ],
+            "hosts": [
+              "data.sec.gov"
+            ],
+            "summary": "SEC EDGAR XBRL frames for Revenues, RevenueFromContractWithCustomerExcludingAssessedTax and RegulatedAndUnregulatedOperatingRevenue x CY2025Q1, CY2024Q1 (1,937 / 2,095 / 2,546 / 2,654 / 20 / 22 facts, equal to the sister entry's source counts) and the submissions profile of the 43 seed utilities; 148 statements in 68 s; every view cached (2026-10-25)",
+            "objects": {
+              "database": "CW_SEC",
+              "container": "cw",
+              "frames": [
+                "cw.frames_<tag>_<period>"
+              ],
+              "submission": [
+                "cw.submission_<cik10>"
+              ]
+            }
+          },
+          {
+            "id": "cw_dns",
+            "kind": "rest",
+            "script": "zetaris/sql/04_cw_dns_create.sql",
+            "select": "zetaris/sql/04_cw_dns_select.sql",
+            "status": "verified",
+            "requires": [
+              "cw_fema"
+            ],
+            "hosts": [
+              "company-dns.mediumroast.io"
+            ],
+            "summary": "company_dns SIC reference V4, 1,005 codes (1,005 distinct, all four digits), raw table and view cw.sic_codes cached (2026-10-25)",
+            "objects": {
+              "database": "CW_DNS",
+              "raw": "CW_DNS.sic_codes_v4_raw",
+              "view": "cw.sic_codes"
+            }
+          },
+          {
+            "id": "cw_seeds",
+            "kind": "values-views",
+            "script": "zetaris/sql/05_cw_seeds_create.sql",
+            "select": "zetaris/sql/05_cw_seeds_select.sql",
+            "status": "verified",
+            "requires": [
+              "cw_sec"
+            ],
+            "hosts": [],
+            "summary": "The committed seed files as SchemaStore views over inline VALUES: cw.states (51), cw.utility_states (97 pairs, 43 utilities, 43 states, 0 orphans against cw.states), cw.seed_stations (56), and cw.seed_utilities (43 rows from the 43 cached submission views with the seed ticker: 40 with a ticker; SIC 4911 x 25, 4931 x 16, 4932 x 1, 4900 x 1 = MGE Energy); all cached (2026-10-25)",
+            "objects": {
+              "container": "cw",
+              "views": [
+                "cw.states",
+                "cw.utility_states",
+                "cw.seed_stations",
+                "cw.seed_utilities"
+              ]
+            }
+          },
+          {
+            "id": "cw_joinmap",
+            "kind": "measurement",
+            "script": "zetaris/sql/06_cw_joinmap_select.sql",
+            "status": "verified",
+            "requires": [
+              "cw_fema",
+              "cw_stations",
+              "cw_sec",
+              "cw_dns",
+              "cw_seeds"
+            ],
+            "hosts": [],
+            "summary": "The five join keys measured over cached views (match rate = matched distinct left keys / distinct left keys): (a) cik lpad10 43/42 = 0.977 VERIFIED (orphan IDACORP, no CY2025Q1 fact); (b) loc substr(4,2) vs business state 42/42 = 1.0; (c) FEMA state vs served states 8/7 = 0.875 PARTIAL (orphan AK), FEMA FIPS vs state reference 8/8; (d) seed station id vs inventory 56/56 with 56/56 states equal; (e) SIC vs sic_codes 4/3 = 0.75 by distinct codes, 43/42 = 0.977 by utility (orphan MGE Energy 4900). Every statement under 19 s (2026-10-25)"
+          },
+          {
+            "id": "cw_usl",
+            "kind": "usl",
+            "script": "zetaris/sql/07_cw_usl_create.sql",
+            "select": "zetaris/sql/07_cw_usl_select.sql",
+            "status": "verified",
+            "requires": [
+              "cw_fema",
+              "cw_stations",
+              "cw_sec",
+              "cw_dns",
+              "cw_seeds"
+            ],
+            "hosts": [],
+            "summary": "USL crosswalk_usl in lightning.metastore.crosswalk: state, sic_code, utility, utility_state, fema_declaration, station, revenue_quarter with PK/FK and descriptions, each activated from a cached view (51 / 1,005 / 43 / 97 / 116 / 56 / 133 rows); RUN DQ per FK: utility.sic 43 / 42 / 1 (MGE Energy, SIC 4900 absent from company_dns), utility_state.cik 97 / 97 / 0, utility_state.state 97 / 97 / 0, fema_declaration.state 116 / 116 / 0, station.state 56 / 56 / 0, revenue_quarter.cik 133 / 133 / 0 on a second run after one refused SEC connection (2026-10-25); weather_quarter not in the model (no GHCN parquet registered on Day 0)",
+            "objects": {
+              "namespace": "lightning.metastore.crosswalk",
+              "usl": "lightning.metastore.crosswalk.crosswalk_usl",
+              "tables": [
+                "state",
+                "sic_code",
+                "utility",
+                "utility_state",
+                "fema_declaration",
+                "station",
+                "revenue_quarter"
+              ],
+              "dq": [
+                "primary and foreign key rules named after their columns (LIST DQ USL)"
+              ]
+            }
+          }
+        ]
+      },
+      "fema_catalogue_rows": [
+        {
+          "name": "DisasterDeclarationsSummaries",
+          "version": 2,
+          "title": "Disaster Declarations Summaries (synthetic title)",
+          "api_endpoint": "https://www.fema.gov/api/open/v2/DisasterDeclarationsSummaries",
+          "last_dataset_refresh": "2026-10-25T00:00:00.000Z"
+        },
+        {
+          "name": "FemaWebDisasterDeclarations",
+          "version": 1,
+          "title": "FEMA Web Disaster Declarations (synthetic title)",
+          "api_endpoint": "https://www.fema.gov/api/open/v1/FemaWebDisasterDeclarations",
+          "last_dataset_refresh": "2026-10-20T00:00:00.000Z"
+        },
+        {
+          "name": "PublicAssistanceProjectsStatus",
+          "version": 1,
+          "title": "Public Assistance Projects Status (synthetic title)",
+          "api_endpoint": "https://www.fema.gov/api/open/v1/PublicAssistanceProjectsStatus",
+          "last_dataset_refresh": "2026-10-19T00:00:00.000Z"
+        },
+        {
+          "name": "NfipResidentialPenetrationRates",
+          "version": 1,
+          "title": "NFIP Residential Penetration Rates (synthetic title)",
+          "api_endpoint": "",
+          "last_dataset_refresh": "2026-09-01T00:00:00.000Z"
+        }
+      ],
+      "getting_started": {
+        "version": 1,
+        "sources": [
+          {
+            "id": "pudl",
+            "kind": "filestore",
+            "status": "known_to_fail",
+            "summary": "Public Utility Data Liberation project electricity utility data (synthetic summary)"
+          },
+          {
+            "id": "nasa_donki",
+            "kind": "rest",
+            "status": "known_to_fail",
+            "summary": "Space weather notifications (synthetic summary)"
+          },
+          {
+            "id": "company_dns",
+            "kind": "rest",
+            "status": "verified",
+            "summary": "US SIC code hierarchy from the company_dns service (synthetic summary)"
+          }
+        ]
+      }
+    },
+    "entries": [
+      {
+        "id": "getting_started_manifest",
+        "kind": "catalogue",
+        "object": null,
+        "status": "verified",
+        "licence": "Zetaris getting-started repository: Apache-2.0 (github.com/zetaris/getting-started).",
+        "note": "The vendor's onboarding manifest (version 1, 23 sources: kind rest | filestore | usl, status verified | unverified | known_to_fail | deprecated). Read at boot; the known_to_fail entries (pudl, nasa_donki, singapore_pm25, foursquare_places, overture_maps, ookla_speedtest, gbif) seed negative memories so the agent never proposes them."
+      },
+      {
+        "id": "openfema_catalogue",
+        "kind": "catalogue",
+        "object": "cw.fema_catalogue",
+        "status": "verified",
+        "licence": "OpenFEMA: public US federal data, no API key; FEMA asks that OpenFEMA be cited as the source and that products not be presented as FEMA-endorsed (fema.gov/about/openfema/terms-conditions).",
+        "note": "The live OpenFEMA dataset catalogue: a `metadata` object and an `OpenFemaDataSets` array (name, identifier, version, title, landingPage, ...). $top / $select / $filter are OData-style query options and must be percent-encoded in a Zetaris REST endpoint ($ -> %24, space -> %20, quote -> %27)."
+      },
+      {
+        "id": "openfema_disaster_declarations",
+        "kind": "REST",
+        "object": "cw.fema_declarations_dr_2025q1",
+        "status": "verified",
+        "licence": "OpenFEMA: public US federal data, no API key; FEMA asks that OpenFEMA be cited as the source and that products not be presented as FEMA-endorsed (fema.gov/about/openfema/terms-conditions).",
+        "note": "Disaster Declarations Summaries v2: one row per declared county/area (disasterNumber, state, fipsStateCode, fipsCountyCode, declarationDate, incidentType, declarationType DR | EM | FM, ...). The array field is `DisasterDeclarationsSummaries`; the Q1-2025 DR filter returns one page. Keys: state (two letters) -> states.code; fipsStateCode (2-digit string) -> states.fips; declarationDate (ISO) -> quarter bucket."
+      },
+      {
+        "id": "sec_frames",
+        "kind": "REST",
+        "object": "cw.frames_{tag}_{period}",
+        "status": "verified",
+        "licence": "SEC EDGAR data: US Government work, public domain; SEC fair-access policy (declared User-Agent, at most 10 requests per second). Queried live through Zetaris, never redistributed.",
+        "note": "One XBRL fact per filer for one tag and calendar period (CY2025Q1, CY2024Q1) under us-gaap Revenues, RevenueFromContractWithCustomerExcludingAssessedTax, RegulatedAndUnregulatedOperatingRevenue. Facts: cik (integer: LPAD(CAST(cik AS STRING), 10, '0') is the key), entityName, loc ('US-XX': SUBSTR(loc, 4, 2) is the state), start, end, val (inferred double or bigint by period: CAST(val AS DOUBLE)), accn. Frames serve the most recently filed fact for the period."
+      },
+      {
+        "id": "sec_submissions",
+        "kind": "REST",
+        "object": "cw.submission_{cik10}",
+        "status": "verified",
+        "licence": "SEC EDGAR data: US Government work, public domain; SEC fair-access policy (declared User-Agent, at most 10 requests per second). Queried live through Zetaris, never redistributed.",
+        "note": "A filer's profile: cik, name, sic, sicDescription, addresses.business.stateOrCountry (the business-address state; street fields are never selected). One request per seed CIK (43)."
+      },
+      {
+        "id": "sec_companyconcept",
+        "kind": "REST",
+        "object": null,
+        "status": "verified",
+        "licence": "SEC EDGAR data: US Government work, public domain; SEC fair-access policy (declared User-Agent, at most 10 requests per second). Queried live through Zetaris, never redistributed.",
+        "note": "A filer's full history for one tag (fy, fp, form, filed, accn, start, end, val). HTTP 404 for a tag the filer never used. Only if the answer needs a like-for-like value; Crosswalk reports frames values with the tag named."
+      },
+      {
+        "id": "company_dns_sic",
+        "kind": "REST",
+        "object": "cw.sic_codes",
+        "status": "verified",
+        "licence": "company_dns: Apache-2.0 (github.com/miha42-github/company_dns); the SIC list is the SEC's public list. Called with an identifying User-Agent.",
+        "note": "The SIC hierarchy, 1,005 codes as a flat `data` array (section, division, group, class with descriptions). Key: class_id (4-digit string) vs submissions.sic (identity). MGE Energy's SIC 4900 is absent from V4: the expected orphan of the sic_code FK."
+      },
+      {
+        "id": "noaa_ghcn_by_year",
+        "kind": "FILESTORE",
+        "object": "cw.ghcn_{year}_{element}",
+        "status": "verified",
+        "licence": "NOAA GHCN-Daily: CC0-1.0 / US Government work (Registry of Open Data on AWS, bucket noaa-ghcn-pds); attribution to NOAA NCEI requested.",
+        "note": "GHCN-Daily parquet partitioned by year and element (ID, DATE yyyymmdd, DATA_VALUE in tenths of a degree C, M_FLAG, Q_FLAG, S_FLAG, OBS_TIME). Years 2024 and 2025, elements TMAX and TMIN; isS3BucketPublic true, endpoint s3.us-east-1.amazonaws.com, no credentials. Every read of a filestore table costs about 9 s per table per view level; the raw tables are never cached, the station-filtered views are. Days with a non-empty Q_FLAG on either element are dropped."
+      },
+      {
+        "id": "noaa_ghcn_stations",
+        "kind": "FILESTORE",
+        "object": "cw.stations",
+        "status": "verified",
+        "licence": "NOAA GHCN-Daily: CC0-1.0 / US Government work (Registry of Open Data on AWS, bucket noaa-ghcn-pds); attribution to NOAA NCEI requested.",
+        "note": "Fixed-width station list: id columns 1-11, latitude 13-20, longitude 22-30, elevation 32-37, state 39-40, name 42-71 (GSN flag 73-75, HCN/CRN flag 77-79, WMO id 81-85). Registered as a one-column CSV with a delimiter that never occurs in the file (for example '|' or U+0001) and parsed with SUBSTR in a view: SUBSTR(line, 1, 11) AS id, SUBSTR(line, 39, 2) AS state, SUBSTR(line, 42, 30) AS name. Key: id vs seeds station_ids (identity); state vs states.code."
+      },
+      {
+        "id": "pudl",
+        "kind": "FILESTORE",
+        "object": null,
+        "status": "known_to_fail",
+        "licence": "PUDL data: CC-BY-4.0 (Catalyst Cooperative); not used here",
+        "note": "The vendor's own manifest marks the PUDL filestore registration known_to_fail. It is the obvious utility-data source an agent would reach for, so it is listed as a negative memory: the agent never proposes it."
+      },
+      {
+        "id": "crosswalk_usl",
+        "kind": "catalogue",
+        "object": "lightning.metastore.crosswalk.crosswalk_usl",
+        "status": "verified",
+        "licence": "Crosswalk's own semantic layer over the sources above (their licences apply to the data it exposes)",
+        "note": "The governed layer this project builds: tables utility, utility_state, state, fema_declaration, station, sic_code, revenue_quarter, weather_quarter with PK/FK, compiled from verified keys, activated from raw tables, DQ run bounded at 900 s. Gate G4 (lane Z) verifies it; the registered-object entries above are updated when lane Z writes zetaris/manifest.json."
+      },
+      {
+        "id": "cw_fema:cw.fema_declarations_dr_2025q1",
+        "object": "cw.fema_declarations_dr_2025q1",
+        "kind": "registered_view",
+        "status": "verified",
+        "licence": "",
+        "note": "OpenFEMA DisasterDeclarationsSummaries v2 filtered to major disasters (DR) declared in Q1 2025 (116 designated areas, 10 declarations, 8 states; equals the response fetched outside Zetaris) and the OpenFemaDataSets v1 catalogue (44 rows, 43 distinct names); container cw created here; both views cached (2026-10-25)"
+      },
+      {
+        "id": "cw_fema:cw.fema_catalogue",
+        "object": "cw.fema_catalogue",
+        "kind": "registered_view",
+        "status": "verified",
+        "licence": "",
+        "note": "OpenFEMA DisasterDeclarationsSummaries v2 filtered to major disasters (DR) declared in Q1 2025 (116 designated areas, 10 declarations, 8 states; equals the response fetched outside Zetaris) and the OpenFemaDataSets v1 catalogue (44 rows, 43 distinct names); container cw created here; both views cached (2026-10-25)"
+      },
+      {
+        "id": "cw_stations:cw.stations",
+        "object": "cw.stations",
+        "kind": "registered_view",
+        "status": "verified",
+        "licence": "",
+        "note": "NOAA GHCN-Daily station inventory ghcnd-stations.txt as a one-column CSV (delimiter '|', never in the file) parsed with SUBSTR into id, state, name, latitude, longitude; 133,039 rows (= the file's line count), 78,568 US stations with a state, the 56 seed stations present with 56/56 states equal to seeds/stations.json; view cached (2026-10-25)"
+      },
+      {
+        "id": "cw_sec:cw.frames_<tag>_<period>",
+        "object": "cw.frames_<tag>_<period>",
+        "kind": "registered_view",
+        "status": "verified",
+        "licence": "",
+        "note": "SEC EDGAR XBRL frames for Revenues, RevenueFromContractWithCustomerExcludingAssessedTax and RegulatedAndUnregulatedOperatingRevenue x CY2025Q1, CY2024Q1 (1,937 / 2,095 / 2,546 / 2,654 / 20 / 22 facts, equal to the sister entry's source counts) and the submissions profile of the 43 seed utilities; 148 statements in 68 s; every view cached (2026-10-25)"
+      },
+      {
+        "id": "cw_sec:cw.submission_<cik10>",
+        "object": "cw.submission_<cik10>",
+        "kind": "registered_view",
+        "status": "verified",
+        "licence": "",
+        "note": "SEC EDGAR XBRL frames for Revenues, RevenueFromContractWithCustomerExcludingAssessedTax and RegulatedAndUnregulatedOperatingRevenue x CY2025Q1, CY2024Q1 (1,937 / 2,095 / 2,546 / 2,654 / 20 / 22 facts, equal to the sister entry's source counts) and the submissions profile of the 43 seed utilities; 148 statements in 68 s; every view cached (2026-10-25)"
+      },
+      {
+        "id": "cw_dns:cw.sic_codes",
+        "object": "cw.sic_codes",
+        "kind": "registered_view",
+        "status": "verified",
+        "licence": "",
+        "note": "company_dns SIC reference V4, 1,005 codes (1,005 distinct, all four digits), raw table and view cw.sic_codes cached (2026-10-25)"
+      },
+      {
+        "id": "cw_seeds:cw.states",
+        "object": "cw.states",
+        "kind": "registered_view",
+        "status": "verified",
+        "licence": "",
+        "note": "The committed seed files as SchemaStore views over inline VALUES: cw.states (51), cw.utility_states (97 pairs, 43 utilities, 43 states, 0 orphans against cw.states), cw.seed_stations (56), and cw.seed_utilities (43 rows from the 43 cached submission views with the seed ticker: 40 with a ticker; SIC 4911 x 25, 4931 x 16, 4932 x 1, 4900 x 1 = MGE Energy); all cached (2026-10-25)"
+      },
+      {
+        "id": "cw_seeds:cw.utility_states",
+        "object": "cw.utility_states",
+        "kind": "registered_view",
+        "status": "verified",
+        "licence": "",
+        "note": "The committed seed files as SchemaStore views over inline VALUES: cw.states (51), cw.utility_states (97 pairs, 43 utilities, 43 states, 0 orphans against cw.states), cw.seed_stations (56), and cw.seed_utilities (43 rows from the 43 cached submission views with the seed ticker: 40 with a ticker; SIC 4911 x 25, 4931 x 16, 4932 x 1, 4900 x 1 = MGE Energy); all cached (2026-10-25)"
+      },
+      {
+        "id": "cw_seeds:cw.seed_stations",
+        "object": "cw.seed_stations",
+        "kind": "registered_view",
+        "status": "verified",
+        "licence": "",
+        "note": "The committed seed files as SchemaStore views over inline VALUES: cw.states (51), cw.utility_states (97 pairs, 43 utilities, 43 states, 0 orphans against cw.states), cw.seed_stations (56), and cw.seed_utilities (43 rows from the 43 cached submission views with the seed ticker: 40 with a ticker; SIC 4911 x 25, 4931 x 16, 4932 x 1, 4900 x 1 = MGE Energy); all cached (2026-10-25)"
+      },
+      {
+        "id": "cw_seeds:cw.seed_utilities",
+        "object": "cw.seed_utilities",
+        "kind": "registered_view",
+        "status": "verified",
+        "licence": "",
+        "note": "The committed seed files as SchemaStore views over inline VALUES: cw.states (51), cw.utility_states (97 pairs, 43 utilities, 43 states, 0 orphans against cw.states), cw.seed_stations (56), and cw.seed_utilities (43 rows from the 43 cached submission views with the seed ticker: 40 with a ticker; SIC 4911 x 25, 4931 x 16, 4932 x 1, 4900 x 1 = MGE Energy); all cached (2026-10-25)"
+      },
+      {
+        "id": "cw_joinmap",
+        "object": null,
+        "kind": "registered_view",
+        "status": "verified",
+        "licence": "",
+        "note": "The five join keys measured over cached views (match rate = matched distinct left keys / distinct left keys): (a) cik lpad10 43/42 = 0.977 VERIFIED (orphan IDACORP, no CY2025Q1 fact); (b) loc substr(4,2) vs business state 42/42 = 1.0; (c) FEMA state vs served states 8/7 = 0.875 PARTIAL (orphan AK), FEMA FIPS vs state reference 8/8; (d) seed station id vs inventory 56/56 with 56/56 states equal; (e) SIC vs sic_codes 4/3 = 0.75 by distinct codes, 43/42 = 0.977 by utility (orphan MGE Energy 4900). Every statement under 19 s (2026-10-25)"
+      },
+      {
+        "id": "cw_usl:lightning.metastore.crosswalk.crosswalk_usl",
+        "object": "lightning.metastore.crosswalk.crosswalk_usl",
+        "kind": "registered_view",
+        "status": "verified",
+        "licence": "",
+        "note": "USL crosswalk_usl in lightning.metastore.crosswalk: state, sic_code, utility, utility_state, fema_declaration, station, revenue_quarter with PK/FK and descriptions, each activated from a cached view (51 / 1,005 / 43 / 97 / 116 / 56 / 133 rows); RUN DQ per FK: utility.sic 43 / 42 / 1 (MGE Energy, SIC 4900 absent from company_dns), utility_state.cik 97 / 97 / 0, utility_state.state 97 / 97 / 0, fema_declaration.state 116 / 116 / 0, station.state 56 / 56 / 0, revenue_quarter.cik 133 / 133 / 0 on a second run after one refused SEC connection (2026-10-25); weather_quarter not in the model (no GHCN parquet registered on Day 0)"
+      },
+      {
+        "id": "openfema:DisasterDeclarationsSummaries@v2",
+        "kind": "openfema_dataset",
+        "object": null,
+        "status": "listed",
+        "licence": "",
+        "note": "Disaster Declarations Summaries (synthetic title) https://www.fema.gov/api/open/v2/DisasterDeclarationsSummaries"
+      },
+      {
+        "id": "openfema:FemaWebDisasterDeclarations@v1",
+        "kind": "openfema_dataset",
+        "object": null,
+        "status": "listed",
+        "licence": "",
+        "note": "FEMA Web Disaster Declarations (synthetic title) https://www.fema.gov/api/open/v1/FemaWebDisasterDeclarations"
+      },
+      {
+        "id": "openfema:PublicAssistanceProjectsStatus@v1",
+        "kind": "openfema_dataset",
+        "object": null,
+        "status": "listed",
+        "licence": "",
+        "note": "Public Assistance Projects Status (synthetic title) https://www.fema.gov/api/open/v1/PublicAssistanceProjectsStatus"
+      },
+      {
+        "id": "openfema:NfipResidentialPenetrationRates@v1",
+        "kind": "openfema_dataset",
+        "object": null,
+        "status": "listed",
+        "licence": "",
+        "note": "NFIP Residential Penetration Rates (synthetic title)"
+      },
+      {
+        "id": "gs:pudl",
+        "object": null,
+        "kind": "filestore",
+        "status": "known_to_fail",
+        "licence": "",
+        "note": "Public Utility Data Liberation project electricity utility data (synthetic summary)"
+      },
+      {
+        "id": "gs:nasa_donki",
+        "object": null,
+        "kind": "rest",
+        "status": "known_to_fail",
+        "licence": "",
+        "note": "Space weather notifications (synthetic summary)"
+      },
+      {
+        "id": "gs:company_dns",
+        "object": null,
+        "kind": "rest",
+        "status": "verified",
+        "licence": "",
+        "note": "US SIC code hierarchy from the company_dns service (synthetic summary)"
+      }
+    ],
+    "tokenize": [
+      {
+        "text": "DisasterDeclarationsSummaries",
+        "expected": [
+          "disaster",
+          "declaration",
+          "summary"
+        ]
+      },
+      {
+        "text": "utilities served states",
+        "expected": [
+          "utility",
+          "served",
+          "state"
+        ]
+      },
+      {
+        "text": "the FEMA's Q1-2025 DR filter",
+        "expected": [
+          "fema",
+          "q1",
+          "2025",
+          "dr",
+          "filter"
+        ]
+      },
+      {
+        "text": "cw.fema_declarations_dr_2025q1",
+        "expected": [
+          "cw",
+          "fema",
+          "declaration",
+          "dr",
+          "2025q1"
+        ]
+      },
+      {
+        "text": "glass ss bus",
+        "expected": [
+          "glass",
+          "ss",
+          "bus"
+        ]
+      }
+    ],
+    "cases": [
+      {
+        "query": "FEMA major disaster declarations by state",
+        "limit": 8,
+        "expected": [
+          {
+            "id": "cw_fema:cw.fema_catalogue",
+            "object": "cw.fema_catalogue",
+            "kind": "registered_view",
+            "status": "verified",
+            "licence": "",
+            "note": "OpenFEMA DisasterDeclarationsSummaries v2 filtered to major disasters (DR) declared in Q1 2025 (116 designated areas, 10 declarations, 8 states; equals the response fetched outside Zetaris) and the Op",
+            "score": 5,
+            "negative": false
+          },
+          {
+            "id": "cw_fema:cw.fema_declarations_dr_2025q1",
+            "object": "cw.fema_declarations_dr_2025q1",
+            "kind": "registered_view",
+            "status": "verified",
+            "licence": "",
+            "note": "OpenFEMA DisasterDeclarationsSummaries v2 filtered to major disasters (DR) declared in Q1 2025 (116 designated areas, 10 declarations, 8 states; equals the response fetched outside Zetaris) and the Op",
+            "score": 5,
+            "negative": false
+          },
+          {
+            "id": "openfema_disaster_declarations",
+            "kind": "REST",
+            "object": "cw.fema_declarations_dr_2025q1",
+            "status": "verified",
+            "licence": "OpenFEMA: public US federal data, no API key; FEMA asks that OpenFEMA be cited as the source and that products not be presented as FEMA-endorsed (fema.gov/about/openfema/terms-conditions).",
+            "note": "Disaster Declarations Summaries v2: one row per declared county/area (disasterNumber, state, fipsStateCode, fipsCountyCode, declarationDate, incidentType, declarationType DR | EM | FM, ...). The array",
+            "score": 4,
+            "negative": false
+          },
+          {
+            "id": "crosswalk_usl",
+            "kind": "catalogue",
+            "object": "lightning.metastore.crosswalk.crosswalk_usl",
+            "status": "verified",
+            "licence": "Crosswalk's own semantic layer over the sources above (their licences apply to the data it exposes)",
+            "note": "The governed layer this project builds: tables utility, utility_state, state, fema_declaration, station, sic_code, revenue_quarter, weather_quarter with PK/FK, compiled from verified keys, activated f",
+            "score": 3,
+            "negative": false
+          },
+          {
+            "id": "cw_usl:lightning.metastore.crosswalk.crosswalk_usl",
+            "object": "lightning.metastore.crosswalk.crosswalk_usl",
+            "kind": "registered_view",
+            "status": "verified",
+            "licence": "",
+            "note": "USL crosswalk_usl in lightning.metastore.crosswalk: state, sic_code, utility, utility_state, fema_declaration, station, revenue_quarter with PK/FK and descriptions, each activated from a cached view (",
+            "score": 3,
+            "negative": false
+          },
+          {
+            "id": "openfema:DisasterDeclarationsSummaries@v2",
+            "kind": "openfema_dataset",
+            "object": null,
+            "status": "listed",
+            "licence": "",
+            "note": "Disaster Declarations Summaries (synthetic title) https://www.fema.gov/api/open/v2/DisasterDeclarationsSummaries",
+            "score": 3,
+            "negative": false
+          },
+          {
+            "id": "openfema:FemaWebDisasterDeclarations@v1",
+            "kind": "openfema_dataset",
+            "object": null,
+            "status": "listed",
+            "licence": "",
+            "note": "FEMA Web Disaster Declarations (synthetic title) https://www.fema.gov/api/open/v1/FemaWebDisasterDeclarations",
+            "score": 3,
+            "negative": false
+          },
+          {
+            "id": "cw_joinmap",
+            "object": null,
+            "kind": "registered_view",
+            "status": "verified",
+            "licence": "",
+            "note": "The five join keys measured over cached views (match rate = matched distinct left keys / distinct left keys): (a) cik lpad10 43/42 = 0.977 VERIFIED (orphan IDACORP, no CY2025Q1 fact); (b) loc substr(4",
+            "score": 2,
+            "negative": false
+          }
+        ]
+      },
+      {
+        "query": "utility revenue SEC frames",
+        "limit": 8,
+        "expected": [
+          {
+            "id": "cw_sec:cw.frames_<tag>_<period>",
+            "object": "cw.frames_<tag>_<period>",
+            "kind": "registered_view",
+            "status": "verified",
+            "licence": "",
+            "note": "SEC EDGAR XBRL frames for Revenues, RevenueFromContractWithCustomerExcludingAssessedTax and RegulatedAndUnregulatedOperatingRevenue x CY2025Q1, CY2024Q1 (1,937 / 2,095 / 2,546 / 2,654 / 20 / 22 facts,",
+            "score": 4,
+            "negative": false
+          },
+          {
+            "id": "cw_sec:cw.submission_<cik10>",
+            "object": "cw.submission_<cik10>",
+            "kind": "registered_view",
+            "status": "verified",
+            "licence": "",
+            "note": "SEC EDGAR XBRL frames for Revenues, RevenueFromContractWithCustomerExcludingAssessedTax and RegulatedAndUnregulatedOperatingRevenue x CY2025Q1, CY2024Q1 (1,937 / 2,095 / 2,546 / 2,654 / 20 / 22 facts,",
+            "score": 4,
+            "negative": false
+          },
+          {
+            "id": "cw_usl:lightning.metastore.crosswalk.crosswalk_usl",
+            "object": "lightning.metastore.crosswalk.crosswalk_usl",
+            "kind": "registered_view",
+            "status": "verified",
+            "licence": "",
+            "note": "USL crosswalk_usl in lightning.metastore.crosswalk: state, sic_code, utility, utility_state, fema_declaration, station, revenue_quarter with PK/FK and descriptions, each activated from a cached view (",
+            "score": 3,
+            "negative": false
+          },
+          {
+            "id": "sec_frames",
+            "kind": "REST",
+            "object": "cw.frames_{tag}_{period}",
+            "status": "verified",
+            "licence": "SEC EDGAR data: US Government work, public domain; SEC fair-access policy (declared User-Agent, at most 10 requests per second). Queried live through Zetaris, never redistributed.",
+            "note": "One XBRL fact per filer for one tag and calendar period (CY2025Q1, CY2024Q1) under us-gaap Revenues, RevenueFromContractWithCustomerExcludingAssessedTax, RegulatedAndUnregulatedOperatingRevenue. Facts",
+            "score": 3,
+            "negative": false
+          },
+          {
+            "id": "crosswalk_usl",
+            "kind": "catalogue",
+            "object": "lightning.metastore.crosswalk.crosswalk_usl",
+            "status": "verified",
+            "licence": "Crosswalk's own semantic layer over the sources above (their licences apply to the data it exposes)",
+            "note": "The governed layer this project builds: tables utility, utility_state, state, fema_declaration, station, sic_code, revenue_quarter, weather_quarter with PK/FK, compiled from verified keys, activated f",
+            "score": 2,
+            "negative": false
+          },
+          {
+            "id": "sec_companyconcept",
+            "kind": "REST",
+            "object": null,
+            "status": "verified",
+            "licence": "SEC EDGAR data: US Government work, public domain; SEC fair-access policy (declared User-Agent, at most 10 requests per second). Queried live through Zetaris, never redistributed.",
+            "note": "A filer's full history for one tag (fy, fp, form, filed, accn, start, end, val). HTTP 404 for a tag the filer never used. Only if the answer needs a like-for-like value; Crosswalk reports frames value",
+            "score": 2,
+            "negative": false
+          },
+          {
+            "id": "cw_joinmap",
+            "object": null,
+            "kind": "registered_view",
+            "status": "verified",
+            "licence": "",
+            "note": "The five join keys measured over cached views (match rate = matched distinct left keys / distinct left keys): (a) cik lpad10 43/42 = 0.977 VERIFIED (orphan IDACORP, no CY2025Q1 fact); (b) loc substr(4",
+            "score": 1,
+            "negative": false
+          },
+          {
+            "id": "cw_seeds:cw.seed_stations",
+            "object": "cw.seed_stations",
+            "kind": "registered_view",
+            "status": "verified",
+            "licence": "",
+            "note": "The committed seed files as SchemaStore views over inline VALUES: cw.states (51), cw.utility_states (97 pairs, 43 utilities, 43 states, 0 orphans against cw.states), cw.seed_stations (56), and cw.seed",
+            "score": 1,
+            "negative": false
+          }
+        ]
+      },
+      {
+        "query": "weather stations GHCN state",
+        "limit": 5,
+        "expected": [
+          {
+            "id": "cw_usl:lightning.metastore.crosswalk.crosswalk_usl",
+            "object": "lightning.metastore.crosswalk.crosswalk_usl",
+            "kind": "registered_view",
+            "status": "verified",
+            "licence": "",
+            "note": "USL crosswalk_usl in lightning.metastore.crosswalk: state, sic_code, utility, utility_state, fema_declaration, station, revenue_quarter with PK/FK and descriptions, each activated from a cached view (",
+            "score": 4,
+            "negative": false
+          },
+          {
+            "id": "crosswalk_usl",
+            "kind": "catalogue",
+            "object": "lightning.metastore.crosswalk.crosswalk_usl",
+            "status": "verified",
+            "licence": "Crosswalk's own semantic layer over the sources above (their licences apply to the data it exposes)",
+            "note": "The governed layer this project builds: tables utility, utility_state, state, fema_declaration, station, sic_code, revenue_quarter, weather_quarter with PK/FK, compiled from verified keys, activated f",
+            "score": 3,
+            "negative": false
+          },
+          {
+            "id": "cw_stations:cw.stations",
+            "object": "cw.stations",
+            "kind": "registered_view",
+            "status": "verified",
+            "licence": "",
+            "note": "NOAA GHCN-Daily station inventory ghcnd-stations.txt as a one-column CSV (delimiter '|', never in the file) parsed with SUBSTR into id, state, name, latitude, longitude; 133,039 rows (= the file's lin",
+            "score": 3,
+            "negative": false
+          },
+          {
+            "id": "noaa_ghcn_stations",
+            "kind": "FILESTORE",
+            "object": "cw.stations",
+            "status": "verified",
+            "licence": "NOAA GHCN-Daily: CC0-1.0 / US Government work (Registry of Open Data on AWS, bucket noaa-ghcn-pds); attribution to NOAA NCEI requested.",
+            "note": "Fixed-width station list: id columns 1-11, latitude 13-20, longitude 22-30, elevation 32-37, state 39-40, name 42-71 (GSN flag 73-75, HCN/CRN flag 77-79, WMO id 81-85). Registered as a one-column CSV ",
+            "score": 3,
+            "negative": false
+          },
+          {
+            "id": "cw_joinmap",
+            "object": null,
+            "kind": "registered_view",
+            "status": "verified",
+            "licence": "",
+            "note": "The five join keys measured over cached views (match rate = matched distinct left keys / distinct left keys): (a) cik lpad10 43/42 = 0.977 VERIFIED (orphan IDACORP, no CY2025Q1 fact); (b) loc substr(4",
+            "score": 2,
+            "negative": false
+          }
+        ]
+      },
+      {
+        "query": "SIC code reference",
+        "limit": 4,
+        "expected": [
+          {
+            "id": "cw_dns:cw.sic_codes",
+            "object": "cw.sic_codes",
+            "kind": "registered_view",
+            "status": "verified",
+            "licence": "",
+            "note": "company_dns SIC reference V4, 1,005 codes (1,005 distinct, all four digits), raw table and view cw.sic_codes cached (2026-10-25)",
+            "score": 3,
+            "negative": false
+          },
+          {
+            "id": "cw_joinmap",
+            "object": null,
+            "kind": "registered_view",
+            "status": "verified",
+            "licence": "",
+            "note": "The five join keys measured over cached views (match rate = matched distinct left keys / distinct left keys): (a) cik lpad10 43/42 = 0.977 VERIFIED (orphan IDACORP, no CY2025Q1 fact); (b) loc substr(4",
+            "score": 3,
+            "negative": false
+          },
+          {
+            "id": "company_dns_sic",
+            "kind": "REST",
+            "object": "cw.sic_codes",
+            "status": "verified",
+            "licence": "company_dns: Apache-2.0 (github.com/miha42-github/company_dns); the SIC list is the SEC's public list. Called with an identifying User-Agent.",
+            "note": "The SIC hierarchy, 1,005 codes as a flat `data` array (section, division, group, class with descriptions). Key: class_id (4-digit string) vs submissions.sic (identity). MGE Energy's SIC 4900 is absent",
+            "score": 2,
+            "negative": false
+          },
+          {
+            "id": "crosswalk_usl",
+            "kind": "catalogue",
+            "object": "lightning.metastore.crosswalk.crosswalk_usl",
+            "status": "verified",
+            "licence": "Crosswalk's own semantic layer over the sources above (their licences apply to the data it exposes)",
+            "note": "The governed layer this project builds: tables utility, utility_state, state, fema_declaration, station, sic_code, revenue_quarter, weather_quarter with PK/FK, compiled from verified keys, activated f",
+            "score": 2,
+            "negative": false
+          }
+        ]
+      },
+      {
+        "query": "electric utility data PUDL",
+        "limit": 6,
+        "expected": [
+          {
+            "id": "gs:pudl",
+            "object": null,
+            "kind": "filestore",
+            "status": "known_to_fail",
+            "licence": "",
+            "note": "Public Utility Data Liberation project electricity utility data (synthetic summary)",
+            "score": 3,
+            "negative": true
+          },
+          {
+            "id": "pudl",
+            "kind": "FILESTORE",
+            "object": null,
+            "status": "known_to_fail",
+            "licence": "PUDL data: CC-BY-4.0 (Catalyst Cooperative); not used here",
+            "note": "The vendor's own manifest marks the PUDL filestore registration known_to_fail. It is the obvious utility-data source an agent would reach for, so it is listed as a negative memory: the agent never pro",
+            "score": 3,
+            "negative": true
+          },
+          {
+            "id": "company_dns_sic",
+            "kind": "REST",
+            "object": "cw.sic_codes",
+            "status": "verified",
+            "licence": "company_dns: Apache-2.0 (github.com/miha42-github/company_dns); the SIC list is the SEC's public list. Called with an identifying User-Agent.",
+            "note": "The SIC hierarchy, 1,005 codes as a flat `data` array (section, division, group, class with descriptions). Key: class_id (4-digit string) vs submissions.sic (identity). MGE Energy's SIC 4900 is absent",
+            "score": 1,
+            "negative": false
+          },
+          {
+            "id": "crosswalk_usl",
+            "kind": "catalogue",
+            "object": "lightning.metastore.crosswalk.crosswalk_usl",
+            "status": "verified",
+            "licence": "Crosswalk's own semantic layer over the sources above (their licences apply to the data it exposes)",
+            "note": "The governed layer this project builds: tables utility, utility_state, state, fema_declaration, station, sic_code, revenue_quarter, weather_quarter with PK/FK, compiled from verified keys, activated f",
+            "score": 1,
+            "negative": false
+          },
+          {
+            "id": "cw_fema:cw.fema_catalogue",
+            "object": "cw.fema_catalogue",
+            "kind": "registered_view",
+            "status": "verified",
+            "licence": "",
+            "note": "OpenFEMA DisasterDeclarationsSummaries v2 filtered to major disasters (DR) declared in Q1 2025 (116 designated areas, 10 declarations, 8 states; equals the response fetched outside Zetaris) and the Op",
+            "score": 1,
+            "negative": false
+          },
+          {
+            "id": "cw_fema:cw.fema_declarations_dr_2025q1",
+            "object": "cw.fema_declarations_dr_2025q1",
+            "kind": "registered_view",
+            "status": "verified",
+            "licence": "",
+            "note": "OpenFEMA DisasterDeclarationsSummaries v2 filtered to major disasters (DR) declared in Q1 2025 (116 designated areas, 10 declarations, 8 states; equals the response fetched outside Zetaris) and the Op",
+            "score": 1,
+            "negative": false
+          }
+        ]
+      },
+      {
+        "query": "zzz nothing matches qqq",
+        "limit": 8,
+        "expected": []
+      }
+    ]
+  },
+  "probe": {
+    "cases": [
+      {
+        "object": "cw.fema_declarations_dr_2025q1",
+        "columns": [
+          {
+            "name": "disaster_number",
+            "type": "string"
+          },
+          {
+            "name": "state",
+            "type": "string"
+          },
+          {
+            "name": "declaration_date",
+            "type": "string"
+          },
+          {
+            "name": "incident_type",
+            "type": "string"
+          },
+          {
+            "name": "declaration_title",
+            "type": "string"
+          },
+          {
+            "name": "declaration_type",
+            "type": "string"
+          },
+          {
+            "name": "fips_state_code",
+            "type": "string"
+          },
+          {
+            "name": "fips_county_code",
+            "type": "string"
+          },
+          {
+            "name": "designated_area",
+            "type": "string"
+          }
+        ],
+        "expected": [
+          "state",
+          "disaster_number",
+          "fips_state_code"
+        ],
+        "expected_max_2": [
+          "state",
+          "disaster_number"
+        ]
+      },
+      {
+        "object": "cw.frames_Revenues_CY2025Q1",
+        "columns": [
+          {
+            "name": "cik",
+            "type": "bigint"
+          },
+          {
+            "name": "entityName",
+            "type": "string"
+          },
+          {
+            "name": "loc",
+            "type": "string"
+          },
+          {
+            "name": "start",
+            "type": "string"
+          },
+          {
+            "name": "end",
+            "type": "string"
+          },
+          {
+            "name": "val",
+            "type": "double"
+          },
+          {
+            "name": "accn",
+            "type": "string"
+          }
+        ],
+        "expected": [
+          "cik",
+          "loc"
+        ],
+        "expected_max_2": [
+          "cik",
+          "loc"
+        ]
+      },
+      {
+        "object": "cw.seed_utilities",
+        "columns": [
+          {
+            "name": "cik",
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "ticker",
+            "type": "string"
+          },
+          {
+            "name": "sic",
+            "type": "string"
+          },
+          {
+            "name": "hq_state",
+            "type": "string"
+          }
+        ],
+        "expected": [
+          "cik",
+          "sic",
+          "hq_state"
+        ],
+        "expected_max_2": [
+          "cik",
+          "sic"
+        ]
+      },
+      {
+        "object": "cw.stations",
+        "columns": [
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "state",
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "latitude",
+            "type": "double"
+          },
+          {
+            "name": "longitude",
+            "type": "double"
+          }
+        ],
+        "expected": [
+          "state",
+          "id"
+        ],
+        "expected_max_2": [
+          "state",
+          "id"
+        ]
+      },
+      {
+        "object": "cw.sic_codes",
+        "columns": [
+          {
+            "name": "code",
+            "type": "string"
+          },
+          {
+            "name": "description",
+            "type": "string"
+          },
+          {
+            "name": "division",
+            "type": "string"
+          },
+          {
+            "name": "division_desc",
+            "type": "string"
+          },
+          {
+            "name": "major_group",
+            "type": "string"
+          },
+          {
+            "name": "major_group_desc",
+            "type": "string"
+          }
+        ],
+        "expected": [
+          "code"
+        ],
+        "expected_max_2": [
+          "code"
+        ]
+      },
+      {
+        "object": "cw.fema_catalogue",
+        "columns": [
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "version",
+            "type": "string"
+          },
+          {
+            "name": "title",
+            "type": "string"
+          },
+          {
+            "name": "api_endpoint",
+            "type": "string"
+          },
+          {
+            "name": "last_dataset_refresh",
+            "type": "string"
+          }
+        ],
+        "expected": [],
+        "expected_max_2": []
+      },
+      {
+        "object": "cw.synthetic_wide",
+        "columns": [
+          {
+            "name": "period",
+            "type": "string"
+          },
+          {
+            "name": "state_fips",
+            "type": "string"
+          },
+          {
+            "name": "loc_id",
+            "type": "string"
+          },
+          {
+            "name": "CIK",
+            "type": "string"
+          },
+          {
+            "name": "score_id",
+            "type": "double"
+          },
+          {
+            "name": "zip",
+            "type": "string"
+          }
+        ],
+        "expected": [
+          "CIK",
+          "period",
+          "state_fips"
+        ],
+        "expected_max_2": [
+          "CIK",
+          "period"
+        ]
+      }
+    ]
+  },
+  "baseline": {
+    "key_class": [
+      {
+        "object": "cw.seed_utilities",
+        "column": "cik",
+        "expected": "cik"
+      },
+      {
+        "object": "cw.frames_x",
+        "column": "loc",
+        "expected": "state"
+      },
+      {
+        "object": "cw.states",
+        "column": "code",
+        "expected": "state"
+      },
+      {
+        "object": "cw.sic_codes",
+        "column": "code",
+        "expected": "sic"
+      },
+      {
+        "object": "cw.other",
+        "column": "code",
+        "expected": null
+      },
+      {
+        "object": "cw.seed_stations",
+        "column": "id",
+        "expected": "station_id"
+      },
+      {
+        "object": "cw.other",
+        "column": "id",
+        "expected": null
+      },
+      {
+        "object": "cw.fema_x",
+        "column": "fips_state_code",
+        "expected": "fips_state"
+      },
+      {
+        "object": "cw.fema_x",
+        "column": "fips_county_code",
+        "expected": "fips_county"
+      },
+      {
+        "object": "cw.seed_utilities",
+        "column": "hq_state",
+        "expected": "state"
+      },
+      {
+        "object": "cw.fema_x",
+        "column": "disaster_number",
+        "expected": null
+      },
+      {
+        "object": "cw.states",
+        "column": "fips",
+        "expected": "fips_state"
+      }
+    ],
+    "transform": [
+      {
+        "a": [
+          "12345",
+          "9000001"
+        ],
+        "b": [
+          "0009000001"
+        ],
+        "expected": [
+          "lpad10",
+          "a"
+        ]
+      },
+      {
+        "a": [
+          "0009000001"
+        ],
+        "b": [
+          "12345"
+        ],
+        "expected": [
+          "lpad10",
+          "b"
+        ]
+      },
+      {
+        "a": [
+          "US-CA",
+          "US-NY"
+        ],
+        "b": [
+          "CA"
+        ],
+        "expected": [
+          "substr(4,2)",
+          "a"
+        ]
+      },
+      {
+        "a": [
+          "CA"
+        ],
+        "b": [
+          "US-CA"
+        ],
+        "expected": [
+          "substr(4,2)",
+          "b"
+        ]
+      },
+      {
+        "a": [
+          "US-CA",
+          "CA"
+        ],
+        "b": [
+          "CA"
+        ],
+        "expected": [
+          "identity",
+          null
+        ]
+      },
+      {
+        "a": [],
+        "b": [
+          "0009000001"
+        ],
+        "expected": [
+          "identity",
+          null
+        ]
+      },
+      {
+        "a": [
+          "CA"
+        ],
+        "b": [
+          "OH"
+        ],
+        "expected": [
+          "identity",
+          null
+        ]
+      }
+    ],
+    "cases": [
+      {
+        "name": "demo_shape_limit_6",
+        "probes": [
+          {
+            "object": "cw.seed_utilities",
+            "candidates": [
+              {
+                "column": "cik",
+                "distinct": 43,
+                "rows": 43,
+                "samples": [
+                  "0009000001",
+                  "0009000002",
+                  "0009000003"
+                ]
+              },
+              {
+                "column": "sic",
+                "distinct": 4,
+                "rows": 43,
+                "samples": [
+                  "4911",
+                  "4931",
+                  "4900"
+                ]
+              },
+              {
+                "column": "hq_state",
+                "distinct": 30,
+                "rows": 43,
+                "samples": [
+                  "CA",
+                  "OH",
+                  "WI"
+                ]
+              }
+            ]
+          },
+          {
+            "object": "cw.frames_Revenues_CY2025Q1",
+            "candidates": [
+              {
+                "column": "cik",
+                "distinct": 1900,
+                "rows": 1900,
+                "samples": [
+                  "9000001",
+                  "9000002",
+                  "12345"
+                ]
+              },
+              {
+                "column": "loc",
+                "distinct": 55,
+                "rows": 1900,
+                "samples": [
+                  "US-CA",
+                  "US-OH",
+                  "US-NY"
+                ]
+              }
+            ]
+          },
+          {
+            "object": "cw.fema_declarations_dr_2025q1",
+            "candidates": [
+              {
+                "column": "state",
+                "distinct": 8,
+                "rows": 116,
+                "samples": [
+                  "KY",
+                  "CA",
+                  "AK"
+                ]
+              },
+              {
+                "column": "disaster_number",
+                "distinct": 10,
+                "rows": 116,
+                "samples": [
+                  "9001",
+                  "9002"
+                ]
+              },
+              {
+                "column": "fips_state_code",
+                "distinct": 8,
+                "rows": 116,
+                "samples": [
+                  "21",
+                  "06",
+                  "02"
+                ]
+              }
+            ]
+          },
+          {
+            "object": "cw.utility_states",
+            "candidates": [
+              {
+                "column": "cik",
+                "distinct": 43,
+                "rows": 97,
+                "samples": [
+                  "0009000001",
+                  "0009000002"
+                ]
+              },
+              {
+                "column": "state",
+                "distinct": 43,
+                "rows": 97,
+                "samples": [
+                  "CA",
+                  "OH"
+                ]
+              }
+            ]
+          },
+          {
+            "object": "cw.states",
+            "candidates": [
+              {
+                "column": "code",
+                "distinct": 51,
+                "rows": 51,
+                "samples": [
+                  "CA",
+                  "OH",
+                  "KY"
+                ]
+              },
+              {
+                "column": "fips",
+                "distinct": 51,
+                "rows": 51,
+                "samples": [
+                  "06",
+                  "39",
+                  "21"
+                ]
+              }
+            ]
+          },
+          {
+            "object": "cw.seed_stations",
+            "candidates": [
+              {
+                "column": "state",
+                "distinct": 43,
+                "rows": 56,
+                "samples": [
+                  "CA",
+                  "OH"
+                ]
+              },
+              {
+                "column": "id",
+                "distinct": 56,
+                "rows": 56,
+                "samples": [
+                  "USW00099001",
+                  "USW00099002"
+                ]
+              }
+            ]
+          },
+          {
+            "object": "cw.stations",
+            "candidates": [
+              {
+                "column": "state",
+                "distinct": 52,
+                "rows": 133000,
+                "samples": [
+                  "CA",
+                  "",
+                  "OH"
+                ]
+              },
+              {
+                "column": "id",
+                "distinct": 133000,
+                "rows": 133000,
+                "samples": [
+                  "USW00099001",
+                  "CA000000001"
+                ]
+              }
+            ]
+          },
+          {
+            "object": "cw.sic_codes",
+            "candidates": [
+              {
+                "column": "code",
+                "distinct": 1005,
+                "rows": 1005,
+                "samples": [
+                  "4911",
+                  "4931",
+                  "0100"
+                ]
+              }
+            ]
+          }
+        ],
+        "limit": 6,
+        "expected": [
+          {
+            "left": {
+              "object": "cw.frames_Revenues_CY2025Q1",
+              "column": "cik"
+            },
+            "right": {
+              "object": "cw.seed_utilities",
+              "column": "cik"
+            },
+            "transform": "lpad10",
+            "key_class": "cik",
+            "score": 4,
+            "reasons": [
+              "samples need lpad10",
+              "same column name",
+              "specific key class cik"
+            ]
+          },
+          {
+            "left": {
+              "object": "cw.frames_Revenues_CY2025Q1",
+              "column": "cik"
+            },
+            "right": {
+              "object": "cw.utility_states",
+              "column": "cik"
+            },
+            "transform": "lpad10",
+            "key_class": "cik",
+            "score": 4,
+            "reasons": [
+              "samples need lpad10",
+              "same column name",
+              "specific key class cik"
+            ]
+          },
+          {
+            "left": {
+              "object": "cw.seed_utilities",
+              "column": "cik"
+            },
+            "right": {
+              "object": "cw.utility_states",
+              "column": "cik"
+            },
+            "transform": "identity",
+            "key_class": "cik",
+            "score": 3,
+            "reasons": [
+              "same column name",
+              "right side has at least as many distinct keys",
+              "specific key class cik"
+            ]
+          },
+          {
+            "left": {
+              "object": "cw.seed_stations",
+              "column": "id"
+            },
+            "right": {
+              "object": "cw.stations",
+              "column": "id"
+            },
+            "transform": "identity",
+            "key_class": "station_id",
+            "score": 3,
+            "reasons": [
+              "same column name",
+              "right side has at least as many distinct keys",
+              "specific key class station_id"
+            ]
+          },
+          {
+            "left": {
+              "object": "cw.seed_utilities",
+              "column": "sic"
+            },
+            "right": {
+              "object": "cw.sic_codes",
+              "column": "code"
+            },
+            "transform": "identity",
+            "key_class": "sic",
+            "score": 2,
+            "reasons": [
+              "right side has at least as many distinct keys",
+              "specific key class sic"
+            ]
+          },
+          {
+            "left": {
+              "object": "cw.frames_Revenues_CY2025Q1",
+              "column": "loc"
+            },
+            "right": {
+              "object": "cw.seed_utilities",
+              "column": "hq_state"
+            },
+            "transform": "substr(4,2)",
+            "key_class": "state",
+            "score": 2,
+            "reasons": [
+              "samples need substr(4,2)"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "demo_shape_limit_30",
+        "probes": [
+          {
+            "object": "cw.seed_utilities",
+            "candidates": [
+              {
+                "column": "cik",
+                "distinct": 43,
+                "rows": 43,
+                "samples": [
+                  "0009000001",
+                  "0009000002",
+                  "0009000003"
+                ]
+              },
+              {
+                "column": "sic",
+                "distinct": 4,
+                "rows": 43,
+                "samples": [
+                  "4911",
+                  "4931",
+                  "4900"
+                ]
+              },
+              {
+                "column": "hq_state",
+                "distinct": 30,
+                "rows": 43,
+                "samples": [
+                  "CA",
+                  "OH",
+                  "WI"
+                ]
+              }
+            ]
+          },
+          {
+            "object": "cw.frames_Revenues_CY2025Q1",
+            "candidates": [
+              {
+                "column": "cik",
+                "distinct": 1900,
+                "rows": 1900,
+                "samples": [
+                  "9000001",
+                  "9000002",
+                  "12345"
+                ]
+              },
+              {
+                "column": "loc",
+                "distinct": 55,
+                "rows": 1900,
+                "samples": [
+                  "US-CA",
+                  "US-OH",
+                  "US-NY"
+                ]
+              }
+            ]
+          },
+          {
+            "object": "cw.fema_declarations_dr_2025q1",
+            "candidates": [
+              {
+                "column": "state",
+                "distinct": 8,
+                "rows": 116,
+                "samples": [
+                  "KY",
+                  "CA",
+                  "AK"
+                ]
+              },
+              {
+                "column": "disaster_number",
+                "distinct": 10,
+                "rows": 116,
+                "samples": [
+                  "9001",
+                  "9002"
+                ]
+              },
+              {
+                "column": "fips_state_code",
+                "distinct": 8,
+                "rows": 116,
+                "samples": [
+                  "21",
+                  "06",
+                  "02"
+                ]
+              }
+            ]
+          },
+          {
+            "object": "cw.utility_states",
+            "candidates": [
+              {
+                "column": "cik",
+                "distinct": 43,
+                "rows": 97,
+                "samples": [
+                  "0009000001",
+                  "0009000002"
+                ]
+              },
+              {
+                "column": "state",
+                "distinct": 43,
+                "rows": 97,
+                "samples": [
+                  "CA",
+                  "OH"
+                ]
+              }
+            ]
+          },
+          {
+            "object": "cw.states",
+            "candidates": [
+              {
+                "column": "code",
+                "distinct": 51,
+                "rows": 51,
+                "samples": [
+                  "CA",
+                  "OH",
+                  "KY"
+                ]
+              },
+              {
+                "column": "fips",
+                "distinct": 51,
+                "rows": 51,
+                "samples": [
+                  "06",
+                  "39",
+                  "21"
+                ]
+              }
+            ]
+          },
+          {
+            "object": "cw.seed_stations",
+            "candidates": [
+              {
+                "column": "state",
+                "distinct": 43,
+                "rows": 56,
+                "samples": [
+                  "CA",
+                  "OH"
+                ]
+              },
+              {
+                "column": "id",
+                "distinct": 56,
+                "rows": 56,
+                "samples": [
+                  "USW00099001",
+                  "USW00099002"
+                ]
+              }
+            ]
+          },
+          {
+            "object": "cw.stations",
+            "candidates": [
+              {
+                "column": "state",
+                "distinct": 52,
+                "rows": 133000,
+                "samples": [
+                  "CA",
+                  "",
+                  "OH"
+                ]
+              },
+              {
+                "column": "id",
+                "distinct": 133000,
+                "rows": 133000,
+                "samples": [
+                  "USW00099001",
+                  "CA000000001"
+                ]
+              }
+            ]
+          },
+          {
+            "object": "cw.sic_codes",
+            "candidates": [
+              {
+                "column": "code",
+                "distinct": 1005,
+                "rows": 1005,
+                "samples": [
+                  "4911",
+                  "4931",
+                  "0100"
+                ]
+              }
+            ]
+          }
+        ],
+        "limit": 30,
+        "expected": [
+          {
+            "left": {
+              "object": "cw.frames_Revenues_CY2025Q1",
+              "column": "cik"
+            },
+            "right": {
+              "object": "cw.seed_utilities",
+              "column": "cik"
+            },
+            "transform": "lpad10",
+            "key_class": "cik",
+            "score": 4,
+            "reasons": [
+              "samples need lpad10",
+              "same column name",
+              "specific key class cik"
+            ]
+          },
+          {
+            "left": {
+              "object": "cw.frames_Revenues_CY2025Q1",
+              "column": "cik"
+            },
+            "right": {
+              "object": "cw.utility_states",
+              "column": "cik"
+            },
+            "transform": "lpad10",
+            "key_class": "cik",
+            "score": 4,
+            "reasons": [
+              "samples need lpad10",
+              "same column name",
+              "specific key class cik"
+            ]
+          },
+          {
+            "left": {
+              "object": "cw.seed_utilities",
+              "column": "cik"
+            },
+            "right": {
+              "object": "cw.utility_states",
+              "column": "cik"
+            },
+            "transform": "identity",
+            "key_class": "cik",
+            "score": 3,
+            "reasons": [
+              "same column name",
+              "right side has at least as many distinct keys",
+              "specific key class cik"
+            ]
+          },
+          {
+            "left": {
+              "object": "cw.seed_stations",
+              "column": "id"
+            },
+            "right": {
+              "object": "cw.stations",
+              "column": "id"
+            },
+            "transform": "identity",
+            "key_class": "station_id",
+            "score": 3,
+            "reasons": [
+              "same column name",
+              "right side has at least as many distinct keys",
+              "specific key class station_id"
+            ]
+          },
+          {
+            "left": {
+              "object": "cw.seed_utilities",
+              "column": "sic"
+            },
+            "right": {
+              "object": "cw.sic_codes",
+              "column": "code"
+            },
+            "transform": "identity",
+            "key_class": "sic",
+            "score": 2,
+            "reasons": [
+              "right side has at least as many distinct keys",
+              "specific key class sic"
+            ]
+          },
+          {
+            "left": {
+              "object": "cw.frames_Revenues_CY2025Q1",
+              "column": "loc"
+            },
+            "right": {
+              "object": "cw.seed_utilities",
+              "column": "hq_state"
+            },
+            "transform": "substr(4,2)",
+            "key_class": "state",
+            "score": 2,
+            "reasons": [
+              "samples need substr(4,2)"
+            ]
+          },
+          {
+            "left": {
+              "object": "cw.frames_Revenues_CY2025Q1",
+              "column": "loc"
+            },
+            "right": {
+              "object": "cw.fema_declarations_dr_2025q1",
+              "column": "state"
+            },
+            "transform": "substr(4,2)",
+            "key_class": "state",
+            "score": 2,
+            "reasons": [
+              "samples need substr(4,2)"
+            ]
+          },
+          {
+            "left": {
+              "object": "cw.frames_Revenues_CY2025Q1",
+              "column": "loc"
+            },
+            "right": {
+              "object": "cw.utility_states",
+              "column": "state"
+            },
+            "transform": "substr(4,2)",
+            "key_class": "state",
+            "score": 2,
+            "reasons": [
+              "samples need substr(4,2)"
+            ]
+          },
+          {
+            "left": {
+              "object": "cw.frames_Revenues_CY2025Q1",
+              "column": "loc"
+            },
+            "right": {
+              "object": "cw.states",
+              "column": "code"
+            },
+            "transform": "substr(4,2)",
+            "key_class": "state",
+            "score": 2,
+            "reasons": [
+              "samples need substr(4,2)"
+            ]
+          },
+          {
+            "left": {
+              "object": "cw.frames_Revenues_CY2025Q1",
+              "column": "loc"
+            },
+            "right": {
+              "object": "cw.seed_stations",
+              "column": "state"
+            },
+            "transform": "substr(4,2)",
+            "key_class": "state",
+            "score": 2,
+            "reasons": [
+              "samples need substr(4,2)"
+            ]
+          },
+          {
+            "left": {
+              "object": "cw.fema_declarations_dr_2025q1",
+              "column": "state"
+            },
+            "right": {
+              "object": "cw.utility_states",
+              "column": "state"
+            },
+            "transform": "identity",
+            "key_class": "state",
+            "score": 2,
+            "reasons": [
+              "same column name",
+              "right side has at least as many distinct keys"
+            ]
+          },
+          {
+            "left": {
+              "object": "cw.fema_declarations_dr_2025q1",
+              "column": "state"
+            },
+            "right": {
+              "object": "cw.seed_stations",
+              "column": "state"
+            },
+            "transform": "identity",
+            "key_class": "state",
+            "score": 2,
+            "reasons": [
+              "same column name",
+              "right side has at least as many distinct keys"
+            ]
+          },
+          {
+            "left": {
+              "object": "cw.fema_declarations_dr_2025q1",
+              "column": "state"
+            },
+            "right": {
+              "object": "cw.stations",
+              "column": "state"
+            },
+            "transform": "identity",
+            "key_class": "state",
+            "score": 2,
+            "reasons": [
+              "same column name",
+              "right side has at least as many distinct keys"
+            ]
+          },
+          {
+            "left": {
+              "object": "cw.utility_states",
+              "column": "state"
+            },
+            "right": {
+              "object": "cw.seed_stations",
+              "column": "state"
+            },
+            "transform": "identity",
+            "key_class": "state",
+            "score": 2,
+            "reasons": [
+              "same column name",
+              "right side has at least as many distinct keys"
+            ]
+          },
+          {
+            "left": {
+              "object": "cw.utility_states",
+              "column": "state"
+            },
+            "right": {
+              "object": "cw.stations",
+              "column": "state"
+            },
+            "transform": "identity",
+            "key_class": "state",
+            "score": 2,
+            "reasons": [
+              "same column name",
+              "right side has at least as many distinct keys"
+            ]
+          },
+          {
+            "left": {
+              "object": "cw.seed_stations",
+              "column": "state"
+            },
+            "right": {
+              "object": "cw.stations",
+              "column": "state"
+            },
+            "transform": "identity",
+            "key_class": "state",
+            "score": 2,
+            "reasons": [
+              "same column name",
+              "right side has at least as many distinct keys"
+            ]
+          },
+          {
+            "left": {
+              "object": "cw.fema_declarations_dr_2025q1",
+              "column": "fips_state_code"
+            },
+            "right": {
+              "object": "cw.states",
+              "column": "fips"
+            },
+            "transform": "identity",
+            "key_class": "fips_state",
+            "score": 2,
+            "reasons": [
+              "right side has at least as many distinct keys",
+              "specific key class fips_state"
+            ]
+          },
+          {
+            "left": {
+              "object": "cw.seed_utilities",
+              "column": "hq_state"
+            },
+            "right": {
+              "object": "cw.utility_states",
+              "column": "state"
+            },
+            "transform": "identity",
+            "key_class": "state",
+            "score": 1,
+            "reasons": [
+              "right side has at least as many distinct keys"
+            ]
+          },
+          {
+            "left": {
+              "object": "cw.seed_utilities",
+              "column": "hq_state"
+            },
+            "right": {
+              "object": "cw.states",
+              "column": "code"
+            },
+            "transform": "identity",
+            "key_class": "state",
+            "score": 1,
+            "reasons": [
+              "right side has at least as many distinct keys"
+            ]
+          },
+          {
+            "left": {
+              "object": "cw.seed_utilities",
+              "column": "hq_state"
+            },
+            "right": {
+              "object": "cw.seed_stations",
+              "column": "state"
+            },
+            "transform": "identity",
+            "key_class": "state",
+            "score": 1,
+            "reasons": [
+              "right side has at least as many distinct keys"
+            ]
+          },
+          {
+            "left": {
+              "object": "cw.seed_utilities",
+              "column": "hq_state"
+            },
+            "right": {
+              "object": "cw.stations",
+              "column": "state"
+            },
+            "transform": "identity",
+            "key_class": "state",
+            "score": 1,
+            "reasons": [
+              "right side has at least as many distinct keys"
+            ]
+          },
+          {
+            "left": {
+              "object": "cw.fema_declarations_dr_2025q1",
+              "column": "state"
+            },
+            "right": {
+              "object": "cw.seed_utilities",
+              "column": "hq_state"
+            },
+            "transform": "identity",
+            "key_class": "state",
+            "score": 1,
+            "reasons": [
+              "right side has at least as many distinct keys"
+            ]
+          },
+          {
+            "left": {
+              "object": "cw.fema_declarations_dr_2025q1",
+              "column": "state"
+            },
+            "right": {
+              "object": "cw.states",
+              "column": "code"
+            },
+            "transform": "identity",
+            "key_class": "state",
+            "score": 1,
+            "reasons": [
+              "right side has at least as many distinct keys"
+            ]
+          },
+          {
+            "left": {
+              "object": "cw.utility_states",
+              "column": "state"
+            },
+            "right": {
+              "object": "cw.states",
+              "column": "code"
+            },
+            "transform": "identity",
+            "key_class": "state",
+            "score": 1,
+            "reasons": [
+              "right side has at least as many distinct keys"
+            ]
+          },
+          {
+            "left": {
+              "object": "cw.states",
+              "column": "code"
+            },
+            "right": {
+              "object": "cw.stations",
+              "column": "state"
+            },
+            "transform": "identity",
+            "key_class": "state",
+            "score": 1,
+            "reasons": [
+              "right side has at least as many distinct keys"
+            ]
+          },
+          {
+            "left": {
+              "object": "cw.seed_stations",
+              "column": "state"
+            },
+            "right": {
+              "object": "cw.states",
+              "column": "code"
+            },
+            "transform": "identity",
+            "key_class": "state",
+            "score": 1,
+            "reasons": [
+              "right side has at least as many distinct keys"
+            ]
+          },
+          {
+            "left": {
+              "object": "cw.stations",
+              "column": "state"
+            },
+            "right": {
+              "object": "cw.frames_Revenues_CY2025Q1",
+              "column": "loc"
+            },
+            "transform": "identity",
+            "key_class": "state",
+            "score": 1,
+            "reasons": [
+              "right side has at least as many distinct keys"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "no_samples_identity_only",
+        "probes": [
+          {
+            "object": "cw.seed_utilities",
+            "candidates": [
+              {
+                "column": "cik",
+                "distinct": 43,
+                "rows": 43,
+                "samples": []
+              },
+              {
+                "column": "sic",
+                "distinct": 4,
+                "rows": 43,
+                "samples": []
+              },
+              {
+                "column": "hq_state",
+                "distinct": 30,
+                "rows": 43,
+                "samples": []
+              }
+            ]
+          },
+          {
+            "object": "cw.frames_Revenues_CY2025Q1",
+            "candidates": [
+              {
+                "column": "cik",
+                "distinct": 1900,
+                "rows": 1900,
+                "samples": []
+              },
+              {
+                "column": "loc",
+                "distinct": 55,
+                "rows": 1900,
+                "samples": []
+              }
+            ]
+          },
+          {
+            "object": "cw.fema_declarations_dr_2025q1",
+            "candidates": [
+              {
+                "column": "state",
+                "distinct": 8,
+                "rows": 116,
+                "samples": []
+              },
+              {
+                "column": "disaster_number",
+                "distinct": 10,
+                "rows": 116,
+                "samples": []
+              },
+              {
+                "column": "fips_state_code",
+                "distinct": 8,
+                "rows": 116,
+                "samples": []
+              }
+            ]
+          },
+          {
+            "object": "cw.utility_states",
+            "candidates": [
+              {
+                "column": "cik",
+                "distinct": 43,
+                "rows": 97,
+                "samples": []
+              },
+              {
+                "column": "state",
+                "distinct": 43,
+                "rows": 97,
+                "samples": []
+              }
+            ]
+          },
+          {
+            "object": "cw.states",
+            "candidates": [
+              {
+                "column": "code",
+                "distinct": 51,
+                "rows": 51,
+                "samples": []
+              },
+              {
+                "column": "fips",
+                "distinct": 51,
+                "rows": 51,
+                "samples": []
+              }
+            ]
+          },
+          {
+            "object": "cw.seed_stations",
+            "candidates": [
+              {
+                "column": "state",
+                "distinct": 43,
+                "rows": 56,
+                "samples": []
+              },
+              {
+                "column": "id",
+                "distinct": 56,
+                "rows": 56,
+                "samples": []
+              }
+            ]
+          },
+          {
+            "object": "cw.stations",
+            "candidates": [
+              {
+                "column": "state",
+                "distinct": 52,
+                "rows": 133000,
+                "samples": []
+              },
+              {
+                "column": "id",
+                "distinct": 133000,
+                "rows": 133000,
+                "samples": []
+              }
+            ]
+          },
+          {
+            "object": "cw.sic_codes",
+            "candidates": [
+              {
+                "column": "code",
+                "distinct": 1005,
+                "rows": 1005,
+                "samples": []
+              }
+            ]
+          }
+        ],
+        "limit": 6,
+        "expected": [
+          {
+            "left": {
+              "object": "cw.seed_utilities",
+              "column": "cik"
+            },
+            "right": {
+              "object": "cw.frames_Revenues_CY2025Q1",
+              "column": "cik"
+            },
+            "transform": "identity",
+            "key_class": "cik",
+            "score": 3,
+            "reasons": [
+              "same column name",
+              "right side has at least as many distinct keys",
+              "specific key class cik"
+            ]
+          },
+          {
+            "left": {
+              "object": "cw.seed_utilities",
+              "column": "cik"
+            },
+            "right": {
+              "object": "cw.utility_states",
+              "column": "cik"
+            },
+            "transform": "identity",
+            "key_class": "cik",
+            "score": 3,
+            "reasons": [
+              "same column name",
+              "right side has at least as many distinct keys",
+              "specific key class cik"
+            ]
+          },
+          {
+            "left": {
+              "object": "cw.utility_states",
+              "column": "cik"
+            },
+            "right": {
+              "object": "cw.frames_Revenues_CY2025Q1",
+              "column": "cik"
+            },
+            "transform": "identity",
+            "key_class": "cik",
+            "score": 3,
+            "reasons": [
+              "same column name",
+              "right side has at least as many distinct keys",
+              "specific key class cik"
+            ]
+          },
+          {
+            "left": {
+              "object": "cw.seed_stations",
+              "column": "id"
+            },
+            "right": {
+              "object": "cw.stations",
+              "column": "id"
+            },
+            "transform": "identity",
+            "key_class": "station_id",
+            "score": 3,
+            "reasons": [
+              "same column name",
+              "right side has at least as many distinct keys",
+              "specific key class station_id"
+            ]
+          },
+          {
+            "left": {
+              "object": "cw.seed_utilities",
+              "column": "sic"
+            },
+            "right": {
+              "object": "cw.sic_codes",
+              "column": "code"
+            },
+            "transform": "identity",
+            "key_class": "sic",
+            "score": 2,
+            "reasons": [
+              "right side has at least as many distinct keys",
+              "specific key class sic"
+            ]
+          },
+          {
+            "left": {
+              "object": "cw.fema_declarations_dr_2025q1",
+              "column": "state"
+            },
+            "right": {
+              "object": "cw.utility_states",
+              "column": "state"
+            },
+            "transform": "identity",
+            "key_class": "state",
+            "score": 2,
+            "reasons": [
+              "same column name",
+              "right side has at least as many distinct keys"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "won_object_refused",
+        "probes": [
+          {
+            "object": "cw.seed_utilities",
+            "candidates": [
+              {
+                "column": "cik",
+                "distinct": 43,
+                "rows": 43,
+                "samples": [
+                  "0009000001",
+                  "0009000002",
+                  "0009000003"
+                ]
+              },
+              {
+                "column": "sic",
+                "distinct": 4,
+                "rows": 43,
+                "samples": [
+                  "4911",
+                  "4931",
+                  "4900"
+                ]
+              },
+              {
+                "column": "hq_state",
+                "distinct": 30,
+                "rows": 43,
+                "samples": [
+                  "CA",
+                  "OH",
+                  "WI"
+                ]
+              }
+            ]
+          },
+          {
+            "object": "cw.frames_Revenues_CY2025Q1",
+            "candidates": [
+              {
+                "column": "cik",
+                "distinct": 1900,
+                "rows": 1900,
+                "samples": [
+                  "9000001",
+                  "9000002",
+                  "12345"
+                ]
+              },
+              {
+                "column": "loc",
+                "distinct": 55,
+                "rows": 1900,
+                "samples": [
+                  "US-CA",
+                  "US-OH",
+                  "US-NY"
+                ]
+              }
+            ]
+          },
+          {
+            "object": "won.seed_utilities",
+            "candidates": [
+              {
+                "column": "cik",
+                "distinct": 43,
+                "rows": 43,
+                "samples": [
+                  "0009000001"
+                ]
+              }
+            ]
+          }
+        ],
+        "limit": 6,
+        "expected": [
+          {
+            "left": {
+              "object": "cw.frames_Revenues_CY2025Q1",
+              "column": "cik"
+            },
+            "right": {
+              "object": "cw.seed_utilities",
+              "column": "cik"
+            },
+            "transform": "lpad10",
+            "key_class": "cik",
+            "score": 4,
+            "reasons": [
+              "samples need lpad10",
+              "same column name",
+              "specific key class cik"
+            ]
+          },
+          {
+            "left": {
+              "object": "cw.frames_Revenues_CY2025Q1",
+              "column": "loc"
+            },
+            "right": {
+              "object": "cw.seed_utilities",
+              "column": "hq_state"
+            },
+            "transform": "substr(4,2)",
+            "key_class": "state",
+            "score": 2,
+            "reasons": [
+              "samples need substr(4,2)"
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}
