@@ -1,0 +1,231 @@
+1
+00:00:00,300 --> 00:00:02,800
+One question, three agencies:
+
+2
+00:00:02,820 --> 00:00:04,880
+which utilities served states with FEMA
+
+3
+00:00:04,900 --> 00:00:07,260
+major-disaster declarations in Q1 2025,
+
+4
+00:00:07,280 --> 00:00:11,190
+what did the weather do, and did revenue hold up?
+
+5
+00:00:11,383 --> 00:00:14,943
+Crosswalk's answer: 12 utilities in 7 declared states.
+
+6
+00:00:15,523 --> 00:00:19,223
+Revenue rose for 9, fell for 2, and 1 is not comparable.
+
+7
+00:00:19,843 --> 00:00:22,493
+Degree days rose at the stations of all 12.
+
+8
+00:00:23,333 --> 00:00:25,063
+A solo entry from Singapore.
+
+9
+00:00:25,900 --> 00:00:28,300
+On one PC, the analyst asks it cold:
+
+10
+00:00:28,780 --> 00:00:31,150
+the agent starts with no remembered keys.
+
+11
+00:00:33,833 --> 00:00:35,233
+It searches a fixed catalogue,
+
+12
+00:00:35,553 --> 00:00:37,553
+then probes each cached Zetaris view:
+
+13
+00:00:38,013 --> 00:00:40,803
+its columns, five rows, and distinct counts.
+
+14
+00:00:46,067 --> 00:00:47,687
+Nemotron, running locally,
+
+15
+00:00:48,067 --> 00:00:51,087
+proposes join keys from a menu of the probed columns.
+
+16
+00:00:51,687 --> 00:00:54,347
+A name-matching baseline also proposes keys.
+
+17
+00:00:54,967 --> 00:00:57,037
+Nothing is used until it is measured.
+
+18
+00:00:59,733 --> 00:01:02,193
+Each proposal is measured in Lightning SQL.
+
+19
+00:01:02,953 --> 00:01:05,773
+The SEC company number, padded to ten digits,
+
+20
+00:01:06,093 --> 00:01:11,363
+matches 97.7% of rows: verified, with IDACORP the orphan.
+
+21
+00:01:13,467 --> 00:01:15,847
+FEMA states against the states the utilities serve:
+
+22
+00:01:16,267 --> 00:01:18,487
+87.5%, partial.
+
+23
+00:01:19,167 --> 00:01:20,457
+Alaska is the orphan.
+
+24
+00:01:23,467 --> 00:01:26,637
+The control, without the padding, matches none: rejected.
+
+25
+00:01:27,420 --> 00:01:30,600
+compile_usl renders the semantic layer from the verified keys.
+
+26
+00:01:31,200 --> 00:01:32,520
+It matches the governed one,
+
+27
+00:01:32,820 --> 00:01:35,050
+and two data-quality rules run live.
+
+28
+00:01:42,033 --> 00:01:44,693
+The join map keeps every key: both rates,
+
+29
+00:01:44,873 --> 00:01:47,723
+the verdict in plain words, and the orphans by name.
+
+30
+00:01:48,367 --> 00:01:51,307
+MGE Energy is the one invalid row in the
+
+31
+00:01:51,327 --> 00:01:53,087
+governed layer's data-quality check:
+
+32
+00:01:53,627 --> 00:01:57,817
+its SIC code, 4900, is missing from the reference.
+
+33
+00:01:58,567 --> 00:02:00,447
+Every number in the answer opens the
+
+34
+00:02:00,467 --> 00:02:02,407
+Lightning SQL that produced it,
+
+35
+00:02:02,547 --> 00:02:05,497
+with its rows, its time and its cache state.
+
+36
+00:02:06,333 --> 00:02:09,313
+The same Zetaris instance: the registered sources,
+
+37
+00:02:09,673 --> 00:02:11,613
+the crosswalk semantic layer with its keys,
+
+38
+00:02:11,853 --> 00:02:13,403
+and its data-quality rules.
+
+39
+00:02:18,433 --> 00:02:22,723
+Now the same question for Q1 2023, asked warm.
+
+40
+00:02:28,667 --> 00:02:32,147
+The agent registers what that quarter lacks, live in Zetaris,
+
+41
+00:02:32,167 --> 00:02:33,487
+under a signed contract:
+
+42
+00:02:34,147 --> 00:02:37,497
+FEMA's declarations for the quarter, in 1.6 seconds.
+
+43
+00:02:40,200 --> 00:02:43,370
+Then the year-earlier revenue frames, one tag at a time.
+
+44
+00:02:50,333 --> 00:02:51,713
+Eight measure steps are skipped:
+
+45
+00:02:52,253 --> 00:02:53,993
+those keys were verified by an earlier
+
+46
+00:02:54,013 --> 00:02:55,943
+run and recalled from memory.
+
+47
+00:02:56,767 --> 00:02:58,627
+Zetaris Lightning holds the sources,
+
+48
+00:02:59,047 --> 00:03:00,727
+the cached views and the governed layer.
+
+49
+00:03:01,327 --> 00:03:03,187
+Meterless gives the memory and the loop.
+
+50
+00:03:03,747 --> 00:03:06,857
+Nemotron 3 Nano runs in Ollama on this PC.
+
+51
+00:03:07,433 --> 00:03:11,013
+On the same probes, the baseline verified 25 of 30 proposals,
+
+52
+00:03:11,333 --> 00:03:13,093
+and the model verified 3 of 11.
+
+53
+00:03:13,613 --> 00:03:14,533
+The baseline wins.
+
+54
+00:03:15,133 --> 00:03:19,893
+By hand, an expert verified the five keys in 179.5 seconds,
+
+55
+00:03:20,053 --> 00:03:21,993
+faster, but with 24 decisions.
+
+56
+00:03:22,573 --> 00:03:24,243
+The agent asks for none.
+
+57
+00:03:24,900 --> 00:03:25,500
+Crosswalk.
+
+58
+00:03:25,700 --> 00:03:28,010
+Every key measured before anything uses it.
