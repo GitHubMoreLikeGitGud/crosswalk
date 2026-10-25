@@ -15,7 +15,8 @@
         "database": "CW_FEMA",
         "container": "cw",
         "raw": ["CW_FEMA.declarations_dr_2025q1", "CW_FEMA.datasets_catalogue"],
-        "views": ["cw.fema_declarations_dr_2025q1", "cw.fema_catalogue"]
+        "views": ["cw.fema_declarations_dr_2025q1", "cw.fema_catalogue"],
+        "runtime_views": ["cw.fema_declarations_dr_<quarter_slug>"]
       }
     },
     {
@@ -101,6 +102,20 @@
         "usl": "lightning.metastore.crosswalk.crosswalk_usl",
         "tables": ["state", "sic_code", "utility", "utility_state", "fema_declaration", "station", "revenue_quarter"],
         "dq": ["primary and foreign key rules named after their columns (LIST DQ USL)"]
+      }
+    },
+    {
+      "id": "cw_seed_names",
+      "kind": "values-views",
+      "script": "zetaris/sql/08_cw_seed_names_create.sql",
+      "select": "zetaris/sql/08_cw_seed_names_select.sql",
+      "status": "verified",
+      "requires": ["cw_seeds"],
+      "hosts": [],
+      "summary": "cw.seed_utility_names: cik (10-digit string), name, ticker, sic of the 43 seed utilities as a VALUES view generated from seeds/utilities.json by scripts/make_cw_sql.py; 43 rows, 43 CIKs, 40 tickers, 4 SIC codes, read in 0.24 s; cached. The answer path reads names here, never cw.seed_utilities (17 s per read) (2026-10-25)",
+      "objects": {
+        "container": "cw",
+        "views": ["cw.seed_utility_names"]
       }
     }
   ]

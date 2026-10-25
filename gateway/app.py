@@ -57,7 +57,7 @@ SEC_CONCEPTS = tuple((c, "Revenues") for c in ("0001326160", "0000092122", "0000
 CACHE_TARGETS: tuple[str, ...] = templates.cache_targets_for(
     [(t, p) for t in SEC_TAGS for p in SEC_PERIODS], [], list(SEC_UTILITIES)) + (
     "cw.fema_declarations_dr_2025q1", "cw.fema_catalogue",
-    "cw.states", "cw.utility_states", "cw.seed_stations", "cw.seed_utilities",
+    "cw.states", "cw.utility_states", "cw.seed_stations", "cw.seed_utilities", "cw.seed_utility_names",
     "cw.stations",
 )
 
