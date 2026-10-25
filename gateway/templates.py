@@ -3,31 +3,32 @@
 Adapted from Weather-or-Not and ClearShelf (same author, Apache-2.0).
 
 Parameters are validated by regex before they are substituted, so a value can only ever be
-a 10-digit CIK, one of three revenue tags, a CY frame period, a year, a quarter number, a
-GHCN station id or a GHCN element. Reader templates run through POST /sql/template. A
-registrar plan (REGISTRAR_PLANS) is a short ordered list of registrar templates that
-POST /registrar/<action> runs under an execution contract (gateway/registrar.py), for
-example the frames table + view + cache of a period the agent has not registered yet.
+a 10-digit CIK (or a list of them), one of three revenue tags, a CY frame period, a year, a
+quarter number, a GHCN station id (or a list) or element, a SIC code, a FEMA quarter, one of
+the six USL foreign-key rules, a column name, or a cw.* view that zetaris/manifest.json lists.
+Reader templates run through POST /sql/template. A registrar plan (REGISTRAR_PLANS) is a short
+ordered list of registrar templates that POST /registrar/<action> runs under an execution
+contract (gateway/registrar.py); register_source dispatches a catalogue id
+(seeds/catalogue.json) to one of those plans (SOURCE_PLANS).
 
-Inherited from Weather-or-Not (same author): the reader templates below are that entry's question-specific reads
-(frames_*, concept_*, submission, sic, weather_quarter, usl_*, dq_*); the Day-1 Crosswalk lane replaces them with the
-discovery reads (catalogue, DESCRIBE/probe, match-rate over cached views, USL compile and DQ). The registrar plans
-register_frames / register_concept / register_submission stay. Reference SQL: zetaris/sql/won-reference/.
+Reader templates, by purpose:
+- discovery probes: describe_object, sample_rows, distinct_counts over a manifest view (cw_object);
+- the join map: joinmap_* over cached views (zetaris/sql/06_cw_joinmap_select.sql);
+- the answer: answer_fema_utilities, answer_revenue, seed_utility_names, weather_quarter;
+- the governed USL: usl_tables, usl_dq_rules, usl_model (each under 3 s), and dq_run / dq_invalid
+  (RUN DQ / SHOW DQ INVALID RECORD per foreign-key rule, minutes, onboarding_only).
+Templates marked onboarding_only are refused on the agent's question path.
 
-SEC objects (reference: won-reference/01_won_sec_*.sql, 02_won_dns_*.sql, 03_won_frames_runtime_template.sql,
-06_won_sec_seeds_*.sql): raw REST tables CW_SEC.frames_<tag>_<period>, CW_SEC.concept_<cik10>_<tag>,
+SEC objects: raw REST tables CW_SEC.frames_<tag>_<period>, CW_SEC.concept_<cik10>_<tag>,
 CW_SEC.submissions_<cik10>, CW_DNS.sic_codes_v4_raw; flattened, cached SchemaStore views
 cw.frames_<tag>_<period>, cw.concept_<cik10>_<tag>, cw.submission_<cik10>, cw.sic_codes.
-frames_seeds filters a frames period to the seed utilities (SEED_CIKS, read from seeds/utilities.json
-at import), so the peer universe comes back in one reply under the gateway's row cap.
 The User-Agent in a REST statement is the placeholder YOUR_APP_NAME YOUR_CONTACT_EMAIL, filled
 from CW_USER_AGENT on the wire only (gateway/jdbc.py apply_user_agent); it is never a literal
 here or in a committed SQL file.
 
-GHCN and USL (reference: won-reference/04_won_ghcn_*.sql, 05_won_usl_*.sql): weather_quarter computes degree
-days in Lightning SQL over the cached station views cw.ghcn_<year>_<element> for a quoted
-station list (the station_list kind, rendered by RENDERERS); usl_describe, dq_invalid and
-dq_run_coverage read the USL lightning.metastore.crosswalk.crosswalk_usl.
+GHCN (zetaris/sql/09_cw_ghcn_*.sql, the shape of won-reference/04_won_ghcn_*.sql): weather_quarter
+computes degree days in Lightning SQL over the cached station-filtered views cw.ghcn_<year>_<element>
+for a quoted station list (the station_list kind, rendered by RENDERERS).
 """
 
 from __future__ import annotations
@@ -55,6 +56,78 @@ SEED_CIKS: tuple[str, ...] = load_seed_ciks()
 # frames carry cik as an integer: the IN list holds the seeds as integers (1326160, 92122, ...).
 SEED_CIK_INTS_SQL = ", ".join(str(int(c)) for c in SEED_CIKS)
 
+STATIONS_PATH = Path(__file__).resolve().parent.parent / "seeds" / "stations.json"
+# The validation station of the sister entry's degree-day check (Richmond, VA): kept in the GHCN
+# views so that weather_quarter can be compared with its published values. No seed utility uses it.
+VALIDATION_STATION = "USW00013740"
+
+
+def load_seed_stations(path: Path = STATIONS_PATH) -> tuple[str, ...]:
+    """The GHCN ids of seeds/stations.json, sorted, plus VALIDATION_STATION: the filter of the
+    station views cw.ghcn_<year>_<element> (one station's days are spread over 9 parquet files)."""
+    ids = {s["id"] for s in json.loads(path.read_text(encoding="utf-8"))["stations"]}
+    bad = [i for i in ids if not re.fullmatch(r"US[A-Z0-9]{9}", i)]
+    if bad:
+        raise ValueError(f"seeds/stations.json: every id must be a US GHCN id (bad: {bad[:3]})")
+    return tuple(sorted(ids | {VALIDATION_STATION}))
+
+
+GHCN_STATIONS: tuple[str, ...] = load_seed_stations()
+GHCN_STATIONS_SQL = ", ".join(f"'{s}'" for s in GHCN_STATIONS)
+
+MANIFEST_PATH = Path(__file__).resolve().parent.parent / "zetaris" / "manifest.json"
+# How a manifest name pattern's <placeholder> matches (lower case: Lightning folds identifier case).
+MANIFEST_PLACEHOLDERS = {
+    "tag": r"(revenues|revenuefromcontractwithcustomerexcludingassessedtax|regulatedandunregulatedoperatingrevenue)",
+    "period": r"cy\d{4}q[1-3]",
+    "cik10": r"\d{10}",
+    "quarter_slug": r"\d{4}q[1-4]",
+    "year": r"20\d{2}",
+    "element": r"(tmax|tmin)",
+}
+
+
+def _manifest_names(node) -> list[str]:
+    """Every "cw.<name>" string under an `objects` entry of the manifest (raw CW_* tables excluded)."""
+    if isinstance(node, str):
+        return [node] if node.startswith("cw.") else []
+    if isinstance(node, list):
+        return [n for x in node for n in _manifest_names(x)]
+    if isinstance(node, dict):
+        return [n for x in node.values() for n in _manifest_names(x)]
+    return []
+
+
+def load_manifest_views(path: Path = MANIFEST_PATH) -> tuple[frozenset[str], tuple[re.Pattern, ...]]:
+    """The SchemaStore view names zetaris/manifest.json lists (lower case) and its name patterns
+    (cw.frames_<tag>_<period>, cw.fema_declarations_dr_<quarter_slug>, ...) as regular expressions."""
+    data = json.loads(path.read_text(encoding="utf-8"))
+    exact, patterns = set(), []
+    for src in data.get("sources", []):
+        for name in _manifest_names(src.get("objects", {})):
+            name = name.lower()
+            if "<" not in name:
+                exact.add(name)
+                continue
+            parts = re.split(r"<(\w+)>", name)
+            rx = "".join(re.escape(p) if i % 2 == 0 else MANIFEST_PLACEHOLDERS[p] for i, p in enumerate(parts))
+            patterns.append(re.compile(rx))
+    return frozenset(exact), tuple(patterns)
+
+
+MANIFEST_VIEWS, MANIFEST_VIEW_PATTERNS = load_manifest_views()
+
+
+def in_manifest(name: str) -> bool:
+    n = name.lower()
+    return n in MANIFEST_VIEWS or any(p.fullmatch(n) for p in MANIFEST_VIEW_PATTERNS)
+
+
+# The six foreign-key rules of the governed USL (zetaris/sql/07_cw_usl_create.sql; LIST DQ USL names a rule
+# after its column, so RUN DQ <column> TABLE <table> runs that column's PK and FK checks together).
+DQ_RULES = ("utility.sic", "utility_state.cik", "utility_state.state", "fema_declaration.state", "station.state",
+            "revenue_quarter.cik")
+
 PARAM_PATTERNS = {
     "cik10": re.compile(r"^\d{10}$"),
     "tag": re.compile(r"^(Revenues|RevenueFromContractWithCustomerExcludingAssessedTax|RegulatedAndUnregulatedOperatingRevenue)$"),
@@ -66,13 +139,29 @@ PARAM_PATTERNS = {
     "element": re.compile(r"^(TMAX|TMIN)$"),
     "sic": re.compile(r"^\d{4}$"),
     "fema_quarter": re.compile(r"^CY\d{4}Q[1-4]$"),  # a calendar quarter of FEMA declarations (any quarter, unlike period)
+    "cw_object": re.compile(r"^cw\.[a-z0-9_]+$"),  # a SchemaStore view in container cw, lower case; must also be in the manifest
+    "column": re.compile(r"^[A-Za-z][A-Za-z0-9_]{0,63}$"),  # a column name, written back-quoted
+    "cik_list": re.compile(r"^\d{10}(,\d{10}){0,59}$"),  # 1 to 60 ten-digit CIKs, comma-separated (43 seed utilities)
+    "dq_rule": re.compile(r"^(utility\.sic|utility_state\.cik|utility_state\.state|fema_declaration\.state|station\.state|revenue_quarter\.cik)$"),
+    "catalogue_id": re.compile(r"^[a-z][a-z0-9_]{0,63}$"),  # an entry id of seeds/catalogue.json (register_source)
 }
 
 # How a validated value is written into the SQL. A kind not listed here is substituted as is;
-# a station_list becomes a quoted IN list ('USW00013740', 'USW00013722').
+# a station_list or cik_list becomes a quoted IN list ('USW00013740', 'USW00013722'); a column is back-quoted.
 RENDERERS = {
     "station_list": lambda v: ", ".join(f"'{s}'" for s in v.split(",")),
+    "cik_list": lambda v: ", ".join(f"'{s}'" for s in v.split(",")),
+    "column": lambda v: f"`{v}`",
 }
+
+
+def _manifest_check(value: str) -> None:
+    if not in_manifest(value):
+        raise BadParams(f"cw_object {value!r} is not a view zetaris/manifest.json lists")
+
+
+# Checks beyond the pattern (kind -> function raising BadParams).
+CHECKS = {"cw_object": _manifest_check}
 
 
 def fema_quarter_bounds(value: str) -> dict[str, str]:
@@ -88,8 +177,18 @@ def fema_quarter_bounds(value: str) -> dict[str, str]:
     }
 
 
+def dq_rule_parts(value: str) -> dict[str, str]:
+    """{dq_table} and {dq_name} of a validated dq_rule <table>.<column> (the rule is named after its column)."""
+    table, column = value.split(".")
+    return {"dq_table": table, "dq_name": column}
+
+
 # Placeholders derived from a validated value (kind -> function); render() substitutes them too.
-DERIVED = {"fema_quarter": fema_quarter_bounds}
+DERIVED = {
+    "fema_quarter": fema_quarter_bounds,
+    "element": lambda v: {"element_lc": v.lower()},  # object names are lower case: cw.ghcn_2025_tmax
+    "dq_rule": dq_rule_parts,
+}
 
 
 class BadParams(ValueError):
@@ -106,6 +205,7 @@ class Template:
     description: str = ""
     role: str = "reader"  # reader templates run via /sql/template; registrar templates only inside a plan
     timeout_s: float | None = None  # bounded wait for this template; None = the gateway's default (60 s)
+    onboarding_only: bool = False  # minutes-long DQ: the onboarding path only, refused on the agent's question path
 
 
 @dataclass(frozen=True)
@@ -124,14 +224,13 @@ class Plan:
 
 
 def _t(id: str, sql: str, params: dict[str, str], objects: tuple[str, ...], raw: tuple[str, ...],
-       description: str, role: str = "reader", timeout_s: float | None = None) -> Template:
-    return Template(id, " ".join(sql.split()), params, objects, raw, description, role, timeout_s)
+       description: str, role: str = "reader", timeout_s: float | None = None, onboarding_only: bool = False) -> Template:
+    return Template(id, " ".join(sql.split()), params, objects, raw, description, role, timeout_s, onboarding_only)
 
 
-# A read of a USL table activated over the GHCN views, and RUN / SHOW DQ on it, materialise the
-# table from the filestore sources again (live: REGISTER DQ 184 s, RUN DQ coverage_ok 361 s), so
-# the DQ templates get a longer bound than the 60 s default.
-DQ_TIMEOUT_S = 600.0
+# RUN DQ / SHOW DQ INVALID RECORD on a USL table whose parent is utility re-read the 43 submission views
+# (live 2026-10-25: 72-151 s, SHOW DQ INVALID RECORD sic 149 s); every DQ statement is bounded at 900 s.
+DQ_TIMEOUT_S = 900.0
 
 
 UA_HEADER = 'HEADER ( user-agent "YOUR_APP_NAME YOUR_CONTACT_EMAIL" )'
@@ -148,17 +247,15 @@ SIC_RAW = "CW_DNS.sic_codes_v4_raw"
 SIC_VIEW = "cw.sic_codes"
 
 FRAMES_COLUMNS = "cik, `entityName`, loc, `start`, `end`, val, accn"
-# frames `val` is inferred bigint for some periods and double for others: the seeds template casts it.
-FRAMES_SEEDS_COLUMNS = "cik, `entityName`, loc, `start`, `end`, CAST(val AS DOUBLE) AS val, accn"
-CONCEPT_COLUMNS = "fy, fp, form, filed, accn, `start`, `end`, val"
-UTILITY_COLUMNS = "cik, name, ticker, sic, hq_state"
-REVENUE_COLUMNS = "cik, xbrl_tag, year, quarter, val, accn, filed, is_comparative"
 SUBMISSION_COLUMNS = "cik, name, sic, `sicDescription`, state"
 SIC_COLUMNS = "code, description, division, division_desc, major_group, major_group_desc"
 
 _TP = {"tag": "tag", "period": "period"}
 _CT = {"cik10": "cik10", "tag": "tag"}
 _C = {"cik10": "cik10"}
+_YE = {"year": "year", "element": "element"}
+_OBJ = {"object": "cw_object"}
+_RULE = {"rule": "dq_rule"}
 
 # Crosswalk objects (zetaris/sql/01_cw_fema_*.sql, 02_cw_stations_*.sql, 05_cw_seeds_*.sql, 06_cw_joinmap_select.sql).
 FEMA_RAW = "CW_FEMA.declarations_dr_{quarter_slug}"
@@ -171,6 +268,11 @@ SEED_UTILITIES_VIEW = "cw.seed_utilities"
 UTILITY_STATES_VIEW = "cw.utility_states"
 SEED_STATIONS_VIEW = "cw.seed_stations"
 STATES_VIEW = "cw.states"
+SEED_NAMES_VIEW = "cw.seed_utility_names"  # zetaris/sql/08_cw_seed_names_create.sql: cik, name, ticker, sic of the 43 seeds
+GHCN_RAW = "CW_GHCN.ghcn_{year}_{element_lc}"
+GHCN_VIEW = "cw.ghcn_{year}_{element_lc}"
+GHCN_PATH = "s3a://noaa-ghcn-pds/parquet/by_year/YEAR={year}/ELEMENT={element}/"
+REVENUE_TAGS = ("Revenues", "RevenueFromContractWithCustomerExcludingAssessedTax", "RegulatedAndUnregulatedOperatingRevenue")
 FEMA_COLUMNS = ("disaster_number, state, declaration_date, incident_type, declaration_title, declaration_type, "
                 "fips_state_code, fips_county_code, designated_area")
 FEMA_ENDPOINT = ("https://www.fema.gov/api/open/v2/DisasterDeclarationsSummaries?%24filter=declarationType%20eq%20%27DR%27"
@@ -188,28 +290,29 @@ _FRAMES_VIEWS_OF_PERIOD = tuple(
     f"cw.frames_{t}_{{period}}" for t in ("Revenues", "RevenueFromContractWithCustomerExcludingAssessedTax", "RegulatedAndUnregulatedOperatingRevenue"))
 _MATCH = "SELECT COUNT(DISTINCT l.k) AS left_keys, COUNT(DISTINCT CASE WHEN r.k IS NOT NULL THEN l.k END) AS matched_keys"
 
-# GHCN and the USL (reference SQL: zetaris/sql/won-reference/04_won_ghcn_*.sql, 05_won_usl_*.sql).
+# GHCN and the USL (zetaris/sql/07_cw_usl_*.sql, 09_cw_ghcn_*.sql).
 USL = "lightning.metastore.crosswalk.crosswalk_usl"
+USL_NAMESPACE = "lightning.metastore.crosswalk"
 GHCN_VIEWS = ("cw.ghcn_2025_tmax", "cw.ghcn_2025_tmin", "cw.ghcn_2024_tmax", "cw.ghcn_2024_tmin")  # warm-up order
-# The SEC-side USL tables are activated over cached REST views (05_won_usl_create.sql steps 6 to 8):
-# utility over the submission view of every seed, revenue_quarter over the six frames views of the
-# two comparison quarters. A read of them is answered from those caches.
+# The USL utility table is activated over the submission view of every seed (07_cw_usl_create.sql).
 USL_UTILITY_VIEWS = tuple(SUBMISSION_VIEW.format(cik10=c) for c in SEED_CIKS)
-USL_REVENUE_VIEWS = tuple(
-    FRAMES_VIEW.format(tag=t, period=p)
-    for t in ("Revenues", "RevenueFromContractWithCustomerExcludingAssessedTax", "RegulatedAndUnregulatedOperatingRevenue")
-    for p in ("CY2025Q1", "CY2024Q1"))
-# Tmean in F from the two GHCN values in tenths of a degree C, in the evaluation order of
-# agent/src/tools/degreeDays.ts so both paths round identically.
+# Tmean in F from the two GHCN values in tenths of a degree C, base 65 F (the sister entry's
+# degree-day arithmetic, validated there against pyarrow to 0.01).
 _TMEAN_F = "(((x.DATA_VALUE + n.DATA_VALUE) / 2.0) / 10.0 * 9.0 / 5.0 + 32)"
 _DAYS_IN_QUARTER = "CASE {quarter} WHEN 1 THEN CASE WHEN {year} % 4 = 0 THEN 91 ELSE 90 END WHEN 2 THEN 91 ELSE 92 END"
+# The answer's revenue: per cik the first tag with a fact in the period (Revenues, then RFC, then RUOR),
+# each frames view referenced once (Lightning 2.4.3.1 resolves a view only once per statement).
+_REVENUE_UNION = " UNION ALL ".join(
+    f"SELECT LPAD(CAST(cik AS STRING), 10, '0') AS cik, '{t}' AS xbrl_tag, CAST(val AS DOUBLE) AS val, accn, {i} AS pri "
+    f"FROM cw.frames_{t}_{{period}}" for i, t in enumerate(REVENUE_TAGS, start=1))
+_INCIDENTS = ("Severe Storm", "Fire", "Flood")
 
 TEMPLATES: dict[str, Template] = {
     t.id: t
     for t in [
         _t("select1", "SELECT 1 AS ok", {}, (), (), "Connectivity check."),
         _t("show_databases", "SHOW LIGHTNING DATABASES", {}, (), (), "The Lightning databases the instance holds."),
-        # -- inherited; Day-1 lane replaces: weather_quarter (Weather-or-Not's degree days; reference 04_won_ghcn_*.sql) --
+        # -- weather per station-quarter over the cached GHCN station views (09_cw_ghcn_*.sql; about 19 s per call) --
         _t(
             "weather_quarter",
             f"""SELECT x.ID AS station_id, {{year}} AS year, {{quarter}} AS quarter,
@@ -230,17 +333,18 @@ TEMPLATES: dict[str, Template] = {
             "HDD, CDD, days observed and coverage per station for one quarter, computed in Lightning SQL over the "
             "cached station-filtered GHCN views (TMAX joined to TMIN on ID and DATE; quality-flagged days dropped).",
         ),
-        # -- inherited; Day-1 lane replaces: usl_describe, dq_invalid, dq_run_coverage (reference 05_won_usl_*.sql) ---
-        _t("usl_describe", "LOAD USL crosswalk_usl NAMESPACE lightning.metastore.crosswalk", {}, (USL,), (),
-           "The USL model as JSON: tables, columns, keys and descriptions (the planner's map)."),
-        # SHOW DQ ALL INVALID (every rule) materialises the table once per rule and did not return within
-        # 900 s live; the single-rule form returned in 181 s, so the gate reads the coverage rule alone.
-        _t("dq_invalid", f"SHOW DQ INVALID RECORD coverage_ok TABLE {USL}.weather_quarter", {}, (f"{USL}.weather_quarter",), GHCN_VIEWS,
-           "Every weather_quarter row that fails the coverage_ok rule (coverage below 0.9); empty when the gate passes.",
-           timeout_s=DQ_TIMEOUT_S),
-        _t("dq_run_coverage", f"RUN DQ coverage_ok TABLE {USL}.weather_quarter", {}, (f"{USL}.weather_quarter",), GHCN_VIEWS,
-           "Run the coverage_ok rule: total, valid and invalid counts.", timeout_s=DQ_TIMEOUT_S),
-        # -- inherited; Day-1 lane replaces: frames_period, frames_count, frames_fact, frames_seeds -------------------
+        # -- discovery probes over one manifest view (probe_source): columns, five rows, key-column counts ---------
+        _t("describe_object", "DESCRIBE {object}", _OBJ, ("{object}",), ("{object}",),
+           "Columns and types of one cw.* view that zetaris/manifest.json lists (DESCRIBE)."),
+        _t("sample_rows", "SELECT * FROM {object} LIMIT 5", _OBJ, ("{object}",), ("{object}",),
+           "Five rows of one cw.* manifest view, every column (the shape probe)."),
+        _t("distinct_counts",
+           "SELECT COUNT(*) AS row_count, COUNT(DISTINCT {column}) AS distinct_values, COUNT({column}) AS non_null, "
+           "COUNT({column}) / CAST(COUNT(*) AS DOUBLE) AS non_null_share FROM {object}",
+           {"object": "cw_object", "column": "column"}, ("{object}",), ("{object}",),
+           "Rows, distinct values, non-null values and the non-null share of one column of a cw.* manifest view "
+           "(a candidate key column of probe_source)."),
+        # -- frames (cw.frames_<tag>_<period>) -------------------------------------------------------------------------
         _t("frames_period", f"SELECT {FRAMES_COLUMNS} FROM {FRAMES_VIEW} ORDER BY cik", _TP, (FRAMES_VIEW,), (FRAMES_VIEW,),
            "Every fact in one frames period: cik, entityName, loc, start, end, val, accn (the HTTP reply holds the first 200 rows; row_count is the total)."),
         _t("frames_count", f"SELECT COUNT(*) AS n FROM {FRAMES_VIEW}", _TP, (FRAMES_VIEW,), (FRAMES_VIEW,),
@@ -248,41 +352,50 @@ TEMPLATES: dict[str, Template] = {
         _t("frames_fact", f"SELECT {FRAMES_COLUMNS} FROM {FRAMES_VIEW} WHERE LPAD(CAST(cik AS STRING), 10, '0') = '{{cik10}}'",
            {**_TP, "cik10": "cik10"}, (FRAMES_VIEW,), (FRAMES_VIEW,),
            "One filer's fact in a frames period (frames carry cik as an integer; LPAD makes the 10-digit key)."),
-        # The peer universe in one call: the facts of the seed utilities (seeds/utilities.json) in a frames
-        # period. At most one row per seed, so the reply is never cut at the gateway's 200-row cap.
-        _t("frames_seeds", f"SELECT {FRAMES_SEEDS_COLUMNS} FROM {FRAMES_VIEW} WHERE CAST(cik AS BIGINT) IN ({SEED_CIK_INTS_SQL}) ORDER BY cik",
-           _TP, (FRAMES_VIEW,), (FRAMES_VIEW,),
-           f"The seed utilities' facts in one frames period ({len(SEED_CIKS)} CIKs from seeds/utilities.json compared as integers): "
-           "cik, entityName, loc, start, end, val (cast to DOUBLE), accn. One row per seed filer present; never more than the seed count."),
-        # -- inherited; Day-1 lane replaces: concept_history, concept_window --------------------------------------------
-        _t("concept_history", f"SELECT {CONCEPT_COLUMNS} FROM {CONCEPT_VIEW} ORDER BY `end`, filed, accn", _CT, (CONCEPT_VIEW,), (CONCEPT_VIEW,),
-           "Every USD fact a filer reported for one tag, across filings: fy, fp, form, filed, accn, start, end, val."),
-        # The like-for-like window: the facts whose period ends in a year or the year before (the current
-        # quarter and the previous quarter in every filing that reports them). A long history is cut at the
-        # gateway's 200-row cap in concept_history (AEP Revenues holds 304 facts), so the agent reads this.
-        _t("concept_window",
-           f"SELECT {CONCEPT_COLUMNS} FROM {CONCEPT_VIEW} WHERE CAST(substr(`end`, 1, 4) AS INT) BETWEEN {{year}} - 1 AND {{year}} ORDER BY `end`, filed, accn",
-           {**_CT, "year": "year"}, (CONCEPT_VIEW,), (CONCEPT_VIEW,),
-           "One filer's USD facts for one tag whose period end falls in the given year or the year before, across filings "
-           "(fy, fp, form, filed, accn, start, end, val): the like-for-like window, always under the gateway row cap."),
         # -- SEC submissions: the filer's profile ---------------------------------------------------
         _t("submission", f"SELECT {SUBMISSION_COLUMNS} FROM {SUBMISSION_VIEW}", _C, (SUBMISSION_VIEW,), (SUBMISSION_VIEW,),
            "A filer's cik, name, sic, sicDescription and business state (no street fields)."),
         # -- SIC reference (company_dns V4) ----------------------------------------------------------
         _t("sic", f"SELECT {SIC_COLUMNS} FROM {SIC_VIEW} WHERE code = '{{code}}'", {"code": "sic"}, (SIC_VIEW,), (SIC_VIEW,),
            "One SIC code with its description, division (letter) and major group (2-digit)."),
-        # -- the governed copies in the USL (keys, descriptions, DQ rules) -------------------------
-        # The USL layer visits each of the 43 source views on every read (live 45 s on Day 0, 141 s on Day 1), so this is the governed
-        # copy for the evidence drawer, not the hot path: submission(cik10) answers the same profile in 0.2 s.
-        _t("usl_utility", f"SELECT {UTILITY_COLUMNS} FROM {USL}.utility WHERE cik = '{{cik10}}'", _C, (f"{USL}.utility",), USL_UTILITY_VIEWS,
-           "One seed utility from the USL utility table (cik, name, ticker, sic, hq_state; sic is the FK to sic_code). "
-           "Slow (45 s to about 2.5 min measured): the governed copy, not the hot path.", timeout_s=300.0),
-        _t("usl_revenue",
-           f"SELECT {REVENUE_COLUMNS} FROM {USL}.revenue_quarter WHERE cik = '{{cik10}}' "
-           f"AND CONCAT('CY', CAST(year AS STRING), 'Q', CAST(quarter AS STRING)) = '{{period}}' ORDER BY xbrl_tag, accn",
-           {"cik10": "cik10", "period": "period"}, (f"{USL}.revenue_quarter",), USL_REVENUE_VIEWS,
-           "One filer's revenue facts for one calendar quarter from the USL revenue_quarter table, every tag it reported under "
-           "(val as DOUBLE, accn of the filing frames served, is_comparative when that filing is later than the period's year)."),
+        # -- the answer (question path; cached views only, sub-second) -------------------------------------------------
+        _t("seed_utility_names", f"SELECT cik, name, ticker, sic FROM {SEED_NAMES_VIEW} ORDER BY cik", {}, (SEED_NAMES_VIEW,), (SEED_NAMES_VIEW,),
+           "The 43 seed utilities' 10-digit cik, name, ticker and SIC from the cached VALUES view of seeds/utilities.json "
+           "(never cw.seed_utilities, which resolves 43 submission views on every read)."),
+        _t("answer_fema_utilities",
+           f"SELECT us.cik, n.name, n.ticker, us.state, f.declarations, f.severe_storm, f.fire, f.flood, f.other_incidents "
+           f"FROM {UTILITY_STATES_VIEW} us JOIN (SELECT state, COUNT(DISTINCT disaster_number) AS declarations, "
+           + ", ".join(f"COUNT(DISTINCT CASE WHEN incident_type = '{i}' THEN disaster_number END) AS {i.lower().replace(' ', '_')}"
+                       for i in _INCIDENTS)
+           + ", COUNT(DISTINCT CASE WHEN incident_type NOT IN ("
+           + ", ".join(f"'{i}'" for i in _INCIDENTS)
+           + f") THEN disaster_number END) AS other_incidents FROM {FEMA_VIEW} GROUP BY state) f ON f.state = us.state "
+           f"JOIN {SEED_NAMES_VIEW} n ON n.cik = us.cik ORDER BY f.declarations DESC, n.name, us.state",
+           {"quarter": "fema_quarter"}, (UTILITY_STATES_VIEW, FEMA_VIEW, SEED_NAMES_VIEW), (UTILITY_STATES_VIEW, FEMA_VIEW, SEED_NAMES_VIEW),
+           "One row per (seed utility, served state) whose state has at least one major-disaster (DR) declaration in the "
+           "quarter: cik, name, ticker, state, declarations (distinct disaster_number) and their count by incident type "
+           "(severe_storm, fire, flood, other_incidents); sorted by declarations descending, then name."),
+        _t("answer_revenue",
+           f"SELECT cik, xbrl_tag, val, accn FROM (SELECT cik, xbrl_tag, val, accn, ROW_NUMBER() OVER (PARTITION BY cik ORDER BY pri) AS rn "
+           f"FROM ({_REVENUE_UNION}) u WHERE u.cik IN ({{cik_list}})) r WHERE rn = 1 ORDER BY cik",
+           {"period": "period", "cik_list": "cik_list"}, _FRAMES_VIEWS_OF_PERIOD, _FRAMES_VIEWS_OF_PERIOD,
+           "Per cik in the list, the first revenue tag with a frames fact in the period (Revenues, then "
+           "RevenueFromContractWithCustomerExcludingAssessedTax, then RegulatedAndUnregulatedOperatingRevenue): cik (10-digit), "
+           "xbrl_tag, val (DOUBLE, USD), accn. A cik with no fact under any of the three tags is absent from the rows."),
+        # -- the governed USL: table list, rules and model (each under 3 s live) ------------------------------------------
+        _t("usl_tables", f"SHOW NAMESPACES OR TABLES IN {USL}", {}, (USL,), (),
+           "The governed USL's tables (name, type, activated); row counts come from the onboarding DQ file."),
+        _t("usl_dq_rules", f"LIST DQ USL {USL}", {}, (USL,), (),
+           "The USL's data-quality rules: primary and foreign keys, each named after its column(s), with its table and type."),
+        _t("usl_model", f"LOAD USL crosswalk_usl NAMESPACE {USL_NAMESPACE}", {}, (USL,), (),
+           "The governed USL as JSON (tables, columns, keys, descriptions): what compile_usl diffs a rendered plan against."),
+        # -- DQ per foreign-key rule (onboarding path only: 1 s to 2.5 min; never on the question path) ---------------------
+        _t("dq_run", f"RUN DQ {{dq_name}} TABLE {USL}.{{dq_table}}", _RULE, (USL,), (),
+           "Run one foreign-key rule <table>.<column> of the USL (with the PK rule of the same column): total, valid and "
+           "invalid records. Onboarding only.", timeout_s=DQ_TIMEOUT_S, onboarding_only=True),
+        _t("dq_invalid", f"SHOW DQ INVALID RECORD {{dq_name}} TABLE {USL}.{{dq_table}}", _RULE, (USL,), (),
+           "The rows that fail one foreign-key rule <table>.<column> (utility.sic: MGE Energy, SIC 4900). Onboarding only.",
+           timeout_s=DQ_TIMEOUT_S, onboarding_only=True),
         # -- Crosswalk reads (zetaris/sql/01, 02, 05, 06): FEMA declarations, the catalogue, the stations inventory --
         _t("fema_declarations", f"SELECT {FEMA_COLUMNS} FROM {FEMA_VIEW} ORDER BY disaster_number, fips_county_code",
            {"quarter": "fema_quarter"}, (FEMA_VIEW,), (FEMA_VIEW,),
@@ -332,12 +445,20 @@ TEMPLATES: dict[str, Template] = {
            f"LEFT JOIN (SELECT DISTINCT code AS k FROM {SIC_VIEW}) r ON r.k = l.sic WHERE r.k IS NULL ORDER BY l.sic, l.cik LIMIT 10",
            {}, (SEED_UTILITIES_VIEW, SIC_VIEW), (SEED_UTILITIES_VIEW, SIC_VIEW),
            "Key (e) orphans: seed utilities whose SIC the reference lacks (MGE Energy, 4900)."),
-        # -- DQ on the Crosswalk USL: the FK rule sic on utility (expect one invalid row, MGE Energy) ---------------------
-        _t("dq_run_sic", f"RUN DQ sic TABLE {USL}.utility", {}, (f"{USL}.utility",), (SEED_UTILITIES_VIEW, SIC_VIEW),
-           "Run the FK rule utility.sic -> sic_code.sic: total, valid and invalid counts.", timeout_s=DQ_TIMEOUT_S),
-        _t("dq_invalid_sic", f"SHOW DQ INVALID RECORD sic TABLE {USL}.utility", {}, (f"{USL}.utility",), (SEED_UTILITIES_VIEW, SIC_VIEW),
-           "Every utility row that fails the FK rule sic (the SIC orphans).", timeout_s=DQ_TIMEOUT_S),
         # -- registrar templates: only inside a plan (POST /registrar/<action>) ----------------------
+        _t("registrar_ghcn_table",
+           f'CREATE LIGHTNING FILESTORE TABLE ghcn_{{year}}_{{element_lc}} FROM CW_GHCN FORMAT PARQUET OPTIONS ( PATH "{GHCN_PATH}", '
+           f'inferSchema "true", isS3BucketPublic "true", useS3PathStyleAccess "true", s3Endpoint "s3.us-east-1.amazonaws.com" )',
+           _YE, (GHCN_RAW,), (), "One GHCN-Daily year and element (9 parquet files, every station worldwide) as a filestore table.", "registrar"),
+        _t("registrar_ghcn_view",
+           f"CREATE SCHEMASTORE VIEW ghcn_{{year}}_{{element_lc}} WITH CONTAINER cw AS SELECT ID, DATE, DATA_VALUE, M_FLAG, Q_FLAG, S_FLAG, OBS_TIME "
+           f"FROM {GHCN_RAW} WHERE ID IN ({GHCN_STATIONS_SQL})",
+           _YE, (GHCN_VIEW,), (GHCN_RAW,),
+           f"The {len(GHCN_STATIONS)} station ids of seeds/stations.json plus the validation station, filtered from the year's parquet.",
+           "registrar"),
+        _t("registrar_ghcn_describe", f"DESCRIBE {GHCN_VIEW}", _YE, (GHCN_VIEW,), (), "Columns of the GHCN station view."),
+        _t("registrar_ghcn_cache", f"CACHE TABLE {GHCN_VIEW}", _YE, (GHCN_VIEW,), (GHCN_VIEW,),
+           "Cache the station view (one scan of the 9 parquet files).", "registrar"),
         _t("registrar_fema_table",
            f'CREATE LIGHTNING REST TABLE declarations_dr_{{quarter_slug}} FROM CW_FEMA REQUEST( endpoint "{FEMA_ENDPOINT}", {REST_REQUEST_TAIL}',
            {"quarter": "fema_quarter"}, (FEMA_RAW,), (), "One quarter of FEMA major-disaster declarations as a raw REST table (filter percent-encoded).", "registrar"),
@@ -414,8 +535,34 @@ REGISTRAR_PLANS: dict[str, Plan] = {
               "Register one calendar quarter of FEMA major-disaster declarations (quarter CY<yyyy>Q<n>): raw REST table, exploded view, DESCRIBE, CACHE."),
         _plan("register_stations", _NONE, "registrar_stations",
               "Register the GHCN station inventory ghcnd-stations.txt: one-column CSV filestore table, SUBSTR view, DESCRIBE, CACHE."),
+        _plan("register_ghcn", _YE, "registrar_ghcn",
+              "Register one GHCN-Daily year and element (year, element TMAX | TMIN): parquet filestore table, station-filtered view, "
+              "DESCRIBE, CACHE (about 40 s for the CACHE)."),
     ]
 }
+
+# register_source: a catalogue id of seeds/catalogue.json -> the registrar plan that registers it. The agent names
+# the source it found (search_catalogue) and the plan's parameters; it never names a statement. Catalogue entries
+# not listed here (the catalogues, sec_companyconcept, the known_to_fail pudl, the USL) cannot be registered.
+REGISTER_SOURCE = "register_source"
+SOURCE_PLANS: dict[str, str] = {
+    "openfema_disaster_declarations": "register_fema",
+    "noaa_ghcn_stations": "register_stations",
+    "sec_frames": "register_frames",
+    "sec_submissions": "register_submission",
+    "noaa_ghcn_by_year": "register_ghcn",
+}
+CATALOGUE_PATH = Path(__file__).resolve().parent.parent / "seeds" / "catalogue.json"
+
+
+def catalogue_entries(path: Path = CATALOGUE_PATH) -> dict[str, dict]:
+    """seeds/catalogue.json entries by id (read per call: lane edits to statuses apply without a restart)."""
+    return {e["id"]: e for e in json.loads(path.read_text(encoding="utf-8"))["entries"]}
+
+
+def registrar_actions() -> tuple[str, ...]:
+    """Every action POST /registrar/<action> accepts: the plans plus the register_source dispatch."""
+    return tuple(sorted(REGISTRAR_PLANS)) + (REGISTER_SOURCE,)
 
 
 def cache_targets_for(frames: list[tuple[str, str]], concepts: list[tuple[str, str]], submissions: list[str]) -> tuple[str, ...]:
@@ -431,8 +578,10 @@ def validate_param(kind: str, value: object) -> str:
         raise BadParams(f"unknown parameter kind: {kind}")
     if not isinstance(value, str):
         raise BadParams(f"{kind} must be a string")
-    if not PARAM_PATTERNS[kind].match(value):
+    if not PARAM_PATTERNS[kind].fullmatch(value):  # fullmatch: "$" alone would let a trailing newline through
         raise BadParams(f"invalid {kind}: {value[:40]!r}")
+    if kind in CHECKS:
+        CHECKS[kind](value)
     return value
 
 

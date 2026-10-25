@@ -61,6 +61,11 @@ export interface RegistrarResponse {
   skipped: string[];
   error?: string;
   code?: string;
+  /** register_source only: the catalogue entry, the plan it ran, and whether the view already existed
+   *  (then only DESCRIBE, plus CACHE if the driver had evicted it, was sent). */
+  catalogue_id?: string;
+  dispatched_to?: string;
+  already_registered?: boolean;
 }
 
 export interface RegistrarResult extends RegistrarResponse {
@@ -91,6 +96,13 @@ export const PARAM_PATTERNS = {
   element: /^(TMAX|TMIN)$/u,
   sic: /^\d{4}$/u,
   fema_quarter: /^CY\d{4}Q[1-4]$/u,
+  // A cw.* SchemaStore view, lower case (Lightning folds identifier case: pass cw.frames_revenues_cy2025q1). The
+  // gateway also requires it to be a view zetaris/manifest.json lists; won.*, clearshelf_* and unlisted names are refused.
+  cw_object: /^cw\.[a-z0-9_]+$/u,
+  column: /^[A-Za-z][A-Za-z0-9_]{0,63}$/u,
+  cik_list: /^\d{10}(,\d{10}){0,59}$/u,
+  dq_rule: /^(utility\.sic|utility_state\.cik|utility_state\.state|fema_declaration\.state|station\.state|revenue_quarter\.cik)$/u,
+  catalogue_id: /^[a-z][a-z0-9_]{0,63}$/u,
 } as const;
 export type ParamKind = keyof typeof PARAM_PATTERNS;
 
@@ -101,33 +113,37 @@ export type ParamKind = keyof typeof PARAM_PATTERNS;
 export const TEMPLATE_PARAMS: Record<string, Record<string, ParamKind>> = {
   select1: {},
   show_databases: {},
-  // GHCN degree days over the cached cw.ghcn_<year>_<element> views (zetaris/sql/04_won_ghcn_*.sql):
+  // GHCN degree days over the cached cw.ghcn_<year>_<element> views (zetaris/sql/09_cw_ghcn_*.sql):
   // station_id, year, quarter, hdd, cdd, days_observed, days_in_quarter, coverage per station,
   // about 19 s for any station list (1 to 60 ids), so one call per (year, quarter).
   weather_quarter: { year: "year", quarter: "quarter", station_list: "station_list" },
-  // USL model and data quality (zetaris/sql/05_won_usl_*.sql); the two DQ templates take minutes.
-  usl_describe: {},
-  dq_invalid: {},
-  dq_run_coverage: {},
+  // Discovery probes over one manifest view (probe_source): DESCRIBE; five rows; rows, distinct values,
+  // non-null values and the non-null share of one column.
+  describe_object: { object: "cw_object" },
+  sample_rows: { object: "cw_object" },
+  distinct_counts: { object: "cw_object", column: "column" },
   // SEC frames (cw.frames_<tag>_<period>): cik, entityName, loc, start, end, val, accn.
   // frames_period holds every filer (the reply carries the first 200 rows; row_count is the total).
   frames_period: { tag: "tag", period: "period" },
   frames_count: { tag: "tag", period: "period" },
   frames_fact: { tag: "tag", period: "period", cik10: "cik10" },
-  // The seed utilities' facts in one frames period (the peer universe in one call; at most one row per seed).
-  frames_seeds: { tag: "tag", period: "period" },
-  // SEC companyconcept (cw.concept_<cik10>_<tag>): fy, fp, form, filed, accn, start, end, val.
-  concept_history: { cik10: "cik10", tag: "tag" },
-  // The same columns for the facts whose period ends in `year` or the year before: the like-for-like
-  // window the get_revenue tool reads (concept_history is cut at the 200-row cap for long histories).
-  concept_window: { cik10: "cik10", tag: "tag", year: "year" },
   // SEC submissions (cw.submission_<cik10>): cik, name, sic, sicDescription, state.
   submission: { cik10: "cik10" },
   // SIC reference (cw.sic_codes): code, description, division, division_desc, major_group, major_group_desc.
   sic: { code: "sic" },
-  // The governed USL copies (keys, descriptions, DQ): slow reads for the evidence drawer, not the hot path.
-  usl_utility: { cik10: "cik10" },
-  usl_revenue: { cik10: "cik10", period: "period" },
+  // The answer (question path, cached views, sub-second): the seed names; one row per (utility, served state)
+  // with that quarter's DR declarations (cik, name, ticker, state, declarations, severe_storm, fire, flood,
+  // other_incidents; declarations desc, name); per cik the first revenue tag with a frames fact (cik, xbrl_tag, val, accn).
+  seed_utility_names: {},
+  answer_fema_utilities: { quarter: "fema_quarter" },
+  answer_revenue: { period: "period", cik_list: "cik_list" },
+  // The governed USL (each under 3 s): tables, DQ rules, the model as JSON (compile_usl diffs against it).
+  usl_tables: {},
+  usl_dq_rules: {},
+  usl_model: {},
+  // RUN DQ / SHOW DQ INVALID RECORD for one of the six FK rules: minutes, onboarding only (ONBOARDING_ONLY_TEMPLATES).
+  dq_run: { rule: "dq_rule" },
+  dq_invalid: { rule: "dq_rule" },
   // Crosswalk reads (zetaris/sql/01_cw_fema, 02_cw_stations, 05_cw_seeds): one quarter of FEMA major-disaster
   // declarations (cw.fema_declarations_dr_<yyyy>q<n>), the OpenFEMA catalogue, the stations inventory lookup.
   fema_declarations: { quarter: "fema_quarter" },
@@ -143,22 +159,23 @@ export const TEMPLATE_PARAMS: Record<string, Record<string, ParamKind>> = {
   joinmap_station: {},
   joinmap_sic: {},
   joinmap_sic_orphans: {},
-  // DQ on the Crosswalk USL: the FK rule sic on utility (one invalid row expected, MGE Energy).
-  dq_run_sic: {},
-  dq_invalid_sic: {},
 };
+
+/** The templates gateway/templates.py marks onboarding_only (minutes-long DQ statements): the
+ *  onboarding path runs them; the agent's question path refuses them (SPEC D2, D6). */
+export const ONBOARDING_ONLY_TEMPLATES: readonly string[] = ["dq_invalid", "dq_run"];
+
+export function isOnboardingOnly(templateId: string): boolean {
+  return ONBOARDING_ONLY_TEMPLATES.includes(templateId);
+}
 
 /** Client-side bound per template id where the gateway sets its own bound (gateway/templates.py
  *  timeout_s), always a little longer than the gateway's so the gateway's reply arrives first:
- *  DQ on the USL weather table resolves the filestore sources again and takes minutes; a USL
- *  utility read visits every submission view (45 s to about 2.5 min measured). Other templates use
- *  GatewayClientOptions.timeoutMs. */
+ *  RUN DQ / SHOW DQ INVALID RECORD on a USL table whose parent is utility re-read the 43 submission
+ *  views (72 to 151 s measured; bound 900 s). Other templates use GatewayClientOptions.timeoutMs. */
 export const TEMPLATE_TIMEOUT_MS: Record<string, number> = {
-  dq_invalid: 630_000,
-  dq_run_coverage: 630_000,
-  usl_utility: 330_000,
-  dq_run_sic: 630_000,
-  dq_invalid_sic: 630_000,
+  dq_run: 930_000,
+  dq_invalid: 930_000,
 };
 
 /** Parameter kinds per registrar action, mirroring gateway/templates.py REGISTRAR_PLANS. Each
@@ -170,7 +187,28 @@ export const REGISTRAR_PARAMS: Record<string, Record<string, ParamKind>> = {
   register_submission: { cik10: "cik10" },
   register_fema: { quarter: "fema_quarter" },
   register_stations: {},
+  register_ghcn: { year: "year", element: "element" },
 };
+
+/** register_source: a seeds/catalogue.json entry id -> the registrar plan the gateway dispatches it to
+ *  (gateway/templates.py SOURCE_PLANS). The contract names action "register_source" with parameters
+ *  { catalogue_id, ...the plan's parameters }; an object that already exists answers already_registered. */
+export const REGISTER_SOURCE_ACTION = "register_source";
+export const SOURCE_PLANS: Record<string, string> = {
+  openfema_disaster_declarations: "register_fema",
+  noaa_ghcn_stations: "register_stations",
+  sec_frames: "register_frames",
+  sec_submissions: "register_submission",
+  noaa_ghcn_by_year: "register_ghcn",
+};
+
+export function validateSourceParams(catalogueId: string, params: Record<string, string>): string {
+  validateParam("catalogue_id", catalogueId);
+  const action = SOURCE_PLANS[catalogueId];
+  if (!action) throw new BadParams(`catalogue entry ${catalogueId} cannot be registered (no registrar plan)`);
+  validateRegistrarParams(action, params);
+  return action;
+}
 
 export class BadParams extends Error {
   constructor(message: string) {
@@ -296,6 +334,20 @@ export class GatewayClient {
    */
   async registrar(action: string, params: Record<string, string>, contract: Record<string, unknown>): Promise<RegistrarResult> {
     validateRegistrarParams(action, params);
+    return this.postRegistrar(action, params, contract);
+  }
+
+  /**
+   * register_source(catalogue_id, params): the gateway dispatches the catalogue entry to its registrar plan
+   * (SOURCE_PLANS) under a contract for action "register_source" whose parameters are
+   * { catalogue_id, ...params }. Idempotent: an existing view answers already_registered: true.
+   */
+  async registerSource(catalogueId: string, params: Record<string, string>, contract: Record<string, unknown>): Promise<RegistrarResult> {
+    validateSourceParams(catalogueId, params);
+    return this.postRegistrar(REGISTER_SOURCE_ACTION, { catalogue_id: catalogueId, ...params }, contract);
+  }
+
+  private async postRegistrar(action: string, params: Record<string, string>, contract: Record<string, unknown>): Promise<RegistrarResult> {
     const started = performance.now();
     const res = await this.fetchImpl(`${this.baseUrl}/registrar/${encodeURIComponent(action)}`, {
       method: "POST",
@@ -316,12 +368,3 @@ export class GatewayClient {
     return { ...body, http_status: res.status, wall_ms: Math.round(wall) };
   }
 }
-
-// ---------- DQ gate ----------
-// TODO(agent loop): the dq_gate tool goes here. Per question it reads the coverage column the
-// weather_quarter template already returns (the coverage_ok rule, coverage >= 0.9); the USL
-// templates dq_invalid (SHOW DQ INVALID RECORD coverage_ok, about 3 min live) and
-// dq_run_coverage (about 6 min) are onboarding or warm-up checks. SHOW DQ ALL INVALID on the
-// weather table did not return within 900 s on this instance (zetaris/README.md, G6), so it is
-// not a template. The ClearShelf DqGate and write-back DQ check were removed: nothing in this
-// entry writes back to Zetaris.

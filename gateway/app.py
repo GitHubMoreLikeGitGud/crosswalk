@@ -223,7 +223,8 @@ class Gateway:
             {"app_id": storage["app_id"], "cached_tables": sorted(storage["cached"])} if storage else {"error": "spark ui unreachable"}
         )
         out["templates"] = sorted(templates.TEMPLATES)
-        out["registrar_actions"] = sorted(templates.REGISTRAR_PLANS)
+        out["onboarding_only_templates"] = sorted(t.id for t in templates.TEMPLATES.values() if t.onboarding_only)
+        out["registrar_actions"] = list(templates.registrar_actions())
         out["last_warmup"] = self.last_warmup
         return out
 
@@ -242,7 +243,7 @@ class Gateway:
             out["error"] = str(e)
             return 400, out
         params = templates.resolved_params(t, req.params)  # request values plus the DERIVED placeholders (quarter_slug)
-        out.update(sql=sql, sql_sha256=sha256(sql), objects=list(t.objects), raw_objects=cache.resolve(t.raw_objects, params))
+        out.update(sql=sql, sql_sha256=sha256(sql), objects=cache.resolve(t.objects, params), raw_objects=cache.resolve(t.raw_objects, params))
         log = {"source_file": "gateway.template", "template_id": t.id, "role": req.role, "params": req.params,
                "sql": sql, "sql_sha256": out["sql_sha256"], "timeout_s": t.timeout_s or QUERY_TIMEOUT_S}
         try:

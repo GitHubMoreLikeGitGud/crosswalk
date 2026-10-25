@@ -5,7 +5,8 @@ from gateway.templates import BadParams, Plan, Step, Template, render
 
 SAMPLES = {"cik10": "0001326160", "tag": "Revenues", "period": "CY2025Q1", "year": "2025", "quarter": "1",
            "station": "USW00013740", "station_list": "USW00013740,USW00013722", "element": "TMAX", "sic": "4931",
-           "fema_quarter": "CY2025Q1"}
+           "fema_quarter": "CY2025Q1", "cw_object": "cw.states", "column": "state", "cik_list": "0001326160,0000092122",
+           "dq_rule": "utility.sic", "catalogue_id": "sec_frames"}
 USL = "lightning.metastore.crosswalk.crosswalk_usl"
 
 FRAMES_CREATE = Template(
@@ -71,19 +72,6 @@ def test_weather_quarter_refuses_an_unquoted_or_injected_station_list():
             render("weather_quarter", {"year": "2025", "quarter": "1", "station_list": bad})
 
 
-def test_usl_and_dq_templates_render_to_fixed_reader_statements():
-    assert render("usl_describe", {})[1] == "LOAD USL crosswalk_usl NAMESPACE lightning.metastore.crosswalk"
-    assert render("dq_invalid", {})[1] == f"SHOW DQ INVALID RECORD coverage_ok TABLE {USL}.weather_quarter"
-    assert render("dq_run_coverage", {})[1] == f"RUN DQ coverage_ok TABLE {USL}.weather_quarter"
-    for tid in ("usl_describe", "dq_invalid", "dq_run_coverage"):
-        t = templates.TEMPLATES[tid]
-        assert allowlist.check(t.sql, "reader") == "read" and t.params == {}
-    assert templates.TEMPLATES["dq_invalid"].raw_objects == templates.GHCN_VIEWS
-    # DQ on a USL table over the filestore views is slow (minutes); the other templates keep the gateway default.
-    assert templates.TEMPLATES["dq_invalid"].timeout_s == templates.TEMPLATES["dq_run_coverage"].timeout_s == templates.DQ_TIMEOUT_S == 600.0
-    assert templates.TEMPLATES["usl_describe"].timeout_s is None and templates.TEMPLATES["weather_quarter"].timeout_s is None
-
-
 @pytest.mark.parametrize("kind,value,ok", [
     ("cik10", "0001326160", True), ("cik10", "1326160", False), ("cik10", "CIK0001326160", False), ("cik10", "0001326160 ", False),
     ("tag", "Revenues", True), ("tag", "RevenueFromContractWithCustomerExcludingAssessedTax", True),
@@ -103,7 +91,21 @@ def test_usl_and_dq_templates_render_to_fixed_reader_statements():
     ("element", "TMAX", True), ("element", "TMIN", True), ("element", "PRCP", False), ("element", "tmax", False),
     ("sic", "4931", True), ("sic", "0111", True), ("sic", "491", False), ("sic", "49311", False), ("sic", "4931'", False),
     ("fema_quarter", "CY2025Q1", True), ("fema_quarter", "CY2024Q4", True), ("fema_quarter", "CY2025Q5", False),
-    ("fema_quarter", "2025Q1", False), ("fema_quarter", "CY2025Q1'", False),
+    ("fema_quarter", "2025Q1", False), ("fema_quarter", "CY2025Q1'", False), ("fema_quarter", "CY2025Q1\n", False),
+    ("cw_object", "cw.states", True), ("cw_object", "cw.fema_declarations_dr_2025q1", True),
+    ("cw_object", "cw.frames_revenues_cy2025q1", True), ("cw_object", "cw.submission_0001326160", True),
+    ("cw_object", "cw.States", False), ("cw_object", "CW.states", False), ("cw_object", "won.ghcn_2025_tmax", False),
+    ("cw_object", "cw.states;", False), ("cw_object", "cw.states\n", False), ("cw_object", "cw.clearshelf_items", False),
+    ("cw_object", "cw.won_states", False), ("cw_object", "cw.probe_values", False), ("cw_object", "cw.frames_netincomeloss_cy2025q1", False),
+    ("column", "state", True), ("column", "entityName", True), ("column", "disaster_number", True), ("column", "_c0", False),
+    ("column", "state`", False), ("column", "a b", False), ("column", "x" * 65, False),
+    ("cik_list", "0001326160", True), ("cik_list", "0001326160,0000092122", True), ("cik_list", ",".join(["0001326160"] * 60), True),
+    ("cik_list", ",".join(["0001326160"] * 61), False), ("cik_list", "1326160", False), ("cik_list", "0001326160, 0000092122", False),
+    ("cik_list", "0001326160','0000092122", False),
+    ("dq_rule", "utility.sic", True), ("dq_rule", "revenue_quarter.cik", True), ("dq_rule", "station.state", True),
+    ("dq_rule", "utility.cik", False), ("dq_rule", "weather_quarter.coverage_ok", False), ("dq_rule", "utility.sic TABLE x", False),
+    ("catalogue_id", "sec_frames", True), ("catalogue_id", "noaa_ghcn_by_year", True), ("catalogue_id", "Sec_frames", False),
+    ("catalogue_id", "sec-frames", False),
 ])
 def test_param_patterns(kind, value, ok):
     if ok:
@@ -150,21 +152,12 @@ def test_reader_templates_read_the_cached_views_with_the_agreed_columns():
     assert sql == "SELECT cik, `entityName`, loc, `start`, `end`, val, accn FROM cw.frames_Revenues_CY2025Q1 ORDER BY cik"
     _, sql = render("frames_fact", {"tag": "RegulatedAndUnregulatedOperatingRevenue", "period": "CY2024Q1", "cik10": "0001326160"})
     assert sql.endswith("FROM cw.frames_RegulatedAndUnregulatedOperatingRevenue_CY2024Q1 WHERE LPAD(CAST(cik AS STRING), 10, '0') = '0001326160'")
-    t, sql = render("concept_history", {"cik10": "0000092122", "tag": "Revenues"})
-    assert sql.startswith("SELECT fy, fp, form, filed, accn, `start`, `end`, val FROM cw.concept_0000092122_Revenues")
-    assert t.raw_objects == ("cw.concept_{cik10}_{tag}",)
-    t, sql = render("concept_window", {"cik10": "0000004904", "tag": "Revenues", "year": "2025"})
-    assert sql == ("SELECT fy, fp, form, filed, accn, `start`, `end`, val FROM cw.concept_0000004904_Revenues "
-                   "WHERE CAST(substr(`end`, 1, 4) AS INT) BETWEEN 2025 - 1 AND 2025 ORDER BY `end`, filed, accn")
-    assert t.raw_objects == ("cw.concept_{cik10}_{tag}",) and allowlist.check(sql, "reader") == "read"
-    with pytest.raises(BadParams):
-        render("concept_window", {"cik10": "0000004904", "tag": "Revenues", "year": "1999"})
     _, sql = render("submission", {"cik10": "0000065984"})
     assert sql == "SELECT cik, name, sic, `sicDescription`, state FROM cw.submission_0000065984"
     assert "street" not in sql.lower()
     _, sql = render("sic", {"code": "4911"})
     assert sql == "SELECT code, description, division, division_desc, major_group, major_group_desc FROM cw.sic_codes WHERE code = '4911'"
-    for tid in ("frames_period", "frames_count", "frames_fact", "concept_history", "concept_window", "submission", "sic"):
+    for tid in ("frames_period", "frames_count", "frames_fact", "submission", "sic"):
         assert templates.TEMPLATES[tid].role == "reader"
 
 
@@ -180,37 +173,6 @@ def test_seed_ciks_come_from_the_seed_file_as_ten_digit_strings(tmp_path):
     bad.write_text('{"utilities": [{"cik": "0001326160"}, {"cik": "0001326160"}]}', encoding="utf-8")
     with pytest.raises(ValueError):
         templates.load_seed_ciks(bad)
-
-
-def test_frames_seeds_filters_a_period_to_the_seed_ciks_as_integers_and_casts_val():
-    from gateway import cache
-
-    t, sql = render("frames_seeds", {"tag": "Revenues", "period": "CY2025Q1"})
-    assert t.role == "reader" and allowlist.check(sql, "reader") == "read"
-    assert sql.startswith("SELECT cik, `entityName`, loc, `start`, `end`, CAST(val AS DOUBLE) AS val, accn FROM cw.frames_Revenues_CY2025Q1 WHERE CAST(cik AS BIGINT) IN (")
-    assert sql.endswith(") ORDER BY cik")
-    in_list = sql.split("IN (")[1].split(")")[0].split(", ")
-    assert len(in_list) == 43 and all(x.isdigit() for x in in_list) and "1031296" in in_list and "4904" in in_list
-    assert "'" not in sql  # integers, never quoted strings
-    assert cache.resolve(t.raw_objects, {"tag": "Revenues", "period": "CY2025Q1"}) == ["cw.frames_Revenues_CY2025Q1"]
-    _, sql2 = render("frames_seeds", {"tag": "RegulatedAndUnregulatedOperatingRevenue", "period": "CY2024Q1"})
-    assert "FROM cw.frames_RegulatedAndUnregulatedOperatingRevenue_CY2024Q1 WHERE" in sql2
-
-
-def test_usl_reader_templates_read_the_governed_sec_tables():
-    t, sql = render("usl_utility", {"cik10": "0001031296"})
-    assert sql == f"SELECT cik, name, ticker, sic, hq_state FROM {USL}.utility WHERE cik = '0001031296'"
-    assert t.role == "reader" and allowlist.check(sql, "reader") == "read" and t.objects == (f"{USL}.utility",)
-    assert len(t.raw_objects) == 43 and "cw.submission_0001031296" in t.raw_objects and t.timeout_s == 300.0
-    t, sql = render("usl_revenue", {"cik10": "0000004904", "period": "CY2025Q1"})
-    assert sql == (f"SELECT cik, xbrl_tag, year, quarter, val, accn, filed, is_comparative FROM {USL}.revenue_quarter "
-                   "WHERE cik = '0000004904' AND CONCAT('CY', CAST(year AS STRING), 'Q', CAST(quarter AS STRING)) = 'CY2025Q1' ORDER BY xbrl_tag, accn")
-    assert allowlist.check(sql, "reader") == "read" and t.objects == (f"{USL}.revenue_quarter",)
-    assert len(t.raw_objects) == 6 and "cw.frames_Revenues_CY2024Q1" in t.raw_objects
-    with pytest.raises(BadParams):
-        render("usl_revenue", {"cik10": "0000004904", "period": "CY2025Q4"})
-    with pytest.raises(BadParams):
-        render("usl_utility", {"cik10": "4904"})
 
 
 def test_registrar_plans_register_table_view_describe_cache_in_order():
@@ -322,5 +284,129 @@ def test_crosswalk_registrar_plans():
     assert allowlist.check(table, "registrar") == "register"
     _, view = render("registrar_stations_view", {})
     assert "SUBSTR(_c0, 1, 11) AS id, SUBSTR(_c0, 39, 2) AS state" in view and "FROM CW_GHCN.ghcnd_stations_txt" in view
-    assert render("dq_run_sic", {})[1] == f"RUN DQ sic TABLE {USL}.utility"
-    assert render("dq_invalid_sic", {})[1] == f"SHOW DQ INVALID RECORD sic TABLE {USL}.utility"
+
+
+def test_inherited_question_templates_are_gone():
+    for tid in ("usl_describe", "dq_run_coverage", "usl_utility", "usl_revenue", "concept_history", "concept_window",
+                "frames_seeds", "dq_run_sic", "dq_invalid_sic"):
+        assert tid not in templates.TEMPLATES
+    for tid in ("frames_period", "frames_count", "frames_fact", "weather_quarter"):
+        assert tid in templates.TEMPLATES
+
+
+def test_probe_templates_take_a_manifest_view():
+    from gateway import cache
+
+    t, sql = render("describe_object", {"object": "cw.fema_declarations_dr_2025q1"})
+    assert sql == "DESCRIBE cw.fema_declarations_dr_2025q1" and allowlist.check(sql, "reader") == "read"
+    assert cache.resolve(t.raw_objects, {"object": "cw.fema_declarations_dr_2025q1"}) == ["cw.fema_declarations_dr_2025q1"]
+    assert render("sample_rows", {"object": "cw.utility_states"})[1] == "SELECT * FROM cw.utility_states LIMIT 5"
+    _, sql = render("distinct_counts", {"object": "cw.frames_revenues_cy2025q1", "column": "entityName"})
+    assert sql == ("SELECT COUNT(*) AS row_count, COUNT(DISTINCT `entityName`) AS distinct_values, COUNT(`entityName`) AS non_null, "
+                   "COUNT(`entityName`) / CAST(COUNT(*) AS DOUBLE) AS non_null_share FROM cw.frames_revenues_cy2025q1")
+    assert allowlist.check(sql, "reader") == "read"
+
+
+@pytest.mark.parametrize("obj", ["won.ghcn_2025_tmax", "WON.ghcn_2025_tmax", "cw.won_seed_utilities"])
+def test_probe_templates_refuse_the_sister_entrys_objects(obj):
+    for tid in ("describe_object", "sample_rows"):
+        with pytest.raises(BadParams):
+            render(tid, {"object": obj})
+    with pytest.raises(BadParams):
+        render("distinct_counts", {"object": obj, "column": "ID"})
+
+
+@pytest.mark.parametrize("obj", ["cw.clearshelf_products", "cw.probe_values", "cw.seed_utilities_x", "cw.ghcn_2025_prcp",
+                                 "cw.states union select 1", "CW_SEC.frames_Revenues_CY2025Q1"])
+def test_probe_templates_refuse_anything_not_in_the_manifest(obj):
+    with pytest.raises(BadParams):
+        render("describe_object", {"object": obj})
+
+
+def test_manifest_names_and_patterns(tmp_path):
+    m = tmp_path / "manifest.json"
+    m.write_text('{"sources": [{"objects": {"raw": "CW_X.t", "container": "cw", "views": ["cw.A_b"], '
+                 '"frames": ["cw.frames_<tag>_<period>"], "fema": "cw.fema_declarations_dr_<quarter_slug>"}}]}', encoding="utf-8")
+    exact, patterns = templates.load_manifest_views(m)
+    assert exact == frozenset({"cw.a_b"})
+    assert [p.pattern for p in patterns] == [
+        r"cw\.frames_(revenues|revenuefromcontractwithcustomerexcludingassessedtax|regulatedandunregulatedoperatingrevenue)_cy\d{4}q[1-3]",
+        r"cw\.fema_declarations_dr_\d{4}q[1-4]"]
+    assert templates.in_manifest("cw.states") and templates.in_manifest("cw.frames_Revenues_CY2024Q1")
+    assert not templates.in_manifest("cw.frames_Revenues_CY2024Q4") and not templates.in_manifest("won.states")
+
+
+def test_answer_templates_read_cached_views_only():
+    from gateway import cache
+
+    t, sql = render("answer_fema_utilities", {"quarter": "CY2025Q1"})
+    assert t.role == "reader" and allowlist.check(sql, "reader") == "read" and "CW_" not in sql
+    assert "FROM cw.utility_states us JOIN (SELECT state, COUNT(DISTINCT disaster_number) AS declarations" in sql
+    assert "COUNT(DISTINCT CASE WHEN incident_type = 'Severe Storm' THEN disaster_number END) AS severe_storm" in sql
+    assert "AS fire" in sql and "AS flood" in sql and "NOT IN ('Severe Storm', 'Fire', 'Flood')" in sql and "AS other_incidents" in sql
+    assert "FROM cw.fema_declarations_dr_2025q1 GROUP BY state) f ON f.state = us.state" in sql
+    assert "JOIN cw.seed_utility_names n ON n.cik = us.cik ORDER BY f.declarations DESC, n.name, us.state" in sql
+    assert "seed_utilities " not in sql  # never the 17-second UNION view
+    assert cache.resolve(t.raw_objects, templates.resolved_params(t, {"quarter": "CY2024Q1"}))[1] == "cw.fema_declarations_dr_2024q1"
+    t, sql = render("answer_revenue", {"period": "CY2024Q1", "cik_list": "0001326160,0000092122"})
+    assert allowlist.check(sql, "reader") == "read"
+    assert "ROW_NUMBER() OVER (PARTITION BY cik ORDER BY pri) AS rn" in sql and sql.endswith("WHERE rn = 1 ORDER BY cik")
+    assert "WHERE u.cik IN ('0001326160', '0000092122')" in sql
+    for i, tag in enumerate(("Revenues", "RevenueFromContractWithCustomerExcludingAssessedTax", "RegulatedAndUnregulatedOperatingRevenue"), 1):
+        assert sql.count(f"FROM cw.frames_{tag}_CY2024Q1") == 1  # each view referenced once per statement
+        assert f"'{tag}' AS xbrl_tag, CAST(val AS DOUBLE) AS val, accn, {i} AS pri" in sql
+    assert sql.count("LPAD(CAST(cik AS STRING), 10, '0') AS cik") == 3
+    with pytest.raises(BadParams):
+        render("answer_revenue", {"period": "CY2024Q1", "cik_list": "1326160"})
+    with pytest.raises(BadParams):
+        render("answer_fema_utilities", {"quarter": "2025Q1"})
+    assert render("seed_utility_names", {})[1] == "SELECT cik, name, ticker, sic FROM cw.seed_utility_names ORDER BY cik"
+
+
+def test_usl_templates_and_onboarding_only_dq():
+    assert render("usl_tables", {})[1] == f"SHOW NAMESPACES OR TABLES IN {USL}"
+    assert render("usl_dq_rules", {})[1] == f"LIST DQ USL {USL}"
+    assert render("usl_model", {})[1] == "LOAD USL crosswalk_usl NAMESPACE lightning.metastore.crosswalk"
+    expected = {"utility.sic": "sic TABLE " + USL + ".utility", "utility_state.cik": "cik TABLE " + USL + ".utility_state",
+                "utility_state.state": "state TABLE " + USL + ".utility_state",
+                "fema_declaration.state": "state TABLE " + USL + ".fema_declaration",
+                "station.state": "state TABLE " + USL + ".station", "revenue_quarter.cik": "cik TABLE " + USL + ".revenue_quarter"}
+    assert set(expected) == set(templates.DQ_RULES)
+    for rule, tail in expected.items():
+        assert render("dq_run", {"rule": rule})[1] == f"RUN DQ {tail}"
+        assert render("dq_invalid", {"rule": rule})[1] == f"SHOW DQ INVALID RECORD {tail}"
+    for tid in ("dq_run", "dq_invalid"):
+        t = templates.TEMPLATES[tid]
+        assert t.onboarding_only and t.timeout_s == templates.DQ_TIMEOUT_S == 900.0 and t.role == "reader"
+        with pytest.raises(BadParams):
+            render(tid, {"rule": "weather_quarter.coverage_ok"})
+    onboarding = {t.id for t in templates.TEMPLATES.values() if t.onboarding_only}
+    assert onboarding == {"dq_run", "dq_invalid"}
+
+
+def test_register_ghcn_plan_filters_the_seed_stations_from_one_year_and_element():
+    plan = templates.REGISTRAR_PLANS["register_ghcn"]
+    assert plan.params == {"year": "year", "element": "element"}
+    assert [s.template_id for s in plan.steps] == ["registrar_ghcn_table", "registrar_ghcn_view", "registrar_ghcn_describe", "registrar_ghcn_cache"]
+    _, table = render("registrar_ghcn_table", {"year": "2024", "element": "TMIN"})
+    assert table.startswith("CREATE LIGHTNING FILESTORE TABLE ghcn_2024_tmin FROM CW_GHCN FORMAT PARQUET OPTIONS (")
+    assert 'PATH "s3a://noaa-ghcn-pds/parquet/by_year/YEAR=2024/ELEMENT=TMIN/"' in table and 'isS3BucketPublic "true"' in table
+    assert allowlist.check(table, "registrar") == "register"
+    _, view = render("registrar_ghcn_view", {"year": "2024", "element": "TMIN"})
+    assert view.startswith("CREATE SCHEMASTORE VIEW ghcn_2024_tmin WITH CONTAINER cw AS SELECT ID, DATE, DATA_VALUE")
+    assert "FROM CW_GHCN.ghcn_2024_tmin WHERE ID IN ('USW00003017'," in view and allowlist.check(view, "registrar") == "register"
+    assert len(templates.GHCN_STATIONS) == 57 and templates.VALIDATION_STATION in templates.GHCN_STATIONS
+    assert render("registrar_ghcn_cache", {"year": "2025", "element": "TMAX"})[1] == "CACHE TABLE cw.ghcn_2025_tmax"
+    t = templates.TEMPLATES["registrar_ghcn_cache"]
+    assert templates.resolved_params(t, {"year": "2025", "element": "TMAX"})["element_lc"] == "tmax"
+
+
+def test_register_source_names_catalogue_entries_and_plans():
+    entries = templates.catalogue_entries()
+    for cid, action in templates.SOURCE_PLANS.items():
+        assert cid in entries and entries[cid]["status"] != "known_to_fail"
+        assert action in templates.REGISTRAR_PLANS
+        assert templates.validate_param("catalogue_id", cid) == cid
+    assert set(templates.SOURCE_PLANS.values()) == {"register_fema", "register_stations", "register_frames", "register_submission", "register_ghcn"}
+    assert "pudl" in entries and "pudl" not in templates.SOURCE_PLANS
+    assert templates.registrar_actions()[-1] == "register_source" and "register_ghcn" in templates.registrar_actions()

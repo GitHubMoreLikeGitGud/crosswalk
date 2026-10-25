@@ -82,8 +82,9 @@ def test_health_ok():
     body = r.json()
     assert body["ok"] is True and body["zetaris"]["select1"] == 1 and body["service"] == "crosswalk-gateway"
     assert FRAMES in body["cache"]["cached_tables"]
-    assert {"select1", "show_databases", "frames_period", "concept_history", "submission", "sic"} <= set(body["templates"])
-    assert body["registrar_actions"] == sorted(templates.REGISTRAR_PLANS) and "register_frames" in body["registrar_actions"]
+    assert {"select1", "show_databases", "frames_period", "describe_object", "answer_fema_utilities", "submission", "sic"} <= set(body["templates"])
+    assert body["registrar_actions"] == sorted(templates.REGISTRAR_PLANS) + ["register_source"] and "register_ghcn" in body["registrar_actions"]
+    assert body["onboarding_only_templates"] == ["dq_invalid", "dq_run"]
 
 
 def test_health_down():
@@ -134,7 +135,7 @@ def test_cached_view_template_reports_hit_and_resolved_raw_objects(monkeypatch, 
     c, _ = client(conn)
     body = c.post("/sql/template", json={"template_id": "frames_count", "params": P}).json()
     assert body["rows"] == [[1937]] and body["cache_state"] == "hit"
-    assert body["objects"] == ["cw.frames_{tag}_{period}"] and body["raw_objects"] == ["cw.frames_Revenues_CY2025Q1"]
+    assert body["objects"] == ["cw.frames_Revenues_CY2025Q1"] and body["raw_objects"] == ["cw.frames_Revenues_CY2025Q1"]
     assert conn.sql == ["SELECT COUNT(*) AS n FROM cw.frames_Revenues_CY2025Q1"]
     body = c.post("/sql/template", json={"template_id": "frames_count", "params": {**P, "period": "CY2024Q1"}}).json()
     assert body["cache_state"] == "miss" and body["cache_detail"] == {"cw.frames_Revenues_CY2024Q1": "miss"}
@@ -158,7 +159,7 @@ def test_derived_placeholder_resolves_in_raw_objects_and_cache_state(temp_sql_lo
 def test_a_template_bound_overrides_the_gateway_default(temp_sql_log):
     class Timed(FakeConn):
         def __init__(self):
-            super().__init__(rows=[["coverage_ok", "weather_quarter", "Custom Data Quality", 342, 342, 0]])
+            super().__init__(rows=[["sic", "utility", "Foreign Key Constraint", 43, 42, 1]])
             self.timeouts = []
 
         def execute(self, sql, timeout_s=None, max_rows=None):
@@ -167,7 +168,7 @@ def test_a_template_bound_overrides_the_gateway_default(temp_sql_log):
 
     conn = Timed()
     c, _ = client(conn)
-    assert c.post("/sql/template", json={"template_id": "dq_run_coverage"}).status_code == 200
+    assert c.post("/sql/template", json={"template_id": "dq_run", "params": {"rule": "utility.sic"}}).status_code == 200
     assert c.post("/sql/template", json={"template_id": "select1"}).status_code == 200
     assert conn.timeouts == [templates.DQ_TIMEOUT_S, app_module.QUERY_TIMEOUT_S]
     logged = [json.loads(line) for line in temp_sql_log.read_text(encoding="utf-8").splitlines()]
