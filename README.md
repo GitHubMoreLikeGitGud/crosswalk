@@ -14,7 +14,7 @@ Demo video (3:14): https://youtu.be/MRar6dzsmv8 · Deck (PDF): [`docs/deck/Cross
 - **What Crosswalk does.** Before it answers, it measures each join key in Zetaris Lightning SQL and runs each answer column only after its key passes. Padded to ten digits, 42 of 43 match, and the one that does not, IDACORP, is named.
 - **The answer** (Q1 2025): 12 utilities in the 7 states with FEMA major-disaster declarations that they serve; revenue up for 9, down for 2, 1 not comparable; degree days up at all 12. Every number opens the SQL behind it, and 18 cold runs gave the same answer.
 - **The check is the product, not the model.** Lightning SQL measured every key Nemotron 3 Nano 4B proposed and REJECTED 7 of its 11. A name-based script proposed better keys (25 of 30 VERIFIED against 3 of 11), and with no model the same answer arrives in a median 87.5 s against 274.2 s (three runs each). The model stays as a measured second proposer.
-- **Check it in about a minute**, no Zetaris and no GPU: `cd agent && npm ci && npm run verify` runs 388 agent, 24 UI and 382 gateway tests and the Meterless conformance suites (13/13, 8/8, 8/8).
+- **Check it with one command**, no Zetaris and no GPU: `cd agent && npm ci && npm run verify` runs 388 agent, 24 UI and 382 gateway tests and the Meterless conformance suites (13/13, 8/8, 8/8).
 - **Who it is for:** an analyst, for example at a state utility commission, who has to put a cross-agency table into a memo with no data engineer on call. Before the table goes in, every column's join is checked and every drop-out is named.
 
 ## What you get
