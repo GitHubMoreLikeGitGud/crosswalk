@@ -43,11 +43,36 @@ const OBJECT_PATTERN = "^cw\\.[A-Za-z0-9_]+$";
 const COLUMN_PATTERN = "^[A-Za-z_][A-Za-z0-9_]*$";
 export const MAX_KEY_CHOICES = 6;
 
-/** One join-key choice: left column, right column, one transform from the closed set. */
+/** One join-key choice: left column, right column, one transform from the closed set. With a menu (D16), each side is
+ *  the short id of a probed column ("p3"), which the host maps back to {object, column}. */
 export interface KeyChoiceInput {
-  left: { object: string; column: string };
-  right: { object: string; column: string };
+  left: { object: string; column: string } | string;
+  right: { object: string; column: string } | string;
   transform: string;
+}
+
+/** D16: the transforms the menu offers, one spelling each (the closed set; substr with the one span a probe needs, US-XX -> XX). */
+export const MENU_TRANSFORMS = ["identity", "upper", "lpad10", "substr(4,2)", "strip_prefix('US-')", "yyyymmdd_to_date", "iso_to_quarter"] as const;
+
+/** The enumerated menu of one propose_keys step: short ids of the probed columns and the transform names. */
+export interface KeyMenuSchema {
+  ids: readonly string[];
+  transforms: readonly string[];
+}
+
+/** propose_keys with a menu: every side is an id from the menu, every transform a name from the menu (an invented view or column cannot be written). */
+export function menuChoicesSchema(menu: KeyMenuSchema): JsonSchema {
+  return {
+    type: "array",
+    minItems: 1,
+    maxItems: MAX_KEY_CHOICES,
+    items: {
+      type: "object",
+      additionalProperties: false,
+      required: ["left", "right", "transform"],
+      properties: { left: { enum: [...menu.ids] }, right: { enum: [...menu.ids] }, transform: { enum: [...menu.transforms] } },
+    },
+  };
 }
 
 const sideSchema: JsonSchema = {
@@ -130,8 +155,10 @@ const plannerInputSchema: JsonSchema = {
  * the host will accept at this point of the chain. `evidenceIds` is the same idea for
  * citations: the model can only cite ids the host has recorded.
  */
-export function plannerSchema(tools: readonly string[], evidenceIds: readonly string[] = []): JsonSchema {
+export function plannerSchema(tools: readonly string[], evidenceIds: readonly string[] = [], menu: KeyMenuSchema | null = null): JsonSchema {
   if (tools.length === 0) throw new Error("plannerSchema: at least one tool is required");
+  const inputSchema: JsonSchema =
+    menu && menu.ids.length >= 2 ? { ...plannerInputSchema, properties: { ...(plannerInputSchema.properties as Record<string, JsonSchema>), choices: menuChoicesSchema(menu) } } : plannerInputSchema;
   for (const t of tools) {
     if (!(TOOL_NAMES as readonly string[]).includes(t)) throw new Error(`plannerSchema: unknown tool ${t}`);
   }
@@ -149,7 +176,7 @@ export function plannerSchema(tools: readonly string[], evidenceIds: readonly st
             type: "object",
             additionalProperties: false,
             required: ["tool", "input"],
-            properties: { tool: { enum: [...tools] }, input: plannerInputSchema },
+            properties: { tool: { enum: [...tools] }, input: inputSchema },
           },
           { type: "null" },
         ],

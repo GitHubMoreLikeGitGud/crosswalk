@@ -85,8 +85,25 @@ describe("measure_key", () => {
       expect(m.sql).toContain(g.calls[0]!.id);
       expect(m.provenance.every((p) => p.run_id === RUN && p.sql.length > 0)).toBe(true);
       expect(m.provenance).toHaveLength(c.replies.orphans ? 2 : 1);
+      // D18: the join-map row reads in the canonical orientation, whoever proposed the pair.
+      expect(m.orientation).toEqual(c.expected.orientation);
+      if (m.route === "match_rate") expect(g.calls[0]!.params).toEqual({ left_object: c.proposal.left.object.toLowerCase(), left_column: c.proposal.left.column, right_object: c.proposal.right.object.toLowerCase(), right_column: c.proposal.right.column, transform: c.proposal.transform });
     });
   }
+  it("a match_rate refusal (HTTP 400: a column DESCRIBE lacks) is unmeasurable with the gateway's reason, not a number", async () => {
+    const err = Object.assign(new Error("refused: column 'fips' is not a column of cw.utility_states"), { status: 400 });
+    const g = port(() => err);
+    const m = await measureKey({ leftObject: "cw.utility_states", leftColumn: "fips", rightObject: "cw.states", rightColumn: "fips", transform: "identity" }, { gateway: g, runId: RUN });
+    expect(m.status).toBe("unmeasurable");
+    expect(m.reason).toMatch(/^match_rate refused: refused: column 'fips'/u);
+    expect(m.rate).toBeNull();
+  });
+  it("never sends cw.seed_utilities to match_rate (D15)", async () => {
+    const g = port(() => new Error("no call expected"));
+    const m = await measureKey({ leftObject: "cw.seed_utilities", leftColumn: "sic", rightObject: "cw.sic_codes", rightColumn: "code", transform: "upper" }, { gateway: g, runId: RUN });
+    expect(m.status).toBe("unmeasurable");
+    expect(g.calls).toHaveLength(0);
+  });
   it("refuses a won object before any call", async () => {
     const g = port(() => new Error("no call expected"));
     await expect(measureKey({ leftObject: "won.seed_utilities", leftColumn: "cik", rightObject: "cw.sic_codes", rightColumn: "code", transform: "identity" }, { gateway: g, runId: RUN })).rejects.toThrow(/refused/u);
@@ -253,21 +270,25 @@ describe("probe_source, propose_keys, scoring", () => {
     expect(parseDistinct({ columns: ["a", "b", "c"], rows: [[10, 4, 9]] })).toEqual({ rows: 10, distinct: 4, non_null: 9 });
   });
   it("validates the planner's choices", () => {
-    const probed = new Set(["cw.seed_utilities", "cw.frames_Revenues_CY2025Q1", "cw.sic_codes", "cw.utility_states"]);
+    const snap = "cw.seed_submissions_snapshot";
+    const probed = new Set([snap, "cw.frames_Revenues_CY2025Q1", "cw.sic_codes", "cw.utility_states"]);
     const c = (lo: string, lc: string, ro: string, rc: string, t: string) => ({ left: { object: lo, column: lc }, right: { object: ro, column: rc }, transform: t });
-    const out = proposeKeys(
-      [
-        c("cw.frames_Revenues_CY2025Q1", "cik", "cw.seed_utilities", "cik", "lpad10"),
-        c("cw.seed_utilities", "cik", "cw.frames_Revenues_CY2025Q1", "cik", "lpad10"),
-        c("cw.seed_utilities", "sic", "cw.sic_codes", "code", "substr(1,04)"),
-        c("cw.seed_utilities", "sic", "cw.stations", "id", "identity"),
-        c("won.seed_utilities", "cik", "cw.seed_utilities", "cik", "identity"),
-        c("cw.utility_states", "cik", "cw.seed_utilities", "cik", "identity"),
-        c("cw.seed_utilities", "sic", "cw.sic_codes", "code", "identity"),
-      ],
-      { probed },
-    );
+    const choices = [
+      c("cw.frames_Revenues_CY2025Q1", "cik", snap, "cik10", "lpad10"),
+      c(snap, "cik10", "cw.frames_Revenues_CY2025Q1", "cik", "lpad10"),
+      c(snap, "sic", "cw.sic_codes", "code", "substr(1,04)"),
+      c(snap, "sic", "cw.stations", "id", "identity"),
+      c("won.seed_utilities", "cik", snap, "cik10", "identity"),
+      c("cw.utility_states", "cik", snap, "cik10", "identity"),
+      c(snap, "sic", "cw.sic_codes", "code", "identity"),
+    ];
+    // Named join-map statements only (a gateway without match_rate): the second pair has no route.
+    const named = new Set(["joinmap_cik", "joinmap_cik_orphans", "joinmap_sic", "joinmap_sic_orphans"]);
+    const out = proposeKeys(choices, { probed, knownTemplates: named });
     expect(out.accepted.map((a) => a.route)).toEqual(["cik@CY2025Q1", null]);
+    // D16: with match_rate every valid pair is measurable; a pair without a named statement gets its generic key.
+    const withGeneric = proposeKeys(choices, { probed, knownTemplates: new Set([...named, "match_rate", "match_rate_orphans"]) });
+    expect(withGeneric.accepted.map((a) => a.route)).toEqual(["cik@CY2025Q1", `pair:cw.utility_states.cik~${snap}.cik10|identity`]);
     expect(out.rejected.map((r) => r.error)).toEqual([
       "duplicate of an earlier choice",
       "invalid transform: substr(1,04)",
@@ -284,7 +305,10 @@ describe("probe_source, propose_keys, scoring", () => {
     for (const [key, route, verdict] of [["cik@CY2025Q1", "cik", "VERIFIED"], ["station@all", "station", "VERIFIED"], ["sic@all", "sic", "VERIFIED"], ["loc@CY2025Q1", "loc", "VERIFIED"]] as const) {
       measured.set(key, { key, route, verdict, status: "measured" } as unknown as MeasureResult);
     }
-    expect(scoreProposals(choices, measured)).toEqual({ proposals: 6, routed: 4, measured: 4, verified: 4, partial: 0, rejected: 0, unmeasured: 2, keys: ["cik@CY2025Q1", "station@all", "sic@all", "loc@CY2025Q1"] });
+    const named = new Set(["joinmap_cik", "joinmap_station", "joinmap_sic", "joinmap_loc", "joinmap_fema_state", "joinmap_fema_fips"]);
+    expect(scoreProposals(choices, measured, named)).toEqual({ proposals: 6, routed: 4, measured: 4, verified: 4, partial: 0, rejected: 0, unmeasured: 2, keys: ["cik@CY2025Q1", "station@all", "sic@all", "loc@CY2025Q1"] });
+    // D16: with match_rate the other two are routed to their generic keys; unmeasured until a measurement exists.
+    expect(scoreProposals(choices, measured, new Set([...named, "match_rate"]))).toMatchObject({ routed: 6, measured: 4, unmeasured: 2 });
   });
 });
 

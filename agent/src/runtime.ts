@@ -4,7 +4,9 @@
 // <data>/world take <data>/agent.lock, so two processes never write the stores at once.
 // Adapted from Weather-or-Not and ClearShelf (same author, Apache-2.0).
 
+import { spawnSync } from "node:child_process";
 import { appendFileSync, existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { DATA_DIR_URL, loadConfig, REPO_ROOT } from "./config.ts";
 import { issueContract, loadContractSecret } from "./contract/scout.ts";
@@ -248,6 +250,35 @@ export interface OnboardReport {
   usl: { tables: string[]; rules: number; ok: boolean; elapsed_ms: number };
   dq: { ran_at: string; rules: { rule: string; total: number | null; valid: number | null; invalid: number | null; elapsed_s: number; sql: string | null; error: string | null; attempts: number }[]; invalid_rows: { rule: string; row: unknown[] }[] };
   dq_file: string;
+  snapshot: SnapshotReport;
+}
+
+/** The onboarding snapshot cw.seed_submissions_snapshot (D15), as scripts/make_cw_snapshot.py reports it. */
+export interface SnapshotReport {
+  view: string;
+  status: "registered" | "already_registered" | "refreshed" | "failed" | string;
+  rows: number | null;
+  snapshot_at: string | null;
+  /** The one read of cw.seed_utilities (a first onboarding without a snapshot file, or --refresh-snapshot); null otherwise. */
+  read: { sql: string; rows: number; elapsed_ms: number; wall_ms: number; snapshot_at: string } | null;
+  statements: { sql: string; elapsed_ms: number; wall_ms: number }[];
+  error: string | null;
+}
+
+/**
+ * D15: make sure cw.seed_submissions_snapshot exists (DESCRIBE; CREATE + CACHE from the committed snapshot file when absent).
+ * Only `refresh` (npm run onboard -- --refresh-snapshot) reads cw.seed_utilities again and replaces the view. The script uses
+ * the gateway's onboard allowlist and logs every statement to data/evidence/sql_log.jsonl.
+ */
+export function ensureSnapshot(opts: { refresh: boolean; log?: (l: string) => void }): SnapshotReport {
+  const py = join(REPO_ROOT, ".venv", process.platform === "win32" ? "Scripts" : "bin", process.platform === "win32" ? "python.exe" : "python");
+  const args = ["-X", "utf8", join(REPO_ROOT, "scripts", "make_cw_snapshot.py"), "--apply", ...(opts.refresh ? ["--read"] : [])];
+  const r = spawnSync(existsSync(py) ? py : "python", args, { cwd: REPO_ROOT, encoding: "utf8", timeout: 300_000 });
+  const lines = (r.stdout ?? "").split(/\r?\n/u).filter((l) => l.trim().startsWith("{"));
+  const base: SnapshotReport = { view: "cw.seed_submissions_snapshot", status: "failed", rows: null, snapshot_at: null, read: null, statements: [], error: null };
+  if (r.status !== 0 || !lines.length) return { ...base, error: `make_cw_snapshot.py exit ${r.status}: ${(r.stderr ?? "").split(/\r?\n/u).filter((l) => l && !l.startsWith("SLF4J")).slice(-2).join(" ").slice(0, 300)}` };
+  const out = JSON.parse(lines[lines.length - 1]!) as Partial<SnapshotReport>;
+  return { ...base, ...out, error: null };
 }
 
 /**
@@ -257,7 +288,7 @@ export interface OnboardReport {
  * one at a time (900 s bound, one retry on a source error), SHOW DQ INVALID RECORD for every rule
  * with invalid rows, and write <data>/dq/latest.json.
  */
-export async function onboard(rt: Runtime, opts: { log?: (l: string) => void; skipDq?: boolean } = {}): Promise<OnboardReport> {
+export async function onboard(rt: Runtime, opts: { log?: (l: string) => void; skipDq?: boolean; refreshSnapshot?: boolean; snapshot?: typeof ensureSnapshot } = {}): Promise<OnboardReport> {
   const log = opts.log ?? rt.log;
   const t0 = performance.now();
   const started = new Date().toISOString();
@@ -289,6 +320,9 @@ export async function onboard(rt: Runtime, opts: { log?: (l: string) => void; sk
       log(`  register_source ${w.catalogue_id} ${JSON.stringify(w.params)}: FAILED ${(e as Error).message.slice(0, 160)}`);
     }
   }
+  // D15: the SEC submissions snapshot the question path reads instead of cw.seed_utilities (idempotent; refreshed only on request).
+  const snapshot = (opts.snapshot ?? ensureSnapshot)({ refresh: !!opts.refreshSnapshot, log });
+  log(`  snapshot ${snapshot.view}: ${snapshot.status} (${snapshot.rows ?? "?"} rows, taken ${snapshot.snapshot_at ?? "?"})${snapshot.read ? `; cw.seed_utilities read once in ${snapshot.read.elapsed_ms} ms` : ""}${snapshot.error ? ` FAILED ${snapshot.error}` : ""}`);
   // The governed USL: verified, never recompiled here (it exists; a differing plan would compile as crosswalk_usl_v<n>).
   const u0 = performance.now();
   let tables: string[] = [];
@@ -349,5 +383,6 @@ export async function onboard(rt: Runtime, opts: { log?: (l: string) => void; sk
     usl,
     dq: { ran_at: file?.ran_at ?? started, rules: dqRules.length ? dqRules : (file?.rules ?? []).map((r) => ({ rule: r.rule, total: r.total, valid: r.valid, invalid: r.invalid, elapsed_s: (r.elapsed_ms ?? 0) / 1000, sql: r.sql, error: r.error, attempts: 1 })), invalid_rows: invalidRows.length ? invalidRows : ((file?.invalid_rows ?? []) as { rule: string; row: unknown[] }[]) },
     dq_file: DQ_FILE,
+    snapshot,
   };
 }

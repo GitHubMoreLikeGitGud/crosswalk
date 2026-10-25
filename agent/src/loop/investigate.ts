@@ -14,6 +14,7 @@ import { fileURLToPath } from "node:url";
 import { Markovian, type ChunkConfig, type MarkovianRun } from "../../../engines/markovian/reference/src/index.ts";
 import { DATA_DIR_URL } from "../config.ts";
 import { missingFields, type EvidenceRecord } from "../evidence/store.ts";
+import type { MemoResult } from "../llm/memo.ts";
 import { refusedModelHostAttempts } from "../llm/ollama.ts";
 import type { AnswerResult, CompileResult, MeasureResult, RegisterResult, SideScore } from "../tools/discovery.ts";
 import { refusedGatewayHostAttempts } from "../zetaris/client.ts";
@@ -53,9 +54,12 @@ export interface JoinMapRow {
   id: string;
   key: string;
   label: string | null;
+  /** D18: canonical orientation, left = the side whose rows the statement counts (whoever proposed the pair). */
   left: string;
   right: string;
   transform: string;
+  /** The side the transform is applied to. */
+  transform_on: "left" | "right";
   proposed_by: string[];
   status: string;
   left_rows: number | null;
@@ -78,6 +82,8 @@ export interface JoinMapRow {
 export interface ProposalTally {
   proposed_by: string | null;
   made: number;
+  /** Choices that passed the schema and the closed-set validation (made - invalid_schema). */
+  valid: number;
   verified: number;
   partial: number;
   rejected: number;
@@ -125,7 +131,7 @@ export interface RunResult {
   registrations: RegisterResult[];
   usl: Omit<CompileResult, "governed_ddl"> | null;
   answer: AnswerResult | null;
-  memo: { text: string; source: "model" | "template"; words: number; attempts: number; attempts_detail: unknown[] } | null;
+  memo: { text: string; source: "model" | "template"; words: number; attempts: number; attempts_detail: unknown[]; verifier: MemoResult["verifier"] } | null;
   not_tested: string[];
   card: { claims: CardClaim[]; gaps: string[] };
   checklist: Array<{ id: string; status: string; note: string | null; evidenceIds: string[] }>;
@@ -166,7 +172,7 @@ export function goalText(ctx: QuestionContext): string {
 }
 
 function tally(by: string | null, choices: readonly unknown[], score: SideScore, invalid: number): ProposalTally {
-  return { proposed_by: by, made: choices.length + invalid, verified: score.verified, partial: score.partial, rejected: score.rejected, invalid_schema: invalid, unmeasurable: score.unmeasured, keys: score.keys, choices: [...choices] };
+  return { proposed_by: by, made: choices.length + invalid, valid: choices.length, verified: score.verified, partial: score.partial, rejected: score.rejected, invalid_schema: invalid, unmeasurable: score.unmeasured, keys: score.keys, choices: [...choices] };
 }
 
 /** The join map: every measured (or recalled) key, with who proposed it. */
@@ -189,9 +195,10 @@ export function joinMapOf(ctx: QuestionContext): JoinMapRow[] {
       id: ids.get(route) ?? route,
       key: route,
       label: m.label,
-      left: `${p.leftObject}.${p.leftColumn}`,
-      right: `${p.rightObject}.${p.rightColumn}`,
+      left: m.orientation?.left ?? `${p.leftObject}.${p.leftColumn}`,
+      right: m.orientation?.right ?? `${p.rightObject}.${p.rightColumn}`,
       transform: p.transform,
+      transform_on: m.orientation?.transform_on ?? "left",
       proposed_by: [...(by.get(route) ?? [])],
       status: m.status,
       left_rows: m.left_rows,
@@ -317,7 +324,7 @@ export async function investigate(opts: InvestigateOptions, deps: ToolDeps): Pro
     registrations: ctx.registrations,
     usl,
     answer: ctx.answer,
-    memo: ctx.memo ? { text: ctx.memo.text, source: ctx.memo.source, words: ctx.memo.wordCount, attempts: ctx.memo.attempts.length, attempts_detail: ctx.memo.attempts } : null,
+    memo: ctx.memo ? { text: ctx.memo.text, source: ctx.memo.source, words: ctx.memo.wordCount, attempts: ctx.memo.attempts.length, attempts_detail: ctx.memo.attempts, verifier: ctx.memo.verifier } : null,
     not_tested: ctx.notTested,
     card: { claims: ctx.card, gaps: ctx.gaps },
     checklist: ctx.checklist.snapshot(),

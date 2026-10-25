@@ -339,6 +339,31 @@
                 "cw.ghcn_<year>_<element>"
               ]
             }
+          },
+          {
+            "id": "cw_seed_snapshot",
+            "kind": "values-views",
+            "script": "zetaris/sql/10_cw_seed_snapshot_create.sql",
+            "select": "zetaris/sql/10_cw_seed_snapshot_select.sql",
+            "status": "verified",
+            "requires": [
+              "cw_seeds"
+            ],
+            "hosts": [],
+            "summary": "cw.seed_submissions_snapshot: the SEC submissions profile of the 43 seed utilities (cik10, name, ticker, sic, hq_state, snapshot_at) read once from cw.seed_utilities at onboarding and kept as a cached VALUES view (scripts/make_cw_snapshot.py); the question path's probe and the cik, loc, sic and control join-map statements read it instead of cw.seed_utilities (decision D15)",
+            "snapshot": {
+              "source_statement": "SELECT cik, name, ticker, sic, hq_state FROM cw.seed_utilities ORDER BY cik",
+              "snapshot_at": "2026-10-25T15:25:59+0800",
+              "rows": 43,
+              "read_elapsed_ms": 18074,
+              "file": "zetaris/snapshots/seed_submissions_snapshot.json"
+            },
+            "objects": {
+              "container": "cw",
+              "views": [
+                "cw.seed_submissions_snapshot"
+              ]
+            }
           }
         ]
       },
@@ -622,6 +647,14 @@
         "note": "NOAA GHCN-Daily parquet by_year 2024 and 2025 x TMAX, TMIN as CW_GHCN filestore tables, registered through the gateway's register_source (catalogue id noaa_ghcn_by_year -> register_ghcn, one signed contract each, 54-58 s wall each, CACHE 41-45 s), with station-filtered views over the 56 seed stations plus the validation station USW00013740; 20,801 / 20,799 / 20,859 / 20,858 rows, 57 stations each, full-year date ranges; degree days for USW00013740 and USW00013722 in Q1 2025 and Q1 2024 equal the sister entry's pyarrow values to 0.01; every view cached (2026-10-25)"
       },
       {
+        "id": "cw_seed_snapshot:cw.seed_submissions_snapshot",
+        "object": "cw.seed_submissions_snapshot",
+        "kind": "registered_view",
+        "status": "verified",
+        "licence": "",
+        "note": "cw.seed_submissions_snapshot: the SEC submissions profile of the 43 seed utilities (cik10, name, ticker, sic, hq_state, snapshot_at) read once from cw.seed_utilities at onboarding and kept as a cached VALUES view (scripts/make_cw_snapshot.py); the question path's probe and the cik, loc, sic and control join-map statements read it instead of cw.seed_utilities (decision D15)"
+      },
+      {
         "id": "openfema:DisasterDeclarationsSummaries@v2",
         "kind": "openfema_dataset",
         "object": null,
@@ -866,6 +899,16 @@
             "negative": false
           },
           {
+            "id": "cw_seed_snapshot:cw.seed_submissions_snapshot",
+            "object": "cw.seed_submissions_snapshot",
+            "kind": "registered_view",
+            "status": "verified",
+            "licence": "",
+            "note": "cw.seed_submissions_snapshot: the SEC submissions profile of the 43 seed utilities (cik10, name, ticker, sic, hq_state, snapshot_at) read once from cw.seed_utilities at onboarding and kept as a cached",
+            "score": 2,
+            "negative": false
+          },
+          {
             "id": "sec_companyconcept",
             "kind": "REST",
             "object": null,
@@ -882,16 +925,6 @@
             "status": "verified",
             "licence": "",
             "note": "The five join keys measured over cached views (match rate = matched distinct left keys / distinct left keys): (a) cik lpad10 43/42 = 0.977 VERIFIED (orphan IDACORP, no CY2025Q1 fact); (b) loc substr(4",
-            "score": 1,
-            "negative": false
-          },
-          {
-            "id": "cw_seed_names:cw.seed_utility_names",
-            "object": "cw.seed_utility_names",
-            "kind": "registered_view",
-            "status": "verified",
-            "licence": "",
-            "note": "cw.seed_utility_names: cik (10-digit string), name, ticker, sic of the 43 seed utilities as a VALUES view generated from seeds/utilities.json by scripts/make_cw_sql.py; 43 rows, 43 CIKs, 40 tickers, 4",
             "score": 1,
             "negative": false
           }
@@ -1489,10 +1522,10 @@
         "name": "demo_shape_limit_6",
         "probes": [
           {
-            "object": "cw.seed_utilities",
+            "object": "cw.seed_submissions_snapshot",
             "candidates": [
               {
-                "column": "cik",
+                "column": "cik10",
                 "distinct": 43,
                 "rows": 43,
                 "samples": [
@@ -1701,7 +1734,7 @@
               "column": "cik"
             },
             "right": {
-              "object": "cw.seed_utilities",
+              "object": "cw.utility_states",
               "column": "cik"
             },
             "transform": "lpad10",
@@ -1719,33 +1752,14 @@
               "column": "cik"
             },
             "right": {
-              "object": "cw.utility_states",
-              "column": "cik"
+              "object": "cw.seed_submissions_snapshot",
+              "column": "cik10"
             },
             "transform": "lpad10",
             "key_class": "cik",
-            "score": 4,
-            "reasons": [
-              "samples need lpad10",
-              "same column name",
-              "specific key class cik"
-            ]
-          },
-          {
-            "left": {
-              "object": "cw.seed_utilities",
-              "column": "cik"
-            },
-            "right": {
-              "object": "cw.utility_states",
-              "column": "cik"
-            },
-            "transform": "identity",
-            "key_class": "cik",
             "score": 3,
             "reasons": [
-              "same column name",
-              "right side has at least as many distinct keys",
+              "samples need lpad10",
               "specific key class cik"
             ]
           },
@@ -1769,7 +1783,24 @@
           },
           {
             "left": {
-              "object": "cw.seed_utilities",
+              "object": "cw.seed_submissions_snapshot",
+              "column": "cik10"
+            },
+            "right": {
+              "object": "cw.utility_states",
+              "column": "cik"
+            },
+            "transform": "identity",
+            "key_class": "cik",
+            "score": 2,
+            "reasons": [
+              "right side has at least as many distinct keys",
+              "specific key class cik"
+            ]
+          },
+          {
+            "left": {
+              "object": "cw.seed_submissions_snapshot",
               "column": "sic"
             },
             "right": {
@@ -1790,7 +1821,7 @@
               "column": "loc"
             },
             "right": {
-              "object": "cw.seed_utilities",
+              "object": "cw.seed_submissions_snapshot",
               "column": "hq_state"
             },
             "transform": "substr(4,2)",
@@ -1806,10 +1837,10 @@
         "name": "demo_shape_limit_30",
         "probes": [
           {
-            "object": "cw.seed_utilities",
+            "object": "cw.seed_submissions_snapshot",
             "candidates": [
               {
-                "column": "cik",
+                "column": "cik10",
                 "distinct": 43,
                 "rows": 43,
                 "samples": [
@@ -2018,7 +2049,7 @@
               "column": "cik"
             },
             "right": {
-              "object": "cw.seed_utilities",
+              "object": "cw.utility_states",
               "column": "cik"
             },
             "transform": "lpad10",
@@ -2036,33 +2067,14 @@
               "column": "cik"
             },
             "right": {
-              "object": "cw.utility_states",
-              "column": "cik"
+              "object": "cw.seed_submissions_snapshot",
+              "column": "cik10"
             },
             "transform": "lpad10",
             "key_class": "cik",
-            "score": 4,
-            "reasons": [
-              "samples need lpad10",
-              "same column name",
-              "specific key class cik"
-            ]
-          },
-          {
-            "left": {
-              "object": "cw.seed_utilities",
-              "column": "cik"
-            },
-            "right": {
-              "object": "cw.utility_states",
-              "column": "cik"
-            },
-            "transform": "identity",
-            "key_class": "cik",
             "score": 3,
             "reasons": [
-              "same column name",
-              "right side has at least as many distinct keys",
+              "samples need lpad10",
               "specific key class cik"
             ]
           },
@@ -2086,7 +2098,24 @@
           },
           {
             "left": {
-              "object": "cw.seed_utilities",
+              "object": "cw.seed_submissions_snapshot",
+              "column": "cik10"
+            },
+            "right": {
+              "object": "cw.utility_states",
+              "column": "cik"
+            },
+            "transform": "identity",
+            "key_class": "cik",
+            "score": 2,
+            "reasons": [
+              "right side has at least as many distinct keys",
+              "specific key class cik"
+            ]
+          },
+          {
+            "left": {
+              "object": "cw.seed_submissions_snapshot",
               "column": "sic"
             },
             "right": {
@@ -2107,7 +2136,7 @@
               "column": "loc"
             },
             "right": {
-              "object": "cw.seed_utilities",
+              "object": "cw.seed_submissions_snapshot",
               "column": "hq_state"
             },
             "transform": "substr(4,2)",
@@ -2302,7 +2331,7 @@
           },
           {
             "left": {
-              "object": "cw.seed_utilities",
+              "object": "cw.seed_submissions_snapshot",
               "column": "hq_state"
             },
             "right": {
@@ -2318,7 +2347,7 @@
           },
           {
             "left": {
-              "object": "cw.seed_utilities",
+              "object": "cw.seed_submissions_snapshot",
               "column": "hq_state"
             },
             "right": {
@@ -2334,7 +2363,7 @@
           },
           {
             "left": {
-              "object": "cw.seed_utilities",
+              "object": "cw.seed_submissions_snapshot",
               "column": "hq_state"
             },
             "right": {
@@ -2350,7 +2379,7 @@
           },
           {
             "left": {
-              "object": "cw.seed_utilities",
+              "object": "cw.seed_submissions_snapshot",
               "column": "hq_state"
             },
             "right": {
@@ -2370,7 +2399,7 @@
               "column": "state"
             },
             "right": {
-              "object": "cw.seed_utilities",
+              "object": "cw.seed_submissions_snapshot",
               "column": "hq_state"
             },
             "transform": "identity",
@@ -2466,10 +2495,10 @@
         "name": "no_samples_identity_only",
         "probes": [
           {
-            "object": "cw.seed_utilities",
+            "object": "cw.seed_submissions_snapshot",
             "candidates": [
               {
-                "column": "cik",
+                "column": "cik10",
                 "distinct": 43,
                 "rows": 43,
                 "samples": []
@@ -2612,42 +2641,6 @@
         "expected": [
           {
             "left": {
-              "object": "cw.seed_utilities",
-              "column": "cik"
-            },
-            "right": {
-              "object": "cw.frames_Revenues_CY2025Q1",
-              "column": "cik"
-            },
-            "transform": "identity",
-            "key_class": "cik",
-            "score": 3,
-            "reasons": [
-              "same column name",
-              "right side has at least as many distinct keys",
-              "specific key class cik"
-            ]
-          },
-          {
-            "left": {
-              "object": "cw.seed_utilities",
-              "column": "cik"
-            },
-            "right": {
-              "object": "cw.utility_states",
-              "column": "cik"
-            },
-            "transform": "identity",
-            "key_class": "cik",
-            "score": 3,
-            "reasons": [
-              "same column name",
-              "right side has at least as many distinct keys",
-              "specific key class cik"
-            ]
-          },
-          {
-            "left": {
               "object": "cw.utility_states",
               "column": "cik"
             },
@@ -2684,7 +2677,41 @@
           },
           {
             "left": {
-              "object": "cw.seed_utilities",
+              "object": "cw.seed_submissions_snapshot",
+              "column": "cik10"
+            },
+            "right": {
+              "object": "cw.frames_Revenues_CY2025Q1",
+              "column": "cik"
+            },
+            "transform": "identity",
+            "key_class": "cik",
+            "score": 2,
+            "reasons": [
+              "right side has at least as many distinct keys",
+              "specific key class cik"
+            ]
+          },
+          {
+            "left": {
+              "object": "cw.seed_submissions_snapshot",
+              "column": "cik10"
+            },
+            "right": {
+              "object": "cw.utility_states",
+              "column": "cik"
+            },
+            "transform": "identity",
+            "key_class": "cik",
+            "score": 2,
+            "reasons": [
+              "right side has at least as many distinct keys",
+              "specific key class cik"
+            ]
+          },
+          {
+            "left": {
+              "object": "cw.seed_submissions_snapshot",
               "column": "sic"
             },
             "right": {
@@ -2722,10 +2749,10 @@
         "name": "won_object_refused",
         "probes": [
           {
-            "object": "cw.seed_utilities",
+            "object": "cw.seed_submissions_snapshot",
             "candidates": [
               {
-                "column": "cik",
+                "column": "cik10",
                 "distinct": 43,
                 "rows": 43,
                 "samples": [
@@ -2803,15 +2830,14 @@
               "column": "cik"
             },
             "right": {
-              "object": "cw.seed_utilities",
-              "column": "cik"
+              "object": "cw.seed_submissions_snapshot",
+              "column": "cik10"
             },
             "transform": "lpad10",
             "key_class": "cik",
-            "score": 4,
+            "score": 3,
             "reasons": [
               "samples need lpad10",
-              "same column name",
               "specific key class cik"
             ]
           },
@@ -2821,7 +2847,7 @@
               "column": "loc"
             },
             "right": {
-              "object": "cw.seed_utilities",
+              "object": "cw.seed_submissions_snapshot",
               "column": "hq_state"
             },
             "transform": "substr(4,2)",
@@ -2856,6 +2882,7 @@
       "cw.ghcn_2025_tmax",
       "cw.ghcn_2025_tmin",
       "cw.seed_stations",
+      "cw.seed_submissions_snapshot",
       "cw.seed_utilities",
       "cw.seed_utility_names",
       "cw.sic_codes",
@@ -2872,8 +2899,8 @@
             "column": "cik"
           },
           "right": {
-            "object": "cw.seed_utilities",
-            "column": "cik"
+            "object": "cw.seed_submissions_snapshot",
+            "column": "cik10"
           },
           "transform": "lpad10"
         },
@@ -2927,14 +2954,19 @@
           "orphans": [
             "0009000099 (SYNTHETIC UTILITY A)"
           ],
-          "extra": {}
+          "extra": {},
+          "orientation": {
+            "left": "cw.seed_submissions_snapshot.cik10",
+            "right": "cw.frames_*_CY2025Q1.cik",
+            "transform_on": "right"
+          }
         }
       },
       {
         "name": "sic_rows_and_codes",
         "proposal": {
           "left": {
-            "object": "cw.seed_utilities",
+            "object": "cw.seed_submissions_snapshot",
             "column": "sic"
           },
           "right": {
@@ -2999,7 +3031,12 @@
           "orphans": [
             "4900 (0009000042, SYNTHETIC UTILITY B)"
           ],
-          "extra": {}
+          "extra": {},
+          "orientation": {
+            "left": "cw.seed_submissions_snapshot.sic",
+            "right": "cw.sic_codes.code",
+            "transform_on": "left"
+          }
         }
       },
       {
@@ -3063,7 +3100,81 @@
           "orphans": [
             "AK"
           ],
-          "extra": {}
+          "extra": {},
+          "orientation": {
+            "left": "cw.fema_declarations_dr_2025q1.state",
+            "right": "cw.utility_states.state",
+            "transform_on": "left"
+          }
+        }
+      },
+      {
+        "name": "fema_state_proposed_reversed",
+        "proposal": {
+          "left": {
+            "object": "cw.utility_states",
+            "column": "state"
+          },
+          "right": {
+            "object": "cw.fema_declarations_dr_2025q1",
+            "column": "state"
+          },
+          "transform": "identity"
+        },
+        "known_templates": [
+          "joinmap_cik",
+          "joinmap_cik_orphans",
+          "joinmap_loc",
+          "joinmap_fema_state",
+          "joinmap_fema_state_orphans",
+          "joinmap_station",
+          "joinmap_sic",
+          "joinmap_sic_orphans"
+        ],
+        "replies": {
+          "counts": {
+            "columns": [
+              "left_keys",
+              "matched_keys"
+            ],
+            "rows": [
+              [
+                8,
+                7
+              ]
+            ]
+          },
+          "orphans": {
+            "columns": [
+              "orphan_state"
+            ],
+            "rows": [
+              [
+                "AK"
+              ]
+            ]
+          }
+        },
+        "expected": {
+          "status": "measured",
+          "route": "fema_state",
+          "key": "fema_state@CY2025Q1",
+          "left_rows": 8,
+          "matched_rows": 7,
+          "left_keys": 8,
+          "matched_keys": 7,
+          "rate": 0.875,
+          "rate_distinct": 0.875,
+          "verdict": "PARTIAL",
+          "orphans": [
+            "AK"
+          ],
+          "extra": {},
+          "orientation": {
+            "left": "cw.fema_declarations_dr_2025q1.state",
+            "right": "cw.utility_states.state",
+            "transform_on": "left"
+          }
         }
       },
       {
@@ -3119,6 +3230,11 @@
           "orphans": [],
           "extra": {
             "state_equal": 55
+          },
+          "orientation": {
+            "left": "cw.seed_stations.id",
+            "right": "cw.stations.id",
+            "transform_on": "left"
           }
         }
       },
@@ -3130,7 +3246,7 @@
             "column": "loc"
           },
           "right": {
-            "object": "cw.seed_utilities",
+            "object": "cw.seed_submissions_snapshot",
             "column": "hq_state"
           },
           "transform": "substr(4,2)"
@@ -3171,15 +3287,20 @@
           "rate_distinct": 1.0,
           "verdict": "VERIFIED",
           "orphans": [],
-          "extra": {}
+          "extra": {},
+          "orientation": {
+            "left": "cw.frames_*_CY2025Q1.loc",
+            "right": "cw.seed_submissions_snapshot.hq_state",
+            "transform_on": "left"
+          }
         }
       },
       {
         "name": "cik_identity_no_control_template",
         "proposal": {
           "left": {
-            "object": "cw.seed_utilities",
-            "column": "cik"
+            "object": "cw.seed_submissions_snapshot",
+            "column": "cik10"
           },
           "right": {
             "object": "cw.frames_Revenues_CY2025Q1",
@@ -3208,8 +3329,8 @@
         "name": "cik_identity_control",
         "proposal": {
           "left": {
-            "object": "cw.seed_utilities",
-            "column": "cik"
+            "object": "cw.seed_submissions_snapshot",
+            "column": "cik10"
           },
           "right": {
             "object": "cw.frames_Revenues_CY2025Q1",
@@ -3254,7 +3375,12 @@
           "rate_distinct": 0.0,
           "verdict": "REJECTED",
           "orphans": [],
-          "extra": {}
+          "extra": {},
+          "orientation": {
+            "left": "cw.seed_submissions_snapshot.cik10",
+            "right": "cw.frames_*_CY2025Q1.cik",
+            "transform_on": "right"
+          }
         }
       },
       {
@@ -3265,8 +3391,8 @@
             "column": "cik"
           },
           "right": {
-            "object": "cw.seed_utilities",
-            "column": "cik"
+            "object": "cw.seed_submissions_snapshot",
+            "column": "cik10"
           },
           "transform": "identity"
         },
@@ -3295,7 +3421,7 @@
             "column": "loc"
           },
           "right": {
-            "object": "cw.seed_utilities",
+            "object": "cw.seed_submissions_snapshot",
             "column": "hq_state"
           },
           "transform": "strip_prefix('US-')"
@@ -3315,6 +3441,148 @@
           "status": "unmeasurable",
           "route": null,
           "key": null
+        }
+      },
+      {
+        "name": "generic_pair_match_rate",
+        "proposal": {
+          "left": {
+            "object": "cw.utility_states",
+            "column": "state"
+          },
+          "right": {
+            "object": "cw.states",
+            "column": "code"
+          },
+          "transform": "identity"
+        },
+        "known_templates": [
+          "joinmap_cik",
+          "joinmap_cik_orphans",
+          "joinmap_loc",
+          "joinmap_fema_state",
+          "joinmap_fema_state_orphans",
+          "joinmap_station",
+          "joinmap_sic",
+          "joinmap_sic_orphans",
+          "match_rate",
+          "match_rate_orphans"
+        ],
+        "replies": {
+          "counts": {
+            "columns": [
+              "left_keys",
+              "matched_keys"
+            ],
+            "rows": [
+              [
+                43,
+                43
+              ]
+            ]
+          }
+        },
+        "expected": {
+          "status": "measured",
+          "route": "match_rate",
+          "key": "pair:cw.utility_states.state~cw.states.code|identity",
+          "left_rows": 43,
+          "matched_rows": 43,
+          "left_keys": 43,
+          "matched_keys": 43,
+          "rate": 1.0,
+          "rate_distinct": 1.0,
+          "verdict": "VERIFIED",
+          "orphans": [],
+          "extra": {},
+          "orientation": {
+            "left": "cw.utility_states.state",
+            "right": "cw.states.code",
+            "transform_on": "left"
+          }
+        }
+      },
+      {
+        "name": "generic_pair_with_orphans",
+        "proposal": {
+          "left": {
+            "object": "cw.frames_Revenues_CY2025Q1",
+            "column": "loc"
+          },
+          "right": {
+            "object": "cw.states",
+            "column": "code"
+          },
+          "transform": "substr(4,2)"
+        },
+        "known_templates": [
+          "joinmap_cik",
+          "joinmap_cik_orphans",
+          "joinmap_loc",
+          "joinmap_fema_state",
+          "joinmap_fema_state_orphans",
+          "joinmap_station",
+          "joinmap_sic",
+          "joinmap_sic_orphans",
+          "match_rate",
+          "match_rate_orphans"
+        ],
+        "replies": {
+          "counts": {
+            "columns": [
+              "left_keys",
+              "matched_keys"
+            ],
+            "rows": [
+              [
+                53,
+                49
+              ]
+            ]
+          },
+          "orphans": {
+            "columns": [
+              "orphan"
+            ],
+            "rows": [
+              [
+                "AS"
+              ],
+              [
+                "GU"
+              ],
+              [
+                "PR"
+              ],
+              [
+                "VI"
+              ]
+            ]
+          }
+        },
+        "expected": {
+          "status": "measured",
+          "route": "match_rate",
+          "key": "pair:cw.frames_revenues_cy2025q1.loc~cw.states.code|substr(4,2)",
+          "left_rows": 53,
+          "matched_rows": 49,
+          "left_keys": 53,
+          "matched_keys": 49,
+          "rate": 0.9245283018867925,
+          "rate_distinct": 0.9245283018867925,
+          "verdict": "PARTIAL",
+          "orphans": [
+            "AS",
+            "GU",
+            "PR",
+            "VI"
+          ],
+          "extra": {},
+          "orientation": {
+            "left": "cw.frames_Revenues_CY2025Q1.loc",
+            "right": "cw.states.code",
+            "transform_on": "left"
+          }
         }
       }
     ],

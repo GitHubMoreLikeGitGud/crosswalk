@@ -13,7 +13,7 @@ export const Q = "CY2025Q1";
 
 const S = (n: string) => ({ name: n, type: "string" });
 const SHAPES: Record<string, { cols: { name: string; type: string }[]; rows: unknown[][]; distinct: Record<string, [number, number]> }> = {
-  "cw.seed_utilities": { cols: ["cik", "name", "ticker", "sic", "hq_state"].map(S), rows: [["0009000001", "SYN A", "SA", "4911", "CA"], ["0009000002", "SYN B", null, "4900", "OH"]], distinct: { cik: [43, 43], sic: [43, 4], hq_state: [43, 30] } },
+  "cw.seed_submissions_snapshot": { cols: ["cik10", "name", "ticker", "sic", "hq_state", "snapshot_at"].map(S), rows: [["0009000001", "SYN A", "SA", "4911", "CA", "2026-10-25T12:00:00+0800"], ["0009000002", "SYN B", null, "4900", "OH", "2026-10-25T12:00:00+0800"]], distinct: { cik10: [43, 43], sic: [43, 4], hq_state: [43, 30] } },
   "cw.frames_revenues_cy2025q1": { cols: [{ name: "cik", type: "bigint" }, S("entityName"), S("loc"), S("accn"), { name: "val", type: "double" }], rows: [[9000001, "SYN A", "US-CA", "x", 1], [12345, "SYN Z", "US-NY", "y", 2]], distinct: { cik: [1900, 1900], loc: [1900, 55] } },
   "cw.fema_declarations_dr_2025q1": { cols: ["disaster_number", "state", "incident_type", "fips_state_code"].map(S), rows: [["9001", "KY", "Flood", "21"], ["9002", "AK", "Fire", "02"]], distinct: { state: [116, 8], disaster_number: [116, 10], fips_state_code: [116, 8] } },
   "cw.utility_states": { cols: ["cik", "state"].map(S), rows: [["0009000001", "CA"], ["0009000002", "OH"]], distinct: { cik: [97, 43], state: [97, 43] } },
@@ -56,6 +56,11 @@ export function resolve(id: string, p: Record<string, string>): Reply | undefine
       return { columns: ["left_keys", "matched_keys", "left_rows", "matched_rows"], rows: [[4, 3, 43, 42]] };
     case "joinmap_sic_orphans":
       return { columns: ["orphan_sic", "cik", "name"], rows: [["4900", "0009000002", "SYN B"]] };
+    // D16: any other pair; synthetic rule: the same column name on both sides matches every key, otherwise half do.
+    case "match_rate":
+      return { columns: ["left_keys", "matched_keys"], rows: [[40, p.left_column === p.right_column ? 40 : 20]] };
+    case "match_rate_orphans":
+      return { columns: ["orphan"], rows: [["SYN-ORPHAN"]] };
     case "dq_run":
       return { columns: ["total", "valid", "invalid"], rows: [[97, 97, 0]] };
     case "answer_fema_utilities":

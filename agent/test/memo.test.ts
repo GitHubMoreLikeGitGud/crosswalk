@@ -158,3 +158,41 @@ describe("writeMemo", () => {
     expect(r.attempts).toHaveLength(0);
   });
 });
+
+describe("note word verifier wired into the note job (D17)", () => {
+  const facts = {
+    verdicts: { VERIFIED: 5, PARTIAL: 1, REJECTED: 1 },
+    utilities: [{ ticker: "AAA", name: "Alpha Power Co", revenue_change: 0.15, declarations: 1, states: 1 }, { ticker: "BBB", name: "Bravo Electric", revenue_change: -0.02, declarations: 1, states: 1 }],
+    totals: { utilities: 2, states: 2, declarations: 2 },
+  };
+  const withFacts: MemoInput = { ...input, facts, sections: [["Revenue rose at AAA by +15.0%."], ["The join map has 5 VERIFIED, 1 PARTIAL and 1 REJECTED keys."]] };
+  const wrong = JSON.stringify({ memo: exactWords(160, `${ALL_MATCH} The join map shows four keys with verified results and their revenue held up.`) });
+  const right = JSON.stringify({ memo: exactWords(160, `${ALL_MATCH} The join map shows five keys verified; AAA revenue rose while BBB revenue fell.`) });
+
+  it("a draft whose words contradict the facts gets one repair naming the contradictions, then the template", async () => {
+    const r = await writeMemo(ollamaWith([wrong, wrong]), withFacts);
+    expect(r.source).toBe("template");
+    expect(r.attempts).toHaveLength(2);
+    expect(r.attempts[0]!.wordIssues!.map((i) => [i.kind, i.subject, i.claimed, i.expected])).toEqual([["verdict_count", "VERIFIED", "four", "5"], ["direction", "all", "held", "BBB"]]);
+    expect(r.verifier).toEqual({ checked: true, drafts_rejected_for_words: 2, final_issues: [] });
+    expect(r.wordCount).toBeLessThanOrEqual(250);
+  });
+
+  it("a repaired draft is kept", async () => {
+    const r = await writeMemo(ollamaWith([wrong, right]), withFacts);
+    expect(r.source).toBe("model");
+    expect(r.verifier).toEqual({ checked: true, drafts_rejected_for_words: 1, final_issues: [] });
+  });
+
+  it("the template is capped at 250 words by whole sentences", () => {
+    const long = { ...withFacts, sections: [Array.from({ length: 60 }, (_, i) => `Sentence ${i} has six words here.`)] };
+    const t = templateMemo(long);
+    expect(wordCount(t)).toBeLessThanOrEqual(250);
+    expect(t.endsWith(".")).toBe(true);
+  });
+
+  it("without facts the words are not checked (verifier null)", async () => {
+    const r = await writeMemo(ollamaWith([wrong]), input);
+    expect(r.verifier).toBeNull();
+  });
+});

@@ -5,11 +5,11 @@
 // the scored proposals, the join map and the verdict mix.
 import { describe, expect, it } from "vitest";
 import { OllamaClient } from "../src/llm/ollama.ts";
-import { CHECKLIST_ITEMS } from "../src/llm/schemas.ts";
+import { CHECKLIST_ITEMS, validate } from "../src/llm/schemas.ts";
 import { ADOPTED_JOB_SETTINGS } from "../src/llm/settings.ts";
-import { repairWithoutThinking, toolContext } from "../src/loop/generator.ts";
+import { loopPlannerSchema, menuFor, repairWithoutThinking, toolContext } from "../src/loop/generator.ts";
 import { investigate } from "../src/loop/investigate.ts";
-import { allowedTools, newQuestionContext } from "../src/loop/tools.ts";
+import { allowedTools, keyMenu, newQuestionContext, resolveMenuChoices } from "../src/loop/tools.ts";
 import { deps, manifest, NOW, Q } from "./helpers/discoveryFake.ts";
 
 interface Scripted {
@@ -127,6 +127,28 @@ describe("the run JSON (L2, L3)", () => {
     const tools = allowedTools(ctx, d).filter((t) => t.name === "search_catalogue");
     expect(toolContext(ctx, tools)).toBeNull();
     const text = toolContext(ctx, [{ ...tools[0]!, name: "propose_keys" }]);
-    expect(text).toContain("cw.states: fips: 51 of 51; 06");
+    expect(text).toContain("- p1 cw.states.fips: 51 of 51; 06");
+  });
+
+  it("D16: propose_keys is an enumerated menu: the schema's sides are the probed column ids, its transforms the closed names", () => {
+    const d = deps();
+    const ctx = newQuestionContext(QUESTION, Q, d.evidence, { now: NOW, manifest });
+    const cand = (column: string, samples: string[]) => ({ column, rows: 51, distinct: 51, non_null: 51, samples });
+    ctx.probes.set("cw.states", { object: "cw.states", columns: [], sample: { columns: [], rows: [] }, candidates: [cand("code", ["CA"]), cand("fips", ["06"])], provenance: [], elapsed_ms: 0 });
+    ctx.probes.set("cw.utility_states", { object: "cw.utility_states", columns: [], sample: { columns: [], rows: [] }, candidates: [cand("state", ["CA"])], provenance: [], elapsed_ms: 0 });
+    const propose = [{ ...allowedTools(ctx, d).find((t) => t.name === "search_catalogue")!, name: "propose_keys" as const }];
+    const menu = menuFor(ctx, propose)!;
+    expect(menu.ids).toEqual(["p1", "p2", "p3"]);
+    expect(menu.transforms).toEqual(["identity", "upper", "lpad10", "substr(4,2)", "strip_prefix('US-')", "yyyymmdd_to_date", "iso_to_quarter"]);
+    const schema = loopPlannerSchema(["propose_keys"], [], menu);
+    const reply = (choices: unknown) => ({ thought: "pair the state codes", action: { tool: "propose_keys", input: { choices } }, state: { focus: "keys", hypotheses: [], evidence_ids: [], open_contradictions: [], checklist: Object.fromEntries(CHECKLIST_ITEMS.map((i) => [i, false])), next: "measure" }, done: false });
+    expect(validate(schema, reply([{ left: "p3", right: "p1", transform: "identity" }]))).toEqual([]);
+    // An invented view or column cannot be written: only ids and closed names validate.
+    expect(validate(schema, reply([{ left: "p9", right: "p1", transform: "identity" }])).length).toBeGreaterThan(0);
+    expect(validate(schema, reply([{ left: { object: "cw.utility_feeds", column: "state" }, right: "p1", transform: "identity" }])).length).toBeGreaterThan(0);
+    expect(validate(schema, reply([{ left: "p3", right: "p1", transform: "trim" }])).length).toBeGreaterThan(0);
+    // The host maps the ids back to {object, column} before validating the pair.
+    expect(resolveMenuChoices([{ left: "p3", right: "p1", transform: "identity" }], ctx)).toEqual([{ left: { object: "cw.utility_states", column: "state" }, right: { object: "cw.states", column: "code" }, transform: "identity" }]);
+    expect(keyMenu(ctx).map((e) => `${e.id} ${e.object}.${e.column}`)).toEqual(["p1 cw.states.code", "p2 cw.states.fips", "p3 cw.utility_states.state"]);
   });
 });

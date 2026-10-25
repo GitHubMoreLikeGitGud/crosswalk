@@ -17,6 +17,7 @@ import { estimateTokens } from "../../../engines/markovian/reference/src/index.t
 import { DATA_DIR_URL, REPO_ROOT, REPO_ROOT_URL } from "../config.ts";
 import { EvidenceStore, sourceFor, type EvidenceRecord } from "../evidence/store.ts";
 import { writeMemo, type AllowedNumber, type MemoResult } from "../llm/memo.ts";
+import type { NoteFacts } from "../llm/noteCheck.ts";
 import type { OllamaClient } from "../llm/ollama.ts";
 import { fenceUntrusted } from "../llm/prompts.ts";
 import type { ChecklistItemId, PlannerAction, ToolName } from "../llm/schemas.ts";
@@ -38,7 +39,10 @@ import {
   registerSource,
   registrationsNeeded,
   routeKey,
+  routeKeyOf,
   routeOf,
+  QUESTION_PATH_REFUSED,
+  SNAPSHOT,
   scoreProposals,
   searchCatalogueTool,
   toProposal,
@@ -192,7 +196,7 @@ export interface QuestionContext {
 export function questionSources(quarter: string): string[] {
   const m = /^CY(\d{4})Q([1-4])$/u.exec(quarter);
   if (!m) throw new Error(`quarter must be CY<yyyy>Q<n>: ${quarter}`);
-  const out = ["cw.seed_utilities"];
+  const out = [SNAPSHOT];
   if (m[2] !== "4") out.push(`cw.frames_Revenues_${quarter}`);
   out.push(`cw.fema_declarations_dr_${quarterSlug(quarter)}`, "cw.utility_states", "cw.states", "cw.seed_stations", "cw.stations", "cw.sic_codes");
   return out;
@@ -386,7 +390,7 @@ const searchTool = def("search_catalogue", {
       // GHCN parquet views are filestore reads (6-9 s per statement, about 40 s per probe); the answer's weather template reads them, so they are not probed.
       // A FEMA or frames view of another quarter is not this question's source.
       const otherPeriod = (FEMA_FAMILY.test(h.object ?? "") || FRAMES_FAMILY.test(h.object ?? "")) && !questionSources(ctx.quarter).some((q) => q.toLowerCase() === h.object!.toLowerCase());
-      if (h.object && ctx.registered.has(h.object) && !ctx.targets.includes(h.object) && !/^cw\.ghcn_/iu.test(h.object) && !otherPeriod && ctx.targets.length < 10) ctx.targets.push(h.object);
+      if (h.object && ctx.registered.has(h.object) && !ctx.targets.includes(h.object) && !/^cw\.ghcn_/iu.test(h.object) && !otherPeriod && !QUESTION_PATH_REFUSED.has(h.object.toLowerCase()) && ctx.targets.length < 10) ctx.targets.push(h.object);
     }
     const negative = r.hits.filter((h) => h.negative);
     const ev = toolEvidence(deps, "search_catalogue", `Catalogue search "${query}": ${r.hits.length} hit(s) over ${r.sources.catalogue} curated, ${r.sources.registered} registered, ${r.sources.fema_catalogue ?? "no"} OpenFEMA${r.sources.getting_started === null ? "" : `, ${r.sources.getting_started} getting-started`} entries; ${negative.length} known_to_fail`, ids, { query, hits: r.hits, sources: r.sources, fema_catalogue_error: r.fema_catalogue_error, targets: ctx.targets });
@@ -449,6 +453,37 @@ export function baselineChoices(ctx: QuestionContext, limit = BASELINE_SCORED): 
 
 const plain = (c: KeyChoice): KeyChoice => ({ left: { ...c.left }, right: { ...c.right }, transform: c.transform });
 
+/** One entry of the propose_keys menu (D16): a probed candidate key column with its short id. */
+export interface MenuEntry {
+  id: string;
+  object: string;
+  column: string;
+  distinct: number | null;
+  rows: number | null;
+  samples: string[];
+}
+
+/** The enumerated menu: every probed candidate key column, in probe order, as p1, p2, ... (deterministic for a run's probes). */
+export function keyMenu(ctx: Pick<QuestionContext, "probes">): MenuEntry[] {
+  const out: MenuEntry[] = [];
+  for (const p of ctx.probes.values()) {
+    for (const c of p.candidates) out.push({ id: `p${out.length + 1}`, object: p.object, column: c.column, distinct: c.distinct, rows: c.rows, samples: c.samples.slice(0, 2) });
+  }
+  return out;
+}
+
+/** Choices written with menu ids ({left: "p3", right: "p7", transform}) mapped back to {object, column}; an unknown id becomes a side the validator refuses. */
+export function resolveMenuChoices(choices: unknown, ctx: Pick<QuestionContext, "probes">): unknown {
+  if (!Array.isArray(choices)) return choices;
+  const menu = new Map(keyMenu(ctx).map((e) => [e.id, e]));
+  const side = (s: unknown): unknown => {
+    if (typeof s !== "string") return s;
+    const e = menu.get(s);
+    return e ? { object: e.object, column: e.column } : { object: `unknown menu id ${s.slice(0, 12)}`, column: "x" };
+  };
+  return choices.map((c) => (c && typeof c === "object" ? { ...(c as Record<string, unknown>), left: side((c as { left?: unknown }).left), right: side((c as { right?: unknown }).right) } : c));
+}
+
 const proposeTool = def("propose_keys", {
   optional: false,
   available: (ctx) => resolved(ctx, "shapes_probed") && ctx.probes.size >= 2 && pending(ctx, "keys_proposed"),
@@ -456,18 +491,15 @@ const proposeTool = def("propose_keys", {
   // A reply whose every choice is refused (an object not probed, a cut name, a transform outside the set) goes back to the model in the repair round.
   checkInput(input, ctx) {
     if (input.choices === undefined) return [];
-    const checked = proposeKeys(input.choices, { probed: new Set(ctx.probes.keys()), knownTemplates: knownTemplates() });
-    return checked.accepted.length ? [] : [`action.input.choices: no choice is valid (${checked.rejected.slice(0, 3).map((r) => r.error).join("; ")}); copy object names exactly from the probed views`];
+    const checked = proposeKeys(resolveMenuChoices(input.choices, ctx), { probed: new Set(ctx.probes.keys()), knownTemplates: knownTemplates() });
+    return checked.accepted.length ? [] : [`action.input.choices: no choice is valid (${checked.rejected.slice(0, 3).map((r) => r.error).join("; ")}); use the menu ids of two different views`];
   },
   async run(input, ctx, deps) {
     const probed = new Set(ctx.probes.keys());
     const known = knownTemplates();
     const base = baselineChoices(ctx, BASELINE_QUEUE);
-    ctx.proposals.baseline = base.map((b, i) => {
-      const r = routeOf(toProposal(b), known);
-      return { ...b, id: `b${i + 1}`, route: r ? routeKey(r, toProposal(b)) : null };
-    });
-    let choices = input.choices ?? [];
+    ctx.proposals.baseline = base.map((b, i) => ({ ...b, id: `b${i + 1}`, route: routeKeyOf(toProposal(b), known) }));
+    let choices = resolveMenuChoices(input.choices ?? [], ctx);
     let checked = proposeKeys(choices, { probed, knownTemplates: known });
     const modelRejected = checked.rejected;
     // A second refusal of every choice falls back to the deterministic baseline (the run says so); the model's refused choices are kept for the score.
@@ -488,7 +520,7 @@ const proposeTool = def("propose_keys", {
     };
     for (const a of [...ctx.proposals.model, ...ctx.proposals.baseline]) {
       if (!a.route) {
-        if (a.id.startsWith("k")) ctx.unmeasurable.set(a.id, "no gateway join-map statement measures this pair under this transform");
+        if (a.id.startsWith("k")) ctx.unmeasurable.set(a.id, "no gateway statement measures this pair under this transform");
         continue;
       }
       const p = toProposal(a);
@@ -499,8 +531,10 @@ const proposeTool = def("propose_keys", {
     for (const v of deps.keyMemory?.verified?.() ?? []) {
       if (ctx.skipped.some((s) => s.memoryId === v.memoryId)) continue; // already recalled through a proposal: one memory, one skipped step
       const p = instantiateFor(v.result.proposal, ctx.quarter);
-      const r = p ? routeOf(p, known) : null;
-      if (p && r) recallInto(`m${ctx.skipped.length + 1}`, p, routeKey(r, p), v);
+      // A key remembered on a view the question path no longer reads (cw.seed_utilities, D15) is not recalled.
+      if (!p || [p.leftObject, p.rightObject].some((o) => QUESTION_PATH_REFUSED.has(o.toLowerCase()))) continue;
+      const key = routeKeyOf(p, known);
+      if (key) recallInto(`m${ctx.skipped.length + 1}`, p, key, v);
     }
     const ev = toolEvidence(deps, "propose_keys", `Key proposals by the ${ctx.proposals.proposedBy}: ${checked.accepted.length} accepted (${ctx.proposals.model.filter((a) => a.route).length} measurable by a join-map statement), ${checked.rejected.length} rejected; baseline proposed ${Math.min(base.length, BASELINE_SCORED)} (ranks 7-12 kept for the measure queue)`, [], {
       proposed_by: ctx.proposals.proposedBy,
@@ -526,13 +560,16 @@ const proposeTool = def("propose_keys", {
 export function measureQueue(ctx: QuestionContext): { id: string; choice: KeyChoice; route: string }[] {
   const out: { id: string; choice: KeyChoice; route: string }[] = [];
   const seen = new Set(ctx.measured.keys());
-  for (const c of [...ctx.proposals.model, ...ctx.proposals.baseline]) {
+  const known = knownTemplates();
+  // Every accepted model choice and the baseline's scored six are measured (named statement or match_rate, D16);
+  // the baseline's ranks 7-24 only add keys a named join-map statement measures (the FEMA state and FIPS keys).
+  const baselineQueue = ctx.proposals.baseline.filter((c, i) => i < BASELINE_SCORED || routeOf(toProposal(c), known) !== null);
+  for (const c of [...ctx.proposals.model, ...baselineQueue]) {
     if (!c.route || seen.has(c.route)) continue;
     seen.add(c.route);
     out.push({ id: c.id, choice: c, route: c.route });
   }
   // L3 controls: a key that needed a transform is measured once more under identity, when a join-map statement exists for it.
-  const known = knownTemplates();
   let n = 0;
   for (const m of ctx.measured.values()) {
     if (m.status !== "measured" || m.proposal.transform === "identity") continue;
@@ -697,13 +734,30 @@ export function compareProposals(ctx: QuestionContext): { planner: SideScore; ba
   return { planner: scoreProposals(ctx.proposals.proposedBy === "planner" ? ctx.proposals.model : [], ctx.measured, known), baseline: scoreProposals(ctx.proposals.baseline.slice(0, BASELINE_SCORED), ctx.measured, known) };
 }
 
-/** The formatted numbers the note may quote and the findings it explains, all from tool outputs. */
-export function noteMaterial(ctx: QuestionContext): { allowed: AllowedNumber[]; findings: string[]; dq: string } {
+/** D17: what the note's words are checked against: the join map's verdict counts, each answered utility's revenue sign and counts, the answer's totals. */
+export function noteFacts(ctx: QuestionContext): NoteFacts {
+  const verdicts = { VERIFIED: 0, PARTIAL: 0, REJECTED: 0 };
+  for (const k of ctx.measured.values()) if (k.status === "measured" && k.verdict) verdicts[k.verdict] += 1;
+  const rows = ctx.answer?.rows ?? [];
+  const perState = new Map<string, number>();
+  for (const r of rows) for (const s of r.states) perState.set(s.state, Math.max(perState.get(s.state) ?? 0, s.declarations));
+  return {
+    verdicts,
+    utilities: rows.map((r) => ({ ticker: r.ticker, name: r.name, revenue_change: r.revenue?.change ?? null, declarations: r.declarations, states: r.states.length })),
+    totals: { utilities: rows.length, states: perState.size, declarations: [...perState.values()].reduce((s, x) => s + x, 0) },
+  };
+}
+
+/** The formatted numbers the note may quote, the findings it explains (all from tool outputs), and the template's sections in priority order. */
+export function noteMaterial(ctx: QuestionContext): { allowed: AllowedNumber[]; findings: string[]; dq: string; facts: NoteFacts; sections: string[][] } {
   const allowed: AllowedNumber[] = [];
   const add = (label: string, text: string) => {
     if (!allowed.some((a) => a.text === text)) allowed.push({ label, text });
   };
   const findings: string[] = [];
+  const keyFindings: string[] = [];
+  const answerFindings: string[] = [];
+  const facts = noteFacts(ctx);
   const m = /^CY(\d{4})Q([1-4])$/u.exec(ctx.quarter)!;
   add("year", m[1]!);
   add("previous year", String(Number(m[1]) - 1));
@@ -715,9 +769,12 @@ export function noteMaterial(ctx: QuestionContext): { allowed: AllowedNumber[]; 
     add(`${k.route} rate`, num(k.rate, 3));
     for (const o of k.orphans) for (const tok of o.match(/\d+/gu) ?? []) add(`${k.route} orphan identifier`, tok);
     // Transform names are identifiers that carry digits (lpad10, substr(4,2)); the number check would otherwise refuse a note that names them.
-    for (const tok of `${k.proposal.transform} ${k.label ?? ""}`.match(/\d+/gu) ?? []) add("transform name", tok);
-    findings.push(`Key ${k.label}: ${k.matched_rows} of ${k.left_rows} matched (${num(k.rate, 3)}), ${k.verdict}${k.orphans.length ? `; orphans ${k.orphans.join("; ")}` : ""}${k.from_memory ? " (recalled from memory)" : ""}.`);
+    for (const tok of `${k.proposal.transform} ${k.label ?? ""} ${k.key ?? ""}`.match(/\d+/gu) ?? []) add("transform or key name", tok);
+    keyFindings.push(`Key ${k.label}: ${k.matched_rows} of ${k.left_rows} matched (${num(k.rate, 3)}), ${k.verdict}${k.orphans.length ? `; orphans ${k.orphans.join("; ")}` : ""}${k.from_memory ? ` (recalled from memory; measured as ${k.key})` : ""}.`);
   }
+  for (const [v, n] of Object.entries(facts.verdicts)) add(`join map ${v} keys`, String(n));
+  const summary = `The join map has ${facts.verdicts.VERIFIED} VERIFIED, ${facts.verdicts.PARTIAL} PARTIAL and ${facts.verdicts.REJECTED} REJECTED keys.`;
+  findings.push(summary, ...keyFindings);
   const dqParts: string[] = [];
   const u = ctx.usl;
   if (u?.dq) {
@@ -735,33 +792,44 @@ export function noteMaterial(ctx: QuestionContext): { allowed: AllowedNumber[]; 
     dqParts.push(`${r.rule} ran live: ${r.invalid ?? 0} invalid of ${r.total}`);
   }
   const dq = dqParts.join("; ") || "no DQ result";
-  findings.push(`Data quality: ${dq}.`);
+  const dqFinding = `Data quality: ${dq}.`;
+  findings.push(dqFinding);
   const c = ctx.comparison;
+  let compFinding: string | null = null;
   if (c) {
     add("planner proposals", String(c.planner.proposals));
     add("planner verified", String(c.planner.verified));
     add("baseline proposals", String(c.baseline.proposals));
     add("baseline verified", String(c.baseline.verified));
-    findings.push(`The ${ctx.proposals.proposedBy ?? "planner"} proposed ${c.planner.proposals} keys (${c.planner.verified} verified, ${c.planner.partial} partial, ${c.planner.rejected} rejected, ${c.planner.unmeasured} not measurable); the deterministic baseline proposed ${c.baseline.proposals} (${c.baseline.verified} verified, ${c.baseline.partial} partial, ${c.baseline.rejected} rejected, ${c.baseline.unmeasured} not measurable).`);
+    // Written "made N, verified V" so that the word check reads no join-map verdict count into it.
+    compFinding = `Key proposals scored by the same measured join map: the ${ctx.proposals.proposedBy ?? "planner"} made ${c.planner.proposals}, verified ${c.planner.verified}, partial ${c.planner.partial}, rejected ${c.planner.rejected}, not measurable ${c.planner.unmeasured}; the deterministic baseline made ${c.baseline.proposals}, verified ${c.baseline.verified}, partial ${c.baseline.partial}, rejected ${c.baseline.rejected}, not measurable ${c.baseline.unmeasured}.`;
+    findings.push(compFinding);
   }
-  if (ctx.usl) findings.push(ctx.usl.matches_governed ? "The semantic layer rendered from this run's keys matches the governed model." : `The semantic layer rendered from this run's keys differs from the governed model: ${ctx.usl.diff.missing_fks.join("; ")}.`);
+  const uslFinding = ctx.usl ? (ctx.usl.matches_governed ? "The semantic layer rendered from this run's keys matches the governed model." : `The semantic layer rendered from this run's keys differs from the governed model: ${ctx.usl.diff.missing_fks.join("; ")}.`) : null;
+  if (uslFinding) findings.push(uslFinding);
   const a = ctx.answer;
   if (a) {
     add("utilities", String(a.rows.length));
-    findings.push(`${a.rows.length} utilities served states with major-disaster declarations in ${ctx.quarter}.`);
+    answerFindings.push(`${a.rows.length} utilities served states with major-disaster declarations in ${ctx.quarter}.`);
     const label = (r: (typeof a.rows)[number]) => r.ticker ?? r.name;
     const states = [...new Set(a.rows.flatMap((r) => r.states.map((s) => s.state)))].sort();
-    findings.push(`Declared states served: ${states.join(", ")}; ${a.rows.map((r) => `${label(r)} ${r.states.map((s) => s.state).join("+")}`).join(", ")}.`);
+    add("declared states served", String(states.length));
+    answerFindings.push(`${states.length} declared states are served (${states.join(", ")}): ${a.rows.map((r) => `${label(r)} ${r.states.map((s) => s.state).join("+")}`).join(", ")}.`);
     const compared = a.rows.filter((r) => r.revenue?.change !== null && r.revenue?.change !== undefined);
     for (const r of compared) add(`${label(r)} revenue change`, pct(r.revenue!.change!));
-    if (compared.length) findings.push(`Revenue year on year (first available tag): ${compared.map((r) => `${label(r)} ${pct(r.revenue!.change!)}`).join(", ")}.`);
+    if (compared.length) answerFindings.push(`Revenue year on year (first available tag): ${compared.map((r) => `${label(r)} ${pct(r.revenue!.change!)}`).join(", ")}.`);
     const notCompared = a.rows.filter((r) => !compared.includes(r));
-    if (notCompared.length) findings.push(`Revenue not compared: ${notCompared.map((r) => `${label(r)} (${r.revenue?.note ?? r.revenue_note ?? "no value"})`).join("; ")}.`);
+    if (notCompared.length) answerFindings.push(`Revenue not compared: ${notCompared.map((r) => `${label(r)} (${r.revenue?.note ?? r.revenue_note ?? "no value"})`).join("; ")}.`);
     const withWeather = a.rows.filter((r) => r.weather);
     for (const r of withWeather) add(`${label(r)} degree-day change`, pct(r.weather!.change));
-    if (withWeather.length) findings.push(`Total heating plus cooling degree days at their stations, year on year: ${withWeather.map((r) => `${label(r)} ${pct(r.weather!.change)}`).join(", ")}.`);
+    if (withWeather.length) answerFindings.push(`Total heating plus cooling degree days at their stations, year on year: ${withWeather.map((r) => `${label(r)} ${pct(r.weather!.change)}`).join(", ")}.`);
+    findings.push(...answerFindings);
   }
-  return { allowed, findings, dq };
+  const notTested = ctx.notTested.length ? `Not tested: ${ctx.notTested.map((n) => n.split(":")[0]!).join("; ")}.` : null;
+  // The template's priority order (the 250-word cap cuts from the end): the answer, the verdict summary with DQ and
+  // Not-tested, each key, then the proposal scores and the USL comparison.
+  const sections = [answerFindings, [summary, dqFinding, ...(notTested ? [notTested] : [])], keyFindings, [compFinding, uslFinding].filter((x): x is string => x !== null)];
+  return { allowed, findings, dq, facts, sections };
 }
 
 const finalizeTool = def("finalize", {
@@ -773,18 +841,18 @@ const finalizeTool = def("finalize", {
     ctx.comparison = compareProposals(ctx);
     const cev = toolEvidence(deps, "key_comparison", `Proposals scored by the measured join map: ${ctx.proposals.proposedBy ?? "planner"} ${ctx.comparison.planner.verified}/${ctx.comparison.planner.proposals} verified, baseline ${ctx.comparison.baseline.verified}/${ctx.comparison.baseline.proposals} verified`, [], { comparison: ctx.comparison, proposed_by: ctx.proposals.proposedBy });
     if (!ctx.notTested.length) ctx.notTested = notTestedFor(ctx, deps);
-    const { allowed, findings, dq } = noteMaterial(ctx);
-    const memo = await timed(ctx, "memo", () => writeMemo(deps.ollama, { question: ctx.question, quarter: ctx.quarter, dq, findings, notTested: ctx.notTested.map((n) => n.split(":")[0]!), allowed }));
+    const { allowed, findings, dq, facts, sections } = noteMaterial(ctx);
+    const memo = await timed(ctx, "memo", () => writeMemo(deps.ollama, { question: ctx.question, quarter: ctx.quarter, dq, findings, notTested: ctx.notTested.map((n) => n.split(":")[0]!), allowed, facts, sections }));
     ctx.memo = memo;
     const tokensIn = memo.attempts.reduce((s, x) => s + (x.metrics?.promptTokens ?? 0), 0);
     const tokensOut = memo.attempts.reduce((s, x) => s + (x.metrics?.evalTokens ?? 0), 0);
     const last = memo.attempts[memo.attempts.length - 1];
     const mev = deps.evidence.add({
       kind: memo.attempts.length ? "model" : "tool",
-      claim: memo.source === "model" ? `Note written by ${memo.model} (${memo.wordCount} words, every number string-matched to a tool output)` : `Template note (${memo.wordCount} words)`,
+      claim: memo.source === "model" ? `Note written by ${memo.model} (${memo.wordCount} words, every number string-matched to a tool output; verdict counts, revenue direction words and counts checked against the join map and the answer)` : `Template note (${memo.wordCount} words, capped at 250)${memo.verifier?.drafts_rejected_for_words ? `; ${memo.verifier.drafts_rejected_for_words} model draft(s) rejected for words that contradict the tool outputs` : ""}`,
       ...(memo.attempts.length ? { model: { name: memo.model, think: false, prompt_sha256: last?.promptSha256 ?? "", tokens_in: tokensIn, tokens_out: tokensOut, attempts: memo.attempts.length, eval_ms: memo.attempts.reduce((s, x) => s + (x.metrics?.evalMs ?? 0), 0), tokens_per_s: last?.metrics?.tokensPerSecond ?? null, label: "measured" as const } } : {}),
       derived_from: [cev.id],
-      details: { tool: "memo", source: memo.source, attempts: memo.attempts, allowed: memo.allowed, findings },
+      details: { tool: "memo", source: memo.source, attempts: memo.attempts, allowed: memo.allowed, findings, facts, verifier: memo.verifier },
     });
     ctx.card.push({ text: cev.claim, evidenceIds: [cev.id] }, { text: mev.claim, evidenceIds: [mev.id] });
     ctx.checklist.set("note_written", "done", memo.source === "template" ? "template note" : null, [cev.id, mev.id]);

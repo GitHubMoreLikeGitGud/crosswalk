@@ -1,6 +1,6 @@
 // Crosswalk command line.
 //
-//   npm run onboard [-- --skip-dq]
+//   npm run onboard [-- --skip-dq] [-- --refresh-snapshot]
 //        idempotent onboarding (never on the question path): register_source for every verified
 //        catalogue source the manifest lists, verify the governed USL, RUN DQ for the six FK
 //        rules (900 s bound each), SHOW DQ INVALID RECORD where a rule has invalid rows, and
@@ -186,14 +186,15 @@ async function cmdOnboard(flags: Record<string, string | boolean>): Promise<numb
   try {
     const t0 = performance.now();
     console.log("onboarding (registrations, governed USL check, RUN DQ for the six FK rules; never on the question path)");
-    const r = await onboard(rt, { log: (l) => console.log(l), skipDq: !!flags["skip-dq"] });
+    const r = await onboard(rt, { log: (l) => console.log(l), skipDq: !!flags["skip-dq"], refreshSnapshot: !!flags["refresh-snapshot"] });
     const failed = r.registrations.filter((x) => "error" in x).length;
     const invalid = r.dq.rules.reduce((s, x) => s + (x.invalid ?? 0), 0);
     console.log(`registrations: ${r.registrations.length} (${r.registrations.filter((x) => "status" in x && x.status === "registered").length} registered, ${r.registrations.filter((x) => "status" in x && x.status === "already_registered").length} already registered, ${failed} failed)`);
+    console.log(`snapshot: ${r.snapshot.status} ${r.snapshot.view} (${r.snapshot.rows ?? "?"} rows, taken ${r.snapshot.snapshot_at ?? "?"})${r.snapshot.read ? `; read cw.seed_utilities once in ${r.snapshot.read.elapsed_ms} ms` : ""}${r.snapshot.error ? `; ${r.snapshot.error}` : ""}`);
     console.log(`USL: ${r.usl.tables.length} tables, ${r.usl.rules} DQ rules, ok=${r.usl.ok}`);
     console.log(`DQ: ${r.dq.rules.length} rules, ${r.dq.rules.filter((x) => x.error).length} failed, ${invalid} invalid row(s): ${JSON.stringify(r.dq.invalid_rows)}`);
     console.log(`wrote ${r.dq_file}; wall ${Math.round(performance.now() - t0)} ms`);
-    return failed || !r.usl.ok || r.dq.rules.some((x) => x.error) ? 3 : 0;
+    return failed || !r.usl.ok || r.dq.rules.some((x) => x.error) || r.snapshot.error ? 3 : 0;
   } finally {
     rt.close();
   }
@@ -279,7 +280,7 @@ async function main(): Promise<number> {
       console.log(
         [
           "usage: cli.ts ask --quarter CY2025Q1 [--cold] [--json] [--out <file>] [--think on|off] [--max-chunks 12] [--no-model]",
-          "       cli.ts onboard [--skip-dq]",
+          "       cli.ts onboard [--skip-dq] [--refresh-snapshot]",
           "       cli.ts replay <run_id> [--json]",
           "       cli.ts runs",
           "       cli.ts why <memory_id> [--json]",

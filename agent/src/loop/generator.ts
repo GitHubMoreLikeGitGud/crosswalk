@@ -23,9 +23,9 @@ import type { Generator } from "../../../engines/markovian/reference/src/index.t
 import { estimateTokens } from "../../../engines/markovian/reference/src/index.ts";
 import { parseJsonContent, type ChatMessage, type ChatResult, type OllamaClient } from "../llm/ollama.ts";
 import { loadPrompt, render, toolLines } from "../llm/prompts.ts";
-import { plannerSchema, plannerSemanticErrors, validate, type JsonSchema, type PlannerOutput } from "../llm/schemas.ts";
+import { MENU_TRANSFORMS, plannerSchema, plannerSemanticErrors, validate, type JsonSchema, type KeyMenuSchema, type PlannerOutput } from "../llm/schemas.ts";
 import { jobSettings } from "../llm/settings.ts";
-import { allowedTools, completeInput, fallbackStep, measureQueue, runTool, toolDef, type LoopToolDef, type QuestionContext, type ToolDeps, type ToolInput, type ToolOutcome } from "./tools.ts";
+import { allowedTools, completeInput, fallbackStep, keyMenu, measureQueue, runTool, toolDef, type LoopToolDef, type QuestionContext, type ToolDeps, type ToolInput, type ToolOutcome } from "./tools.ts";
 import { LoopTelemetry, NaiveHistory, sumMetrics, type ChunkRecord } from "./telemetry.ts";
 
 // ---------- typed markers ----------
@@ -135,8 +135,15 @@ export function carryoverOf(referencePrompt: string): string {
   return m ? m[1]!.trim() : "";
 }
 
-export function loopPlannerSchema(tools: readonly string[], evidenceIds: readonly string[]): JsonSchema {
-  return plannerSchema(tools, evidenceIds);
+export function loopPlannerSchema(tools: readonly string[], evidenceIds: readonly string[], menu: KeyMenuSchema | null = null): JsonSchema {
+  return plannerSchema(tools, evidenceIds, menu);
+}
+
+/** D16: the enumerated menu of the propose_keys step (probed column ids and the transform names), or null when propose_keys is not allowed. */
+export function menuFor(ctx: QuestionContext, tools: readonly LoopToolDef[]): KeyMenuSchema | null {
+  if (!tools.some((t) => t.name === "propose_keys")) return null;
+  const ids = keyMenu(ctx).map((e) => e.id);
+  return ids.length >= 2 ? { ids, transforms: MENU_TRANSFORMS } : null;
 }
 
 /**
@@ -151,12 +158,9 @@ export function toolContext(ctx: QuestionContext, tools: readonly LoopToolDef[])
     out.push(`Views still to probe: ${left.join(", ") || "none"}`);
   }
   if (names.has("propose_keys")) {
-    out.push("Probed views and candidate key columns (column: distinct of rows; sample values):");
-    for (const p of ctx.probes.values()) {
-      const cands = p.candidates.map((c) => `${c.column}: ${c.distinct ?? "?"} of ${c.rows ?? "?"}; ${c.samples.slice(0, 2).join(", ")}`).join(" | ");
-      out.push(`- ${p.object}: ${neutralize(cands) || "no candidate key column"}`);
-    }
-    out.push("Propose up to six choices; each pairs a column of one view with a column of another and names one transform from the closed set.");
+    out.push("Key menu: the probed candidate key columns by id (view.column: distinct of rows; sample values):");
+    for (const e of keyMenu(ctx)) out.push(`- ${e.id} ${e.object}.${e.column}: ${e.distinct ?? "?"} of ${e.rows ?? "?"}; ${neutralize(e.samples.join(", "))}`);
+    out.push(`Propose up to six choices as {"left": "<id>", "right": "<id>", "transform": "<name>"}: two ids of different views from the menu, and one transform from ${MENU_TRANSFORMS.join(", ")}. The transform is applied to the left column; the left side's values are the ones counted.`);
   }
   if (names.has("measure_key")) {
     const q = measureQueue(ctx);
@@ -332,7 +336,7 @@ export class PlannerSession {
       return { output: null, errors: ["no model wired (deterministic run)"], firstErrors: ["no model wired (deterministic run)"], results: [], promptChars: 0, validFirstTry: false, firstPromptTokens: 0, callError: null, repairThinkOff: false };
     }
     const ids = this.deps.evidence.all().slice(ctx.evStart).map((e) => e.id);
-    const schema = loopPlannerSchema(tools.map((t) => t.name), ids);
+    const schema = loopPlannerSchema(tools.map((t) => t.name), ids, menuFor(ctx, tools));
     const results: ChatResult[] = [];
     let msgs = messages;
     let errors: string[] = [];

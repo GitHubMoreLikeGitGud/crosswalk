@@ -7,6 +7,7 @@
 // unknown number the draft is rejected (the retry asks for the 150-word target), and the
 // template memo is the last resort. Nothing here computes.
 
+import { capWords, checkNoteWords, NOTE_MAX_WORDS, repairFeedback, type NoteFacts, type NoteIssue } from "./noteCheck.ts";
 import type { ChatResult, OllamaClient } from "./ollama.ts";
 import { fenceUntrusted, loadPrompt } from "./prompts.ts";
 import { memoSchema, wordCount, type MemoOutput } from "./schemas.ts";
@@ -28,6 +29,10 @@ export interface MemoInput {
   findings: string[];
   notTested: string[];
   allowed: AllowedNumber[];
+  /** D17: what the note's words are checked against (join-map verdict counts, revenue signs, answer counts); absent = words unchecked. */
+  facts?: NoteFacts;
+  /** The template's paragraphs in priority order (the 250-word cap cuts from the end); absent = built from `findings`. */
+  sections?: string[][];
 }
 export interface MemoAttempt {
   attempt: number;
@@ -39,6 +44,8 @@ export interface MemoAttempt {
   metrics: ChatResult["metrics"] | null;
   promptSha256: string | null;
   error: string | null;
+  /** D17: places where the draft's words contradict the facts (noteCheck.ts); a draft with any is rejected. */
+  wordIssues?: NoteIssue[];
   /** A rejected draft, kept for the record (the kept draft is the memo itself). */
   draft?: string;
 }
@@ -50,6 +57,8 @@ export interface MemoResult {
   allowed: AllowedNumber[];
   wordCount: number;
   model: string;
+  /** D17: the word check of the kept text, and how many drafts it rejected; null when no facts were given. */
+  verifier: { checked: boolean; drafts_rejected_for_words: number; final_issues: NoteIssue[] } | null;
 }
 
 /** `min` is the target the model is asked for; `accept_min` is the shortest draft the host keeps. */
@@ -86,15 +95,13 @@ export function unknownNumbers(memo: string, allowed: readonly AllowedNumber[]):
   return out;
 }
 
-/** Deterministic fallback: the same findings as prose, every number from the allowed list. */
+/** Deterministic fallback: the same findings as prose, every number from the allowed list, capped at 250 words (D17) by whole sentences. */
 export function templateMemo(m: MemoInput): string {
-  const paras = [
-    `Crosswalk answered the ${m.quarter} question by discovering how the sources join before reading them. ${m.findings[0] ?? ""}`.trim(),
-    m.findings.slice(1, 5).join(" "),
-    m.findings.slice(5).join(" "),
-    `Data quality: ${m.dq}. Not tested: ${m.notTested.join("; ")}.`,
-  ];
-  return paras.filter((p) => p.trim().length > 0).join("\n\n");
+  const lead = `Crosswalk answered the ${m.quarter} question by discovering how the sources join before reading them.`;
+  const paras = m.sections
+    ? m.sections.map((s, i) => (i === 0 ? [lead, ...s] : s).join(" "))
+    : [`${lead} ${m.findings[0] ?? ""}`.trim(), m.findings.slice(1, 5).join(" "), m.findings.slice(5).join(" "), `Data quality: ${m.dq}. Not tested: ${m.notTested.join("; ")}.`];
+  return capWords(paras.filter((p) => p.trim().length > 0), NOTE_MAX_WORDS);
 }
 
 function requestText(m: MemoInput, feedback: string | null): string {
@@ -148,9 +155,10 @@ export async function writeMemo(ollama: OllamaClient | null, input: MemoInput, o
     const words = wordCount(memo);
     const lengthOk = lengthAccepted(words);
     if (memo && !lengthOk) schemaErrors.push(`memo: ${words} words, wanted ${MEMO_WORDS.accept_min} to ${MEMO_WORDS.max}`);
-    const ok = parseError === null && schemaErrors.length === 0 && unknown.length === 0;
-    attempts.push({ attempt: i, ok, parseError, schemaErrors, unknownNumbers: unknown, wordCount: words, metrics: res.metrics, promptSha256: res.promptSha256, error: null, ...(ok ? {} : { draft: memo.slice(0, 2400) }) });
-    if (ok) return { text: memo, source: "model", attempts, allowed: input.allowed, wordCount: words, model: res.model };
+    const wordIssues = memo && input.facts ? checkNoteWords(memo, input.facts) : [];
+    const ok = parseError === null && schemaErrors.length === 0 && unknown.length === 0 && wordIssues.length === 0;
+    attempts.push({ attempt: i, ok, parseError, schemaErrors, unknownNumbers: unknown, wordCount: words, metrics: res.metrics, promptSha256: res.promptSha256, error: null, ...(input.facts ? { wordIssues } : {}), ...(ok ? {} : { draft: memo.slice(0, 2400) }) });
+    if (ok) return { text: memo, source: "model", attempts, allowed: input.allowed, wordCount: words, model: res.model, verifier: verifierOf(input, attempts, []) };
     feedback = [
       "Your previous draft was rejected:",
       ...(parseError ? [`- it was not valid JSON (${parseError})`] : []),
@@ -158,8 +166,15 @@ export async function writeMemo(ollama: OllamaClient | null, input: MemoInput, o
       ...(memo && words < MEMO_WORDS.min ? [`- it had ${words} words; write at least ${MEMO_WORDS.min + 20} words this time, adding a paragraph on the join map orphans and one on what was not tested, with the same numbers.`] : []),
       ...(memo && words > MEMO_WORDS.max ? [`- it had ${words} words; cut it to at most ${MEMO_WORDS.max} words.`] : []),
       ...(unknown.length ? [`- it contained numbers that are not in the ALLOWED NUMBERS list: ${unknown.join(", ")}. Remove them or replace them with listed numbers.`] : []),
+      ...(wordIssues.length ? [repairFeedback(wordIssues)] : []),
     ].join("\n");
   }
+  // One draft and one repair (D17), then the template, capped at 250 words.
   const text = templateMemo(input);
-  return { text, source: "template", attempts, allowed: input.allowed, wordCount: wordCount(text), model: ollama?.model ?? "none" };
+  return { text, source: "template", attempts, allowed: input.allowed, wordCount: wordCount(text), model: ollama?.model ?? "none", verifier: verifierOf(input, attempts, input.facts ? checkNoteWords(text, input.facts) : []) };
+}
+
+function verifierOf(input: MemoInput, attempts: readonly MemoAttempt[], finalIssues: NoteIssue[]): MemoResult["verifier"] {
+  if (!input.facts) return null;
+  return { checked: true, drafts_rejected_for_words: attempts.filter((a) => (a.wordIssues ?? []).length > 0).length, final_issues: finalIssues };
 }

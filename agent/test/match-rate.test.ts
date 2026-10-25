@@ -156,3 +156,15 @@ describe("parseMatchRows", () => {
     ).toThrow(Error);
   });
 });
+
+describe("gateway parity (D16)", () => {
+  it("matchRateSql renders the same counts and orphan statements as the gateway's match_rate templates", () => {
+    // The same strings are asserted in gateway/tests/test_templates.py (C1_COUNTS, C1_ORPHANS).
+    const p = { leftObject: "cw.frames_revenues_cy2025q1", leftColumn: "cik", rightObject: "cw.seed_submissions_snapshot", rightColumn: "cik10", transform: "lpad10" };
+    const left = "(SELECT DISTINCT LPAD(CAST(l.`cik` AS STRING), 10, '0') AS k FROM cw.frames_revenues_cy2025q1 l WHERE LPAD(CAST(l.`cik` AS STRING), 10, '0') IS NOT NULL) l";
+    const right = "(SELECT DISTINCT CAST(r.`cik10` AS STRING) AS k FROM cw.seed_submissions_snapshot r) r";
+    const { counts, orphans } = matchRateSql(p);
+    expect(counts).toBe(`SELECT COUNT(DISTINCT l.k) AS left_keys, COUNT(DISTINCT CASE WHEN r.k IS NOT NULL THEN l.k END) AS matched_keys FROM ${left} LEFT JOIN ${right} ON r.k = l.k`);
+    expect(orphans).toBe(`SELECT l.k AS orphan FROM ${left} LEFT JOIN ${right} ON r.k = l.k WHERE r.k IS NULL AND l.k IS NOT NULL ORDER BY l.k LIMIT 10`);
+  });
+});

@@ -374,8 +374,7 @@ export function proposeKeys(choices: unknown, opts: { probed: ReadonlySet<string
       return;
     }
     seen.add(sig);
-    const route = routeOf(p, opts.knownTemplates);
-    out.accepted.push({ left: { object: p.leftObject, column: p.leftColumn }, right: { object: p.rightObject, column: p.rightColumn }, transform: p.transform, proposal: p, route: route ? routeKey(route, p) : null });
+    out.accepted.push({ left: { object: p.leftObject, column: p.leftColumn }, right: { object: p.rightObject, column: p.rightColumn }, transform: p.transform, proposal: p, route: routeKeyOf(p, opts.knownTemplates) });
   });
   return out;
 }
@@ -407,6 +406,27 @@ export interface KeyRoute {
   params(p: KeyProposal): Record<string, string>;
   /** The scope a verified key holds for (the frames period or the FEMA quarter), part of the memory key. */
   scope(p: KeyProposal): string;
+  /** D18: the canonical orientation of the measured statement (left = the side whose rows are counted), whoever proposed the pair. */
+  orient(p: KeyProposal): Orientation;
+}
+
+/** How a join-map row reads: the counted side on the left, and the side the transform is applied to. */
+export interface Orientation {
+  left: string;
+  right: string;
+  transform_on: "left" | "right";
+}
+
+/** D15: the onboarding snapshot of cw.seed_utilities that the question path reads. */
+export const SNAPSHOT = "cw.seed_submissions_snapshot";
+/** Views the question path never reads (cw.seed_utilities resolves 43 submission views per read; D15). */
+export const QUESTION_PATH_REFUSED: ReadonlySet<string> = new Set(["cw.seed_utilities"]);
+/** The gateway template that measures any proposal outside the named join-map statements (D16). */
+export const GENERIC_TEMPLATE = "match_rate";
+export const GENERIC_ORPHANS_TEMPLATE = "match_rate_orphans";
+
+function framesAll(p: KeyProposal): string {
+  return `cw.frames_*_${framesPeriod(p)}`;
 }
 
 function framesPeriod(p: KeyProposal): string {
@@ -432,24 +452,26 @@ export const KEY_ROUTES: readonly KeyRoute[] = [
   {
     id: "cik",
     label: "(a) cik: submissions cik vs frames cik under lpad10",
-    a: { object: exact("cw.seed_utilities"), column: "cik" },
+    a: { object: exact(SNAPSHOT), column: "cik10" },
     b: { object: FRAMES_RE, column: "cik" },
     transforms: ["lpad10"],
     template: "joinmap_cik",
     orphanTemplate: "joinmap_cik_orphans",
-    measuredAs: "left cw.seed_utilities.cik (43 seed filers); right LPAD(frames cik) over the three frames views of the period",
+    measuredAs: "left cw.seed_submissions_snapshot.cik10 (43 seed filers, SEC submissions snapshot taken at onboarding); right LPAD(frames cik) over the three frames views of the period",
+    orient: (p) => ({ left: `${SNAPSHOT}.cik10`, right: `${framesAll(p)}.cik`, transform_on: "right" }),
     params: (p) => ({ period: framesPeriod(p) }),
     scope: (p) => framesPeriod(p),
   },
   {
     id: "cik_control",
     label: "(a, control) cik without lpad10",
-    a: { object: exact("cw.seed_utilities"), column: "cik" },
+    a: { object: exact(SNAPSHOT), column: "cik10" },
     b: { object: FRAMES_RE, column: "cik" },
     transforms: ["identity"],
     template: "joinmap_cik_control",
     orphanTemplate: null,
-    measuredAs: "left cw.seed_utilities.cik; right CAST(frames cik AS STRING) over the three frames views of the period",
+    measuredAs: "left cw.seed_submissions_snapshot.cik10; right CAST(frames cik AS STRING) over the three frames views of the period",
+    orient: (p) => ({ left: `${SNAPSHOT}.cik10`, right: `${framesAll(p)}.cik`, transform_on: "right" }),
     params: (p) => ({ period: framesPeriod(p) }),
     scope: (p) => framesPeriod(p),
   },
@@ -457,11 +479,12 @@ export const KEY_ROUTES: readonly KeyRoute[] = [
     id: "loc",
     label: "(b) frames loc under substr(4,2) vs submissions business state",
     a: { object: FRAMES_RE, column: "loc" },
-    b: { object: exact("cw.seed_utilities"), column: "hq_state" },
+    b: { object: exact(SNAPSHOT), column: "hq_state" },
     transforms: ["substr(4,2)"],
     template: "joinmap_loc",
     orphanTemplate: null,
-    measuredAs: "left the seed filers present in the period's frames with SUBSTR(loc, 4, 2); right cw.seed_utilities.hq_state",
+    measuredAs: "left the seed filers present in the period's frames with SUBSTR(loc, 4, 2); right cw.seed_submissions_snapshot.hq_state",
+    orient: (p) => ({ left: `${framesAll(p)}.loc`, right: `${SNAPSHOT}.hq_state`, transform_on: "left" }),
     params: (p) => ({ period: framesPeriod(p) }),
     scope: (p) => framesPeriod(p),
   },
@@ -474,6 +497,7 @@ export const KEY_ROUTES: readonly KeyRoute[] = [
     template: "joinmap_fema_state",
     orphanTemplate: "joinmap_fema_state_orphans",
     measuredAs: "left the distinct FEMA declaration states of the quarter; right cw.utility_states.state",
+    orient: (p) => ({ left: `cw.fema_declarations_dr_${quarterSlug(femaQuarter(p))}.state`, right: "cw.utility_states.state", transform_on: "left" }),
     params: (p) => ({ quarter: femaQuarter(p) }),
     scope: (p) => femaQuarter(p),
   },
@@ -486,6 +510,7 @@ export const KEY_ROUTES: readonly KeyRoute[] = [
     template: "joinmap_fema_fips",
     orphanTemplate: null,
     measuredAs: "left the distinct FEMA fipsStateCode values of the quarter; right cw.states.fips",
+    orient: (p) => ({ left: `cw.fema_declarations_dr_${quarterSlug(femaQuarter(p))}.fips_state_code`, right: "cw.states.fips", transform_on: "left" }),
     params: (p) => ({ quarter: femaQuarter(p) }),
     scope: (p) => femaQuarter(p),
   },
@@ -498,18 +523,20 @@ export const KEY_ROUTES: readonly KeyRoute[] = [
     template: "joinmap_station",
     orphanTemplate: null,
     measuredAs: "left cw.seed_stations.id (56); right cw.stations.id (ghcnd-stations.txt), with the count whose state agrees",
+    orient: () => ({ left: "cw.seed_stations.id", right: "cw.stations.id", transform_on: "left" }),
     params: () => ({}),
     scope: () => "all",
   },
   {
     id: "sic",
     label: "(e) submissions SIC vs the SIC reference",
-    a: { object: exact("cw.seed_utilities"), column: "sic" },
+    a: { object: exact(SNAPSHOT), column: "sic" },
     b: { object: exact("cw.sic_codes"), column: "code" },
     transforms: ["identity"],
     template: "joinmap_sic",
     orphanTemplate: "joinmap_sic_orphans",
-    measuredAs: "left the 43 seed utilities' sic (rows) and its distinct codes; right cw.sic_codes.code",
+    measuredAs: "left the 43 seed utilities' sic (rows; SEC submissions snapshot taken at onboarding) and its distinct codes; right cw.sic_codes.code",
+    orient: () => ({ left: `${SNAPSHOT}.sic`, right: "cw.sic_codes.code", transform_on: "left" }),
     params: () => ({}),
     scope: () => "all",
   },
@@ -533,6 +560,23 @@ export function routeKey(r: KeyRoute, p: KeyProposal): string {
   return `${r.id}@${r.scope(p)}`;
 }
 
+/** The key of a pair no named statement measures: the proposal as given (match_rate counts its left side). */
+export function genericKey(p: KeyProposal): string {
+  return `pair:${p.leftObject.toLowerCase()}.${p.leftColumn.toLowerCase()}~${p.rightObject.toLowerCase()}.${p.rightColumn.toLowerCase()}|${p.transform}`;
+}
+
+/** True when the gateway (as the client mirrors it) has the generic match_rate template; an absent set means yes. */
+export function genericAvailable(knownTemplates?: ReadonlySet<string>): boolean {
+  return !knownTemplates || knownTemplates.has(GENERIC_TEMPLATE);
+}
+
+/** The measurement key of a proposal: its named join-map route when one exists, else the generic pair key (D16), else null. */
+export function routeKeyOf(p: KeyProposal, knownTemplates?: ReadonlySet<string>): string | null {
+  const r = routeOf(p, knownTemplates);
+  if (r) return routeKey(r, p);
+  return genericAvailable(knownTemplates) ? genericKey(p) : null;
+}
+
 export interface MeasureResult {
   key: string | null;
   route: string | null;
@@ -541,6 +585,8 @@ export interface MeasureResult {
   status: "measured" | "unmeasurable";
   reason: string | null;
   measured_as: string | null;
+  /** D18: the canonical orientation of the statement that ran (null when nothing ran). */
+  orientation: Orientation | null;
   left_rows: number | null;
   matched_rows: number | null;
   left_keys: number | null;
@@ -579,6 +625,7 @@ export async function measureKey(p: KeyProposal, opts: { gateway: TemplatePort; 
     status: "unmeasurable",
     reason: null,
     measured_as: null,
+    orientation: null,
     left_rows: null,
     matched_rows: null,
     left_keys: null,
@@ -596,7 +643,10 @@ export async function measureKey(p: KeyProposal, opts: { gateway: TemplatePort; 
     from_memory: null,
   };
   if (!route) {
-    return { ...base, reason: "no gateway join-map statement measures this pair under this transform (the gateway runs named templates only)" };
+    if (!genericAvailable(opts.knownTemplates)) {
+      return { ...base, reason: "no gateway join-map statement measures this pair under this transform (the gateway runs named templates only)" };
+    }
+    return measureGeneric(proposal, base, opts);
   }
   const t0 = performance.now();
   const params = route.params(proposal);
@@ -628,6 +678,7 @@ export async function measureKey(p: KeyProposal, opts: { gateway: TemplatePort; 
     label: route.label,
     status: "measured",
     measured_as: route.measuredAs,
+    orientation: route.orient(proposal),
     left_rows: leftRows,
     matched_rows: matchedRows,
     left_keys: leftKeys,
@@ -637,6 +688,72 @@ export async function measureKey(p: KeyProposal, opts: { gateway: TemplatePort; 
     verdict: verdictFor(rate),
     orphans,
     extra,
+    sql: counts.prov.sql,
+    sql_orphans: sqlOrphans,
+    elapsed_ms: Math.round(performance.now() - t0),
+    provenance,
+  };
+}
+
+/**
+ * D16: a proposal no named join-map statement measures goes through the gateway's match_rate template: C1's
+ * statement over the two views as proposed (the transform on the left column, the left side counted), the
+ * columns checked against DESCRIBE by the gateway, bounded at 60 s. A refusal (an unknown column, a view
+ * outside the manifest) comes back as unmeasurable with the gateway's reason, never as a number.
+ */
+async function measureGeneric(proposal: KeyProposal, base: MeasureResult, opts: { gateway: TemplatePort; runId: string }): Promise<MeasureResult> {
+  const t0 = performance.now();
+  const params = {
+    left_object: proposal.leftObject.toLowerCase(),
+    left_column: proposal.leftColumn,
+    right_object: proposal.rightObject.toLowerCase(),
+    right_column: proposal.rightColumn,
+    transform: proposal.transform,
+  };
+  for (const o of [params.left_object, params.right_object]) {
+    if (QUESTION_PATH_REFUSED.has(o)) return { ...base, reason: `${o} is read once at onboarding only (D15); the question path reads ${SNAPSHOT}` };
+  }
+  let counts: Awaited<ReturnType<typeof call>>;
+  try {
+    counts = await call(opts.gateway, opts.runId, GENERIC_TEMPLATE, params);
+  } catch (e) {
+    const status = (e as { status?: number }).status;
+    if (status === 400) return { ...base, reason: `match_rate refused: ${(e as Error).message.slice(0, 200)}` };
+    throw e;
+  }
+  const row = counts.rows[0];
+  if (counts.rows.length !== 1 || !row) throw new Error(`${GENERIC_TEMPLATE}: expected one count row, got ${counts.rows.length}`);
+  const leftKeys = num(pick(row, ["left_keys"]));
+  const matchedKeys = num(pick(row, ["matched_keys"]));
+  if (leftKeys === null || matchedKeys === null) throw new Error(`${GENERIC_TEMPLATE}: null left_keys or matched_keys`);
+  const provenance = [counts.prov];
+  let orphans: string[] = [];
+  let sqlOrphans: string | null = null;
+  if (matchedKeys < leftKeys) {
+    const o = await call(opts.gateway, opts.runId, GENERIC_ORPHANS_TEMPLATE, params);
+    provenance.push(o.prov);
+    orphans = o.rows.slice(0, ORPHAN_SAMPLE).map(orphanText);
+    sqlOrphans = o.prov.sql;
+  }
+  const rate = leftKeys === 0 ? 0 : matchedKeys / leftKeys;
+  const left = `${proposal.leftObject}.${proposal.leftColumn}`;
+  const right = `${proposal.rightObject}.${proposal.rightColumn}`;
+  return {
+    ...base,
+    key: genericKey(proposal),
+    route: GENERIC_TEMPLATE,
+    label: `${left} ~ ${right} under ${proposal.transform}`,
+    status: "measured",
+    measured_as: `left the distinct values of ${left} under ${proposal.transform} (nulls dropped); right the distinct values of ${right} (match_rate, one key per row)`,
+    orientation: { left, right, transform_on: "left" },
+    left_rows: leftKeys,
+    matched_rows: matchedKeys,
+    left_keys: leftKeys,
+    matched_keys: matchedKeys,
+    rate,
+    rate_distinct: rate,
+    verdict: verdictFor(rate),
+    orphans,
     sql: counts.prov.sql,
     sql_orphans: sqlOrphans,
     elapsed_ms: Math.round(performance.now() - t0),
@@ -666,13 +783,13 @@ export function scoreProposals(choices: readonly KeyChoice[], measured: Readonly
       s.unmeasured++;
       continue;
     }
-    const r = routeOf(p, knownTemplates);
-    if (!r) {
+    const key = routeKeyOf(p, knownTemplates);
+    if (!key) {
       s.unmeasured++;
       continue;
     }
     s.routed++;
-    const m = measured.get(routeKey(r, p));
+    const m = measured.get(key);
     if (!m || m.status !== "measured") {
       s.unmeasured++;
       continue;

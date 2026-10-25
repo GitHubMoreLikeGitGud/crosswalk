@@ -253,8 +253,8 @@ def probe(obj, *cands):
 def demo_probes() -> list[dict]:
     """Synthetic probes shaped like the Crosswalk sources (made-up CIKs 0009000001.., states, ids)."""
     return [
-        probe("cw.seed_utilities",
-              ("cik", 43, 43, ["0009000001", "0009000002", "0009000003"]),
+        probe("cw.seed_submissions_snapshot",
+              ("cik10", 43, 43, ["0009000001", "0009000002", "0009000003"]),
               ("sic", 4, 43, ["4911", "4931", "4900"]),
               ("hq_state", 30, 43, ["CA", "OH", "WI"])),
         probe("cw.frames_Revenues_CY2025Q1",
@@ -336,7 +336,7 @@ def verdict(rate: float) -> str:
     return "VERIFIED" if rate >= VERIFIED_AT else "PARTIAL" if rate >= PARTIAL_AT else "REJECTED"
 
 
-def measure_case(name, proposal, counts_cols, counts_row, orphan_cols=None, orphan_rows=None, known=None, route=None, key=None):
+def measure_case(name, proposal, counts_cols, counts_row, orphan_cols=None, orphan_rows=None, known=None, route=None, key=None, orientation=None):
     rec = dict(zip(counts_cols, counts_row)) if counts_row is not None else None
     case = {"name": name, "proposal": proposal, "known_templates": known,
             "replies": {}, "expected": {"status": "unmeasurable", "route": None, "key": None}}
@@ -356,7 +356,7 @@ def measure_case(name, proposal, counts_cols, counts_row, orphan_cols=None, orph
     extra = {"state_equal": rec["state_equal"]} if "state_equal" in rec else {}
     case["expected"] = {"status": "measured", "route": route, "key": key, "left_rows": lr, "matched_rows": mr, "left_keys": lk,
                         "matched_keys": mk, "rate": rate, "rate_distinct": 0 if lk == 0 else mk / lk, "verdict": verdict(rate),
-                        "orphans": orphans, "extra": extra}
+                        "orphans": orphans, "extra": extra, "orientation": orientation}
     return case
 
 
@@ -364,32 +364,55 @@ def choice(lo, lc, ro, rc, t):
     return {"left": {"object": lo, "column": lc}, "right": {"object": ro, "column": rc}, "transform": t}
 
 
+def orient(left, right, on):
+    """D18: the canonical orientation of the statement (left = the side whose rows are counted)."""
+    return {"left": left, "right": right, "transform_on": on}
+
+
 def measure_cases() -> list[dict]:
     jm = ["joinmap_cik", "joinmap_cik_orphans", "joinmap_loc", "joinmap_fema_state", "joinmap_fema_state_orphans",
           "joinmap_station", "joinmap_sic", "joinmap_sic_orphans"]
+    mr = jm + ["match_rate", "match_rate_orphans"]
     f25 = "cw.frames_Revenues_CY2025Q1"
+    snap = "cw.seed_submissions_snapshot"
     return [
-        measure_case("cik_lpad10_frames_first", choice(f25, "cik", "cw.seed_utilities", "cik", "lpad10"),
+        measure_case("cik_lpad10_frames_first", choice(f25, "cik", snap, "cik10", "lpad10"),
                      ["left_keys", "matched_keys"], [43, 42], ["orphan_cik", "name"], [["0009000099", "SYNTHETIC UTILITY A"]],
-                     jm, "cik", "cik@CY2025Q1"),
-        measure_case("sic_rows_and_codes", choice("cw.seed_utilities", "sic", "cw.sic_codes", "code", "identity"),
+                     jm, "cik", "cik@CY2025Q1", orient(f"{snap}.cik10", "cw.frames_*_CY2025Q1.cik", "right")),
+        measure_case("sic_rows_and_codes", choice(snap, "sic", "cw.sic_codes", "code", "identity"),
                      ["left_keys", "matched_keys", "left_rows", "matched_rows"], [4, 3, 43, 42],
-                     ["orphan_sic", "cik", "name"], [["4900", "0009000042", "SYNTHETIC UTILITY B"]], jm, "sic", "sic@all"),
+                     ["orphan_sic", "cik", "name"], [["4900", "0009000042", "SYNTHETIC UTILITY B"]], jm, "sic", "sic@all",
+                     orient(f"{snap}.sic", "cw.sic_codes.code", "left")),
         measure_case("fema_state_partial", choice("cw.fema_declarations_dr_2025q1", "state", "cw.utility_states", "state", "identity"),
-                     ["left_keys", "matched_keys"], [8, 7], ["orphan_state"], [["AK"]], jm, "fema_state", "fema_state@CY2025Q1"),
+                     ["left_keys", "matched_keys"], [8, 7], ["orphan_state"], [["AK"]], jm, "fema_state", "fema_state@CY2025Q1",
+                     orient("cw.fema_declarations_dr_2025q1.state", "cw.utility_states.state", "left")),
+        measure_case("fema_state_proposed_reversed", choice("cw.utility_states", "state", "cw.fema_declarations_dr_2025q1", "state", "identity"),
+                     ["left_keys", "matched_keys"], [8, 7], ["orphan_state"], [["AK"]], jm, "fema_state", "fema_state@CY2025Q1",
+                     orient("cw.fema_declarations_dr_2025q1.state", "cw.utility_states.state", "left")),
         measure_case("station_reversed", choice("cw.stations", "id", "cw.seed_stations", "id", "identity"),
-                     ["left_keys", "matched_keys", "state_equal"], [56, 56, 55], None, None, jm, "station", "station@all"),
-        measure_case("loc_substr", choice(f25, "loc", "cw.seed_utilities", "hq_state", "substr(4,2)"),
-                     ["left_keys", "matched_keys"], [42, 42], None, None, jm, "loc", "loc@CY2025Q1"),
-        measure_case("cik_identity_no_control_template", choice("cw.seed_utilities", "cik", f25, "cik", "identity"),
+                     ["left_keys", "matched_keys", "state_equal"], [56, 56, 55], None, None, jm, "station", "station@all",
+                     orient("cw.seed_stations.id", "cw.stations.id", "left")),
+        measure_case("loc_substr", choice(f25, "loc", snap, "hq_state", "substr(4,2)"),
+                     ["left_keys", "matched_keys"], [42, 42], None, None, jm, "loc", "loc@CY2025Q1",
+                     orient("cw.frames_*_CY2025Q1.loc", f"{snap}.hq_state", "left")),
+        measure_case("cik_identity_no_control_template", choice(snap, "cik10", f25, "cik", "identity"),
                      None, None, known=jm),
-        measure_case("cik_identity_control", choice("cw.seed_utilities", "cik", f25, "cik", "identity"),
-                     ["left_keys", "matched_keys"], [43, 0], None, None, jm + ["joinmap_cik_control"], "cik_control", "cik_control@CY2025Q1"),
-        measure_case("unrouted_pair", choice("cw.utility_states", "cik", "cw.seed_utilities", "cik", "identity"), None, None, known=jm),
-        measure_case("loc_strip_prefix_not_routed", choice(f25, "loc", "cw.seed_utilities", "hq_state", "strip_prefix('US-')"),
+        measure_case("cik_identity_control", choice(snap, "cik10", f25, "cik", "identity"),
+                     ["left_keys", "matched_keys"], [43, 0], None, None, jm + ["joinmap_cik_control"], "cik_control", "cik_control@CY2025Q1",
+                     orient(f"{snap}.cik10", "cw.frames_*_CY2025Q1.cik", "right")),
+        measure_case("unrouted_pair", choice("cw.utility_states", "cik", snap, "cik10", "identity"), None, None, known=jm),
+        measure_case("loc_strip_prefix_not_routed", choice(f25, "loc", snap, "hq_state", "strip_prefix('US-')"),
                      None, None, known=jm),
+        # D16: with the gateway's match_rate template, a pair no named statement measures is measured as proposed.
+        measure_case("generic_pair_match_rate", choice("cw.utility_states", "state", "cw.states", "code", "identity"),
+                     ["left_keys", "matched_keys"], [43, 43], None, None, mr, "match_rate",
+                     "pair:cw.utility_states.state~cw.states.code|identity",
+                     orient("cw.utility_states.state", "cw.states.code", "left")),
+        measure_case("generic_pair_with_orphans", choice(f25, "loc", "cw.states", "code", "substr(4,2)"),
+                     ["left_keys", "matched_keys"], [53, 49], ["orphan"], [["AS"], ["GU"], ["PR"], ["VI"]], mr, "match_rate",
+                     "pair:cw.frames_revenues_cy2025q1.loc~cw.states.code|substr(4,2)",
+                     orient(f"{f25}.loc", "cw.states.code", "left")),
     ]
-
 
 # FK -> what supports it (the same rule the TypeScript states; recomputed here for the expected status).
 FK_SUPPORT = {
