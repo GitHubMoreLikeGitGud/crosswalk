@@ -91,7 +91,7 @@ body.has-drawer { overflow: hidden; }
 h1, h2, h3, h4 { font-family: var(--font-serif); font-weight: 600; line-height: 1.2; margin: 0; letter-spacing: -0.005em; }
 p { margin: 0 0 6px; }
 ul, ol { margin: 0; padding: 0; }
-code, pre, .hash { font-family: var(--font-mono); font-size: 0.92em; }
+code, pre, .hash { font-family: var(--font-mono); font-size: max(0.92em, 11.5px); }
 code { overflow-wrap: anywhere; background: var(--code-bg); padding: 0 3px; border-radius: 3px; }
 pre code, .cite code, .evrec__id, .tele__run { background: none; padding: 0; }
 a { color: var(--accent); text-underline-offset: 2px; }
@@ -432,7 +432,7 @@ table.rows td { max-width: 360px; overflow-wrap: anywhere; }
 .tele__item:first-child { border-left: 0; padding-left: 0; }
 .tele__k { font-size: 11px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--ink-3); white-space: nowrap; }
 .tele__v { font-family: var(--font-fig); font-weight: 700; font-size: 15px; line-height: 1.2; white-space: nowrap; }
-.tele__n { font-size: 10.5px; color: var(--ink-3); white-space: nowrap; }
+.tele__n { font-size: 11px; color: var(--ink-3); white-space: nowrap; }
 .tele__run { font-size: 12px; font-weight: 600; }
 .bars { display: block; height: 26px; }
 .bars__m { fill: var(--accent); }
@@ -481,7 +481,7 @@ table.rows td { max-width: 360px; overflow-wrap: anywhere; }
 .eng-on .eng { display: inline; margin-left: 4px; font-size: 11.5px; color: var(--ink-3); }
 .eng-on .eng code { font-size: 11px; }
 .runpick { display: inline-flex; align-items: center; gap: 6px; }
-.runpick__k { text-transform: uppercase; letter-spacing: 0.05em; font-size: 10.5px; }
+.runpick__k { text-transform: uppercase; letter-spacing: 0.05em; font-size: 11px; }
 .runpick select { max-width: 340px; font: 600 12.5px var(--font-body); color: var(--ink); background: var(--surface); border: 1px solid var(--rule-strong); border-radius: 4px; padding: 3px 6px; }
 .engtoggle { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; color: var(--top-ink); }
 .engtoggle input { accent-color: #e8c170; }
@@ -523,7 +523,7 @@ table.runs thead th, table.dq thead th, table.rows thead th, table.ans__t thead 
 .tl__chunk { font-family: var(--font-serif); font-size: 15px; margin-right: 8px; }
 .tl__t { font-variant-numeric: tabular-nums; color: var(--ink-2); margin-right: 8px; }
 .tl--chunkend { font-size: 12.5px; }
-.tl__who { display: inline-block; min-width: 54px; margin-right: 6px; padding: 0 6px; border-radius: 3px; font: 700 10.5px/18px var(--font-body); letter-spacing: 0.05em; text-transform: uppercase; text-align: center; border: 1px solid var(--neutral-edge); background: var(--neutral-bg); color: var(--neutral); }
+.tl__who { display: inline-block; min-width: 54px; margin-right: 6px; padding: 0 6px; border-radius: 3px; font: 700 11px/18px var(--font-body); letter-spacing: 0.05em; text-transform: uppercase; text-align: center; border: 1px solid var(--neutral-edge); background: var(--neutral-bg); color: var(--neutral); }
 .tl--plan .tl__who { background: var(--model-bg); border-color: var(--model-edge); color: var(--model); }
 .tl--tool .tl__who { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
 .tl--fallback .tl__who { background: var(--mid-bg); border-color: var(--mid-edge); color: var(--mid); }
