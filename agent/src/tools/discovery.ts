@@ -1146,7 +1146,7 @@ export interface AnswerGateCheck {
   note: string;
 }
 
-/** A join-map key reported beside the gate and never used to withhold: its rate measures coverage, not whether the codes join. */
+/** A join-map key reported beside the gate: its rate measures coverage, not whether the codes join. It withholds only when its join (the one the FEMA selection runs on) returns no rows. */
 export interface AnswerCoverage {
   key: string;
   verdict: Verdict | null;
@@ -1157,7 +1157,7 @@ export interface AnswerCoverage {
   note: string;
 }
 
-/** The FEMA selection needs the FEMA state codes to join the state reference (fema_fips VERIFIED: form); the revenue column needs the CIK key VERIFIED; the weather column needs the station key VERIFIED. The FEMA state key against the states the seed utilities serve (fema_state) measures coverage and is only reported. */
+/** The FEMA selection needs the FEMA state codes to join the state reference (fema_fips VERIFIED: form); the revenue column needs the CIK key VERIFIED; the weather column needs the station key VERIFIED. The FEMA state key against the states the seed utilities serve (fema_state) measures coverage and is reported; since the FEMA selection joins on that state code, a fema_state key measured or recalled with 0 matched rows also withholds the FEMA selection. */
 export interface AnswerGate {
   fema: AnswerGateCheck;
   revenue: AnswerGateCheck;
@@ -1175,14 +1175,15 @@ export function answerGate(quarter: string, measured: ReadonlyMap<string, Measur
     const state = verdict ? `${verdict}${counts}${recalled ? ", recalled from memory" : ""}` : "not measured in this run";
     return { key, m, verdict, recalled, state };
   };
-  const check = (route: "fema_fips" | "cik" | "station", what: string): AnswerGateCheck => {
+  const check = (route: "fema_fips" | "cik" | "station", what: string, blocked: string | null = null): AnswerGateCheck => {
     const { key, m, verdict, recalled, state } = read(route);
-    const ok = verdict === "VERIFIED";
-    const note = ok ? `${what}: key ${key} ${state}` : `${what} withheld: key ${key} is ${state}, and the answer needs it VERIFIED`;
+    const ok = verdict === "VERIFIED" && !blocked;
+    const note = ok ? `${what}: key ${key} ${state}` : verdict === "VERIFIED" ? `${what} withheld: key ${key} is ${state}, but ${blocked}` : `${what} withheld: key ${key} is ${state}, and the answer needs it VERIFIED`;
     return { key, need: "VERIFIED", verdict, matched_rows: m?.matched_rows ?? null, left_rows: m?.left_rows ?? null, recalled, ok, note };
   };
   const cov = read("fema_state");
   const orphans = cov.verdict ? [...(cov.m?.orphans ?? [])] : [];
+  const emptyJoin = cov.verdict !== null && cov.m?.matched_rows === 0;
   const fema_coverage: AnswerCoverage = {
     key: cov.key,
     verdict: cov.verdict,
@@ -1190,9 +1191,10 @@ export function answerGate(quarter: string, measured: ReadonlyMap<string, Measur
     left_rows: cov.m?.left_rows ?? null,
     orphans,
     recalled: cov.recalled,
-    note: `FEMA coverage (reported, not gated): key ${cov.key} ${cov.state}${orphans.length ? `; declared states no seed utility serves: ${orphans.join(", ")}` : ""}`,
+    note: `FEMA coverage (${emptyJoin ? "the state join returns no rows, so it withholds the FEMA selection" : "reported, not gated"}): key ${cov.key} ${cov.state}${orphans.length ? `; declared states no seed utility serves: ${orphans.join(", ")}` : ""}`,
   };
-  return { fema: check("fema_fips", "FEMA selection"), revenue: check("cik", "Revenue column"), weather: check("station", "Weather column"), fema_coverage };
+  const femaBlocked = emptyJoin ? `the selection joins on the state code and key ${cov.key} is ${cov.state}: the state join returns no rows` : null;
+  return { fema: check("fema_fips", "FEMA selection", femaBlocked), revenue: check("cik", "Revenue column"), weather: check("station", "Weather column"), fema_coverage };
 }
 
 const FEMA_BASE_COLUMNS = new Set(["cik", "name", "ticker", "state", "declarations"]);

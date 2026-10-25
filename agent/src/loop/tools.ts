@@ -711,7 +711,7 @@ const answerToolDef = def("answer", {
   checkInput: (input, ctx) => (input.quarter === undefined || input.quarter === ctx.quarter ? [] : [`action.input.quarter ${input.quarter} is not the quarter asked about (${ctx.quarter})`]),
   async run(_input, ctx, deps) {
     const stationsByCik = weatherReady(ctx, deps) ? Object.fromEntries(deps.seeds.utilities.map((u) => [u.cik, u.station_ids])) : null;
-    // The answer's joins are gated on this run's join map: the FEMA selection on the FEMA FIPS key (form), revenue on the CIK key, weather on the station key; FEMA coverage is reported only.
+    // The answer's joins are gated on this run's join map: the FEMA selection on the FEMA FIPS key (form) and a non-empty state join, revenue on the CIK key, weather on the station key; FEMA coverage is otherwise reported only.
     const gate = answerGate(ctx.quarter, ctx.measured);
     const r = await timed(ctx, "answer", () => answerTool({ quarter: ctx.quarter }, { gateway: questionPort(deps.gateway), runId: deps.evidence.runId, stationsByCik, gate }));
     ctx.answer = r;

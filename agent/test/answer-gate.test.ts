@@ -1,7 +1,8 @@
 // The answer gated on the join map (agent/src/tools/discovery.ts answerGate): the FEMA selection needs the
 // FEMA FIPS key VERIFIED (the FEMA state codes join the state reference: form), the revenue column needs the CIK
 // key VERIFIED, the weather column the station key VERIFIED (measured in this run or recalled). The FEMA state key
-// against the states the seed utilities serve measures coverage: it is reported with its orphans, never gated.
+// against the states the seed utilities serve measures coverage: it is reported with its orphans, and withholds the
+// FEMA selection (which joins on that state code) only when it was measured or recalled with 0 matched rows.
 // The last two tests replay the committed redacted server fixtures (synthetic values) offline.
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
@@ -94,6 +95,23 @@ describe("answerGate", () => {
     const g = answerGate("CY2024Q1", new Map([key("cik", "VERIFIED", 42, 43), key("fema_fips", "VERIFIED", 8, 8)]));
     expect([g.fema.ok, g.revenue.ok]).toEqual([false, false]);
   });
+  it("an empty state join withholds the FEMA selection: the FEMA state key measured or recalled with 0 matched rows, even with the FIPS key VERIFIED", () => {
+    const g = answerGate(Q, new Map([key("cik", "VERIFIED", 42, 43), key("fema_fips", "VERIFIED", 8, 8), key("fema_state", "REJECTED", 0, 8, null, ["AK", "CA"])]));
+    expect(g.fema).toMatchObject({ key: "fema_fips@CY2025Q1", verdict: "VERIFIED", ok: false });
+    expect(g.fema.note).toBe("FEMA selection withheld: key fema_fips@CY2025Q1 is VERIFIED (8 of 8), but the selection joins on the state code and key fema_state@CY2025Q1 is REJECTED (0 of 8): the state join returns no rows");
+    expect(g.fema_coverage.note).toBe("FEMA coverage (the state join returns no rows, so it withholds the FEMA selection): key fema_state@CY2025Q1 REJECTED (0 of 8); declared states no seed utility serves: AK, CA");
+    expect(g.revenue.ok).toBe(true);
+    expect(answerGate(Q, new Map([key("fema_fips", "VERIFIED", 8, 8, "mem-65"), key("fema_state", "REJECTED", 0, 8, "mem-66")])).fema.ok).toBe(false);
+  });
+  it("a state join with rows never withholds: the warm shape (REJECTED 8 of 11), the cold shape (PARTIAL 7 of 8), REJECTED 1 of 8 and an absent FEMA state key all pass on the FIPS key VERIFIED", () => {
+    const W = "CY2024Q1";
+    expect(answerGate(W, new Map([key("fema_fips", "VERIFIED", 8, 8, "mem-65", [], W), key("fema_state", "REJECTED", 8, 11, null, ["AK", "ME", "VT"], W)])).fema.ok).toBe(true);
+    expect(answerGate(Q, new Map([key("fema_fips", "VERIFIED", 8, 8), key("fema_state", "PARTIAL", 7, 8, null, ["AK"])])).fema.ok).toBe(true);
+    expect(answerGate(Q, new Map([key("fema_fips", "VERIFIED", 8, 8), key("fema_state", "REJECTED", 1, 8)])).fema.ok).toBe(true);
+    const absent = answerGate(Q, new Map([key("fema_fips", "VERIFIED", 8, 8)]));
+    expect(absent.fema).toMatchObject({ ok: true, note: "FEMA selection: key fema_fips@CY2025Q1 VERIFIED (8 of 8)" });
+    expect(absent.fema_coverage.note).toBe("FEMA coverage (reported, not gated): key fema_state@CY2025Q1 not measured in this run");
+  });
 });
 
 describe("answer under the gate", () => {
@@ -104,6 +122,14 @@ describe("answer under the gate", () => {
     expect(r.rows).toEqual([]);
     expect(r.gate?.fema.ok).toBe(false);
     expect(r.gate?.fema.note).toMatch(/^FEMA selection withheld: key fema_fips@CY2025Q1 is REJECTED \(1 of 8\)/u);
+  });
+  it("an empty state join (FEMA state key 0 matched rows) withholds the FEMA selection: no statement runs and no row is returned", async () => {
+    const g = fixturePort();
+    const r = await answer({ quarter: Q }, { gateway: g, runId: RUN, stationsByCik: STATIONS, gate: answerGate(Q, new Map([key("cik", "VERIFIED", 42, 43), key("fema_fips", "VERIFIED", 8, 8), key("fema_state", "REJECTED", 0, 8), key("station", "VERIFIED", 56, 56)])) });
+    expect(g.calls).toEqual([]);
+    expect(r.rows).toEqual([]);
+    expect(r.weather_status).toBe("not_tested");
+    expect(r.gate?.fema.note).toMatch(/^FEMA selection withheld: key fema_fips@CY2025Q1 is VERIFIED \(8 of 8\), but .*the state join returns no rows$/u);
   });
   it("a REJECTED coverage key does not withhold: the FEMA selection runs and the answer equals the ungated answer", async () => {
     const g = fixturePort();
