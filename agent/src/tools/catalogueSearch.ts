@@ -82,8 +82,9 @@ export function objectOf(zetarisObject: unknown): string | null {
     return null;
   }
   let s = zetarisObject;
-  if (s.includes("->")) {
-    s = s.split("->", 2)[1]!;
+  const arrow = s.indexOf("->");
+  if (arrow >= 0) {
+    s = s.slice(arrow + 2);
   }
   s = s.trim();
   if (!s) return null;

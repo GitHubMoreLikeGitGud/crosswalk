@@ -75,6 +75,10 @@ describe("objectOf", () => {
     expect(objectOf(undefined)).toBeNull();
     expect(objectOf("   ")).toBeNull();
   });
+  it("keeps everything after the first arrow (a second arrow stays in the name)", () => {
+    expect(objectOf("A.raw -> cw.view->x (note)")).toBe("cw.view->x");
+    expect(objectOf("A.raw ->")).toBeNull();
+  });
 });
 
 describe("searchCatalogue", () => {
