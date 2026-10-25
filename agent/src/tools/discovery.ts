@@ -37,6 +37,8 @@ export interface TemplateReply {
   sql: string | null;
   executed_at?: string;
   cache_state?: string;
+  /** When the gateway last cached each source object of the statement (from its SQL log since the driver started). */
+  source_cached_at?: Record<string, string>;
 }
 
 export interface TemplatePort {
@@ -68,6 +70,8 @@ export interface Provenance {
   run_id: string;
   executed_at: string | null;
   cache_state: string | null;
+  /** The gateway's cache time per source object, as it reported them (absent when it reported none). */
+  source_cached_at?: Record<string, string>;
   /** The rows the statement returned (count, and the first rows for the evidence record). */
   row_count?: number;
   columns?: string[];
@@ -94,6 +98,7 @@ async function call(port: TemplatePort, runId: string, template: string, params:
     run_id: runId,
     executed_at: reply.executed_at ?? null,
     cache_state: reply.cache_state ?? null,
+    ...(reply.source_cached_at && Object.keys(reply.source_cached_at).length ? { source_cached_at: { ...reply.source_cached_at } } : {}),
     row_count: reply.rows.length,
     columns: [...reply.columns],
     rows: reply.rows.slice(0, 20),

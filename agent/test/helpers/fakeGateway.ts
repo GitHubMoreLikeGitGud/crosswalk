@@ -4,7 +4,7 @@
 import { createHash } from "node:crypto";
 import { GatewayClient, type TemplateResponse } from "../../src/zetaris/client.ts";
 
-export type Reply = { columns: string[]; rows: unknown[][]; elapsed_ms?: number; cache_state?: string } | { error: string; status: number };
+export type Reply = { columns: string[]; rows: unknown[][]; elapsed_ms?: number; cache_state?: string; source_cached_at?: Record<string, string> } | { error: string; status: number };
 
 export type Resolver = (templateId: string, params: Record<string, string>) => Reply | undefined;
 
@@ -67,7 +67,7 @@ export function fakeGateway(resolve: Resolver, opts: { registrarOk?: boolean } =
       objects: [`fake.${body.template_id}`],
       raw_objects: [`cw.fake_${body.template_id}`],
       cache_state: r.cache_state ?? "hit",
-      source_cached_at: { [`cw.fake_${body.template_id}`]: "2026-10-24T00:00:00+08:00" },
+      source_cached_at: r.source_cached_at ?? { [`cw.fake_${body.template_id}`]: "2026-10-24T00:00:00+08:00" },
     };
     return new Response(JSON.stringify(resp), { status: 200 });
   }) as typeof fetch;

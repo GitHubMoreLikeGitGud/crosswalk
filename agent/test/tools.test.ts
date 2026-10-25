@@ -150,6 +150,27 @@ describe("the discovery loop on the fallback alone", () => {
     expect(ctx.startedAt).toBe(NOW.toISOString());
   });
 
+  it("each statement's evidence carries the gateway's cache time for its object, and null when the gateway reports none", async () => {
+    const CACHED = "2026-10-25T08:35:25+08:00";
+    // The live gateway keys source_cached_at by the lower-case object it read; the frames target is written in mixed case.
+    const withCache = (id: string, p: Record<string, string>): Reply | undefined => {
+      const r = resolve(id, p);
+      return r && !("error" in r) && p.object ? { ...r, source_cached_at: { [p.object.toLowerCase()]: CACHED } } : r;
+    };
+    const fake = fakeGateway(withCache);
+    const d = deps({ gateway: fake.client });
+    const { ctx } = await runFallback(d);
+    const sql = d.evidence.all().filter((e) => e.kind === "zetaris_sql");
+    const probes = sql.filter((e) => ["describe_object", "sample_rows", "distinct_counts"].includes(e.template_id ?? ""));
+    expect(new Set(probes.map((e) => e.zetaris_object))).toEqual(new Set(ctx.probes.keys()));
+    expect(probes.every((e) => e.source_cached_at === CACHED)).toBe(true);
+    expect(probes.some((e) => e.zetaris_object === "cw.frames_Revenues_CY2025Q1")).toBe(true);
+    // A statement whose reply names a different object (the fake keys it cw.fake_<template>) records no cache time.
+    const joinmap = sql.filter((e) => e.template_id === "joinmap_cik");
+    expect(joinmap.length).toBeGreaterThan(0);
+    expect(joinmap.every((e) => e.source_cached_at === null)).toBe(true);
+  });
+
   it("a warm run recalls verified keys from memory and skips their measure steps", async () => {
     const memory = new Map<string, MeasureResult>();
     const port: KeyMemoryPort = {

@@ -352,6 +352,13 @@ function snapshotNote(sql: string): string {
   return ` (SEC submissions snapshot taken at onboarding ${SNAPSHOT_AT ?? "(time not recorded)"})`;
 }
 
+/** The gateway's cache time for one object of a statement; names compare case-insensitively (Lightning folds identifier case). */
+export function cachedAtFor(p: Pick<Provenance, "source_cached_at">, object: string): string | null {
+  const o = object.toLowerCase();
+  for (const [k, v] of Object.entries(p.source_cached_at ?? {})) if (k.toLowerCase() === o && v) return v;
+  return null;
+}
+
 function statementEvidence(deps: ToolDeps, p: Provenance, claimIn: string, object: string, rowsIn: unknown[][] = [], columnsIn: string[] = []): EvidenceRecord {
   const claim = `${claimIn}${snapshotNote(p.sql ?? "")}`;
   const src = sourceFor(object);
@@ -369,7 +376,7 @@ function statementEvidence(deps: ToolDeps, p: Provenance, claimIn: string, objec
     raw_objects: [object],
     source_url: src.url,
     licence: src.licence,
-    source_cached_at: null,
+    source_cached_at: cachedAtFor(p, object),
     columns,
     rows: rows.slice(0, 60),
     row_count: p.row_count ?? rows.length,
