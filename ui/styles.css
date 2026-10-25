@@ -565,7 +565,7 @@ table.ans__t th.r, table.ans__t td.r { text-align: right; }
 .usl__grid { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: 0 14px; }
 table.dq { font-size: 13px; margin-bottom: 10px; }
 table.dq th.dq__grp { text-align: center; border-bottom: 1px solid var(--rule-strong); }
-.dq__live th[scope="row"]::after { content: "live"; margin-left: 6px; padding: 0 5px; border-radius: 3px; font: 700 10px/16px var(--font-body); letter-spacing: 0.05em; text-transform: uppercase; color: var(--accent); border: 1px solid var(--accent); }
+.dq__live th[scope="row"]::after { content: "in this run"; display: inline-block; white-space: nowrap; margin-left: 6px; padding: 0 5px; border-radius: 3px; font: 700 11px/16px var(--font-body); letter-spacing: 0.05em; text-transform: uppercase; color: var(--accent); border: 1px solid var(--accent); }
 .panel--alert-soft { border-color: var(--mid-edge); box-shadow: inset 4px 0 0 var(--mid-edge); }
 .inv__words { font-size: 14px; line-height: 1.5; }
 .erd { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 10px; }
