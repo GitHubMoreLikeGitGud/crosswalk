@@ -95,7 +95,7 @@
       "status": "verified",
       "requires": ["cw_fema", "cw_stations", "cw_sec", "cw_dns", "cw_seeds"],
       "hosts": [],
-      "summary": "USL crosswalk_usl in lightning.metastore.crosswalk: state, sic_code, utility, utility_state, fema_declaration, station, revenue_quarter with PK/FK and descriptions, each activated from a cached view (51 / 1,005 / 43 / 97 / 116 / 56 / 133 rows); RUN DQ per FK: utility.sic 43 / 42 / 1 (MGE Energy, SIC 4900 absent from company_dns), utility_state.cik 97 / 97 / 0, utility_state.state 97 / 97 / 0, fema_declaration.state 116 / 116 / 0, station.state 56 / 56 / 0 (2026-10-25); weather_quarter not in the model (no GHCN parquet registered on Day 0)",
+      "summary": "USL crosswalk_usl in lightning.metastore.crosswalk: state, sic_code, utility, utility_state, fema_declaration, station, revenue_quarter with PK/FK and descriptions, each activated from a cached view (51 / 1,005 / 43 / 97 / 116 / 56 / 133 rows); RUN DQ per FK: utility.sic 43 / 42 / 1 (MGE Energy, SIC 4900 absent from company_dns), utility_state.cik 97 / 97 / 0, utility_state.state 97 / 97 / 0, fema_declaration.state 116 / 116 / 0, station.state 56 / 56 / 0, revenue_quarter.cik 133 / 133 / 0 on a second run after one refused SEC connection (2026-10-25); weather_quarter not in the model (no GHCN parquet registered on Day 0)",
       "objects": {
         "namespace": "lightning.metastore.crosswalk",
         "usl": "lightning.metastore.crosswalk.crosswalk_usl",
