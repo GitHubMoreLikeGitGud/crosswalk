@@ -25,6 +25,8 @@ export interface JoinRowIn {
   left: string;
   right: string;
   transform: string;
+  /** Recorded by the loop since Day 2 (D18): the side the transform is applied to. */
+  transform_on?: "left" | "right";
   proposed_by?: string[];
   status?: string;
   left_rows?: number | null;

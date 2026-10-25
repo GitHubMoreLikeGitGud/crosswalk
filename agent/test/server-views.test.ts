@@ -34,6 +34,11 @@ describe("ops/joinmap", () => {
     expect(b?.other.objects).toEqual(["cw.inventory"]);
     const c = sourcesOf("SELECT COUNT(DISTINCT l.cik) AS left_keys FROM (SELECT DISTINCT cik, SUBSTR(loc, 4, 2) AS s FROM cw.frames_a) l JOIN cw.seed_x r ON r.cik = l.cik");
     expect(c?.counted.objects).toEqual(["cw.frames_a"]);
+    // The generic match_rate statement (C1 matchRateSql shape): aliases inside the subqueries too.
+    const d = sourcesOf("SELECT COUNT(DISTINCT l.k) AS left_keys, COUNT(DISTINCT CASE WHEN r.k IS NOT NULL THEN l.k END) AS matched_keys FROM (SELECT DISTINCT LPAD(CAST(l.`cik` AS STRING), 10, '0') AS k FROM cw.frames_a l WHERE LPAD(CAST(l.`cik` AS STRING), 10, '0') IS NOT NULL) l LEFT JOIN (SELECT DISTINCT CAST(r.`cik` AS STRING) AS k FROM cw.seed_x r) r ON r.k = l.k");
+    expect(d?.counted.objects).toEqual(["cw.frames_a"]);
+    expect(d?.other.objects).toEqual(["cw.seed_x"]);
+    expect(canonicalRow({ key: "m1", left: "cw.frames_a.cik", right: "cw.seed_x.cik", transform: "lpad10", sql: d ? "SELECT COUNT(DISTINCT l.k) AS left_keys FROM (SELECT DISTINCT LPAD(CAST(l.`cik` AS STRING), 10, '0') AS k FROM cw.frames_a l) l LEFT JOIN (SELECT DISTINCT CAST(r.`cik` AS STRING) AS k FROM cw.seed_x r) r ON r.k = l.k" : null })).toMatchObject({ orientation: "as_recorded", transform_applies_to: "left" });
     expect(sourcesOf("SELECT 1")).toBeNull();
     expect(sourcesOf(null)).toBeNull();
   });
@@ -44,6 +49,10 @@ describe("ops/joinmap", () => {
     expect(swapped).toMatchObject({ orientation: "swapped", left: { object: "cw.seed_x", column: "cik" }, right: { object: "cw.frames_a", column: "cik" }, transform_applies_to: "right" });
     const kept = canonicalRow({ key: "cik@P", left: "cw.seed_x.cik", right: "cw.frames_a.cik", transform: "lpad10", sql });
     expect(kept.orientation).toBe("as_recorded");
+    // The statement does not show the function: the loop's transform_on is used, read through the swap.
+    const plain = COUNTS("(SELECT DISTINCT code AS k FROM cw.seed_x)", "(SELECT DISTINCT code AS k FROM cw.ref)");
+    expect(canonicalRow({ key: "c@all", left: "cw.ref.code", right: "cw.seed_x.code", transform: "upper", transform_on: "left", sql: plain })).toMatchObject({ orientation: "swapped", transform_applies_to: "right" });
+    expect(canonicalRow({ key: "c@all", left: "cw.seed_x.code", right: "cw.ref.code", transform: "identity", transform_on: "left", sql: plain }).transform_applies_to).toBeNull();
     const unread = canonicalRow({ key: "x@all", left: "cw.a.x", right: "cw.b.y", transform: "identity", sql: null, status: "unmeasurable" });
     expect(unread).toMatchObject({ orientation: "unread", left: { ref: "cw.a.x" }, verdict: null, verdict_definition: null, provenance: "not measured (unmeasurable)" });
   });

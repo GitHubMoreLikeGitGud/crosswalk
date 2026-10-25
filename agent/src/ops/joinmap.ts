@@ -180,6 +180,10 @@ export function canonicalRow(r: JoinRowIn): JoinMapRowView {
     }
     if (orientation !== "unread") applies = transformSide(r.transform, src.counted, src.other);
   }
+  // A statement that does not show the transform's function: the loop's own record, read through the swap.
+  if (applies === null && r.transform_on && r.transform !== "identity" && orientation !== "unread") {
+    applies = orientation === "swapped" ? (r.transform_on === "left" ? "right" : "left") : r.transform_on;
+  }
   const verdict = r.verdict ?? null;
   const recalled = !!r.from_memory;
   const measuredAs = r.measured_as ?? null;
