@@ -5,7 +5,8 @@
 //     `known_to_fail` source becomes a negative memory (low confidence, tagged);
 //   - every `known_to_fail/ISSUE*.md` in that repository, mined with the reference's
 //     model-free path (deterministic at boot; no model time);
-//   - Crosswalk's own measured source findings (below), each with the gate that measured it.
+//   - Crosswalk's Day-0 PRECHECKS (below), each with the gate that measured it, tagged `prior`;
+//   - every known_to_fail entry of seeds/catalogue.json as a negative memory.
 // Every memory carries provenance origin "document" and refs [file, sha256]. Seeding is
 // idempotent: a document whose sha256 is already recorded in seed.json is skipped.
 // Run it directly (from agent/): npx tsx src/memory/seed.ts
@@ -15,10 +16,10 @@ import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import path from "node:path";
 import { createHash } from "node:crypto";
 import { pathToFileURL } from "node:url";
-import { loadConfig } from "../config.ts";
+import { loadConfig, REPO_ROOT } from "../config.ts";
 import { openMemory, type HMEM } from "./hmemFacade.ts";
 
-export type SourceTag = "sec" | "noaa" | "zetaris" | "company_dns";
+export type SourceTag = "fema" | "sec" | "noaa" | "zetaris" | "company_dns" | "joinmap" | "usl" | "catalogue";
 
 export interface SourceFinding {
   id: string;
@@ -29,101 +30,25 @@ export interface SourceFinding {
   refs: string[];
 }
 
-/** Measured on Day 0 and Day 1 (24 Oct 2026) against the live sources and the local Zetaris. */
+/**
+ * The Day-0 PRECHECKS (DAY0-VERDICT and JOINMAP-DAY0, re-measured 25 Oct 2026): PRIOR facts, tagged
+ * `prior`. They are what the team measured before any agent run, never this run's measurements: the
+ * run's join map comes from measure_key, and the note quotes only the run's own tool outputs.
+ */
 export const SOURCE_FINDINGS: readonly SourceFinding[] = [
-  {
-    id: "noaa-by-station-stale",
-    source: "noaa",
-    text: "The GHCN-Daily by_station CSVs on the public bucket were last modified 2025-02-09, while the parquet by_year partitions (YEAR=2025/ELEMENT=TMAX, 9 files, 14.9 MB) were current on 2026-10-24; Crosswalk reads the parquet by_year partitions only.",
-    label: "Day-0 prechecks, measured 2026-10-24",
-    refs: ["PRECHECKS", "zetaris/sql/04_won_ghcn_create.sql"],
-  },
-  {
-    id: "noaa-filestore-9s",
-    source: "noaa",
-    text: "Any read of a Zetaris filestore table pays about 9 s per table per view level in Zetaris's own resolution (Spark itself runs the cached scan in under a second); the two-view degree-day join takes about 19 s for any station list, so weather_quarter is called once per (year, quarter) with every station in one list.",
-    label: "Day-0 gate G2, measured 2026-10-24",
-    refs: ["gate:G2", "zetaris/README.md"],
-  },
-  {
-    id: "noaa-q-flag",
-    source: "noaa",
-    text: "Degree days drop a day when either TMAX or TMIN carries a non-empty Q_FLAG; days_observed over days_in_quarter is the coverage, and a utility's coverage is the minimum over its stations and then over the two quarters.",
-    label: "SPEC section 11 item 8",
-    refs: ["agent/src/tools/degreeDays.ts"],
-  },
-  {
-    id: "sec-frames-latest-filing",
-    source: "sec",
-    text: "The SEC frames endpoint serves the most recently filed fact for a period: on 2026-10-24 the CY2025Q1 values came from the 2026 10-Q comparative columns, so the like-for-like step reads the current filing's value through companyconcept and uses the frames for probing and peers only.",
-    label: "Lane S demo pick, measured 2026-10-24",
-    refs: ["docs/demo-case.md", "agent/src/tools/recast.ts"],
-  },
-  {
-    id: "sec-frames-val-type",
-    source: "sec",
-    text: "frames val is inferred double for some periods and bigint for others (CY2025Q1 double, CY2025Q2 bigint); the gateway casts it to DOUBLE and joins on LPAD(CAST(cik AS STRING), 10, '0').",
-    label: "Day-0 gate G3, measured 2026-10-24",
-    refs: ["gate:G3", "gateway/templates.py"],
-  },
-  {
-    id: "sec-ruor-filers",
-    source: "sec",
-    text: "Duke Energy and Xcel Energy report quarterly revenue only under RegulatedAndUnregulatedOperatingRevenue (20 facts in CY2025Q1), so peers pool across the three tags, each peer with its own first available tag.",
-    label: "Day-0 gate G3 and lane S, measured 2026-10-24",
-    refs: ["gate:G3", "SPEC:11.2"],
-  },
-  {
-    id: "sec-entergy-tag-switch",
-    source: "sec",
-    text: "Entergy's CY2024Q1 Revenues fact exists only in the 2025 filing; the 2024 filing reported the same value under RevenueFromContractWithCustomerExcludingAssessedTax, so a comparative-only history under one tag can be a tag switch, not a recast.",
-    label: "Day-0 gate G4, measured 2026-10-24",
-    refs: ["gate:G4", "SPEC:11.5"],
-  },
-  {
-    id: "sec-fair-access",
-    source: "sec",
-    text: "SEC EDGAR fair access: at most 10 requests per second with a declared User-Agent; the gateway spaces statements that name data.sec.gov at 0.1 s and fills the User-Agent on the wire only.",
-    label: "gateway/run_sql.py and gateway/jdbc.py",
-    refs: ["gateway/run_sql.py"],
-  },
-  {
-    id: "zetaris-concept-row-cap",
-    source: "zetaris",
-    text: "The gateway caps a reply at 200 rows; concept_history is cut for long histories (AEP Revenues holds 304 facts), so get_revenue reads concept_window(cik10, tag, year), the facts whose period ends in the year or the year before.",
-    label: "Day-1 agent lane, measured 2026-10-24",
-    refs: ["gateway/templates.py"],
-  },
-  {
-    id: "zetaris-dq-minutes",
-    source: "zetaris",
-    text: "On the USL weather_quarter table RUN DQ coverage_ok took 361 to 557 s, SHOW DQ INVALID RECORD coverage_ok 181 s and SHOW DQ ALL INVALID did not return within 900 s; the per-question DQ gate reads the onboarding result in data/dq/latest.json plus the coverage column of its own weather_quarter result.",
-    label: "Day-0 gate G6 and Day-1 Z2, measured 2026-10-24",
-    refs: ["gate:G6", "scripts/dq_onboard.py"],
-  },
-  {
-    id: "zetaris-no-if-not-exists",
-    source: "zetaris",
-    text: "CREATE LIGHTNING DATABASE IF NOT EXISTS is a parse error on Zetaris 2.4.3.1; the registrar plans treat an 'already exists' error on a CREATE as done and only re-cache.",
-    label: "Day-0 gate G3, measured 2026-10-24",
-    refs: ["gate:G3", "gateway/registrar.py"],
-  },
-  {
-    id: "zetaris-concurrent-filestore",
-    source: "zetaris",
-    text: "Two GHCN filestore queries at the same time slow each other (61.9 s and a 60 s gateway timeout observed); the agent serialises its two weather_quarter calls and never runs the onboarding DQ pass during a question.",
-    label: "Day-1 hygiene lane, measured 2026-10-24",
-    refs: ["HYGIENE-RESULTS"],
-  },
-  {
-    id: "dns-sic-4900-absent",
-    source: "company_dns",
-    text: "company_dns V4 lists 1,005 SIC codes and has no code 4900; MGE Energy (SIC 4900) fails the USL utility foreign-key rule and is outside the peer SIC set 4911, 4931, 4932.",
-    label: "Day-1 Z2 RUN DQ, measured 2026-10-24",
-    refs: ["zetaris/README.md"],
-  },
+  { id: "prior-fema-2025q1", source: "fema", text: "Prior (Day-0 precheck): the OpenFEMA Q1-2025 major-disaster (DR) filter returns 116 designated-area rows, 10 declarations, 8 states (AK CA KY MO OK OR SC WV); metadata.count is not a row count.", label: "Day-0 gate G1, measured 2026-10-25 (prior)", refs: ["gate:G1", "zetaris/sql/01_cw_fema_create.sql"] },
+  { id: "prior-stations", source: "noaa", text: "Prior (Day-0 precheck): ghcnd-stations.txt registered as a one-column CSV with delimiter '|' has 133,039 rows; the 56 seed stations are all present with equal states; any cw.stations read costs 7-9 s of filestore resolution.", label: "Day-0 gate G2, measured 2026-10-25 (prior)", refs: ["gate:G2"] },
+  { id: "prior-key-cik", source: "joinmap", text: "Prior (Day-0 precheck): seed submissions cik vs frames cik under lpad10 matched 42 of 43 (VERIFIED), orphan IDACORP 0001057877 with no CY2025Q1 fact; without LPAD the control matched 0 of 43 (REJECTED).", label: "JOINMAP-DAY0 key (a), measured 2026-10-25 (prior)", refs: ["gate:G3", "zetaris/sql/06_cw_joinmap_select.sql"] },
+  { id: "prior-key-loc", source: "joinmap", text: "Prior (Day-0 precheck): frames loc under substr(4,2) vs the submissions business-address state matched 42 of 42 seed filers present in CY2025Q1 (VERIFIED).", label: "JOINMAP-DAY0 key (b), measured 2026-10-25 (prior)", refs: ["gate:G3"] },
+  { id: "prior-key-fema-state", source: "joinmap", text: "Prior (Day-0 precheck): FEMA state vs the seed utilities' served states matched 7 of 8 (PARTIAL), orphan AK (no seed utility serves Alaska); FEMA fipsStateCode vs the state reference matched 8 of 8.", label: "JOINMAP-DAY0 key (c), measured 2026-10-25 (prior)", refs: ["gate:G3"] },
+  { id: "prior-key-station", source: "joinmap", text: "Prior (Day-0 precheck): seed station id vs the GHCN inventory matched 56 of 56 with 56 states equal (VERIFIED).", label: "JOINMAP-DAY0 key (d), measured 2026-10-25 (prior)", refs: ["gate:G3"] },
+  { id: "prior-key-sic", source: "joinmap", text: "Prior (Day-0 precheck): submissions SIC vs company_dns sic_codes matched 42 of 43 utilities (VERIFIED by rows, D1) and 3 of 4 distinct codes; orphan MGE Energy, SIC 4900.", label: "JOINMAP-DAY0 key (e), measured 2026-10-25 (prior)", refs: ["gate:G3", "SPEC:D1"] },
+  { id: "prior-usl-dq", source: "usl", text: "Prior (Day-0 precheck): the governed USL lightning.metastore.crosswalk.crosswalk_usl has 7 tables and 6 FK rules, activated from cached views; RUN DQ utility.sic gives 1 invalid row (MGE Energy) in about 150 s, the other five FK rules 0 invalid; DQ runs only on the onboarding path.", label: "Day-0 gate G4, measured 2026-10-25 (prior)", refs: ["gate:G4", "SPEC:D2", "SPEC:D6"] },
+  { id: "zetaris-seed-utilities-17s", source: "zetaris", text: "Any statement that reads cw.seed_utilities costs about 17 s even though it is cached (the 43 submission views behind it are resolved on every read); the answer path reads cw.seed_utility_names instead.", label: "Day-0 lane V timings, measured 2026-10-25", refs: ["SPEC:D5"] },
+  { id: "zetaris-view-once", source: "zetaris", text: "On Lightning 2.4.3.1 a view may be referenced only once per statement; a second reference fails with MISSING_ATTRIBUTES.RESOLVED_ATTRIBUTE_APPEAR_IN_OPERATION.", label: "Day-0 lane Z, measured 2026-10-25", refs: ["SPEC:D11"] },
+  { id: "sec-frames-tags", source: "sec", text: "Quarterly revenue in SEC frames sits under one of three tags (Revenues, RevenueFromContractWithCustomerExcludingAssessedTax, RegulatedAndUnregulatedOperatingRevenue); each utility uses its first available tag, and a year-earlier value under a different tag is named, not compared.", label: "Day-0 lane Z and the sister entry, measured 2026-10-25", refs: ["gateway/templates.py"] },
+  { id: "noaa-ghcn-years", source: "noaa", text: "GHCN-Daily parquet by_year is registered for 2024 and 2025 (TMAX, TMIN, 57 stations each, about 55 s per registration); weather for a quarter needs both its year and the year before.", label: "Day-1 lane G, measured 2026-10-25", refs: ["zetaris/sql/09_cw_ghcn_create.sql"] },
 ];
-
 export interface SeedDocReport {
   file: string;
   sha12: string;
@@ -156,6 +81,8 @@ function findIssues(dir: string, out: string[] = []): string[] {
 export interface SeedOptions {
   /** Root of the Zetaris getting-started repository (env ZETARIS_GETTING_STARTED_DIR). */
   gettingStartedDir?: string | null;
+  /** Repository root holding seeds/catalogue.json (default: this repository). */
+  repoRoot?: string;
   log?: (line: string) => void;
 }
 
@@ -262,7 +189,7 @@ export async function seedMemory(hmem: HMEM, opts: SeedOptions = {}): Promise<Se
           content: f.text,
           type: "factual",
           layer: "long_term",
-          tags: ["kind:source_note", `finding:${f.id}`, `source:${f.source}`],
+          tags: ["kind:source_note", `finding:${f.id}`, `source:${f.source}`, ...(f.id.startsWith("prior-") ? ["prior"] : [])],
           confidence: 0.85,
           source: "document:crosswalk-source-findings",
           provenance: { origin: "document", learnedAt: hmem.clock(), label: f.label, refs: f.refs },
@@ -272,6 +199,43 @@ export async function seedMemory(hmem: HMEM, opts: SeedOptions = {}): Promise<Se
     hmem.markSeeded(fkey, { sha12: fsha, memoryIds: ids, via: "listed" });
     reports.push({ file: fkey, sha12: fsha, via: "listed", memories: ids.length, skipped: false, wallMs: 0 });
     log(`  ${fkey}: ${ids.length} findings`);
+  }
+
+  // 4. seeds/catalogue.json: every known_to_fail entry is a negative memory ("pudl: known_to_fail, <reason>").
+  const catFile = path.join(opts.repoRoot ?? REPO_ROOT, "seeds", "catalogue.json");
+  if (existsSync(catFile)) {
+    const text = readFileSync(catFile, "utf8").replace(/\r\n/gu, "\n");
+    const ckey = "seeds/catalogue.json#known_to_fail";
+    const csha = sha256(text).slice(0, 12);
+    if (already(ckey, csha)) {
+      reports.push({ file: ckey, sha12: csha, via: "parsed", memories: seeded[ckey]!.memoryIds.length, skipped: true, wallMs: 0 });
+    } else {
+      const entries = ((JSON.parse(text) as { entries?: { id: string; status?: string; note?: string; verified_how?: string; kind?: string }[] }).entries ?? []).filter((e) => e.status === "known_to_fail");
+      const ids: string[] = [];
+      for (const e of entries) {
+        const existing = hmem.store.all().find((m) => m.tags.includes(`catalogue:${e.id}`) && m.tags.includes("negative"));
+        if (existing) {
+          ids.push(existing.id);
+          continue;
+        }
+        ids.push(
+          hmem.add({
+            content: `${e.id}: known_to_fail, ${(e.note ?? e.verified_how ?? "marked known_to_fail in the catalogue").trim()}`,
+            type: "factual",
+            layer: "long_term",
+            tags: ["document", "negative", "known_to_fail", "source:catalogue", `catalogue:${e.id}`],
+            confidence: 0.3,
+            source: "document:seeds/catalogue.json",
+            provenance: { origin: "document", learnedAt: hmem.clock(), label: "parsed from seeds/catalogue.json (known_to_fail: a negative memory)", refs: ["seeds/catalogue.json", sha256(text)] },
+          }).id,
+        );
+      }
+      hmem.markSeeded(ckey, { sha12: csha, memoryIds: ids, via: "parsed" });
+      reports.push({ file: ckey, sha12: csha, via: "parsed", memories: ids.length, skipped: false, wallMs: 0 });
+      log(`  ${ckey}: ${ids.length} negative memories`);
+    }
+  } else {
+    missing.push("seeds/catalogue.json");
   }
 
   return { documents: reports, missing, totalMemories: hmem.store.all().length };
