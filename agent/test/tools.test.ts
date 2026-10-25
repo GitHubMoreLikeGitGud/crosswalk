@@ -1,349 +1,201 @@
-// The tool chain against a mocked gateway: a deterministic run (no model, every step is the
-// fallback) must complete the checklist, record evidence with every required field, build the
-// peer set and the attribution, record the recast conflicts, remember the tag for a warm run,
-// and ingest a World Model that a second run does not change.
-import { mkdtempSync, writeFileSync } from "node:fs";
-import os from "node:os";
-import path from "node:path";
+// The discovery-loop registry (agent/src/loop/tools.ts) driven by the deterministic fallback alone, over a fake
+// gateway with synthetic replies (made-up CIKs, station ids and values): every checklist item resolves, the
+// baseline's keys are measured through the join-map templates, the onboarding-only DQ templates are refused on
+// the question path, and the planner's choices are checked and scored.
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { EvidenceStore, missingFields } from "../src/evidence/store.ts";
-import { investigate, type RunResult } from "../src/loop/investigate.ts";
-import { memoMaterial, newQuestionContext, NOT_TESTED, runTool, toolDef, type ToolDeps } from "../src/loop/tools.ts";
-import { HMEM } from "../src/memory/hmemFacade.ts";
-import { unknownNumbers } from "../src/llm/memo.ts";
-import { attribute } from "../src/tools/attribution.ts";
-import { WeatherWorld } from "../src/world/world.ts";
-import { fakeGateway, type FakeGateway } from "./helpers/fakeGateway.ts";
-import { EXPECTED_PEERS, PERIOD, syntheticResolver, syntheticSeeds, TARGET, TARGET_DW, TARGET_FACTS } from "./helpers/syntheticQuestion.ts";
+import { EvidenceStore } from "../src/evidence/store.ts";
+import { plannerSchema, validate } from "../src/llm/schemas.ts";
+import { TOOL_CATALOG } from "../src/llm/toolCatalog.ts";
+import { allowedTools, completeInput, fallbackStep, newQuestionContext, questionPort, runTool, toolDef, type KeyMemoryPort, type RegistrarPort, type ToolDeps } from "../src/loop/tools.ts";
+import { loadSeeds } from "../src/seeds.ts";
+import type { MeasureResult } from "../src/tools/discovery.ts";
+import type { RegistrarResult } from "../src/zetaris/client.ts";
+import { fakeGateway, type Reply } from "./helpers/fakeGateway.ts";
 
-let clockMs = 1_700_000_000_000;
-const clock = () => (clockMs += 1000);
+const repo = new URL("../../", import.meta.url);
+const manifest = JSON.parse(readFileSync(new URL("zetaris/manifest.json", repo), "utf8"));
+const NOW = new Date("2026-10-25T12:00:00+08:00");
+const Q = "CY2025Q1";
 
-function dqFile(invalid: Record<string, unknown>[] = []): string {
-  const dir = mkdtempSync(path.join(os.tmpdir(), "cw-dq-"));
-  const file = path.join(dir, "latest.json");
-  writeFileSync(
-    file,
-    JSON.stringify({
-      ran_at: "2026-10-24T19:31:39+0800",
-      rule: "coverage_ok",
-      table: "lightning.metastore.crosswalk.crosswalk_usl.weather_quarter",
-      elapsed_s: 739.3,
-      ok: true,
-      run: { total: 342, valid: 342 - invalid.length, invalid: invalid.length },
-      invalid_rows: invalid,
-      statements: [
-        { template_id: "dq_run_coverage", sql: "RUN DQ coverage_ok TABLE t", sql_sha256: "a1", started_at: "2026-10-24T19:31:39+0800", elapsed_s: 557.2, columns: ["name"], rows: [["coverage_ok"]], row_count: 1, error: null },
-        { template_id: "dq_invalid", sql: "SHOW DQ INVALID RECORD coverage_ok TABLE t", sql_sha256: "b2", started_at: "2026-10-24T19:40:57+0800", elapsed_s: 181.7, columns: ["station_id"], rows: invalid.map((r) => [r.station_id]), row_count: invalid.length, error: null },
-      ],
-    }),
-  );
-  return file;
-}
+const S = (n: string) => ({ name: n, type: "string" });
+const SHAPES: Record<string, { cols: { name: string; type: string }[]; rows: unknown[][]; distinct: Record<string, [number, number]> }> = {
+  "cw.seed_utilities": { cols: ["cik", "name", "ticker", "sic", "hq_state"].map(S), rows: [["0009000001", "SYN A", "SA", "4911", "CA"], ["0009000002", "SYN B", null, "4900", "OH"]], distinct: { cik: [43, 43], sic: [43, 4], hq_state: [43, 30] } },
+  "cw.frames_revenues_cy2025q1": { cols: [{ name: "cik", type: "bigint" }, S("entityName"), S("loc"), S("accn"), { name: "val", type: "double" }], rows: [[9000001, "SYN A", "US-CA", "x", 1], [12345, "SYN Z", "US-NY", "y", 2]], distinct: { cik: [1900, 1900], loc: [1900, 55] } },
+  "cw.fema_declarations_dr_2025q1": { cols: ["disaster_number", "state", "incident_type", "fips_state_code"].map(S), rows: [["9001", "KY", "Flood", "21"], ["9002", "AK", "Fire", "02"]], distinct: { state: [116, 8], disaster_number: [116, 10], fips_state_code: [116, 8] } },
+  "cw.utility_states": { cols: ["cik", "state"].map(S), rows: [["0009000001", "CA"], ["0009000002", "OH"]], distinct: { cik: [97, 43], state: [97, 43] } },
+  "cw.states": { cols: ["code", "name", "fips"].map(S), rows: [["CA", "California", "06"], ["OH", "Ohio", "39"]], distinct: { code: [51, 51], fips: [51, 51] } },
+  "cw.seed_stations": { cols: ["id", "state", "name"].map(S), rows: [["USW00099001", "CA", "SYN 1"], ["USW00099002", "OH", "SYN 2"]], distinct: { state: [56, 43], id: [56, 56] } },
+  "cw.stations": { cols: [S("id"), S("state"), S("name"), { name: "latitude", type: "double" }], rows: [["USW00099001", "CA", "SYN 1", 1.5], ["CA000000001", "", "SYN 3", 2.5]], distinct: { state: [133000, 60], id: [133000, 133000] } },
+  "cw.sic_codes": { cols: ["code", "description"].map(S), rows: [["4911", "Electric"], ["4900", "x"]], distinct: { code: [1005, 1005] } },
+};
 
-interface Harness {
-  gw: FakeGateway;
-  deps: ToolDeps;
-  hmem: HMEM;
-  world: WeatherWorld;
-}
-
-function harness(opts: { registrar?: boolean; missingFrames?: Set<string>; missingConcept?: boolean; dq?: string | null; hmem?: HMEM; world?: WeatherWorld } = {}): Harness {
-  const seeds = syntheticSeeds();
-  const gw = fakeGateway(syntheticResolver(seeds, { missingFrames: opts.missingFrames, missingConcept: opts.missingConcept }));
-  const hmem = opts.hmem ?? new HMEM({ actor: "cw-agent", clock });
-  const world = opts.world ?? new WeatherWorld({ directory: null, clock: () => new Date(clock()) });
-  const deps: ToolDeps = {
-    gateway: gw.client,
-    ollama: null,
-    evidence: new EvidenceStore(`r${Math.random().toString(36).slice(2, 8)}`, null),
-    seeds,
-    hmem,
-    world,
-    dqFile: opts.dq === null ? path.join(os.tmpdir(), "cw-no-such-dq.json") : (opts.dq ?? dqFile()),
-    ...(opts.registrar
-      ? {
-          registrar: {
-            register: async (action: string, params: Record<string, string>) => {
-              gw.registered.add(`${action}:${JSON.stringify(params)}`);
-              return { action, params, contract_id: "c-test", steps: [{ template_id: `registrar_${action}_table`, kind: "register", sql: "CREATE x", sql_sha256: "s", objects: [], elapsed_ms: 3 }], skipped: [], http_status: 200, wall_ms: 9 };
-            },
-          },
-        }
-      : {}),
-  };
-  return { gw, deps, hmem, world };
-}
-
-async function run(h: Harness): Promise<RunResult> {
-  return investigate({ cik: TARGET, period: PERIOD, claim: "colder weather", historyDir: null }, h.deps);
-}
-
-describe("the tool chain on the synthetic question (no model: every step is the deterministic fallback)", () => {
-  it("completes the checklist with the expected peers, growth, weather, attribution and verdict", async () => {
-    const h = harness();
-    const r = await run(h);
-    expect(r.checklist_complete).toBe(true);
-    expect(r.markovian.status).toBe("completed");
-    expect(r.timeline.map((t) => t.tool)).toEqual(["resolve_utility", "probe_revenue_tag", "get_revenue", "get_peers", "get_weather", "dq_gate", "attribute", "not_tested", "finalize"]);
-    expect(r.timeline.every((t) => t.source === "fallback" && t.ok)).toBe(true);
-    expect(r.markovian.chunks).toBe(5);
-    const c = r.card;
-    expect(c.utility?.name).toBe("Target Electric Corp");
-    expect(c.growth).toMatchObject({ tag: "Revenues", rev_current: TARGET_FACTS.current.val, rev_previous: TARGET_FACTS.prevComparative.val, current_accn: TARGET_FACTS.current.accn, recast: true });
-    expect(c.growth!.g).toBeCloseTo((TARGET_FACTS.current.val - TARGET_FACTS.prevComparative.val) / TARGET_FACTS.prevComparative.val, 12);
-    expect(c.peers!.count).toBe(EXPECTED_PEERS.length);
-    expect(c.peers!.list.map((p) => p.cik).sort()).toEqual([...EXPECTED_PEERS].sort());
-    expect(c.peers!.by_tag).toEqual({ Revenues: 5, RevenueFromContractWithCustomerExcludingAssessedTax: 1, RegulatedAndUnregulatedOperatingRevenue: 1 });
-    const reasons = c.peers!.excluded.map((x) => x.reason).join("\n");
-    expect(reasons).toMatch(/Gas Nine: excluded: SIC 4900/u);
-    expect(reasons).toMatch(/Peer Ten No Current: excluded: current period missing \(no fact under any of the three tags\)/u);
-    expect(reasons).toMatch(/Peer Eleven No Previous: excluded: previous period missing \(tag Revenues\)/u);
-    expect(reasons).toMatch(/Peer Twelve Outlier: excluded: \|g\| >= 60%/u);
-    expect(c.weather!.delta_w).toBeCloseTo(TARGET_DW, 9);
-    expect(c.weather!.coverage).toBe(1);
-    expect(c.weather!.stations_used).toEqual(["USW00000001", "USW00000002"]);
-    // Two weather_quarter calls, one per quarter, each with the union of target and peer stations.
-    const wq = h.gw.calls.filter((x) => x.template_id === "weather_quarter");
-    expect(wq.map((x) => x.params.year)).toEqual(["2025", "2024"]);
-    expect(wq[0]!.params.station_list!.split(",")).toHaveLength(2 + EXPECTED_PEERS.length);
-    // The attribution equals the deterministic module on the same inputs.
-    const peers = c.peers!.list.map((p) => ({ cik: p.cik, g: p.g, dw: p.dw! }));
-    const expected = attribute({ cik: TARGET, g: c.growth!.g, dw: c.weather!.delta_w, coverage: 1 }, peers, { resamples: 300, seed: 7 });
-    expect(c.attribution!.beta).toBeCloseTo(expected.beta, 12);
-    expect(c.attribution!.weather).toBeCloseTo(expected.weather, 12);
-    expect(c.attribution!.ranges).toEqual(expected.ranges);
-    expect(c.attribution!.peers).toBe(7);
-    expect(c.verdict!.verdict).toBe(expected.claim.verdict);
-    expect(c.verdict!.confidence).toBe(expected.confidence);
-    expect(c.dq!.label).toBe("pass");
-    expect(c.dq!.basis).toBe("onboarding+coverage");
-    expect(c.not_tested).toEqual(NOT_TESTED);
-    expect(c.memo!.source).toBe("template");
-    expect(c.memo!.attempts).toBe(0);
-    expect(r.telemetry.cloud_model_calls).toBe(0);
-    expect(r.summary.planner_calls).toBe(0);
-  });
-
-  it("records every number the memo may use and the template memo uses only those", async () => {
-    const h = harness();
-    const r2 = await run(h);
-    expect(r2.card.memo!.text.length).toBeGreaterThan(100);
-    const allowed = (r2.evidence.find((e) => e.details?.tool === "memo")!.details!.allowed as { text: string }[]).map((a) => a.text);
-    expect(unknownNumbers(r2.card.memo!.text, allowed.map((text) => ({ label: "", text })))).toEqual([]);
-    expect(allowed).toContain("1,150.0");
-    expect(allowed).toContain("980.0");
-    expect(allowed).toContain("7");
-  });
-
-  it("records the recast comparative and the own-period restatement as conflicts resolved by R1, with both values in memory", async () => {
-    const h = harness();
-    const r = await run(h);
-    expect(r.card.recast_conflicts).toHaveLength(2);
-    const prev = r.card.recast_conflicts.find((c) => c.scope === "previous_period")!;
-    expect(prev).toMatchObject({ period: "CY2024Q1", chosen: "later_filing", chosen_val: TARGET_FACTS.prevComparative.val, status: "resolved_by_rule" });
-    expect(prev.own_filing.accn).toBe(TARGET_FACTS.prevOriginal.accn);
-    expect(prev.later_filing.accn).toBe(TARGET_FACTS.prevComparative.accn);
-    const cur = r.card.recast_conflicts.find((c) => c.scope === "current_period")!;
-    expect(cur).toMatchObject({ period: PERIOD, chosen: "own_filing", chosen_val: TARGET_FACTS.current.val });
-    expect(cur.later_filing.val).toBe(TARGET_FACTS.currentLater.val);
-    expect(h.hmem.store.get(prev.own_filing_memory)!.supersededBy).toBe(prev.later_filing_memory);
-    expect(h.hmem.store.get(cur.later_filing_memory)!.supersededBy).toBe(cur.own_filing_memory);
-    expect(h.hmem.why(prev.own_filing_memory).provenance?.accn).toBe(TARGET_FACTS.prevOriginal.accn);
-    expect(r.card.growth!.rev_current).toBe(TARGET_FACTS.current.val);
-    // The World Model holds the recasts edges.
-    expect(h.world.exportGraph().edgeTypes.recasts).toBe(2);
-  });
-
-  it("writes evidence with every required field and a Zetaris record per gateway call", async () => {
-    const h = harness();
-    const r = await run(h);
-    expect(r.quality.e_complete).toBe(1);
-    expect(r.quality.e_cov).toBe(1);
-    for (const e of r.evidence) expect(missingFields(e), e.id).toEqual([]);
-    const sql = r.evidence.filter((e) => e.kind === "zetaris_sql");
-    expect(sql.length).toBe(h.gw.calls.length);
-    for (const e of sql) {
-      expect(e.sql_sha256).toMatch(/^[0-9a-f]{64}$/u);
-      expect(e.params).toBeDefined();
-      expect(e.elapsed_ms).toBeGreaterThan(0);
-      expect(e.cache_state).toBe("hit");
-      expect(e.licence).toBeTruthy();
+function resolve(id: string, p: Record<string, string>): Reply | undefined {
+  const shape = p.object ? SHAPES[p.object] : undefined;
+  switch (id) {
+    case "catalogue_list":
+      return { columns: ["name", "version", "title", "api_endpoint", "last_dataset_refresh"], rows: [["DisasterDeclarationsSummaries", 2, "Disaster Declarations Summaries (synthetic)", "", "2026-10-25"]] };
+    case "describe_object":
+      return shape && { columns: ["col_name", "data_type", "comment"], rows: shape.cols.map((c) => [c.name, c.type, null]) };
+    case "sample_rows":
+      return shape && { columns: shape.cols.map((c) => c.name), rows: shape.rows };
+    case "distinct_counts": {
+      const d = shape?.distinct[p.column!];
+      return d && { columns: ["row_count", "distinct_values", "non_null", "non_null_share"], rows: [[d[0], d[1], d[0], 1]] };
     }
-    expect(r.evidence.filter((e) => e.kind === "dq")).toHaveLength(2);
-    expect(r.evidence.filter((e) => e.kind === "dq").every((e) => e.reused)).toBe(true);
+    case "joinmap_cik":
+      return { columns: ["left_keys", "matched_keys"], rows: [[43, 42]] };
+    case "joinmap_cik_orphans":
+      return { columns: ["orphan_cik", "name"], rows: [["0009000043", "SYN Q"]] };
+    case "joinmap_loc":
+      return { columns: ["left_keys", "matched_keys"], rows: [[42, 42]] };
+    case "joinmap_fema_state":
+      return { columns: ["left_keys", "matched_keys"], rows: [[8, 7]] };
+    case "joinmap_fema_state_orphans":
+      return { columns: ["orphan_state"], rows: [["AK"]] };
+    case "joinmap_station":
+      return { columns: ["left_keys", "matched_keys", "state_equal"], rows: [[56, 56, 56]] };
+    case "joinmap_sic":
+      return { columns: ["left_keys", "matched_keys", "left_rows", "matched_rows"], rows: [[4, 3, 43, 42]] };
+    case "joinmap_sic_orphans":
+      return { columns: ["orphan_sic", "cik", "name"], rows: [["4900", "0009000002", "SYN B"]] };
+    case "dq_run":
+      return { columns: ["total", "valid", "invalid"], rows: [[97, 97, 0]] };
+    case "answer_fema_utilities":
+      return { columns: ["cik", "name", "ticker", "state", "declarations", "severe_storm", "fire", "flood", "other_incidents"], rows: [["0009000001", "SYN A", "SA", "CA", 1, 0, 1, 0, 0]] };
+    case "answer_revenue":
+      return { columns: ["cik", "xbrl_tag", "val", "accn"], rows: [["0009000001", "Revenues", p.period === Q ? 110 : 100, "a"]] };
+    default:
+      return undefined;
+  }
+}
+
+function registrar(alreadyRegistered = true): RegistrarPort & { calls: { action: string; params: Record<string, string> }[] } {
+  const calls: { action: string; params: Record<string, string> }[] = [];
+  return {
+    calls,
+    async register(action, params): Promise<RegistrarResult> {
+      calls.push({ action, params });
+      return { action, params, contract_id: "c-test", steps: [{ template_id: "registrar_fema_describe", kind: "describe", sql: "DESCRIBE x", sql_sha256: "0", objects: [] }], skipped: [], already_registered: alreadyRegistered, http_status: 200, wall_ms: 9 };
+    },
+  };
+}
+
+function deps(over: Partial<ToolDeps> = {}): ToolDeps & { fake: ReturnType<typeof fakeGateway> } {
+  const fake = fakeGateway(resolve);
+  const evidence = new EvidenceStore("r-test", null);
+  return { fake, gateway: fake.client, ollama: null, evidence, seeds: loadSeeds(), registrar: registrar(), catalogue: { catalogue: JSON.parse(readFileSync(new URL("seeds/catalogue.json", repo), "utf8")), manifest, gettingStarted: null }, dqFile: "no-such-file.json", ...over };
+}
+
+async function runFallback(d: ToolDeps, ctx = newQuestionContext("Which utilities served states with FEMA major disaster declarations?", Q, d.evidence, { now: NOW, manifest })) {
+  const steps: string[] = [];
+  for (let i = 0; i < 60; i++) {
+    const s = fallbackStep(ctx, d);
+    if (!s) break;
+    steps.push(s.tool.name);
+    await runTool(s.tool, s.input, ctx, d);
+  }
+  return { ctx, steps };
+}
+
+describe("the discovery loop on the fallback alone", () => {
+  it("resolves every checklist item with the baseline's keys and cites every statement", async () => {
+    const d = deps();
+    const { ctx, steps } = await runFallback(d);
+    expect(ctx.checklist.complete()).toBe(true);
+    expect(ctx.checklist.snapshot().map((i) => [i.id, i.status])).toEqual([
+      ["sources_found", "done"], ["shapes_probed", "done"], ["keys_proposed", "done"], ["keys_measured", "done"], ["sources_registered", "done"],
+      ["usl_built", "done"], ["dq_run", "done"], ["answered", "done"], ["not_tested_listed", "done"], ["note_written", "done"],
+    ]);
+    // The question's eight source views first; the search adds the registered views it ranked (here one more, which the fake cannot describe).
+    expect(ctx.targets.slice(0, 8)).toEqual(["cw.seed_utilities", "cw.frames_Revenues_CY2025Q1", "cw.fema_declarations_dr_2025q1", "cw.utility_states", "cw.states", "cw.seed_stations", "cw.stations", "cw.sic_codes"]);
+    expect(steps.filter((s) => s === "probe_source")).toHaveLength(ctx.targets.length);
+    expect(ctx.probes.size).toBe(8);
+    expect(steps.filter((s) => s === "measure_key")).toHaveLength(5);
+    expect(ctx.proposals.proposedBy).toBe("baseline");
+    expect([...ctx.measured.keys()].sort()).toEqual(["cik@CY2025Q1", "fema_state@CY2025Q1", "loc@CY2025Q1", "sic@all", "station@all"]);
+    expect(ctx.measured.get("fema_state@CY2025Q1")!.verdict).toBe("PARTIAL");
+    expect(ctx.measured.get("sic@all")!.rate_distinct).toBe(0.75);
+    expect(ctx.usl!.matches_governed).toBe(true);
+    expect(ctx.registrations.map((r) => [r.object, r.status])).toEqual([["cw.fema_declarations_dr_2025q1", "already_registered"]]);
+    expect(ctx.answer!.rows[0]!.revenue!.change).toBeCloseTo(0.1, 12);
+    expect(ctx.notTested.at(-1)).toMatch(/^Weather/u);
+    expect(ctx.comparison!.baseline).toMatchObject({ proposals: 6, verified: 4 });
+    expect(ctx.comparison!.planner.proposals).toBe(0);
+    const probed = d.fake.calls.filter((c) => c.template_id === "describe_object").map((c) => c.params.object);
+    expect(probed).toContain("cw.frames_revenues_cy2025q1");
+    expect(d.fake.calls.filter((c) => c.template_id === "dq_run").map((c) => c.params.rule)).toEqual(["fema_declaration.state", "utility_state.state"]);
+    const sql = d.evidence.all().filter((e) => e.kind === "zetaris_sql");
+    // One evidence record per statement that answered (the fake has no reply for the extra view and for the optional row-count read).
+    expect(sql.length).toBe(d.fake.calls.filter((c) => resolve(c.template_id, c.params) !== undefined).length);
+    expect(sql.every((e) => (e.sql ?? "").length > 0 && e.run_id === "r-test")).toBe(true);
+    expect(ctx.startedAt).toBe(NOW.toISOString());
   });
 
-  it("remembers the tag so a second run skips the probe step and re-ingests the World Model without a new event", async () => {
-    const h = harness();
-    const r1 = await run(h);
-    expect(r1.skipped_steps).toEqual([]);
-    expect(h.gw.calls.filter((x) => x.template_id === "frames_fact")).toHaveLength(1);
-    const events = h.world.eventCount();
-    const h2 = harness({ hmem: h.hmem, world: h.world });
-    const r2 = await run(h2);
-    expect(r2.skipped_steps).toHaveLength(1);
-    expect(r2.skipped_steps[0]).toMatchObject({ item: "tag_chosen" });
-    expect(r2.timeline.map((t) => t.tool)).toEqual(["resolve_utility", "get_revenue", "get_peers", "get_weather", "dq_gate", "attribute", "not_tested", "finalize"]);
-    expect(r2.markovian.chunks).toBe(4);
-    expect(h2.gw.calls.filter((x) => x.template_id === "frames_fact")).toHaveLength(0);
-    expect(r2.evidence.filter((e) => e.kind === "memory")).toHaveLength(1);
-    expect(h.world.eventCount()).toBe(events);
-    expect(r2.card.recast_conflicts).toHaveLength(2);
-    expect(h.hmem.recasts.all()).toHaveLength(2);
-    expect(r2.memory!.conflicts).toBe(2);
-  });
-
-  it("get_revenue honours an analyst override: the overridden conflict's chosen_val replaces R1's value and growth is recomputed (D4)", async () => {
-    const h = harness();
-    const r1 = await run(h);
-    const cur = r1.card.recast_conflicts.find((c) => c.scope === "current_period")!;
-    expect(r1.card.growth!.rev_current).toBe(TARGET_FACTS.current.val);
-    h.hmem.recasts.override(cur.id, { chosen: "later_filing", reason: "the later filing corrected a booking error", by: "analyst", contractId: "c-test-override" });
-    const h2 = harness({ hmem: h.hmem, world: h.world });
-    const r2 = await run(h2);
-    const g = r2.card.growth!;
-    expect(g.rev_current).toBe(TARGET_FACTS.currentLater.val);
-    expect(g.rev_previous).toBe(TARGET_FACTS.prevComparative.val);
-    expect(g.g).toBeCloseTo((TARGET_FACTS.currentLater.val - TARGET_FACTS.prevComparative.val) / TARGET_FACTS.prevComparative.val, 12);
-    const conflict = r2.card.recast_conflicts.find((c) => c.id === cur.id)!;
-    expect(conflict).toMatchObject({ status: "overridden", chosen: "later_filing", chosen_val: TARGET_FACTS.currentLater.val });
-    expect(conflict.override).toMatchObject({ by: "analyst", contract_id: "c-test-override" });
-    const ov = r2.evidence.find((e) => e.details?.tool === "override_recast")!;
-    expect(ov.claim).toContain(cur.id);
-    expect(ov.claim).toContain("c-test-override");
-    expect(ov.details).toMatchObject({ conflict_id: cur.id, chosen: "later_filing", chosen_val: TARGET_FACTS.currentLater.val, growth_rule_r1: r1.card.growth!.g, growth_overridden: g.g });
-    expect(r2.card.claims.some((c) => c.evidenceIds.includes(ov.id))).toBe(true);
-    // The attribution and the memo material follow the overridden growth.
-    expect(r2.evidence.find((e) => e.details?.tool === "attribution")!.claim).toContain(`of g ${((g.g >= 0 ? "+" : "") + (g.g * 100).toFixed(1))}%`);
-    const memoDetails = r2.evidence.find((e) => e.details?.tool === "memo")!.details!;
-    const allowed = (memoDetails.allowed as { text: string }[]).map((a) => a.text);
-    expect(allowed).toContain("1,149.0");
-    // The conflict finding names R1's value and the analyst's value, not the overridden value twice.
-    expect((memoDetails.findings as string[]).find((f) => f.includes("overridden by the analyst"))).toContain("rule R1 keeps 1,150.0 million, overridden by the analyst to 1,149.0 million");
-    // The previous-period conflict was not overridden and still follows R1.
-    expect(r2.card.recast_conflicts.find((c) => c.scope === "previous_period")!.status).toBe("resolved_by_rule");
-    expect(h.hmem.recasts.all()).toHaveLength(2);
-  });
-
-  it("withholds the verdict when an invalid coverage row names one of the utility's stations", async () => {
-    const h = harness({ dq: dqFile([{ station_id: "USW00000002", year: 2024, quarter: 1, coverage: 0.85 }]) });
-    const r = await run(h);
-    expect(r.card.dq!.label).toBe("withheld");
-    expect(r.card.dq!.invalidForTarget).toHaveLength(1);
-    expect(r.card.verdict!.verdict).toBe("withheld");
-    expect(r.card.verdict!.withheld_reason).toMatch(/DQ gate/u);
-    expect(r.card.attribution).not.toBeNull();
-    expect(r.checklist_complete).toBe(true);
-  });
-
-  it("passes on the coverage column alone when the onboarding file is missing, and says so", async () => {
-    const h = harness({ dq: null });
-    const r = await run(h);
-    expect(r.card.dq!.label).toBe("pass");
-    expect(r.card.dq!.basis).toBe("coverage only");
-    expect(r.card.gaps.join("\n")).toMatch(/no DQ onboarding result/u);
-    expect(r.evidence.filter((e) => e.kind === "dq")).toHaveLength(0);
-  });
-
-  it("registers a missing frames period through the registrar, then probes again", async () => {
-    const h = harness({ registrar: true, missingFrames: new Set(["Revenues|CY2025Q1"]) });
-    // The fake resolver keeps reporting the period missing, so the chain registers it once, then the probe falls through to the next tags.
-    const r = await run(h);
-    const tools = r.timeline.map((t) => t.tool);
-    expect(tools.slice(0, 3)).toEqual(["resolve_utility", "probe_revenue_tag", "register_frames"]);
-    expect(r.evidence.some((e) => e.kind === "registrar" && e.claim.includes("register_frames"))).toBe(true);
-    expect(h.gw.registered.has('register_frames:{"tag":"Revenues","period":"CY2025Q1"}')).toBe(true);
-  });
-
-  it("without a registrar, a missing frames period ends the tag probe as failed and the card says why", async () => {
-    const h = harness({ missingFrames: new Set(["Revenues|CY2025Q1", "RevenueFromContractWithCustomerExcludingAssessedTax|CY2025Q1", "RegulatedAndUnregulatedOperatingRevenue|CY2025Q1"]) });
-    const r = await run(h);
-    expect(r.checklist.find((i) => i.id === "tag_chosen")!.status).toBe("failed");
-    expect(r.checklist.find((i) => i.id === "revenue_like_for_like")!.status).toBe("na");
-    expect(r.card.verdict!.verdict).toBe("withheld");
-    expect(r.card.memo).not.toBeNull();
-    expect(r.checklist_complete).toBe(true);
-  });
-
-  it("registers a missing companyconcept view inside get_revenue when a registrar is wired", async () => {
-    const h = harness({ registrar: true });
-    const ctx = newQuestionContext(TARGET, PERIOD, "x", h.deps.evidence);
-    await runTool(toolDef("resolve_utility")!, {}, ctx, h.deps);
-    await runTool(toolDef("probe_revenue_tag")!, {}, ctx, h.deps);
-    // Switch the gateway to a resolver that reports the concept view missing on the first read only.
-    let first = true;
-    const seeds = syntheticSeeds();
-    const base = syntheticResolver(seeds);
-    const gw = fakeGateway((t, p) => {
-      if (t === "concept_window" && first) {
-        first = false;
-        return { error: "TABLE_OR_VIEW_NOT_FOUND cw.concept", status: 502 };
-      }
-      return base(t, p);
-    });
-    const out = await runTool(toolDef("get_revenue")!, {}, ctx, { ...h.deps, gateway: gw.client });
-    expect(out.ok).toBe(true);
-    expect(ctx.registered.map((x) => x.action)).toEqual(["register_concept"]);
-    expect(gw.calls.filter((c) => c.template_id === "concept_window").length).toBeGreaterThanOrEqual(2);
-  });
-
-  it("fails a step twice before giving up on it, and still finalizes", async () => {
-    const seeds = syntheticSeeds();
-    const base = syntheticResolver(seeds);
-    const gw = fakeGateway((t, p) => (t === "weather_quarter" ? { error: "timeout: no result within 60 s", status: 504 } : base(t, p)));
-    const h = harness();
-    const r = await investigate({ cik: TARGET, period: PERIOD, claim: "x", historyDir: null }, { ...h.deps, gateway: gw.client });
-    const weatherCalls = r.timeline.filter((t) => t.tool === "get_weather");
-    expect(weatherCalls).toHaveLength(2);
-    expect(weatherCalls.every((t) => !t.ok)).toBe(true);
-    expect(r.checklist.find((i) => i.id === "weather_target")!.status).toBe("failed");
-    expect(r.checklist.find((i) => i.id === "attribution_done")!.status).toBe("failed");
-    expect(r.card.verdict!.verdict).toBe("withheld");
-    expect(r.card.gaps.join("\n")).toMatch(/get_weather failed twice/u);
-    expect(r.checklist_complete).toBe(true);
-  });
-
-  it("fills the gateway's object placeholders with the parameters in the evidence record", () => {
-    const store = new EvidenceStore("rph", null);
-    const res = {
-      template_id: "weather_quarter",
-      role: "reader" as const,
-      columns: ["station_id"],
-      rows: [["USW00000001"]],
-      row_count: 1,
-      truncated: false,
-      elapsed_ms: 10,
-      sql: "SELECT 1",
-      sql_sha256: "s",
-      objects: ["cw.ghcn_{year}_tmax", "cw.ghcn_{year}_tmin"],
-      raw_objects: ["cw.ghcn_2025_tmax", "cw.ghcn_2025_tmin"],
-      executed_at: "t",
-      cache_state: "hit",
-      cache_detail: {},
-      source_cached_at: { "cw.ghcn_2025_tmax": "c" },
-      error: null,
-      params: { year: "2025", quarter: "1", station_list: "USW00000001" },
-      http_status: 200,
-      wall_ms: 12,
-      warm_retries: 0,
+  it("a warm run recalls verified keys from memory and skips their measure steps", async () => {
+    const memory = new Map<string, MeasureResult>();
+    const port: KeyMemoryPort = {
+      recall: (k) => (memory.has(k) ? { result: memory.get(k)!, memoryId: `mem-${k}` } : null),
+      remember: (m) => {
+        memory.set(m.key!, m);
+        return `mem-${m.key}`;
+      },
     };
-    const ev = store.fromTemplate(res, "x");
-    expect(ev.zetaris_object).toBe("cw.ghcn_2025_tmax");
-    expect(ev.zetaris_objects).toEqual(["cw.ghcn_2025_tmax", "cw.ghcn_2025_tmin"]);
-    expect(ev.source_url).toContain("YEAR=2025/ELEMENT=TMAX");
-    expect(ev.source_cached_at).toBe("c");
+    await runFallback(deps({ keyMemory: port }));
+    expect([...memory.keys()].sort()).toEqual(["cik@CY2025Q1", "fema_state@CY2025Q1", "loc@CY2025Q1", "sic@all", "station@all"]);
+    const warm = deps({ keyMemory: port });
+    const { ctx, steps } = await runFallback(warm);
+    expect(ctx.checklist.complete()).toBe(true);
+    const skipped = ctx.skipped.filter((s) => s.item === "keys_measured").length;
+    expect(skipped + steps.filter((s) => s === "measure_key").length).toBe(5);
+    expect(skipped).toBeGreaterThanOrEqual(4);
+    expect(ctx.measured.get("cik@CY2025Q1")!.from_memory).toBe("mem-cik@CY2025Q1");
   });
 
-  it("memoMaterial names the allowed numbers from the tool outputs", async () => {
-    const h = harness();
-    const ctx = newQuestionContext(TARGET, PERIOD, "colder weather", h.deps.evidence);
-    for (const name of ["resolve_utility", "probe_revenue_tag", "get_revenue", "get_peers", "get_weather", "dq_gate", "attribute", "not_tested"] as const) await runTool(toolDef(name)!, {}, ctx, h.deps);
-    const m = memoMaterial(ctx);
-    const texts = m.allowed.map((a) => a.text);
-    expect(texts).toContain("+17.3%");
-    expect(texts).toContain("+18.0%");
-    expect(texts).toContain("1.00");
-    for (const f of m.findings) expect(unknownNumbers(f, m.allowed), f).toEqual([]);
+  it("without a registrar the registration item is unavailable, never silently passed", async () => {
+    const { ctx } = await runFallback(deps({ registrar: undefined }));
+    expect(ctx.checklist.get("sources_registered").status).toBe("unavailable");
+    expect(ctx.checklist.isDone("answered")).toBe(true);
+  });
+});
+
+describe("the registry", () => {
+  it("checks the planner's choices and scores them against the baseline", async () => {
+    const d = deps();
+    const ctx = newQuestionContext("q", Q, d.evidence, { now: NOW, manifest });
+    for (let i = 0; i < 12; i++) {
+      const s = fallbackStep(ctx, d)!;
+      if (s.tool.name === "propose_keys") break;
+      await runTool(s.tool, s.input, ctx, d);
+    }
+    const propose = toolDef("propose_keys")!;
+    const c = (lo: string, lc: string, ro: string, rc: string, t: string) => ({ left: { object: lo, column: lc }, right: { object: ro, column: rc }, transform: t });
+    const out = await runTool(propose, { choices: [c("cw.fema_declarations_dr_2025q1", "state", "cw.utility_states", "state", "identity"), c("cw.seed_utilities", "cik", "cw.frames_Revenues_CY2025Q1", "cik", "identity"), c("won.x", "a", "cw.states", "code", "identity")] }, ctx, d);
+    expect(out.ok).toBe(true);
+    expect(ctx.proposals.proposedBy).toBe("planner");
+    expect(ctx.proposals.model.map((m) => m.route)).toEqual(["fema_state@CY2025Q1", null]);
+    expect(ctx.unmeasurable.get("k2")).toMatch(/no gateway join-map statement/u);
+    expect(ctx.proposals.rejected).toHaveLength(1);
+    expect(allowedTools(ctx, d).map((t) => t.name)).toContain("measure_key");
+    expect(completeInput(toolDef("measure_key")!, {}, ctx).key).toBe("k1");
+  });
+
+  it("refuses onboarding-only templates on the question path", async () => {
+    const d = deps();
+    await expect(questionPort(d.gateway).template("dq_run", { rule: "utility.sic" })).rejects.toThrow(/onboarding-only/u);
+  });
+
+  it("names the nine tools and keeps every description under 60 words", () => {
+    expect(Object.keys(TOOL_CATALOG)).toEqual(["search_catalogue", "probe_source", "propose_keys", "measure_key", "register_source", "compile_usl", "answer", "not_tested", "finalize"]);
+    for (const [name, e] of Object.entries(TOOL_CATALOG)) expect(e.description.split(/\s+/u).length, name).toBeLessThan(60);
+  });
+
+  it("validates a planner step that proposes keys", () => {
+    const schema = plannerSchema(["propose_keys"]);
+    const base = { thought: "Propose the cik key.", state: { focus: "Q1 2025 FEMA", hypotheses: [], evidence_ids: [], open_contradictions: [], checklist: Object.fromEntries(["sources_found", "shapes_probed", "keys_proposed", "keys_measured", "sources_registered", "usl_built", "dq_run", "answered", "not_tested_listed", "note_written"].map((k) => [k, false])), next: "" }, done: false };
+    const ok = { ...base, action: { tool: "propose_keys", input: { choices: [{ left: { object: "cw.frames_Revenues_CY2025Q1", column: "cik" }, right: { object: "cw.seed_utilities", column: "cik" }, transform: "lpad10" }] } } };
+    expect(validate(schema, ok)).toEqual([]);
+    const bad = { ...base, action: { tool: "propose_keys", input: { choices: [{ left: { object: "cw.a", column: "x" }, right: { object: "cw.b", column: "y" }, transform: "substr(0,2)" }] } } };
+    expect(validate(schema, bad)).toEqual(["$.action: matches no allowed shape"]);
   });
 });

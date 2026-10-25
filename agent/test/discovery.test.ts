@@ -50,8 +50,9 @@ function port(resolve: (id: string, params: Record<string, string>) => Reply | E
 }
 
 describe("registered objects and the governed plan", () => {
-  it("expands the manifest's views and frames pattern", () => {
-    expect([...registeredObjects(manifest)].sort()).toEqual(T.registered_objects);
+  it("expands the manifest's views and frames pattern (the manifest copy the fixture was generated from)", () => {
+    expect([...registeredObjects(fx.search.inputs.manifest)].sort()).toEqual(T.registered_objects);
+    expect(registeredObjects(manifest)).toEqual(expect.arrayContaining(["cw.seed_utilities", "cw.frames_Revenues_CY2025Q1", "cw.stations"]));
   });
   it("seeds/usl-plan.json renders the COMPILE statement of 07_cw_usl_create.sql exactly", () => {
     const plan = validatePlan(JSON.parse(readFileSync(new URL("seeds/usl-plan.json", repo), "utf8")));

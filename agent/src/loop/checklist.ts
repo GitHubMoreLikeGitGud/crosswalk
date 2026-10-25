@@ -5,7 +5,7 @@
 // Status of an item:
 //   pending      not done yet
 //   done         a tool completed it (evidence ids attached)
-//   na           does not apply to this question (no revenue fact under any tag, so nothing to attribute)
+//   na           does not apply to this question (no registrar wired, so nothing to register)
 //   unavailable  the component is not wired in this build (recorded as a gap, never silently passed)
 //   failed       the tool failed twice; the card reports the gap
 // Adapted from Weather-or-Not and ClearShelf (same author, Apache-2.0); the items are Crosswalk's.
@@ -30,23 +30,25 @@ export interface ChecklistItem extends ItemDef {
   failures: number;
 }
 
-/** The steps of one question (SPEC 7), in the order the fallback works through them. */
+/** keys_measured needs this many measured keys (D14: a join map with >= 5 measured keys). */
+export const MIN_MEASURED_KEYS = 5;
+
+/** The steps of one question (SPEC section 3), in the order the fallback works through them. */
 export const QUESTION_ITEMS: readonly ItemDef[] = [
-  { id: "utility_resolved", label: "utility found in the seed list and its SEC profile read", tools: ["resolve_utility"] },
-  { id: "tag_chosen", label: "revenue tag probed in the fixed order (or recalled from memory)", tools: ["probe_revenue_tag", "register_frames"] },
-  { id: "revenue_like_for_like", label: "like-for-like growth from companyconcept with the recast check", tools: ["get_revenue"] },
-  { id: "peers_loaded", label: "peer set from the seed utilities' frames facts, pooled across tags", tools: ["get_peers", "register_frames"] },
-  { id: "weather_target", label: "degree days of the utility's stations for both quarters (Lightning SQL)", tools: ["get_weather"] },
-  { id: "weather_peers", label: "degree days of every peer's stations for both quarters", tools: ["get_weather"] },
-  { id: "dq_checked", label: "Zetaris DQ gate (coverage_ok onboarding run and the utility's own coverage)", tools: ["dq_gate"] },
-  { id: "attribution_done", label: "three-way split with bootstrap ranges and confidence label", tools: ["attribute"] },
-  { id: "claim_tested", label: "claim verdict recorded", tools: ["finalize"] },
-  { id: "not_tested_listed", label: "what the analysis cannot see, listed", tools: ["not_tested"] },
-  { id: "memo_written", label: "memo written and every number string-matched", tools: ["finalize"] },
+  { id: "sources_found", label: "candidate sources found in the catalogue (negative memories flagged)", tools: ["search_catalogue"] },
+  { id: "shapes_probed", label: "every target view described, sampled and its candidate key columns counted", tools: ["probe_source"] },
+  { id: "keys_proposed", label: "up to six join keys proposed (planner, or the deterministic baseline as the fallback)", tools: ["propose_keys"] },
+  { id: "keys_measured", label: `at least ${MIN_MEASURED_KEYS} keys measured in Lightning SQL (or recalled as verified from memory)`, tools: ["measure_key"] },
+  { id: "sources_registered", label: "the sources the question needs registered (already_registered counts)", tools: ["register_source"] },
+  { id: "usl_built", label: "semantic layer rendered from the verified keys: matches the governed model or a new version", tools: ["compile_usl"] },
+  { id: "dq_run", label: "foreign-key DQ: two rules run live, the rest from the onboarding run", tools: ["compile_usl"] },
+  { id: "answered", label: "answer table with per-cell provenance", tools: ["answer"] },
+  { id: "not_tested_listed", label: "what the answer cannot see, listed", tools: ["not_tested"] },
+  { id: "note_written", label: "note written, proposals scored against the baseline", tools: ["finalize"] },
 ];
 
 /** The items that must be last; they may run only when every other item is resolved. */
-export const FINAL_ITEMS: readonly ChecklistItemId[] = ["claim_tested", "memo_written"];
+export const FINAL_ITEMS: readonly ChecklistItemId[] = ["note_written"];
 
 export class Checklist {
   private readonly items: ChecklistItem[];

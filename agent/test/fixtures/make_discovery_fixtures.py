@@ -623,7 +623,7 @@ def main() -> None:
             (["CA"], ["US-CA"]), (["US-CA", "CA"], ["CA"]), ([], ["0009000001"]), (["CA"], ["OH"])]]
 
     plan, compile_sql = governed_plan((REPO / "zetaris" / "sql" / "07_cw_usl_create.sql").read_text(encoding="utf-8"))
-    (REPO / "seeds" / "usl-plan.json").write_text(json.dumps(plan, indent=2) + "\n", encoding="utf-8")
+    (REPO / "seeds" / "usl-plan.json").write_text(json.dumps(plan, indent=2) + "\n", encoding="utf-8", newline="\n")
     all_routes = ["cik", "loc", "fema_state", "station", "sic"]
     ok_live = {"fema_declaration.state": (116, 116, 0), "utility_state.state": (97, 97, 0)}
     onboarding = {"utility.sic": (43, 42, 1), "utility_state.cik": (97, 97, 0)}

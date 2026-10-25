@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { CHECKLIST_ITEMS, memoSchema, minerSchema, plannerSchema, plannerSemanticErrors, validate, type PlannerOutput } from "../src/llm/schemas.ts";
+import { answerParamsSchema, CHECKLIST_ITEMS, keyChoicesSchema, memoSchema, minerSchema, plannerSchema, plannerSemanticErrors, validate, type PlannerOutput } from "../src/llm/schemas.ts";
 import { OllamaClient, assertLoopbackUrl, parseJsonContent, refusedModelHostAttempts, resetRefusedModelHostAttempts } from "../src/llm/ollama.ts";
 import { ADOPTED_JOB_SETTINGS, jobSettings, type JobName } from "../src/llm/settings.ts";
 import { TOOL_CATALOG, toolSpecs } from "../src/llm/toolCatalog.ts";
@@ -8,42 +8,35 @@ import { loadPrompt, render, toolLines } from "../src/llm/prompts.ts";
 const ALL_FALSE = Object.fromEntries(CHECKLIST_ITEMS.map((i) => [i, false]));
 
 describe("planner schema", () => {
+  const state = { focus: "FEMA Q1 2025", hypotheses: ["state is the key"], evidence_ids: ["ev-1"], open_contradictions: [], checklist: { ...ALL_FALSE }, next: "probe" };
   it("builds a planner schema whose tool and evidence enums are dynamic and whose checklist is fixed", () => {
-    const schema = plannerSchema(["resolve_utility", "not_tested"], ["ev-1"]);
-    const out: PlannerOutput = {
-      thought: "Resolve the utility first.",
-      action: { tool: "resolve_utility", input: { cik: "0001031296" } },
-      state: { utility: "0001031296", hypotheses: ["weather"], evidence_ids: ["ev-1"], open_contradictions: [], checklist: { ...ALL_FALSE }, next: "probe the tag" },
-      done: false,
-    };
+    const schema = plannerSchema(["probe_source", "not_tested"], ["ev-1"]);
+    const out: PlannerOutput = { thought: "Probe the FEMA view first.", action: { tool: "probe_source", input: { object: "cw.fema_declarations_dr_2025q1" } }, state, done: false };
     expect(validate(schema, out)).toEqual([]);
     expect(validate(schema, { ...out, action: null })).toEqual([]);
     expect(validate(schema, { ...out, action: { tool: "finalize", input: {} } })).toEqual(["$.action: matches no allowed shape"]);
-    expect(validate(schema, { ...out, action: { tool: "resolve_utility", input: { cik: "1031296" } } })).toEqual(["$.action: matches no allowed shape"]);
+    expect(validate(schema, { ...out, action: { tool: "probe_source", input: { object: "won.seed_utilities" } } })).toEqual(["$.action: matches no allowed shape"]);
     expect(validate(schema, { ...out, state: { ...out.state, evidence_ids: ["ev-9"] } }).length).toBe(1);
-    expect(validate(schema, { ...out, state: { ...out.state, checklist: { utility_resolved: true } } }).length).toBeGreaterThan(0);
-    expect(validate(plannerSchema(["resolve_utility"]), out).some((e) => e.includes("evidence_ids"))).toBe(true);
+    expect(validate(schema, { ...out, state: { ...out.state, checklist: { sources_found: true } } }).length).toBeGreaterThan(0);
+    expect(validate(plannerSchema(["probe_source"]), out).some((e) => e.includes("evidence_ids"))).toBe(true);
     expect(() => plannerSchema(["shell.exec"])).toThrow(/unknown tool/u);
     expect(() => plannerSchema([])).toThrow(/at least one tool/u);
   });
 
-  it("accepts a tag only from the three-tag enum", () => {
-    const schema = plannerSchema(["get_revenue"]);
-    const base: PlannerOutput = { thought: "x", action: { tool: "get_revenue", input: { tag: "Revenues" } }, state: { utility: "u", hypotheses: [], evidence_ids: [], open_contradictions: [], checklist: { ...ALL_FALSE }, next: "" }, done: false };
-    expect(validate(schema, base)).toEqual([]);
-    expect(validate(schema, { ...base, action: { tool: "get_revenue", input: { tag: "NetIncomeLoss" } } })).toEqual(["$.action: matches no allowed shape"]);
+  it("accepts key choices only from the closed transform set, at most six", () => {
+    const choice = { left: { object: "cw.frames_Revenues_CY2025Q1", column: "cik" }, right: { object: "cw.seed_utilities", column: "cik" }, transform: "lpad10" };
+    expect(validate(keyChoicesSchema, [choice])).toEqual([]);
+    for (const t of ["identity", "upper", "substr(4,2)", "strip_prefix('US-')", "yyyymmdd_to_date", "iso_to_quarter"]) expect(validate(keyChoicesSchema, [{ ...choice, transform: t }]), t).toEqual([]);
+    for (const t of ["lpad", "substr(0,2)", "substr(4, 2)", "trim"]) expect(validate(keyChoicesSchema, [{ ...choice, transform: t }]).length, t).toBeGreaterThan(0);
+    expect(validate(keyChoicesSchema, Array(7).fill(choice))).toEqual(["$: more than 6 items"]);
+    expect(validate(answerParamsSchema, { quarter: "CY2025Q1" })).toEqual([]);
+    expect(validate(answerParamsSchema, { quarter: "2025Q1" }).length).toBe(1);
   });
 
   it("flags long thoughts and done-with-action", () => {
-    const base: PlannerOutput = {
-      thought: Array(61).fill("word").join(" "),
-      action: { tool: "resolve_utility", input: {} },
-      state: { utility: "u", hypotheses: [], evidence_ids: [], open_contradictions: [], checklist: {}, next: "" },
-      done: true,
-    };
+    const base: PlannerOutput = { thought: Array(61).fill("word").join(" "), action: { tool: "probe_source", input: {} }, state: { ...state, checklist: {} }, done: true };
     expect(plannerSemanticErrors(base)).toHaveLength(2);
   });
-
   it("shapes the memo and the H-MEM miner reply", () => {
     expect(validate(memoSchema, { memo: "x".repeat(200) })).toEqual([]);
     expect(validate(memoSchema, { memo: "short" })).toHaveLength(1);
@@ -55,12 +48,12 @@ describe("planner schema", () => {
 describe("tool catalog and prompts", () => {
   it("describes every tool and the checklist items it completes", () => {
     const names = Object.keys(TOOL_CATALOG);
-    expect(names).toHaveLength(10);
+    expect(names).toHaveLength(9);
     const completed = new Set(names.flatMap((n) => TOOL_CATALOG[n as keyof typeof TOOL_CATALOG].completes));
     for (const item of CHECKLIST_ITEMS) expect(completed.has(item), item).toBe(true);
-    const lines = toolLines(toolSpecs(["resolve_utility", "finalize"]));
-    expect(lines).toContain("- resolve_utility:");
-    expect(lines).toContain("Completes: claim_tested, memo_written");
+    const lines = toolLines(toolSpecs(["compile_usl", "finalize"]));
+    expect(lines).toContain("- compile_usl:");
+    expect(lines).toContain("Completes: usl_built, dq_run");
   });
 
   it("renders the planner and memo prompts for this domain, with no leftover from the sister project", () => {

@@ -4,55 +4,97 @@
 // (num_predict) and an older Ollama build may ignore keywords it does not support.
 // Adapted from Weather-or-Not and ClearShelf (same author, Apache-2.0); the jobs are Crosswalk's.
 
-import { REVENUE_TAGS, type RevenueTag } from "../tools/frames.ts";
-
 export type JsonSchema = { [key: string]: unknown };
 
-// ---------- the chain ----------
+// ---------- the discovery loop ----------
 
-/** The host-run tools of one question (SPEC 7). The planner picks from a dynamic subset. */
+/** The host-run tools of one question (SPEC section 3, decision D8). The planner picks from a dynamic subset. */
 export const TOOL_NAMES = [
-  "resolve_utility",
-  "probe_revenue_tag",
-  "register_frames",
-  "get_revenue",
-  "get_peers",
-  "get_weather",
-  "dq_gate",
-  "attribute",
+  "search_catalogue",
+  "probe_source",
+  "propose_keys",
+  "measure_key",
+  "register_source",
+  "compile_usl",
+  "answer",
   "not_tested",
   "finalize",
 ] as const;
 export type ToolName = (typeof TOOL_NAMES)[number];
 
-/** The checklist items of one question, in fallback order (SPEC 7). */
+/** The checklist items of one question, in fallback order (SPEC section 3). */
 export const CHECKLIST_ITEMS = [
-  "utility_resolved",
-  "tag_chosen",
-  "revenue_like_for_like",
-  "peers_loaded",
-  "weather_target",
-  "weather_peers",
-  "dq_checked",
-  "attribution_done",
-  "claim_tested",
+  "sources_found",
+  "shapes_probed",
+  "keys_proposed",
+  "keys_measured",
+  "sources_registered",
+  "usl_built",
+  "dq_run",
+  "answered",
   "not_tested_listed",
-  "memo_written",
+  "note_written",
 ] as const;
 export type ChecklistItemId = (typeof CHECKLIST_ITEMS)[number];
+
+/** The closed transform set (agent/src/tools/transforms.ts), canonical spellings only. */
+export const TRANSFORM_PATTERN = "^(identity|upper|lpad10|substr\\([1-9][0-9]*,[1-9][0-9]*\\)|strip_prefix\\('US-'\\)|yyyymmdd_to_date|iso_to_quarter)$";
+const OBJECT_PATTERN = "^cw\\.[A-Za-z0-9_]+$";
+const COLUMN_PATTERN = "^[A-Za-z_][A-Za-z0-9_]*$";
+export const MAX_KEY_CHOICES = 6;
+
+/** One join-key choice: left column, right column, one transform from the closed set. */
+export interface KeyChoiceInput {
+  left: { object: string; column: string };
+  right: { object: string; column: string };
+  transform: string;
+}
+
+const sideSchema: JsonSchema = {
+  type: "object",
+  additionalProperties: false,
+  required: ["object", "column"],
+  properties: { object: { type: "string", pattern: OBJECT_PATTERN }, column: { type: "string", pattern: COLUMN_PATTERN } },
+};
+
+/** propose_keys: at most six {left, right, transform} choices. */
+export const keyChoicesSchema: JsonSchema = {
+  type: "array",
+  minItems: 1,
+  maxItems: MAX_KEY_CHOICES,
+  items: {
+    type: "object",
+    additionalProperties: false,
+    required: ["left", "right", "transform"],
+    properties: { left: sideSchema, right: sideSchema, transform: { type: "string", pattern: TRANSFORM_PATTERN } },
+  },
+};
+
+/** answer: the calendar quarter the question asks about (frames spelling; FEMA reads any quarter). */
+export const answerParamsSchema: JsonSchema = {
+  type: "object",
+  additionalProperties: false,
+  required: ["quarter"],
+  properties: { quarter: { type: "string", pattern: "^CY[0-9]{4}Q[1-4]$" } },
+};
 
 // ---------- Job 1: planner (one Markovian step) ----------
 
 export interface PlannerAction {
   tool: ToolName;
   input: {
-    cik?: string;
+    query?: string;
+    object?: string;
+    choices?: KeyChoiceInput[];
+    key?: string;
+    catalogue_id?: string;
+    quarter?: string;
+    tag?: string;
     period?: string;
-    tag?: RevenueTag;
   };
 }
 export interface PlannerState {
-  utility: string;
+  focus: string;
   hypotheses: string[];
   evidence_ids: string[];
   open_contradictions: string[];
@@ -72,9 +114,14 @@ const plannerInputSchema: JsonSchema = {
   type: "object",
   additionalProperties: false,
   properties: {
-    cik: { type: "string", pattern: "^[0-9]{10}$" },
+    query: { type: "string", minLength: 1, maxLength: 120 },
+    object: { type: "string", pattern: OBJECT_PATTERN },
+    choices: keyChoicesSchema,
+    key: { type: "string", pattern: "^[kb][0-9]{1,2}$" },
+    catalogue_id: { type: "string", pattern: "^[a-z][a-z0-9_]{0,63}$" },
+    quarter: { type: "string", pattern: "^CY[0-9]{4}Q[1-4]$" },
+    tag: { enum: ["Revenues", "RevenueFromContractWithCustomerExcludingAssessedTax", "RegulatedAndUnregulatedOperatingRevenue"] },
     period: { type: "string", pattern: "^CY[0-9]{4}Q[1-3]$" },
-    tag: { enum: [...REVENUE_TAGS] },
   },
 };
 
@@ -110,9 +157,9 @@ export function plannerSchema(tools: readonly string[], evidenceIds: readonly st
       state: {
         type: "object",
         additionalProperties: false,
-        required: ["utility", "hypotheses", "evidence_ids", "open_contradictions", "checklist", "next"],
+        required: ["focus", "hypotheses", "evidence_ids", "open_contradictions", "checklist", "next"],
         properties: {
-          utility: { type: "string", minLength: 1, maxLength: 40 },
+          focus: { type: "string", minLength: 1, maxLength: 80 },
           hypotheses: { type: "array", maxItems: 5, items: { type: "string", maxLength: 200 } },
           evidence_ids:
             evidenceIds.length > 0
