@@ -346,6 +346,11 @@ export class HMEM extends ReferenceHMEM {
     return fr;
   }
 
+  /** Every object a source_access memory says is registered (no ledger read). */
+  sourceObjects(): string[] {
+    return Object.values(this.sources).map((s) => s.object);
+  }
+
   sourceAccess(object: string): { record: SourceAccessRecord; memoryId: string } | null {
     const m = this.byTag(`object:${object.toLowerCase()}`);
     const record = m ? this.sources[m.id] : undefined;

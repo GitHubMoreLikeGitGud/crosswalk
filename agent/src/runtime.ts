@@ -196,7 +196,7 @@ export async function ask(rt: Runtime, req: AskRequest, origin: { source: "cli" 
   // Cold when asked, or when no VERIFIED key is remembered yet; warm otherwise.
   const mode = req.mode ?? (rt.hmem.keyRecords().some((k) => k.record.verdict === "VERIFIED") ? "warm" : "cold");
   const keyMemory = keyMemoryPort(rt.hmem, evidence.runId, { recall: mode === "warm", evidence });
-  const deps: ToolDeps = { gateway: rt.gateway, ollama: rt.ollama, evidence, seeds: rt.seeds, registrar: rt.registrar, keyMemory, weather: true, dqFile: DQ_FILE, log: rt.log };
+  const deps: ToolDeps = { gateway: rt.gateway, ollama: rt.ollama, evidence, seeds: rt.seeds, registrar: rt.registrar, keyMemory, weather: true, dqFile: DQ_FILE, log: rt.log, registeredExtra: rt.hmem.sourceObjects() };
   const question = req.question ?? demoQuestion(req.quarter);
   const memoryContext = rt.hmem.memoryContext();
   const result = await investigate({ question, quarter: req.quarter, think: req.think, maxChunks: req.maxChunks, onEvent: req.onEvent, abortSignal: req.abortSignal, mode, memoryContext: memoryContext || undefined }, deps);

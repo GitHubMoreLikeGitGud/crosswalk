@@ -130,6 +130,8 @@ export interface ToolDeps {
   dqFile?: string;
   /** True when the GHCN station tables are registered and cached (D3); otherwise weather is Not-tested. */
   weather?: boolean;
+  /** Views registered at run time by earlier runs (source_access memories), added to the manifest's set. */
+  registeredExtra?: string[];
   log?: (line: string) => void;
 }
 
@@ -196,9 +198,10 @@ export function questionSources(quarter: string): string[] {
   return out;
 }
 
-export function newQuestionContext(question: string, quarter: string, evidence: EvidenceStore, opts: { now?: Date; manifest?: unknown } = {}): QuestionContext {
+export function newQuestionContext(question: string, quarter: string, evidence: EvidenceStore, opts: { now?: Date; manifest?: unknown; registeredExtra?: readonly string[] } = {}): QuestionContext {
   const manifest = opts.manifest ?? JSON.parse(readFileSync(new URL("zetaris/manifest.json", REPO_ROOT_URL), "utf8"));
-  const registered = new Set(registeredObjects(manifest));
+  // The manifest's views plus the views earlier runs registered at run time (source_access memories).
+  const registered = new Set([...registeredObjects(manifest), ...(opts.registeredExtra ?? [])]);
   return {
     question: question.trim(),
     quarter,
@@ -221,7 +224,8 @@ export function newQuestionContext(question: string, quarter: string, evidence: 
     proposals: { model: [], proposedBy: null, baseline: [], rejected: [] },
     measured: new Map(),
     unmeasurable: new Map(),
-    needs: registrationsNeeded(quarter, registered),
+    // Needs come from the manifest alone: a view an earlier run registered is re-confirmed (already_registered) under contract.
+    needs: registrationsNeeded(quarter, new Set(registeredObjects(manifest))),
     registrations: [],
     usl: null,
     answer: null,
@@ -380,7 +384,9 @@ const searchTool = def("search_catalogue", {
     const ids: string[] = r.provenance.map((p) => statementEvidence(deps, p, `OpenFEMA dataset catalogue: ${r.sources.fema_catalogue ?? 0} datasets (cached cw.fema_catalogue)`, "cw.fema_catalogue").id);
     for (const h of r.hits) {
       // GHCN parquet views are filestore reads (6-9 s per statement, about 40 s per probe); the answer's weather template reads them, so they are not probed.
-      if (h.object && ctx.registered.has(h.object) && !ctx.targets.includes(h.object) && !/^cw\.ghcn_/iu.test(h.object) && ctx.targets.length < 10) ctx.targets.push(h.object);
+      // A FEMA or frames view of another quarter is not this question's source.
+      const otherPeriod = (FEMA_FAMILY.test(h.object ?? "") || FRAMES_FAMILY.test(h.object ?? "")) && !questionSources(ctx.quarter).some((q) => q.toLowerCase() === h.object!.toLowerCase());
+      if (h.object && ctx.registered.has(h.object) && !ctx.targets.includes(h.object) && !/^cw\.ghcn_/iu.test(h.object) && !otherPeriod && ctx.targets.length < 10) ctx.targets.push(h.object);
     }
     const negative = r.hits.filter((h) => h.negative);
     const ev = toolEvidence(deps, "search_catalogue", `Catalogue search "${query}": ${r.hits.length} hit(s) over ${r.sources.catalogue} curated, ${r.sources.registered} registered, ${r.sources.fema_catalogue ?? "no"} OpenFEMA${r.sources.getting_started === null ? "" : `, ${r.sources.getting_started} getting-started`} entries; ${negative.length} known_to_fail`, ids, { query, hits: r.hits, sources: r.sources, fema_catalogue_error: r.fema_catalogue_error, targets: ctx.targets });
@@ -491,6 +497,7 @@ const proposeTool = def("propose_keys", {
     }
     // D9: the keys verified in an earlier run whose source families this question reads are recalled too, re-instantiated on this question's views.
     for (const v of deps.keyMemory?.verified?.() ?? []) {
+      if (ctx.skipped.some((s) => s.memoryId === v.memoryId)) continue; // already recalled through a proposal: one memory, one skipped step
       const p = instantiateFor(v.result.proposal, ctx.quarter);
       const r = p ? routeOf(p, known) : null;
       if (p && r) recallInto(`m${ctx.skipped.length + 1}`, p, routeKey(r, p), v);

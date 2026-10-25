@@ -150,6 +150,8 @@ describe("the discovery loop on the fallback alone", () => {
     await runFallback(deps({ keyMemory: port }));
     expect([...memory.values()].map((m) => m.key).sort()).toEqual(["cik@CY2025Q1", "cik_control@CY2025Q1", "fema_fips@CY2025Q1", "fema_state@CY2025Q1", "loc@CY2025Q1", "sic@all", "station@all"]);
     expect(memory.has("cw.frames_revenues_<period>.cik|cw.seed_utilities.cik|lpad10")).toBe(true);
+    // verified() lists the same memories again: one memory is one skipped step, never two.
+    port.verified = () => [...memory.entries()].filter(([, m]) => m.verdict === "VERIFIED").map(([k, m]) => ({ memoryKey: k, result: m, memoryId: `mem-${m.key}` }));
     const warm = deps({ keyMemory: port });
     const { ctx, steps } = await runFallback(warm);
     expect(ctx.checklist.complete()).toBe(true);

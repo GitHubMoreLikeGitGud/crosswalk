@@ -39,6 +39,8 @@ export interface MemoAttempt {
   metrics: ChatResult["metrics"] | null;
   promptSha256: string | null;
   error: string | null;
+  /** A rejected draft, kept for the record (the kept draft is the memo itself). */
+  draft?: string;
 }
 
 export interface MemoResult {
@@ -147,7 +149,7 @@ export async function writeMemo(ollama: OllamaClient | null, input: MemoInput, o
     const lengthOk = lengthAccepted(words);
     if (memo && !lengthOk) schemaErrors.push(`memo: ${words} words, wanted ${MEMO_WORDS.accept_min} to ${MEMO_WORDS.max}`);
     const ok = parseError === null && schemaErrors.length === 0 && unknown.length === 0;
-    attempts.push({ attempt: i, ok, parseError, schemaErrors, unknownNumbers: unknown, wordCount: words, metrics: res.metrics, promptSha256: res.promptSha256, error: null });
+    attempts.push({ attempt: i, ok, parseError, schemaErrors, unknownNumbers: unknown, wordCount: words, metrics: res.metrics, promptSha256: res.promptSha256, error: null, ...(ok ? {} : { draft: memo.slice(0, 2400) }) });
     if (ok) return { text: memo, source: "model", attempts, allowed: input.allowed, wordCount: words, model: res.model };
     feedback = [
       "Your previous draft was rejected:",
