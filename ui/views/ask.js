@@ -1,208 +1,131 @@
-// Ask: the utility picker (saved runs and the 43 seeds), period and claim, the live timeline of
-// the run from server-sent events, and the saved runs to open. A saved run's own timeline is
-// replayed here when no run is live.
+// The Ask screen: the demo question (cold) and the warm question as presets, a question box that
+// accepts only the one shape Crosswalk answers (the quarter is the only free part), and the saved
+// runs to open. Asking starts a model run (POST /api/ask) and opens its live Discovery timeline.
+// parseQuestion and the renderers are pure.
 
-import { api, confidenceChip, esc, fmtMs, fmtNum, fmtTime, refreshChipKinds, renderError, tag, verdictChip } from "../lib.js";
-import { listRuns, loadRun, pickRunId, setCurrentRun } from "./runs.js";
-import { mountStream, replayRows } from "./stream.js";
+import { api, esc, fmtNum, quarterWords, renderError, runWords } from "../lib.js";
 
-const PERIODS = [];
-for (const y of [2025, 2024, 2023]) for (const q of [1, 2, 3]) PERIODS.push(`CY${y}Q${q}`);
+export const DEMO_QUESTION = "Which investor-owned electric utilities served states with FEMA major-disaster declarations in Q1 2025, what did the weather at their stations do that quarter, and did their revenue hold up year on year?";
 
-const CLAIMS = ["colder weather", "favorable weather", "milder weather", "warmer weather", "unfavorable weather"];
-
-let seedsCache = null;
-
-/** The 43 seed utilities, from whichever path the server exposes them on; empty when none does. */
-async function loadSeeds() {
-  if (seedsCache) return seedsCache;
-  for (const p of ["/api/seeds", "/seeds/utilities.json"]) {
-    const r = await api(p);
-    if (r.ok && r.data) {
-      const list = Array.isArray(r.data) ? r.data : Array.isArray(r.data.utilities) ? r.data.utilities : [];
-      if (list.length) {
-        seedsCache = list;
-        return list;
-      }
-    }
-  }
-  return [];
+export function questionFor(quarter) {
+  const m = /^CY(\d{4})Q([1-4])$/u.exec(quarter);
+  return m ? DEMO_QUESTION.replace("Q1 2025", `Q${m[2]} ${m[1]}`) : DEMO_QUESTION;
 }
 
-function utilityOptions(seeds, runs) {
-  const seen = new Set();
-  const withRun = new Set(runs.map((r) => r.cik));
-  const opts = [];
-  for (const s of seeds) {
-    if (!s?.cik || seen.has(s.cik)) continue;
-    seen.add(s.cik);
-    opts.push({ cik: s.cik, name: s.name, ticker: s.ticker, hasRun: withRun.has(s.cik), flags: Array.isArray(s.flags) ? s.flags : [] });
-  }
-  for (const r of runs) {
-    if (!r?.cik || seen.has(r.cik)) continue;
-    seen.add(r.cik);
-    opts.push({ cik: r.cik, name: r.utility ?? r.cik, ticker: null, hasRun: true, flags: [] });
-  }
-  opts.sort((a, b) => Number(b.hasRun) - Number(a.hasRun) || String(a.name).localeCompare(String(b.name)));
-  return opts;
+export const PRESETS = [
+  { id: "cold", quarter: "CY2025Q1", mode: "cold", title: "Demo question, cold", note: "Starts with no remembered keys: the agent searches, probes, proposes and measures every key." },
+  { id: "warm", quarter: "CY2024Q1", mode: "warm", title: "Warm question: the same for Q1 2024", note: "Reuses the keys verified earlier (their measure steps are skipped and counted) and registers in Zetaris any source the quarter still lacks." },
+];
+
+/**
+ * The supported shape: the demo question with any quarter "Q<n> <yyyy>" (2000-2099). Returns
+ * {ok, quarter} or {ok: false, reason}. The words around the quarter must be the demo question's.
+ */
+export function parseQuestion(text) {
+  const t = String(text ?? "").trim().replace(/\s+/gu, " ");
+  if (!t) return { ok: false, reason: "Type the question, or pick one of the two above." };
+  const quarters = [...t.matchAll(/\bQ([1-4]) (20\d{2})\b/gu)];
+  if (quarters.length !== 1) return { ok: false, reason: "Name exactly one quarter, written like Q1 2025." };
+  const q = quarters[0];
+  const norm = (s) => s.toLowerCase().replace(/[^a-z0-9 ]/gu, "").replace(/\s+/gu, " ").trim();
+  const asked = norm(t.replace(q[0], "QUARTER"));
+  const shape = norm(DEMO_QUESTION.replace("Q1 2025", "QUARTER"));
+  if (asked !== shape) return { ok: false, reason: "Crosswalk answers one shape of question: the one below, with your quarter. Change only the quarter." };
+  return { ok: true, quarter: `CY${q[2]}Q${q[1]}` };
 }
 
-export function renderRunsTable(runs) {
-  if (!runs.length) return `<p class="muted">No saved runs yet. Ask a question above, or run the CLI's <code>ask</code> command.</p>`;
-  return `<div class="table-wrap"><table class="runs"><thead><tr><th scope="col">Started</th><th scope="col">Utility</th><th scope="col">Period</th><th scope="col">Claim</th><th scope="col">Verdict</th><th scope="col">Chunks</th><th scope="col">Wall</th><th scope="col">Memo</th><th scope="col"><span class="sr-only">Open</span></th></tr></thead><tbody>${runs
-    .map(
-      (r) => `<tr data-run-row="${esc(r.run_id)}"><td class="tnum">${esc(fmtTime(r.started_at))}</td><td><strong>${esc(r.utility ?? r.cik)}</strong><br><code class="small">${esc(r.cik)}</code></td><td class="tnum">${esc(r.period)}</td><td><q>${esc(r.claim)}</q></td><td>${verdictChip(r.verdict)} ${confidenceChip(r.confidence, { bare: true })}</td><td class="tnum">${esc(fmtNum(r.chunks))}</td><td class="tnum">${esc(fmtMs(r.wall_ms))}</td><td>${r.memo_source ? tag(`${r.memo_source} memo`, r.memo_source === "model" ? "model" : "neutral") : ""}</td><td><a class="btn btn--small" href="#/card/${esc(r.run_id)}">Open card</a> <button type="button" class="btn btn--small btn--ghost" data-replay="${esc(r.run_id)}">Timeline</button></td></tr>`,
-    )
-    .join("")}</tbody></table></div>`;
+function savedFor(runs, quarter, mode) {
+  return runs.find((r) => r.quarter === quarter && r.mode === mode) ?? null;
+}
+
+export function renderPreset(p, saved, busy) {
+  return `<article class="panel ask__preset" data-preset="${esc(p.id)}">
+    <h2 class="panel__h">${esc(p.title)}</h2>
+    <p class="ask__q"><q>${esc(questionFor(p.quarter))}</q></p>
+    <p class="small muted">${esc(p.note)}</p>
+    <div class="ask__btns">
+      <button type="button" class="btn btn--primary" data-ask="${esc(p.id)}"${busy ? " disabled" : ""}>Ask now (runs the local model, about 4-6 minutes)</button>
+      ${saved ? `<a class="btn" href="#/timeline/${esc(saved.run_id)}">Replay the saved run</a><span class="small muted">${esc(runWords(saved))}, ${esc(fmtNum(saved.wall_s, 1))} s</span>` : `<span class="small muted">No saved run of this question yet.</span>`}
+    </div>
+  </article>`;
+}
+
+export function renderRuns(runs) {
+  if (!runs.length) return `<p class="muted">No saved run yet.</p>`;
+  return `<div class="table-wrap"><table class="runs">
+    <thead><tr><th scope="col">Run</th><th scope="col">Question quarter</th><th scope="col" class="r">Wall</th><th scope="col" class="r">Utilities</th><th scope="col" class="r">Keys</th><th scope="col" class="r">Measure steps skipped</th><th scope="col">Open</th></tr></thead>
+    <tbody>${runs
+      .slice(0, 12)
+      .map(
+        (r) => `<tr><td>${esc(runWords(r))} <span class="eng"><code>${esc(r.run_id)}</code></span></td><td>${esc(quarterWords(r.quarter))}</td><td class="r tnum">${esc(fmtNum(r.wall_s, 1))} s</td><td class="r tnum">${esc(fmtNum(r.utilities))}</td><td class="r tnum">${esc(fmtNum(r.keys))}</td><td class="r tnum">${esc(fmtNum(r.skipped))}</td><td class="runs__open"><a href="#/timeline/${esc(r.run_id)}">Discovery</a> <a href="#/joinmap/${esc(r.run_id)}">Join map</a> <a href="#/answer/${esc(r.run_id)}">Answer</a></td></tr>`,
+      )
+      .join("")}</tbody>
+  </table></div>`;
 }
 
 export function mount(el, ctx) {
-  el.innerHTML = `
-    <h1 class="view-h">Ask</h1>
-    <div class="ask">
-      <form class="panel ask__form" id="ask-form" aria-labelledby="ask-h">
-        <h2 class="panel__h" id="ask-h">Why did this utility's revenue change?</h2>
-        <p class="small muted">The agent reads the two quarters' revenue through Zetaris, computes degree days in Lightning SQL, loads the peer set, and splits the change into a weather part, an industry part and a remainder, each with a bootstrap range. Nothing is computed by the model.</p>
-        <div class="field"><label class="field__label" for="utility">Utility</label><select id="utility" name="utility" required><option value="">Loading the utilities…</option></select><p class="small muted" id="utility-note"></p></div>
-        <div class="field field--row">
-          <div><label class="field__label" for="period">Period (quarter)</label><select id="period" name="period">${PERIODS.map((p) => `<option value="${p}"${p === "CY2025Q1" ? " selected" : ""}>${p}</option>`).join("")}</select><p class="small muted">Compared with the same quarter a year earlier. The frames API has no three-month fourth quarter.</p></div>
-          <div><label class="field__label" for="max_chunks">Max chunks</label><input id="max_chunks" name="max_chunks" type="number" min="1" max="10" value="10" inputmode="numeric"></div>
+  ctx.setTitle?.("Ask");
+  let alive = true;
+  const paint = () => {
+    const runs = ctx.runs();
+    const running = ctx.running();
+    el.innerHTML = `<section class="ask">
+      <h1 class="view-h">Ask <span class="view-h__sub">one cross-agency question: FEMA disasters, NOAA weather and SEC revenue, joined by keys the agent measures itself</span></h1>
+      ${running ? `<p class="msg" role="status">A run is in progress (${esc(runWords(running))}). <a href="#/timeline/${esc(running.run_id)}">Watch it live</a>.</p>` : ""}
+      <div class="ask__grid">${PRESETS.map((p) => renderPreset(p, savedFor(runs, p.quarter, p.mode), !!running)).join("")}</div>
+      <form class="panel ask__free" data-free novalidate>
+        <h2 class="panel__h"><label for="q">Your quarter</label> <span class="panel__note">the same question for any quarter; the agent registers in Zetaris what that quarter needs</span></h2>
+        <textarea id="q" name="q" rows="3" spellcheck="false">${esc(DEMO_QUESTION)}</textarea>
+        <div class="ask__btns">
+          <fieldset class="ask__mode"><legend class="sr-only">Memory</legend>
+            <label><input type="radio" name="mode" value="warm" checked> Warm: reuse keys verified earlier</label>
+            <label><input type="radio" name="mode" value="cold"> Cold: measure every key again</label>
+          </fieldset>
+          <button type="submit" class="btn btn--primary"${running ? " disabled" : ""}>Ask now</button>
         </div>
-        <div class="field"><label class="field__label" for="claim">Management's claim (optional)</label><input id="claim" name="claim" type="text" list="claims" value="colder weather" maxlength="120" autocomplete="off"><datalist id="claims">${CLAIMS.map((c) => `<option value="${esc(c)}">`).join("")}</datalist><p class="small muted">The words from the filing or the call that credit the weather; the verdict tests them against the weather part.</p></div>
-        <div class="act__buttons"><button type="submit" class="btn btn--primary" id="ask-go">Ask</button><span id="ask-status" class="small" role="status"></span></div>
-        <div id="ask-msg"></div>
+        <p class="ask__check small" data-check aria-live="polite"></p>
       </form>
-      <section class="panel ask__live" aria-labelledby="live-h">
-        <h2 class="panel__h" id="live-h">Investigation timeline <span class="panel__note" id="live-note">live from the agent's server-sent events</span></h2>
-        <ol class="stream" id="stream" aria-label="Investigation steps"></ol>
-        <p class="small muted">Planner lines quote the model's plan as written; only tool lines carry facts, each with its evidence. Chunk boundaries are the Markovian chain's: the next chunk sees only the carried state.</p>
-      </section>
-    </div>
-    <section class="panel" aria-labelledby="runs-h">
-      <h2 class="panel__h" id="runs-h">Saved runs <span class="panel__note">render fully with the model off</span></h2>
-      <div id="runs"></div>
+      <div data-msg></div>
+      <div class="panel"><h2 class="panel__h">Saved runs <span class="panel__note">open any of them; a saved run is shown as a replay</span></h2>${renderRuns(runs)}</div>
     </section>`;
-
-  const stream = el.querySelector("#stream");
-  const note = el.querySelector("#live-note");
-  const status = el.querySelector("#ask-status");
-  const msg = el.querySelector("#ask-msg");
-  const select = el.querySelector("#utility");
-  let liveRun = null;
-  let runs = [];
-
-  const showReplay = async (id) => {
-    const r = await loadRun(id);
+    const form = el.querySelector("[data-free]");
+    const box = form.querySelector("textarea");
+    const check = form.querySelector("[data-check]");
+    const show = () => {
+      const p = parseQuestion(box.value);
+      check.textContent = p.ok ? `Understood: ${quarterWords(p.quarter)}, compared with the same quarter a year earlier.` : p.reason;
+      check.dataset.ok = p.ok ? "1" : "0";
+      return p;
+    };
+    show();
+    box.addEventListener("input", show);
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const p = show();
+      if (!p.ok) return;
+      start(p.quarter, form.querySelector("input[name=mode]:checked")?.value ?? "warm");
+    });
+    el.querySelectorAll("[data-ask]").forEach((b) =>
+      b.addEventListener("click", () => {
+        const p = PRESETS.find((x) => x.id === b.getAttribute("data-ask"));
+        if (p) start(p.quarter, p.mode);
+      }),
+    );
+  };
+  const start = async (quarter, mode) => {
+    const msg = el.querySelector("[data-msg]");
+    msg.innerHTML = `<p class="msg" role="status">Starting a ${esc(mode)} run for ${esc(quarterWords(quarter))}…</p>`;
+    const r = await api("/api/ask", { body: { quarter, mode } });
+    if (!alive) return;
     if (!r.ok) {
-      stream.innerHTML = `<li class="s s--fail"><span class="s__t"></span><span class="s__b">${esc(r.data?.error ?? "run not found")}</span></li>`;
-      return;
-    }
-    stream.innerHTML = replayRows(r.data);
-    note.textContent = `replayed from the saved run ${id} (${r.data.card?.utility?.name ?? r.data.cik}, ${r.data.period})`;
-    stream.scrollTop = 0;
-  };
-
-  const refreshRuns = async () => {
-    const res = await listRuns();
-    runs = res.runs;
-    el.querySelector("#runs").innerHTML = res.ok ? renderRunsTable(runs) : renderError(res.res);
-    return runs;
-  };
-
-  (async () => {
-    const [seeds] = await Promise.all([loadSeeds(), refreshRuns()]);
-    const opts = utilityOptions(seeds, runs);
-    if (!opts.length) {
-      select.innerHTML = `<option value="">No utilities listed</option>`;
-      el.querySelector("#utility-note").textContent = "The seed list is not served at /api/seeds or /seeds/utilities.json and no run is saved yet.";
-    } else {
-      select.innerHTML = opts.map((o) => `<option value="${esc(o.cik)}">${esc(o.name)}${o.ticker ? ` (${esc(o.ticker)})` : ""}, CIK ${esc(o.cik)}${o.hasRun ? ", has a saved run" : ""}${o.flags.length ? `, ${esc(o.flags.join(", "))}` : ""}</option>`).join("");
-      const fe = opts.find((o) => o.cik === "0001031296");
-      if (fe) select.value = fe.cik;
-      el.querySelector("#utility-note").textContent = seeds.length ? `${opts.length} seed utilities; ${opts.filter((o) => o.hasRun).length} with a saved run.` : `Seed list not served; ${opts.length} utilities from the saved runs.`;
-    }
-    const id = await pickRunId(ctx.params.run);
-    if (id && !liveRun) showReplay(id);
-  })();
-
-  const form = el.querySelector("#ask-form");
-  form.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const cik = select.value;
-    if (!cik) return;
-    const body = { cik, period: el.querySelector("#period").value };
-    const claim = el.querySelector("#claim").value.trim();
-    if (claim) body.claim = claim;
-    const mc = Number(el.querySelector("#max_chunks").value);
-    if (Number.isInteger(mc) && mc > 0 && mc < 10) body.max_chunks = mc;
-    const go = el.querySelector("#ask-go");
-    go.disabled = true;
-    status.textContent = "Starting the run…";
-    msg.innerHTML = "";
-    const r = await api("/api/ask", { body });
-    go.disabled = false;
-    if (r.status === 202 || (r.ok && r.data?.run_id)) {
-      liveRun = r.data.run_id;
-      setCurrentRun(liveRun);
-      stream.innerHTML = "";
-      note.textContent = `live, run ${liveRun}`;
-      status.textContent = `Run ${liveRun} accepted; the steps appear below as they happen.`;
-      ctx.announce(`Run ${liveRun} started`);
-    } else if (r.status === 409) {
-      status.textContent = "";
-      msg.innerHTML = `<p class="msg msg--warn" role="alert">The agent is busy with run <code>${esc(r.data?.busy_run_id ?? "")}</code>; one model job runs at a time. <button type="button" class="btn btn--small" data-replay="${esc(r.data?.busy_run_id ?? "")}" data-follow="yes">Follow it</button></p>`;
-    } else {
-      status.textContent = "";
       msg.innerHTML = renderError(r);
-    }
-  });
-
-  el.addEventListener("click", (e) => {
-    const b = e.target instanceof Element ? e.target.closest("[data-replay]") : null;
-    if (!b) return;
-    const id = b.getAttribute("data-replay");
-    if (!id) return;
-    if (b.getAttribute("data-follow") === "yes") {
-      liveRun = id;
-      stream.innerHTML = "";
-      note.textContent = `live, run ${id} (joined in progress)`;
       return;
     }
-    liveRun = null;
-    setCurrentRun(id);
-    showReplay(id);
-    stream.focus?.();
-  });
-
-  const off = mountStream(stream, {
-    filter: (type, d) => {
-      if (!liveRun) {
-        if (type === "run_started" && d.run_id) {
-          liveRun = d.run_id;
-          stream.innerHTML = "";
-          note.textContent = `live, run ${d.run_id}`;
-          return true;
-        }
-        return false;
-      }
-      return !d.run_id || d.run_id === liveRun;
-    },
-    onEvent: (type, d) => {
-      if (type === "run_finished") {
-        const finished = d.run_id ?? liveRun;
-        status.innerHTML = `Run <code>${esc(finished)}</code> finished. <a href="#/card/${esc(finished)}">Open the answer card</a>.`;
-        ctx.announce("Run finished; the answer card is ready.");
-        if (d.run_id) setCurrentRun(d.run_id);
-        refreshRuns();
-        // The saved run names each evidence record's kind; the live chips learn it now.
-        if (finished) loadRun(finished).then((r) => r.ok && refreshChipKinds(stream));
-        liveRun = null;
-      } else if (type === "run_failed") {
-        status.textContent = `Run failed: ${d.error ?? ""}`;
-        liveRun = null;
-      }
-    },
-  });
-  ctx.setTitle("Ask");
-  return () => off();
+    await ctx.reloadRuns();
+    location.hash = `#/timeline/${r.data.run_id}`;
+  };
+  paint();
+  return () => {
+    alive = false;
+  };
 }

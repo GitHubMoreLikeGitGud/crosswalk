@@ -15,15 +15,10 @@ export function safeUrl(u) {
   return typeof u === "string" && /^https?:\/\/[^\s"'<>]+$/iu.test(u) ? u : null;
 }
 
-/** An id that may wrap only at its hyphens (run, evidence, memory and contract ids). */
-export function idHtml(id) {
-  return esc(id).replaceAll("-", "-<wbr>");
-}
-
 // ---------- numbers ----------
 
 export function fmtNum(n, digits = 0) {
-  if (n === null || n === undefined || Number.isNaN(Number(n))) return "";
+  if (n === null || n === undefined || n === "" || Number.isNaN(Number(n))) return "";
   return Number(n).toLocaleString("en-GB", { maximumFractionDigits: digits, minimumFractionDigits: digits });
 }
 
@@ -32,14 +27,8 @@ export function fmtPct(x, digits = 1, signed = true) {
   if (x === null || x === undefined || Number.isNaN(Number(x))) return "";
   const v = Number(x) * 100;
   const s = fmtNum(Math.abs(v), digits);
-  if (v < 0) return `-${s}%`;
+  if (v < 0 && s !== fmtNum(0, digits)) return `-${s}%`;
   return `${signed ? "+" : ""}${s}%`;
-}
-
-/** "(range +1.6% to +14.0%)" from two fractions. */
-export function fmtRange(lo, hi, digits = 1) {
-  if (lo === null || lo === undefined || hi === null || hi === undefined) return "";
-  return `(range ${fmtPct(lo, digits)} to ${fmtPct(hi, digits)})`;
 }
 
 /** USD in millions: 3765000000 -> "3,765.0 M". */
@@ -55,10 +44,12 @@ export function fmtMs(ms) {
 }
 
 export function plural(n, one, many = `${one}s`) {
-  return `${fmtNum(n)} ${n === 1 ? one : many}`;
+  return `${fmtNum(n)} ${Number(n) === 1 ? one : many}`;
 }
 
-// ---------- time ----------
+// ---------- time: one zone everywhere (SGT, Asia/Singapore, UTC+8) ----------
+
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
 /** "+0800" -> "+08:00" so Date can parse the gateway's timestamps everywhere. */
 export function parseTime(t) {
@@ -71,52 +62,43 @@ export function parseTime(t) {
 
 const pad = (n) => String(n).padStart(2, "0");
 
-/** The browser's time zone at that moment, as a short name ("SGT", "GMT+8"). */
-export function zoneName(d = new Date()) {
-  try {
-    return new Intl.DateTimeFormat("en-GB", { timeZoneName: "short" }).formatToParts(d).find((p) => p.type === "timeZoneName")?.value ?? "";
-  } catch {
-    return "";
-  }
+/** The SGT wall-clock parts of an instant (fixed +8 h; Singapore has no daylight saving). */
+function sgtParts(d) {
+  const x = new Date(d.getTime() + 8 * 3600 * 1000);
+  return { y: x.getUTCFullYear(), mo: x.getUTCMonth(), d: x.getUTCDate(), h: x.getUTCHours(), mi: x.getUTCMinutes(), s: x.getUTCSeconds() };
 }
 
-/** Local date and time, e.g. "24 Oct 20:46 GMT+8". */
-export function fmtTime(t, withSeconds = false) {
-  const d = parseTime(t);
-  if (!d) return "";
-  const mon = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][d.getMonth()];
-  const zone = zoneName(d);
-  return `${d.getDate()} ${mon} ${pad(d.getHours())}:${pad(d.getMinutes())}${withSeconds ? `:${pad(d.getSeconds())}` : ""}${zone ? ` ${zone}` : ""}`;
-}
-
-/** The clock time only ("16:29:35"). */
-export function fmtClock(t) {
-  const d = parseTime(t);
-  return d ? `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}` : "";
-}
-
-/** Local date and time with the year ("24 Oct 2026 20:46 GMT+8"), for times that may span years. */
-export function fmtTimeYear(t, withSeconds = false) {
-  const d = parseTime(t);
-  if (!d) return "";
-  const mon = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][d.getMonth()];
-  const zone = zoneName(d);
-  return `${d.getDate()} ${mon} ${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}${withSeconds ? `:${pad(d.getSeconds())}` : ""}${zone ? ` ${zone}` : ""}`;
-}
-
-/**
- * A source time as the source states it: a date stamped at midnight UTC (a filing date, a quarter
- * end) stays a date ("2025-03-31"); anything else is a local date and time with the year.
- */
-export function fmtSourceTime(t) {
+/** "25 Oct 2026 16:00:20 SGT" from an ISO instant or the server's "2026-10-25 16:00:20 SGT". */
+export function fmtSgt(t, { seconds = true, year = true } = {}) {
   if (t === null || t === undefined || t === "") return "";
-  const s = String(t);
-  if (/^\d{4}-\d{2}-\d{2}$/u.test(s)) return s;
-  if (/^\d{4}-\d{2}-\d{2}T00:00(?::00(?:\.0+)?)?Z$/u.test(s)) return s.slice(0, 10);
-  return fmtTimeYear(s) || s;
+  const m = /^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2}) SGT$/u.exec(String(t));
+  let p;
+  if (m) p = { y: Number(m[1]), mo: Number(m[2]) - 1, d: Number(m[3]), h: Number(m[4]), mi: Number(m[5]), s: Number(m[6]) };
+  else {
+    const d = parseTime(t);
+    if (!d) return "";
+    p = sgtParts(d);
+  }
+  return `${p.d} ${MONTHS[p.mo]}${year ? ` ${p.y}` : ""} ${pad(p.h)}:${pad(p.mi)}${seconds ? `:${pad(p.s)}` : ""} SGT`;
+}
+
+/** The SGT clock time only ("16:00:20"). */
+export function fmtClock(t) {
+  const m = /^\d{4}-\d{2}-\d{2} (\d{2}:\d{2}:\d{2}) SGT$/u.exec(String(t ?? ""));
+  if (m) return m[1];
+  const d = parseTime(t);
+  if (!d) return "";
+  const p = sgtParts(d);
+  return `${pad(p.h)}:${pad(p.mi)}:${pad(p.s)}`;
 }
 
 // ---------- domain words ----------
+
+/** "CY2025Q1" -> "Q1 2025". */
+export function quarterWords(q) {
+  const m = /^CY(\d{4})Q([1-4])$/u.exec(String(q ?? ""));
+  return m ? `Q${m[2]} ${m[1]}` : String(q ?? "");
+}
 
 const TAG_SHORT = { Revenues: "Revenues", RevenueFromContractWithCustomerExcludingAssessedTax: "RFC", RegulatedAndUnregulatedOperatingRevenue: "RUOR" };
 
@@ -128,174 +110,36 @@ export function tagShort(tag) {
 }
 
 export const TOOL_WORDS = {
-  resolve_utility: "Resolve the utility",
-  probe_revenue_tag: "Probe the revenue tag",
-  register_frames: "Register a frames period in Zetaris",
-  get_revenue: "Read like-for-like revenue",
-  get_peers: "Load the peer set",
-  get_weather: "Compute degree days in Lightning SQL",
-  dq_gate: "Run the data-quality gate",
-  attribute: "Attribute the change",
+  search_catalogue: "Search the catalogue",
+  probe_source: "Probe a source's shape",
+  propose_keys: "Propose join keys",
+  measure_key: "Measure a key in Lightning SQL",
+  register_source: "Register a source in Zetaris",
+  compile_usl: "Compile the USL and run live DQ",
+  answer: "Answer from the cached views",
   not_tested: "List what was not tested",
-  finalize: "Test the claim and write the memo",
+  finalize: "Write the note",
 };
 
 export function toolWord(tool) {
   return TOOL_WORDS[tool] ?? String(tool ?? "").replaceAll("_", " ");
 }
 
-/** Cosmetic: a word, a hyphen, a space, a word -> word-word (render time only; the saved text is untouched). */
-export function hyphenJoin(text) {
-  return String(text ?? "").replace(/(\w)- (\w)/gu, "$1-$2");
+/** "cold" / "warm" with what it means. */
+export function modeWords(mode) {
+  return mode === "warm" ? "Warm run" : mode === "cold" ? "Cold run" : "Run";
 }
 
-// ---------- chips ----------
-
-const VERDICT_CLASS = { supported: "good", partly_supported: "mid", not_supported: "bad", withheld: "neutral", untested: "neutral" };
-
-/** The claim verdict as a chip: colour plus the word, never colour alone. */
-export function verdictChip(verdict, opts = {}) {
-  const v = String(verdict ?? "").toLowerCase();
-  const cls = VERDICT_CLASS[v] ?? "neutral";
-  return `<span class="chip chip--${cls}${opts.large ? " chip--lg" : ""}" data-verdict="${esc(v)}">${esc(v.replaceAll("_", " ") || "no verdict")}</span>`;
+/** A run as a person reads it: "Cold run, Q1 2025, 25 Oct 2026 16:00 SGT". No id. */
+export function runWords(r) {
+  if (!r) return "";
+  const when = fmtSgt(r.started_at_sgt ?? r.started_at, { seconds: false });
+  return `${modeWords(r.mode)}, ${quarterWords(r.quarter)}${when ? `, ${when}` : ""}`;
 }
 
-const CONF_CLASS = { high: "good", medium: "mid", low: "bad", withheld: "neutral" };
-
-export function confidenceChip(level, opts = {}) {
-  const c = String(level ?? "").toLowerCase();
-  return `<span class="chip chip--${CONF_CLASS[c] ?? "neutral"}${opts.large ? " chip--lg" : ""}" data-confidence="${esc(c)}">${opts.bare ? "" : "confidence "}${esc(c || "not stated")}</span>`;
-}
-
-export function dqChip(label) {
-  const l = String(label ?? "").toLowerCase();
-  const cls = l === "pass" ? "good" : l === "withheld" || l === "fail" ? "bad" : "neutral";
-  return `<span class="chip chip--${cls}" data-dq="${esc(l)}">DQ ${esc(l || "not run")}</span>`;
-}
-
-/** A plain neutral tag, e.g. "replay", "model memo". */
-export function tag(text, kind = "neutral") {
-  return `<span class="tag tag--${esc(kind)}">${esc(text)}</span>`;
-}
-
-// ---------- evidence ids and chips ----------
-
-const RUN_OF_EV = /^ev-(r\d{8}T\d{6}[0-9a-f]{4})-(\d{2,4})$/u;
-const EV_RE_SRC = "ev-r\\d{8}T\\d{6}[0-9a-f]{4}-\\d{2,4}";
-
-/** The run an evidence id belongs to (ids embed it), else the given fallback. */
-export function runOfEvidence(id, fallback = null) {
-  const m = RUN_OF_EV.exec(String(id ?? ""));
-  return m ? m[1] : fallback;
-}
-
-/** Short label for a chip: the record number within its run. */
-export function evShort(id) {
-  const m = RUN_OF_EV.exec(String(id ?? ""));
-  return m ? m[2] : String(id ?? "");
-}
-
-export const EV_KIND_WORD = { zetaris_sql: "SQL", dq: "DQ", tool: "Tool", model: "Model", memory: "Memory", registrar: "Registrar", world_model: "World" };
-export const EV_KIND_LONG = {
-  zetaris_sql: "Lightning SQL through Zetaris",
-  dq: "Zetaris data-quality rule",
-  tool: "deterministic tool output",
-  model: "local model call (NVIDIA Nemotron 3 Nano 4B via Ollama)",
-  memory: "H-MEM memory",
-  registrar: "Zetaris registrar contract",
-  world_model: "World Model",
-};
-
-const knownEvidence = new Map();
-
-/** Remembers each record (so chips can say what they cite and the drawer can render saved runs offline). */
-export function rememberEvidence(records) {
-  for (const r of Array.isArray(records) ? records : []) {
-    if (r && typeof r.id === "string") knownEvidence.set(r.id, r);
-  }
-}
-
-export function evidenceRecord(id) {
-  return knownEvidence.get(id) ?? null;
-}
-
-/** Chips rendered before their records were known (a live run) get their kind once the run is saved. */
-export function refreshChipKinds(root) {
-  for (const b of root.querySelectorAll(".ev[data-ev]")) {
-    const rec = knownEvidence.get(b.getAttribute("data-ev"));
-    if (!rec?.kind || b.getAttribute("data-kind") === rec.kind) continue;
-    b.setAttribute("data-kind", rec.kind);
-    const k = b.querySelector(".ev__k");
-    if (k) k.textContent = EV_KIND_WORD[rec.kind] ?? "Record";
-    const claim = typeof rec.claim === "string" ? rec.claim : "";
-    const title = `Evidence ${evShort(rec.id)}${rec.template_id ? ` (${rec.template_id})` : ""}, ${EV_KIND_LONG[rec.kind] ?? rec.kind}${claim ? `: ${claim.length > 200 ? `${claim.slice(0, 200)}…` : claim}` : ""}`;
-    b.setAttribute("title", title);
-    b.setAttribute("aria-label", title);
-  }
-}
-
-function kindOf(id, hint) {
-  return knownEvidence.get(id)?.kind ?? hint ?? null;
-}
-
-function chip(id, run, hint) {
-  const rec = knownEvidence.get(id);
-  const kind = kindOf(id, hint);
-  const word = EV_KIND_WORD[kind] ?? "Record";
-  const n = evShort(id);
-  const claim = typeof rec?.claim === "string" ? rec.claim : "";
-  const title = `Evidence ${n}${rec?.template_id ? ` (${rec.template_id})` : ""}${kind ? `, ${EV_KIND_LONG[kind] ?? kind}` : ""}${claim ? `: ${claim.length > 200 ? `${claim.slice(0, 200)}…` : claim}` : ""}`;
-  return `<button type="button" class="ev" data-ev="${esc(id)}" data-run="${esc(runOfEvidence(id, run) ?? "")}" data-kind="${esc(kind ?? "unknown")}" title="${esc(title)}" aria-label="${esc(title)}"><span class="ev__k" aria-hidden="true">${esc(word)}</span><span class="ev__n" aria-hidden="true">${esc(n)}</span></button>`;
-}
-
-/**
- * Evidence chips for one claim. Each chip is a button naming what it cites; clicking any opens
- * the drawer with every id of the group, starting at the one clicked. `max` folds a long list.
- */
-export function evidenceChips(runId, ids, opts = {}) {
-  const list = [...new Set((Array.isArray(ids) ? ids : []).filter((x) => typeof x === "string" && x))];
-  if (!list.length) return `<span class="evs evs--none">${opts.noneText !== undefined ? esc(opts.noneText) : "no evidence id"}</span>`;
-  const run = runId ?? runOfEvidence(list[0]);
-  const max = typeof opts.max === "number" && opts.max > 0 && list.length > opts.max + 1 ? opts.max : list.length;
-  let chips = list.slice(0, max).map((id) => chip(id, run, opts.kind)).join("");
-  if (max < list.length) chips += `<button type="button" class="ev ev--more" data-ev="${esc(list[max])}" data-run="${esc(runOfEvidence(list[max], run) ?? "")}" aria-label="${esc(`${list.length - max} more evidence records`)}">+${esc(list.length - max)} more</button>`;
-  return `<span class="evs" data-run="${esc(run ?? "")}" data-ids="${esc(list.join(" "))}">${chips}</span>`;
-}
-
-/**
- * A cited number: the figure is itself the button that opens the evidence drawer for its ids.
- * `label` says what the number is (for the aria-label); `cls` adds a size class.
- */
-export function numBtn(runId, ids, html, label, cls = "") {
-  const list = [...new Set((Array.isArray(ids) ? ids : []).filter(Boolean))];
-  const run = runId ?? runOfEvidence(list[0]);
-  if (!list.length) return `<span class="num num--uncited${cls ? ` ${cls}` : ""}" title="no evidence id recorded">${html}</span>`;
-  return `<button type="button" class="num${cls ? ` ${cls}` : ""}" data-ev="${esc(list[0])}" data-run="${esc(run ?? "")}" data-ids="${esc(list.join(" "))}" aria-label="${esc(label)}: open the evidence (${list.length} record${list.length === 1 ? "" : "s"})">${html}</button>`;
-}
-
-/** Escaped text with evidence ids inside it turned into chips (for server-written trace lines). */
-export function linkEvidenceIds(text) {
-  const parts = String(text ?? "").split(new RegExp(`(${EV_RE_SRC})`, "u"));
-  return parts.map((p, i) => (i % 2 ? evidenceChips(null, [p]) : esc(p))).join("");
-}
-
-/** A fact line without its trailing "[ev-…, ev-…]" list (the chips beside it carry those ids). */
-export function stripEvidenceRefs(text) {
-  return String(text ?? "").replace(new RegExp(`\\s*\\[${EV_RE_SRC}(?:,\\s*${EV_RE_SRC})*\\]`, "gu"), "");
-}
-
-/** Memory ids inside text ("mem-62") become buttons that open the why trace. */
-export function linkMemoryIds(text) {
-  const parts = String(text ?? "").split(/(mem-\d+)/u);
-  return parts.map((p, i) => (i % 2 ? `<button type="button" class="memid" data-why="${esc(p)}">${esc(p)}</button>` : esc(p))).join("");
-}
-
-// ---------- misc rendering ----------
-
-/** Visible field, or a marked "missing" for a required one that is absent. */
-export function fieldOrMissing(value, render = (v) => esc(v)) {
-  if (value === undefined || value === null || value === "") return `<span class="missing">missing</span>`;
-  return render(value);
+/** An engineering id: hidden unless "Show engineering detail" is on. */
+export function eng(html) {
+  return `<span class="eng">${html}</span>`;
 }
 
 export function errorText(res) {
@@ -336,75 +180,41 @@ export async function api(path, { method = "GET", body } = {}) {
   }
 }
 
-/** Plain text (the memo.md). */
-export async function apiText(path) {
-  try {
-    const res = await fetch(path, { headers: { accept: "text/markdown, text/plain" } });
-    const text = await res.text();
-    return { ok: res.ok, status: res.status, text };
-  } catch (e) {
-    return { ok: false, status: 0, text: "", error: e?.message ?? String(e) };
+export const STREAM_EVENTS = ["stream", "run_started", "chunk_start", "planner", "tool", "chunk_end", "run_finished", "run_failed"];
+
+/**
+ * One run's event stream (GET /api/runs/:id/events): live while the run is running, replayed from
+ * the saved run otherwise. The first event, "stream", says which. onEvent(type, data); onEnd() when
+ * the server closes the stream. Returns the close function.
+ */
+export function openRunStream(runId, { delayMs = 0, onEvent, onEnd } = {}) {
+  if (typeof EventSource === "undefined") return () => {};
+  const src = new EventSource(`/api/runs/${encodeURIComponent(runId)}/events${delayMs ? `?delay_ms=${delayMs}` : ""}`);
+  let ended = false;
+  const end = () => {
+    if (ended) return;
+    ended = true;
+    src.close();
+    onEnd?.();
+  };
+  for (const t of STREAM_EVENTS) {
+    src.addEventListener(t, (ev) => {
+      let data = {};
+      try {
+        data = JSON.parse(ev.data);
+      } catch {
+        data = {};
+      }
+      onEvent?.(t, data);
+      if (t === "run_finished" || t === "run_failed") end();
+    });
   }
-}
-
-// ---------- server-sent events: one EventSource per page ----------
-
-let source = null;
-const handlers = new Map();
-const connListeners = new Set();
-let connState = "connecting";
-
-export const KNOWN_EVENTS = ["run_started", "chunk_start", "planner", "tool", "chunk_end", "run_finished", "run_failed", "override"];
-
-function dispatch(type, ev) {
-  let data = {};
-  try {
-    data = JSON.parse(ev.data);
-  } catch {
-    data = {};
-  }
-  for (const fn of handlers.get(type) ?? []) {
-    try {
-      fn(data, type, ev.lastEventId);
-    } catch (e) {
-      console.error(`handler for ${type} failed`, e);
-    }
-  }
-  for (const fn of handlers.get("*") ?? []) {
-    try {
-      fn(data, type, ev.lastEventId);
-    } catch (e) {
-      console.error("handler for * failed", e);
-    }
-  }
-}
-
-function setConn(s) {
-  connState = s;
-  for (const fn of connListeners) fn(s);
-}
-
-function ensureSource() {
-  if (source || typeof EventSource === "undefined") return;
-  source = new EventSource("/api/events");
-  for (const t of KNOWN_EVENTS) source.addEventListener(t, (ev) => dispatch(t, ev));
-  source.addEventListener("open", () => setConn("live"));
-  source.addEventListener("error", () => setConn(source && source.readyState === 2 ? "closed" : "reconnecting"));
-}
-
-/** Subscribe to an SSE event type ("*" for every known type). Returns the unsubscribe function. */
-export function on(type, fn) {
-  ensureSource();
-  if (!handlers.has(type)) handlers.set(type, new Set());
-  handlers.get(type).add(fn);
-  return () => handlers.get(type)?.delete(fn);
-}
-
-export function onConnection(fn) {
-  ensureSource();
-  connListeners.add(fn);
-  fn(connState);
-  return () => connListeners.delete(fn);
+  // The server ends a stream by closing it; EventSource reports that as an error and would retry.
+  src.addEventListener("error", () => end());
+  return () => {
+    ended = true;
+    src.close();
+  };
 }
 
 // ---------- session memory (per-viewer conveniences only) ----------
@@ -424,5 +234,3 @@ export function sessionGet(key) {
     return null;
   }
 }
-
-export const ANALYST = "analyst";
