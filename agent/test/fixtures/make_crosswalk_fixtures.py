@@ -1,4 +1,4 @@
-"""Known-answer fixture generator for Crosswalk's deterministic tools (Cursor tasks C1 to C3).
+"""Known-answer fixture generator for Crosswalk's deterministic tools (tasks C1 to C3).
 
 Writes crosswalk-transforms.json, crosswalk-usl-plan.json, crosswalk-fema.json and
 crosswalk-stations.json next to this file. Every expected value is computed here, in Python,
