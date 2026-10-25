@@ -40,7 +40,7 @@ python -m venv .venv && .venv/Scripts/pip install -r gateway/requirements-dev.tx
 .venv/Scripts/python -X utf8 -m pytest gateway/tests -q        # 381 passed, 2 skipped (the 2 need a live Zetaris)
 ```
 
-Wall time on that clone: 51 s from `git clone` to the last test, the Python package install included; `git status` was clean afterwards. The same steps run in CI on `windows-latest` ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)), plus the agent and UI suites again with the clock moved forward 400 days (no test reads today's date); the CI run on `cc0ac3c` passed.
+Wall time on that clone: 51 s from `git clone` to the last test, the Python package install included; `git status` was clean afterwards. The same steps run in CI on `windows-latest` ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)), plus the agent and UI suites again with the clock moved forward 400 days (no test reads today's date); the CI run on `fd172e9`, the commit with the answer gate and the demo run, passed.
 
 </details>
 
