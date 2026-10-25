@@ -6,7 +6,7 @@
 
 Open Agent Hackathon 2026, Track 1: Solving Fragmented Intelligence. Team: Umar Mohktar, Singapore - solo.
 
-Demo video (3:29): https://youtu.be/AJyT-ar1LBs · Deck (PDF): [`docs/deck/Crosswalk.pdf`](docs/deck/Crosswalk.pdf) · Evaluation: [`docs/eval-report.md`](docs/eval-report.md) · The demo case step by step: [`docs/demo-case.md`](docs/demo-case.md) · How Cursor was used: [`docs/how-cursor-was-used.md`](docs/how-cursor-was-used.md)
+Demo video (3:14): https://youtu.be/MRar6dzsmv8 · Deck (PDF): [`docs/deck/Crosswalk.pdf`](docs/deck/Crosswalk.pdf) · Evaluation: [`docs/eval-report.md`](docs/eval-report.md) · The demo case step by step: [`docs/demo-case.md`](docs/demo-case.md) · How Cursor was used: [`docs/how-cursor-was-used.md`](docs/how-cursor-was-used.md)
 
 **Why it matters.** SEC publishes a company's number unpadded in one API and as a ten-digit string in another. Joined as published, 0 of 43 utilities match, and the revenue column of a cross-agency answer silently comes back empty; with the transform Crosswalk measured (zero-padding to ten digits), 42 of 43 match and the one that does not, IDACORP, is named. A state utility-commission analyst who asks which utilities served states with FEMA major-disaster declarations in Q1 2025 gets 12 utilities in 7 states, each number one click from the Lightning SQL behind it.
 
