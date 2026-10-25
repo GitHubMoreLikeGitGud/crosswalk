@@ -7,7 +7,7 @@ import { describe, expect, it } from "vitest";
 import { EvidenceStore } from "../src/evidence/store.ts";
 import { plannerSchema, validate } from "../src/llm/schemas.ts";
 import { TOOL_CATALOG } from "../src/llm/toolCatalog.ts";
-import { allowedTools, completeInput, fallbackStep, memoryKeyOf, newQuestionContext, questionPort, runTool, snapshotTakenAt, toolDef, type KeyMemoryPort, type RegistrarPort, type ToolDeps } from "../src/loop/tools.ts";
+import { allowedTools, completeInput, fallbackStep, memoryKeyOf, newQuestionContext, opaqueSources, questionPort, runTool, snapshotTakenAt, toolDef, type KeyMemoryPort, type RegistrarPort, type ToolDeps } from "../src/loop/tools.ts";
 import { loadSeeds } from "../src/seeds.ts";
 import type { MeasureResult } from "../src/tools/discovery.ts";
 import type { RegistrarResult } from "../src/zetaris/client.ts";
@@ -169,6 +169,49 @@ describe("the discovery loop on the fallback alone", () => {
     const joinmap = sql.filter((e) => e.template_id === "joinmap_cik");
     expect(joinmap.length).toBeGreaterThan(0);
     expect(joinmap.every((e) => e.source_cached_at === null)).toBe(true);
+  });
+
+  it("the opaque-column experiment probes the cw.opq_* copies with every column a candidate; the name-based baseline then proposes nothing and the gate withholds the answer", async () => {
+    const opaqueManifest = JSON.parse(readFileSync(new URL("zetaris/manifest-opaque.json", repo), "utf8"));
+    const sources = opaqueSources(opaqueManifest, Q);
+    expect(sources).toEqual(["cw.opq_seed_submissions_snapshot", "cw.opq_frames_revenues_cy2025q1", "cw.opq_fema_declarations_dr_2025q1", "cw.opq_utility_states", "cw.opq_states", "cw.opq_seed_stations", "cw.opq_stations", "cw.opq_sic_codes"]);
+    expect(() => opaqueSources(opaqueManifest, "CY2024Q1")).toThrow(/no opaque copies/u);
+    // The synthetic shapes above, renamed c1, c2, ... through the committed column maps.
+    const copies = opaqueManifest.sources[0].copies as { view: string; of: string; columns: Record<string, string> }[];
+    const opq: typeof SHAPES = {};
+    for (const c of copies) {
+      const s = SHAPES[c.of.toLowerCase()]!;
+      const back = Object.fromEntries(Object.entries(c.columns).map(([k, v]) => [v, k]));
+      const cols = s.cols.filter((x) => back[x.name]).map((x) => ({ name: back[x.name]!, type: x.type }));
+      const idx = s.cols.map((x, i) => (back[x.name] ? i : -1)).filter((i) => i >= 0);
+      opq[c.view] = { cols, rows: s.rows.map((r) => idx.map((i) => r[i])), distinct: Object.fromEntries(cols.map((x) => [x.name, s.distinct[c.columns[x.name]!] ?? [10, 10]])) };
+    }
+    const resolveOpq = (id: string, p: Record<string, string>): Reply | undefined => {
+      const shape = p.object ? opq[p.object] : undefined;
+      if (id === "describe_object") return shape && { columns: ["col_name", "data_type", "comment"], rows: shape.cols.map((c) => [c.name, c.type, null]) };
+      if (id === "sample_rows") return shape && { columns: shape.cols.map((c) => c.name), rows: shape.rows };
+      if (id === "distinct_counts") {
+        const d = shape?.distinct[p.column!];
+        return d && { columns: ["row_count", "distinct_values", "non_null", "non_null_share"], rows: [[d[0], d[1], d[0], 1]] };
+      }
+      return resolve(id, p);
+    };
+    const fake = fakeGateway(resolveOpq);
+    const d = deps({ gateway: fake.client, opaque: { sources, allColumnsWhenUnnamed: 10 }, registeredExtra: sources });
+    const ctx = newQuestionContext("Which utilities served states with FEMA major disaster declarations?", Q, d.evidence, { now: NOW, manifest, registeredExtra: sources, sources });
+    await runFallback(d, ctx);
+    // Only the copies are probed: no view from the search is added, and no original view is described.
+    expect(ctx.targets).toEqual(sources);
+    expect(fake.calls.filter((c) => c.template_id === "describe_object").map((c) => c.params.object)).toEqual(sources);
+    // Every non-floating-point column is a candidate (the frames copy's val, a double, is not).
+    expect(ctx.probes.get("cw.opq_frames_revenues_cy2025q1")!.candidates.map((c) => c.column)).toEqual(["c1", "c2", "c3", "c7"]);
+    // The deterministic baseline classifies columns by name, so it has nothing to propose; nothing is measured.
+    expect(ctx.proposals.baseline).toEqual([]);
+    expect(ctx.checklist.get("keys_proposed").status).toBe("failed");
+    expect([...ctx.measured.values()].filter((m) => m.status === "measured")).toHaveLength(0);
+    // The answer gate finds none of its keys, so no answer statement runs.
+    expect(fake.calls.some((c) => c.template_id.startsWith("answer_"))).toBe(false);
+    expect(ctx.answer?.rows ?? []).toHaveLength(0);
   });
 
   it("a warm run recalls verified keys from memory and skips their measure steps", async () => {

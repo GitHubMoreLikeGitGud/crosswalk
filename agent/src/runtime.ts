@@ -13,7 +13,7 @@ import { issueContract, loadContractSecret } from "./contract/scout.ts";
 import { EvidenceStore } from "./evidence/store.ts";
 import { OllamaClient } from "./llm/ollama.ts";
 import { demoQuestion, investigate, type InvestigateOptions, type RunResult } from "./loop/investigate.ts";
-import { memoryKeyOf, type KeyMemoryPort, type RegistrarAction, type RegistrarPort, type ToolDeps } from "./loop/tools.ts";
+import { memoryKeyOf, opaqueSources, type KeyMemoryPort, type RegistrarAction, type RegistrarPort, type ToolDeps } from "./loop/tools.ts";
 import { openMemory, provenanceOf, type HMEM } from "./memory/hmemFacade.ts";
 import { seedMemory, type SeedReport } from "./memory/seed.ts";
 import { DEMO_RUNS_DIR, RunStore, RUNS_DIR } from "./ops/runStore.ts";
@@ -166,6 +166,8 @@ export interface AskRequest {
   abortSignal?: AbortSignal;
   noSeed?: boolean;
   runId?: string;
+  /** The opaque-column experiment: probe the cw.opq_* copies (zetaris/manifest-opaque.json), cold, with no memory context. */
+  opaque?: boolean;
 }
 
 export interface AskOutcome {
@@ -196,11 +198,14 @@ export async function ask(rt: Runtime, req: AskRequest, origin: { source: "cli" 
   const seed = req.noSeed ? null : await seedMemory(rt.hmem, { log: () => {} });
   const evidence = new EvidenceStore(req.runId);
   // Cold when asked, or when no VERIFIED key is remembered yet; warm otherwise.
-  const mode = req.mode ?? (rt.hmem.keyRecords().some((k) => k.record.verdict === "VERIFIED") ? "warm" : "cold");
+  // The opaque-column experiment is always cold, and its planner sees no memory context: remembered keys name the
+  // original views and columns, and one opaque run's verified keys would hint the next.
+  const opaque = req.opaque ? opaqueSources(JSON.parse(readFileSync(join(REPO_ROOT, "zetaris", "manifest-opaque.json"), "utf8")), req.quarter) : null;
+  const mode = opaque ? "cold" : (req.mode ?? (rt.hmem.keyRecords().some((k) => k.record.verdict === "VERIFIED") ? "warm" : "cold"));
   const keyMemory = keyMemoryPort(rt.hmem, evidence.runId, { recall: mode === "warm", evidence });
-  const deps: ToolDeps = { gateway: rt.gateway, ollama: rt.ollama, evidence, seeds: rt.seeds, registrar: rt.registrar, keyMemory, weather: true, dqFile: DQ_FILE, log: rt.log, registeredExtra: rt.hmem.sourceObjects() };
+  const deps: ToolDeps = { gateway: rt.gateway, ollama: rt.ollama, evidence, seeds: rt.seeds, registrar: rt.registrar, keyMemory, weather: true, dqFile: DQ_FILE, log: rt.log, registeredExtra: [...rt.hmem.sourceObjects(), ...(opaque ?? [])], ...(opaque ? { opaque: { sources: opaque, allColumnsWhenUnnamed: 10 } } : {}) };
   const question = req.question ?? demoQuestion(req.quarter);
-  const memoryContext = rt.hmem.memoryContext();
+  const memoryContext = opaque ? "" : rt.hmem.memoryContext();
   const result = await investigate({ question, quarter: req.quarter, think: req.think, maxChunks: req.maxChunks, onEvent: req.onEvent, abortSignal: req.abortSignal, mode, memoryContext: memoryContext || undefined }, deps);
   // source_access memories for every registration the run made or confirmed.
   for (const r of result.registrations) {

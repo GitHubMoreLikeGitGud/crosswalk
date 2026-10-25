@@ -117,6 +117,11 @@ def load_manifest_views(path: Path = MANIFEST_PATH) -> tuple[frozenset[str], tup
 
 
 MANIFEST_VIEWS, MANIFEST_VIEW_PATTERNS = load_manifest_views()
+# The opaque-column experiment's cw.opq_* views (zetaris/manifest-opaque.json): probe and match_rate objects too.
+OPAQUE_MANIFEST_PATH = MANIFEST_PATH.with_name("manifest-opaque.json")
+if OPAQUE_MANIFEST_PATH.exists():
+    _opaque_views, _opaque_patterns = load_manifest_views(OPAQUE_MANIFEST_PATH)
+    MANIFEST_VIEWS, MANIFEST_VIEW_PATTERNS = MANIFEST_VIEWS | _opaque_views, MANIFEST_VIEW_PATTERNS + _opaque_patterns
 
 
 def in_manifest(name: str) -> bool:

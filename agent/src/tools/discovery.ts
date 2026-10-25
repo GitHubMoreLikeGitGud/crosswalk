@@ -294,7 +294,21 @@ export function assertProbeable(object: string, allowed: ReadonlySet<string>): v
   if (!lower.has(object.toLowerCase())) throw new DiscoveryRefusal("not_in_manifest", `object is not a registered view in the manifest: ${object}`);
 }
 
-export async function probeSource(object: string, opts: { gateway: TemplatePort; allowed: ReadonlySet<string>; runId: string; maxColumns?: number }): Promise<ProbeResult> {
+/** Floating-point columns are never key candidates (the probe heuristic's rule). */
+const FLOAT_TYPES = new Set(["double", "float", "decimal"]);
+
+/**
+ * The probe's candidate key columns: the name heuristic's picks, or, when `allColumnsWhenUnnamed` is set and no
+ * column name matches a key pattern (the opaque-column experiment), every column that is not floating-point, in
+ * DESCRIBE order, up to that many.
+ */
+export function probeCandidates(columns: readonly DescribedColumn[], maxColumns = 3, allColumnsWhenUnnamed: number | null = null): string[] {
+  const named = candidateKeyColumns(columns, maxColumns);
+  if (named.length || !allColumnsWhenUnnamed) return named;
+  return columns.filter((c) => !FLOAT_TYPES.has(c.type.toLowerCase().split("(", 1)[0]!)).slice(0, allColumnsWhenUnnamed).map((c) => c.name);
+}
+
+export async function probeSource(object: string, opts: { gateway: TemplatePort; allowed: ReadonlySet<string>; runId: string; maxColumns?: number; allColumnsWhenUnnamed?: number | null }): Promise<ProbeResult> {
   assertProbeable(object, opts.allowed);
   const t0 = performance.now();
   const provenance: Provenance[] = [];
@@ -307,7 +321,7 @@ export async function probeSource(object: string, opts: { gateway: TemplatePort;
   provenance.push(s.prov);
   const sampleRows = s.reply.rows.slice(0, 5);
   const candidates: ProbeColumnStat[] = [];
-  for (const column of candidateKeyColumns(columns, opts.maxColumns ?? 3)) {
+  for (const column of probeCandidates(columns, opts.maxColumns ?? 3, opts.allColumnsWhenUnnamed ?? null)) {
     const c = await call(opts.gateway, opts.runId, "distinct_counts", { object: name, column });
     provenance.push(c.prov);
     const idx = s.reply.columns.findIndex((x) => x.toLowerCase() === column.toLowerCase());

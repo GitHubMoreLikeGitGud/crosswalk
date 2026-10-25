@@ -242,7 +242,7 @@ export function verdictMixOf(ctx: QuestionContext, evidence: readonly EvidenceRe
 
 export async function investigate(opts: InvestigateOptions, deps: ToolDeps): Promise<RunResult> {
   const t0 = performance.now();
-  const ctx = newQuestionContext(opts.question, opts.quarter, deps.evidence, { now: opts.now, registeredExtra: deps.registeredExtra });
+  const ctx = newQuestionContext(opts.question, opts.quarter, deps.evidence, { now: opts.now, registeredExtra: deps.registeredExtra, sources: deps.opaque?.sources });
   const chunkConfig: ChunkConfig = { ...QUESTION_CHUNK_CONFIG, ...(opts.maxChunks ? { maxChunks: opts.maxChunks } : {}) };
   const goal = goalText(ctx);
   const session = new PlannerSession(ctx, deps, {

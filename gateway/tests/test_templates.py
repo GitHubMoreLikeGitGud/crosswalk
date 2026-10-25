@@ -348,6 +348,24 @@ def test_manifest_names_and_patterns(tmp_path):
     assert not templates.in_manifest("cw.frames_Revenues_CY2024Q4") and not templates.in_manifest("won.states")
 
 
+def test_opaque_experiment_views_are_manifest_objects():
+    """zetaris/manifest-opaque.json: the cw.opq_* copies are probe and match_rate objects; names outside it are not."""
+    import json
+
+    opaque = json.loads(templates.OPAQUE_MANIFEST_PATH.read_text(encoding="utf-8"))["sources"][0]
+    views = opaque["objects"]["views"]
+    assert len(views) == 8 and all(v.startswith("cw.opq_") for v in views)
+    assert {c["view"] for c in opaque["copies"]} == set(views)
+    for v in views:
+        assert templates.in_manifest(v)
+        assert render("describe_object", {"object": v})[1] == f"DESCRIBE {v}"
+    _, sql = render("match_rate", {"left_object": "cw.opq_seed_stations", "left_column": "c1", "right_object": "cw.opq_stations",
+                                   "right_column": "c1", "transform": "identity"})
+    assert "FROM cw.opq_seed_stations l" in sql and allowlist.check(sql, "reader") == "read"
+    assert not templates.in_manifest("cw.opq_frames_revenues_cy2024q1") and not templates.in_manifest("cw.opq_x")
+    assert templates.in_manifest("cw.states")  # the originals stay listed
+
+
 def test_answer_templates_read_cached_views_only():
     from gateway import cache
 

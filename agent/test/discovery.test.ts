@@ -13,6 +13,7 @@ import {
   notTested,
   NOT_TESTED_WEATHER,
   parseDistinct,
+  probeCandidates,
   probeSource,
   proposeKeys,
   registeredObjects,
@@ -59,6 +60,33 @@ describe("registered objects and the governed plan", () => {
     expect(plan.tables).toHaveLength(T.governed.tables);
     expect(plan.fks).toHaveLength(T.governed.fks);
     expect(renderCompileUsl(plan)).toBe(T.governed.compile_sql);
+  });
+});
+
+describe("probe candidates for the opaque-column experiment", () => {
+  const opaque = [{ name: "c1", type: "bigint" }, { name: "c2", type: "string" }, { name: "c3", type: "string" }, { name: "c4", type: "double" }, { name: "c5", type: "string" }];
+  it("names that match no key pattern give no candidates unless asked, then every non-floating-point column up to the cap", () => {
+    expect(probeCandidates(opaque, 3)).toEqual([]);
+    expect(probeCandidates(opaque, 3, 10)).toEqual(["c1", "c2", "c3", "c5"]);
+    expect(probeCandidates(opaque, 3, 2)).toEqual(["c1", "c2"]);
+  });
+  it("named columns keep the name heuristic's picks, with or without the option (ordinary runs are unchanged)", () => {
+    const named = [{ name: "code", type: "string" }, { name: "name", type: "string" }, { name: "fips", type: "string" }];
+    expect(probeCandidates(named, 3, 10)).toEqual(probeCandidates(named, 3));
+    expect(probeCandidates(named, 3)).toEqual(["code", "fips"]);
+  });
+  it("probe_source sends a distinct-count statement for every candidate the option adds", async () => {
+    const g = port((id) => {
+      if (id === "describe_object") return { columns: ["col_name", "data_type"], rows: opaque.map((c) => [c.name, c.type]) };
+      if (id === "sample_rows") return { columns: opaque.map((c) => c.name), rows: [[1, "US-CA", "CA", 1.5, "x"]] };
+      return { columns: ["row_count", "distinct_values", "non_null", "non_null_share"], rows: [[10, 5, 10, 1]] };
+    });
+    const allowed = new Set(["cw.opq_t"]);
+    const p = await probeSource("cw.opq_t", { gateway: g, allowed, runId: RUN, allColumnsWhenUnnamed: 10 });
+    expect(p.candidates.map((c) => c.column)).toEqual(["c1", "c2", "c3", "c5"]);
+    expect(g.calls.filter((c) => c.id === "distinct_counts").map((c) => c.params.column)).toEqual(["c1", "c2", "c3", "c5"]);
+    const plain = await probeSource("cw.opq_t", { gateway: g, allowed, runId: RUN });
+    expect(plain.candidates).toEqual([]);
   });
 });
 

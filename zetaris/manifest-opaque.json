@@ -1,0 +1,33 @@
+{
+  "about": "Opaque-column experiment: the eight views the Q1 2025 question probes, copied as cw.opq_* views whose columns are renamed c1, c2, ... in their original order (zetaris/sql/11_cw_opaque_create.sql). The gateway accepts these views as probe and match_rate objects; the agent reads this file only for `ask --opaque`, and then only the view list and which original view each one copies. The column maps are for scoring the runs afterwards and are never shown to the model.",
+  "sources": [
+    {
+      "id": "cw_opaque_experiment",
+      "quarter": "CY2025Q1",
+      "create_sql": "zetaris/sql/11_cw_opaque_create.sql",
+      "select_sql": "zetaris/sql/11_cw_opaque_select.sql",
+      "objects": {
+        "views": [
+          "cw.opq_seed_submissions_snapshot",
+          "cw.opq_frames_revenues_cy2025q1",
+          "cw.opq_fema_declarations_dr_2025q1",
+          "cw.opq_utility_states",
+          "cw.opq_states",
+          "cw.opq_seed_stations",
+          "cw.opq_stations",
+          "cw.opq_sic_codes"
+        ]
+      },
+      "copies": [
+        { "view": "cw.opq_seed_submissions_snapshot", "of": "cw.seed_submissions_snapshot", "columns": { "c1": "cik10", "c2": "name", "c3": "ticker", "c4": "sic", "c5": "hq_state", "c6": "snapshot_at" } },
+        { "view": "cw.opq_frames_revenues_cy2025q1", "of": "cw.frames_Revenues_CY2025Q1", "columns": { "c1": "cik", "c2": "entityName", "c3": "loc", "c4": "start", "c5": "end", "c6": "val", "c7": "accn" } },
+        { "view": "cw.opq_fema_declarations_dr_2025q1", "of": "cw.fema_declarations_dr_2025q1", "columns": { "c1": "disaster_number", "c2": "state", "c3": "declaration_date", "c4": "incident_type", "c5": "declaration_title", "c6": "declaration_type", "c7": "fips_state_code", "c8": "fips_county_code", "c9": "designated_area" } },
+        { "view": "cw.opq_utility_states", "of": "cw.utility_states", "columns": { "c1": "cik", "c2": "state" } },
+        { "view": "cw.opq_states", "of": "cw.states", "columns": { "c1": "code", "c2": "name", "c3": "fips" } },
+        { "view": "cw.opq_seed_stations", "of": "cw.seed_stations", "columns": { "c1": "id", "c2": "state", "c3": "name" } },
+        { "view": "cw.opq_stations", "of": "cw.stations", "columns": { "c1": "id", "c2": "state", "c3": "name", "c4": "latitude", "c5": "longitude" } },
+        { "view": "cw.opq_sic_codes", "of": "cw.sic_codes", "columns": { "c1": "code", "c2": "description", "c3": "division", "c4": "division_desc", "c5": "major_group", "c6": "major_group_desc" } }
+      ]
+    }
+  ]
+}

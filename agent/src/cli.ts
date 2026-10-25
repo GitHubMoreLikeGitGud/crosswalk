@@ -5,10 +5,11 @@
 //        catalogue source the manifest lists, verify the governed USL, RUN DQ for the six FK
 //        rules (900 s bound each), SHOW DQ INVALID RECORD where a rule has invalid rows, and
 //        write <data>/dq/latest.json
-//   npm run ask -- --quarter CY2025Q1 [--cold] [--think on|off] [--max-chunks 12] [--no-model] [--json] [--out <file>]
+//   npm run ask -- --quarter CY2025Q1 [--cold] [--think on|off] [--max-chunks 12] [--no-model] [--opaque] [--json] [--out <file>]
 //        the demo question of SPEC D9 for the quarter through the Markovian chain; --cold never
 //        recalls key_verified memories (they are still written); the run is saved under
-//        <data>/runs/<id>/run.json
+//        <data>/runs/<id>/run.json; --opaque probes the cw.opq_* copies of the question's views
+//        (zetaris/manifest-opaque.json, columns renamed c1, c2, ...), always cold, no memory context
 //   npm run replay -- <run_id> [--json]          print a saved run (no model, no gateway)
 //   npm run cli -- runs                          list the saved runs
 //   npm run cli -- why <memory_id>               "why do you believe this?" for one memory
@@ -160,6 +161,7 @@ async function cmdAsk(flags: Record<string, string | boolean>, positional: strin
       quarter,
       mode,
       think,
+      opaque: !!flags.opaque,
       maxChunks: typeof flags["max-chunks"] === "string" ? Number(flags["max-chunks"]) : undefined,
       onEvent: (e) => {
         if (e.type === "chunk_start") process.stderr.write(`chunk ${e.chunk} (carryover ${e.carryover_tokens} tok)\n`);
@@ -279,7 +281,7 @@ async function main(): Promise<number> {
     default:
       console.log(
         [
-          "usage: cli.ts ask --quarter CY2025Q1 [--cold] [--json] [--out <file>] [--think on|off] [--max-chunks 12] [--no-model]",
+          "usage: cli.ts ask --quarter CY2025Q1 [--cold] [--json] [--out <file>] [--think on|off] [--max-chunks 12] [--no-model] [--opaque]",
           "       cli.ts onboard [--skip-dq] [--refresh-snapshot]",
           "       cli.ts replay <run_id> [--json]",
           "       cli.ts runs",
