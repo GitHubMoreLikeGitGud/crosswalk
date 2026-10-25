@@ -1,0 +1,900 @@
+{
+ "label": "measured",
+ "fetched_at": "2026-10-25T14:11:42Z",
+ "method": "both lists fetched over HTTPS outside Zetaris with the declared User-Agent (not recorded); SEC codes parsed from the page's table; company_dns codes are its class_id values",
+ "sources": {
+  "company_dns": "https://company-dns.mediumroast.io/V4.0/na/sic/code/%25",
+  "sec": "https://www.sec.gov/search-filings/standard-industrial-classification-sic-code-list"
+ },
+ "company_dns_codes": 1005,
+ "sec_codes": 444,
+ "sec_codes_missing_from_company_dns": 172,
+ "seed_utility_sics": [
+  {
+   "sic": "4900",
+   "on_sec_list": true,
+   "in_company_dns": false,
+   "sec_title": "ELECTRIC, GAS & SANITARY SERVICES"
+  },
+  {
+   "sic": "4911",
+   "on_sec_list": true,
+   "in_company_dns": true,
+   "sec_title": "ELECTRIC SERVICES"
+  },
+  {
+   "sic": "4931",
+   "on_sec_list": true,
+   "in_company_dns": true,
+   "sec_title": "ELECTRIC & OTHER SERVICES COMBINED"
+  },
+  {
+   "sic": "4932",
+   "on_sec_list": true,
+   "in_company_dns": true,
+   "sec_title": "GAS & OTHER SERVICES COMBINED"
+  }
+ ],
+ "missing": [
+  {
+   "sic": "0100",
+   "office": "Industrial Applications and Services",
+   "title": "AGRICULTURAL PRODUCTION-CROPS"
+  },
+  {
+   "sic": "0200",
+   "office": "Industrial Applications and Services",
+   "title": "AGRICULTURAL PROD-LIVESTOCK & ANIMAL SPECIALTIES"
+  },
+  {
+   "sic": "0700",
+   "office": "Industrial Applications and Services",
+   "title": "AGRICULTURAL SERVICES"
+  },
+  {
+   "sic": "0800",
+   "office": "Industrial Applications and Services",
+   "title": "FORESTRY"
+  },
+  {
+   "sic": "0900",
+   "office": "Industrial Applications and Services",
+   "title": "FISHING, HUNTING AND TRAPPING"
+  },
+  {
+   "sic": "1000",
+   "office": "Office of Energy & Transportation",
+   "title": "METAL MINING"
+  },
+  {
+   "sic": "1040",
+   "office": "Office of Energy & Transportation",
+   "title": "GOLD AND SILVER ORES"
+  },
+  {
+   "sic": "1090",
+   "office": "Office of Energy & Transportation",
+   "title": "MISCELLANEOUS METAL ORES"
+  },
+  {
+   "sic": "1220",
+   "office": "Office of Energy & Transportation",
+   "title": "BITUMINOUS COAL & LIGNITE MINING"
+  },
+  {
+   "sic": "1400",
+   "office": "Office of Energy & Transportation",
+   "title": "MINING & QUARRYING OF NONMETALLIC MINERALS (NO FUELS)"
+  },
+  {
+   "sic": "1520",
+   "office": "Office of Real Estate & Construction",
+   "title": "GENERAL BLDG CONTRACTORS - RESIDENTIAL BLDGS"
+  },
+  {
+   "sic": "1540",
+   "office": "Office of Real Estate & Construction",
+   "title": "GENERAL BLDG CONTRACTORS - NONRESIDENTIAL BLDGS"
+  },
+  {
+   "sic": "1600",
+   "office": "Office of Real Estate & Construction",
+   "title": "HEAVY CONSTRUCTION OTHER THAN BLDG CONST - CONTRACTORS"
+  },
+  {
+   "sic": "1700",
+   "office": "Office of Real Estate & Construction",
+   "title": "CONSTRUCTION - SPECIAL TRADE CONTRACTORS"
+  },
+  {
+   "sic": "2000",
+   "office": "Office of Manufacturing",
+   "title": "FOOD AND KINDRED PRODUCTS"
+  },
+  {
+   "sic": "2020",
+   "office": "Office of Manufacturing",
+   "title": "DAIRY PRODUCTS"
+  },
+  {
+   "sic": "2030",
+   "office": "Office of Manufacturing",
+   "title": "CANNED, FROZEN & PRESERVD FRUIT, VEG & FOOD SPECIALTIES"
+  },
+  {
+   "sic": "2040",
+   "office": "Office of Manufacturing",
+   "title": "GRAIN MILL PRODUCTS"
+  },
+  {
+   "sic": "2050",
+   "office": "Office of Manufacturing",
+   "title": "BAKERY PRODUCTS"
+  },
+  {
+   "sic": "2060",
+   "office": "Office of Manufacturing",
+   "title": "SUGAR & CONFECTIONERY PRODUCTS"
+  },
+  {
+   "sic": "2070",
+   "office": "Office of Manufacturing",
+   "title": "FATS & OILS"
+  },
+  {
+   "sic": "2080",
+   "office": "Office of Manufacturing",
+   "title": "BEVERAGES"
+  },
+  {
+   "sic": "2090",
+   "office": "Office of Manufacturing",
+   "title": "MISCELLANEOUS FOOD PREPARATIONS & KINDRED PRODUCTS"
+  },
+  {
+   "sic": "2100",
+   "office": "Office of Manufacturing",
+   "title": "TOBACCO PRODUCTS"
+  },
+  {
+   "sic": "2200",
+   "office": "Office of Manufacturing",
+   "title": "TEXTILE MILL PRODUCTS"
+  },
+  {
+   "sic": "2250",
+   "office": "Office of Manufacturing",
+   "title": "KNITTING MILLS"
+  },
+  {
+   "sic": "2300",
+   "office": "Office of Manufacturing",
+   "title": "APPAREL & OTHER FINISHD PRODS OF FABRICS & SIMILAR MATL"
+  },
+  {
+   "sic": "2320",
+   "office": "Office of Manufacturing",
+   "title": "MEN'S & BOYS' FURNISHGS, WORK CLOTHG, & ALLIED GARMENTS"
+  },
+  {
+   "sic": "2330",
+   "office": "Office of Manufacturing",
+   "title": "WOMEN'S, MISSES', AND JUNIORS OUTERWEAR"
+  },
+  {
+   "sic": "2340",
+   "office": "Office of Manufacturing",
+   "title": "WOMEN'S, MISSES', CHILDREN'S & INFANTS' UNDERGARMENTS"
+  },
+  {
+   "sic": "2390",
+   "office": "Office of Manufacturing",
+   "title": "MISCELLANEOUS FABRICATED TEXTILE PRODUCTS"
+  },
+  {
+   "sic": "2400",
+   "office": "Office of Manufacturing",
+   "title": "LUMBER & WOOD PRODUCTS (NO FURNITURE)"
+  },
+  {
+   "sic": "2430",
+   "office": "Office of Manufacturing",
+   "title": "MILLWOOD, VENEER, PLYWOOD, & STRUCTURAL WOOD MEMBERS"
+  },
+  {
+   "sic": "2510",
+   "office": "Office of Manufacturing",
+   "title": "HOUSEHOLD FURNITURE"
+  },
+  {
+   "sic": "2520",
+   "office": "Office of Manufacturing",
+   "title": "OFFICE FURNITURE"
+  },
+  {
+   "sic": "2540",
+   "office": "Office of Manufacturing",
+   "title": "PARTITIONS, SHELVG, LOCKERS, & OFFICE & STORE FIXTURES"
+  },
+  {
+   "sic": "2590",
+   "office": "Office of Manufacturing",
+   "title": "MISCELLANEOUS FURNITURE & FIXTURES"
+  },
+  {
+   "sic": "2600",
+   "office": "Office of Manufacturing",
+   "title": "PAPERS & ALLIED PRODUCTS"
+  },
+  {
+   "sic": "2650",
+   "office": "Office of Manufacturing",
+   "title": "PAPERBOARD CONTAINERS & BOXES"
+  },
+  {
+   "sic": "2670",
+   "office": "Office of Manufacturing",
+   "title": "CONVERTED PAPER & PAPERBOARD PRODS (NO CONTANERS/BOXES)"
+  },
+  {
+   "sic": "2750",
+   "office": "Office of Manufacturing",
+   "title": "COMMERCIAL PRINTING"
+  },
+  {
+   "sic": "2780",
+   "office": "Office of Manufacturing",
+   "title": "BLANKBOOKS, LOOSELEAF BINDERS & BOOKBINDG & RELATD WORK"
+  },
+  {
+   "sic": "2790",
+   "office": "Office of Manufacturing",
+   "title": "SERVICE INDUSTRIES FOR THE PRINTING TRADE"
+  },
+  {
+   "sic": "2800",
+   "office": "Industrial Applications and Services",
+   "title": "CHEMICALS & ALLIED PRODUCTS"
+  },
+  {
+   "sic": "2810",
+   "office": "Industrial Applications and Services",
+   "title": "INDUSTRIAL INORGANIC CHEMICALS"
+  },
+  {
+   "sic": "2820",
+   "office": "Industrial Applications and Services",
+   "title": "PLASTIC MATERIAL, SYNTH RESIN/RUBBER, CELLULOS (NO GLASS)"
+  },
+  {
+   "sic": "2840",
+   "office": "Industrial Applications and Services",
+   "title": "SOAP, DETERGENTS, CLEANG PREPARATIONS, PERFUMES, COSMETICS"
+  },
+  {
+   "sic": "2860",
+   "office": "Industrial Applications and Services",
+   "title": "INDUSTRIAL ORGANIC CHEMICALS"
+  },
+  {
+   "sic": "2870",
+   "office": "Industrial Applications and Services",
+   "title": "AGRICULTURAL CHEMICALS"
+  },
+  {
+   "sic": "2890",
+   "office": "Industrial Applications and Services",
+   "title": "MISCELLANEOUS CHEMICAL PRODUCTS"
+  },
+  {
+   "sic": "2950",
+   "office": "Office of Energy & Transportation",
+   "title": "ASPHALT PAVING & ROOFING MATERIALS"
+  },
+  {
+   "sic": "2990",
+   "office": "Office of Energy & Transportation",
+   "title": "MISCELLANEOUS PRODUCTS OF PETROLEUM & COAL"
+  },
+  {
+   "sic": "3050",
+   "office": "Office of Manufacturing",
+   "title": "GASKETS, PACKG & SEALG DEVICES & RUBBER & PLASTICS HOSE"
+  },
+  {
+   "sic": "3060",
+   "office": "Office of Manufacturing",
+   "title": "FABRICATED RUBBER PRODUCTS, NEC"
+  },
+  {
+   "sic": "3080",
+   "office": "Industrial Applications and Services",
+   "title": "MISCELLANEOUS PLASTICS PRODUCTS"
+  },
+  {
+   "sic": "3100",
+   "office": "Office of Manufacturing",
+   "title": "LEATHER & LEATHER PRODUCTS"
+  },
+  {
+   "sic": "3140",
+   "office": "Office of Manufacturing",
+   "title": "FOOTWEAR, (NO RUBBER)"
+  },
+  {
+   "sic": "3220",
+   "office": "Office of Manufacturing",
+   "title": "GLASS & GLASSWARE, PRESSED OR BLOWN"
+  },
+  {
+   "sic": "3250",
+   "office": "Office of Manufacturing",
+   "title": "STRUCTURAL CLAY PRODUCTS"
+  },
+  {
+   "sic": "3260",
+   "office": "Office of Manufacturing",
+   "title": "POTTERY & RELATED PRODUCTS"
+  },
+  {
+   "sic": "3270",
+   "office": "Office of Manufacturing",
+   "title": "CONCRETE, GYPSUM & PLASTER PRODUCTS"
+  },
+  {
+   "sic": "3290",
+   "office": "Office of Manufacturing",
+   "title": "ABRASIVE, ASBESTOS & MISC NONMETALLIC MINERAL PRODS"
+  },
+  {
+   "sic": "3310",
+   "office": "Office of Manufacturing",
+   "title": "STEEL WORKS, BLAST FURNACES & ROLLING & FINISHING MILLS"
+  },
+  {
+   "sic": "3320",
+   "office": "Office of Manufacturing",
+   "title": "IRON & STEEL FOUNDRIES"
+  },
+  {
+   "sic": "3330",
+   "office": "Office of Manufacturing",
+   "title": "PRIMARY SMELTING & REFINING OF NONFERROUS METALS"
+  },
+  {
+   "sic": "3350",
+   "office": "Office of Manufacturing",
+   "title": "ROLLING DRAWING & EXTRUDING OF NONFERROUS METALS"
+  },
+  {
+   "sic": "3360",
+   "office": "Office of Manufacturing",
+   "title": "NONFERROUS FOUNDRIES (CASTINGS)"
+  },
+  {
+   "sic": "3390",
+   "office": "Office of Manufacturing",
+   "title": "MISCELLANEOUS PRIMARY METAL PRODUCTS"
+  },
+  {
+   "sic": "3420",
+   "office": "Office of Manufacturing",
+   "title": "CUTLERY, HANDTOOLS & GENERAL HARDWARE"
+  },
+  {
+   "sic": "3430",
+   "office": "Office of Manufacturing",
+   "title": "HEATING EQUIP, EXCEPT ELEC & WARM AIR; & PLUMBING FIXTURES"
+  },
+  {
+   "sic": "3440",
+   "office": "Office of Manufacturing",
+   "title": "FABRICATED STRUCTURAL METAL PRODUCTS"
+  },
+  {
+   "sic": "3460",
+   "office": "Office of Manufacturing",
+   "title": "METAL FORGINGS & STAMPINGS"
+  },
+  {
+   "sic": "3470",
+   "office": "Office of Manufacturing",
+   "title": "COATING, ENGRAVING & ALLIED SERVICES"
+  },
+  {
+   "sic": "3480",
+   "office": "Office of Manufacturing",
+   "title": "ORDNANCE & ACCESSORIES, (NO VEHICLES/GUIDED MISSILES)"
+  },
+  {
+   "sic": "3490",
+   "office": "Office of Manufacturing",
+   "title": "MISCELLANEOUS FABRICATED METAL PRODUCTS"
+  },
+  {
+   "sic": "3510",
+   "office": "Office of Technology",
+   "title": "ENGINES & TURBINES"
+  },
+  {
+   "sic": "3530",
+   "office": "Office of Technology",
+   "title": "CONSTRUCTION, MINING & MATERIALS HANDLING MACHINERY & EQUIP"
+  },
+  {
+   "sic": "3540",
+   "office": "Office of Technology",
+   "title": "METALWORKG MACHINERY & EQUIPMENT"
+  },
+  {
+   "sic": "3550",
+   "office": "Office of Technology",
+   "title": "SPECIAL INDUSTRY MACHINERY (NO METALWORKING MACHINERY)"
+  },
+  {
+   "sic": "3560",
+   "office": "Office of Technology",
+   "title": "GENERAL INDUSTRIAL MACHINERY & EQUIPMENT"
+  },
+  {
+   "sic": "3570",
+   "office": "Office of Technology",
+   "title": "COMPUTER & OFFICE EQUIPMENT"
+  },
+  {
+   "sic": "3576",
+   "office": "Office of Technology",
+   "title": "COMPUTER COMMUNICATIONS EQUIPMENT"
+  },
+  {
+   "sic": "3580",
+   "office": "Office of Technology",
+   "title": "REFRIGERATION & SERVICE INDUSTRY MACHINERY"
+  },
+  {
+   "sic": "3590",
+   "office": "Office of Technology",
+   "title": "MISC INDUSTRIAL & COMMERCIAL MACHINERY & EQUIPMENT"
+  },
+  {
+   "sic": "3600",
+   "office": "Office of Manufacturing",
+   "title": "ELECTRONIC & OTHER ELECTRICAL EQUIPMENT (NO COMPUTER EQUIP)"
+  },
+  {
+   "sic": "3620",
+   "office": "Office of Manufacturing",
+   "title": "ELECTRICAL INDUSTRIAL APPARATUS"
+  },
+  {
+   "sic": "3630",
+   "office": "Office of Manufacturing",
+   "title": "HOUSEHOLD APPLIANCES"
+  },
+  {
+   "sic": "3640",
+   "office": "Office of Manufacturing",
+   "title": "ELECTRIC LIGHTING & WIRING EQUIPMENT"
+  },
+  {
+   "sic": "3670",
+   "office": "Office of Manufacturing",
+   "title": "ELECTRONIC COMPONENTS & ACCESSORIES"
+  },
+  {
+   "sic": "3690",
+   "office": "Office of Manufacturing",
+   "title": "MISCELLANEOUS ELECTRICAL MACHINERY, EQUIPMENT & SUPPLIES"
+  },
+  {
+   "sic": "3720",
+   "office": "Office of Manufacturing",
+   "title": "AIRCRAFT & PARTS"
+  },
+  {
+   "sic": "3730",
+   "office": "Office of Manufacturing",
+   "title": "SHIP & BOAT BUILDING & REPAIRING"
+  },
+  {
+   "sic": "3760",
+   "office": "Office of Manufacturing",
+   "title": "GUIDED MISSILES & SPACE VEHICLES & PARTS"
+  },
+  {
+   "sic": "3790",
+   "office": "Office of Manufacturing",
+   "title": "MISCELLANEOUS TRANSPORTATION EQUIPMENT"
+  },
+  {
+   "sic": "3910",
+   "office": "Office of Manufacturing",
+   "title": "JEWELRY, SILVERWARE & PLATED WARE"
+  },
+  {
+   "sic": "3950",
+   "office": "Office of Manufacturing",
+   "title": "PENS, PENCILS & OTHER ARTISTS' MATERIALS"
+  },
+  {
+   "sic": "3960",
+   "office": "Office of Manufacturing",
+   "title": "COSTUME JEWELRY & NOVELTIES"
+  },
+  {
+   "sic": "3990",
+   "office": "Office of Manufacturing",
+   "title": "MISCELLANEOUS MANUFACTURING INDUSTRIES"
+  },
+  {
+   "sic": "4100",
+   "office": "Office of Energy & Transportation",
+   "title": "LOCAL & SUBURBAN TRANSIT & INTERURBAN HWY PASSENGER TRANS"
+  },
+  {
+   "sic": "4210",
+   "office": "Office of Energy & Transportation",
+   "title": "TRUCKING & COURIER SERVICES (NO AIR)"
+  },
+  {
+   "sic": "4220",
+   "office": "Office of Energy & Transportation",
+   "title": "PUBLIC WAREHOUSING & STORAGE"
+  },
+  {
+   "sic": "4400",
+   "office": "Office of Energy & Transportation",
+   "title": "WATER TRANSPORTATION"
+  },
+  {
+   "sic": "4610",
+   "office": "Office of Energy & Transportation",
+   "title": "PIPE LINES (NO NATURAL GAS)"
+  },
+  {
+   "sic": "4700",
+   "office": "Office of Energy & Transportation",
+   "title": "TRANSPORTATION SERVICES"
+  },
+  {
+   "sic": "4900",
+   "office": "Office of Energy & Transportation",
+   "title": "ELECTRIC, GAS & SANITARY SERVICES"
+  },
+  {
+   "sic": "4950",
+   "office": "Office of Energy & Transportation",
+   "title": "SANITARY SERVICES"
+  },
+  {
+   "sic": "4955",
+   "office": "Office of Energy & Transportation",
+   "title": "HAZARDOUS WASTE MANAGEMENT"
+  },
+  {
+   "sic": "4991",
+   "office": "Office of Energy & Transportation",
+   "title": "COGENERATION SERVICES & SMALL POWER PRODUCERS"
+  },
+  {
+   "sic": "5000",
+   "office": "Office of Trade & Services",
+   "title": "WHOLESALE-DURABLE GOODS"
+  },
+  {
+   "sic": "5010",
+   "office": "Office of Trade & Services",
+   "title": "WHOLESALE-MOTOR VEHICLES & MOTOR VEHICLE PARTS & SUPPLIES"
+  },
+  {
+   "sic": "5020",
+   "office": "Office of Trade & Services",
+   "title": "WHOLESALE-FURNITURE & HOME FURNISHINGS"
+  },
+  {
+   "sic": "5030",
+   "office": "Office of Trade & Services",
+   "title": "WHOLESALE-LUMBER & OTHER CONSTRUCTION MATERIALS"
+  },
+  {
+   "sic": "5040",
+   "office": "Office of Trade & Services",
+   "title": "WHOLESALE-PROFESSIONAL & COMMERCIAL EQUIPMENT & SUPPLIES"
+  },
+  {
+   "sic": "5050",
+   "office": "Office of Trade & Services",
+   "title": "WHOLESALE-METALS & MINERALS (NO PETROLEUM)"
+  },
+  {
+   "sic": "5070",
+   "office": "Office of Trade & Services",
+   "title": "WHOLESALE-HARDWARE & PLUMBING & HEATING EQUIPMENT & SUPPLIES"
+  },
+  {
+   "sic": "5080",
+   "office": "Office of Trade & Services",
+   "title": "WHOLESALE-MACHINERY, EQUIPMENT & SUPPLIES"
+  },
+  {
+   "sic": "5090",
+   "office": "Office of Trade & Services",
+   "title": "WHOLESALE-MISC DURABLE GOODS"
+  },
+  {
+   "sic": "5110",
+   "office": "Office of Trade & Services",
+   "title": "WHOLESALE-PAPER & PAPER PRODUCTS"
+  },
+  {
+   "sic": "5130",
+   "office": "Office of Trade & Services",
+   "title": "WHOLESALE-APPAREL, PIECE GOODS & NOTIONS"
+  },
+  {
+   "sic": "5140",
+   "office": "Office of Trade & Services",
+   "title": "WHOLESALE-GROCERIES & RELATED PRODUCTS"
+  },
+  {
+   "sic": "5150",
+   "office": "Office of Trade & Services",
+   "title": "WHOLESALE-FARM PRODUCT RAW MATERIALS"
+  },
+  {
+   "sic": "5160",
+   "office": "Office of Trade & Services",
+   "title": "WHOLESALE-CHEMICALS & ALLIED PRODUCTS"
+  },
+  {
+   "sic": "5180",
+   "office": "Office of Trade & Services",
+   "title": "WHOLESALE-BEER, WINE & DISTILLED ALCOHOLIC BEVERAGES"
+  },
+  {
+   "sic": "5190",
+   "office": "Office of Trade & Services",
+   "title": "WHOLESALE-MISCELLANEOUS NONDURABLE GOODS"
+  },
+  {
+   "sic": "5200",
+   "office": "Office of Trade & Services",
+   "title": "RETAIL-BUILDING MATERIALS, HARDWARE, GARDEN SUPPLY"
+  },
+  {
+   "sic": "5400",
+   "office": "Office of Trade & Services",
+   "title": "RETAIL-FOOD STORES"
+  },
+  {
+   "sic": "5412",
+   "office": "Office of Trade & Services",
+   "title": "RETAIL-CONVENIENCE STORES"
+  },
+  {
+   "sic": "5500",
+   "office": "Office of Trade & Services",
+   "title": "RETAIL-AUTO DEALERS & GASOLINE STATIONS"
+  },
+  {
+   "sic": "5600",
+   "office": "Office of Trade & Services",
+   "title": "RETAIL-APPAREL & ACCESSORY STORES"
+  },
+  {
+   "sic": "5700",
+   "office": "Office of Trade & Services",
+   "title": "RETAIL-HOME FURNITURE, FURNISHINGS & EQUIPMENT STORES"
+  },
+  {
+   "sic": "5810",
+   "office": "Office of Trade & Services",
+   "title": "RETAIL-EATING & DRINKING PLACES"
+  },
+  {
+   "sic": "5900",
+   "office": "Office of Trade & Services",
+   "title": "RETAIL-MISCELLANEOUS RETAIL"
+  },
+  {
+   "sic": "5940",
+   "office": "Office of Trade & Services",
+   "title": "RETAIL-MISCELLANEOUS SHOPPING GOODS STORES"
+  },
+  {
+   "sic": "5960",
+   "office": "Office of Trade & Services",
+   "title": "RETAIL-NONSTORE RETAILERS"
+  },
+  {
+   "sic": "5990",
+   "office": "Office of Trade & Services",
+   "title": "RETAIL-RETAIL STORES, NEC"
+  },
+  {
+   "sic": "6172",
+   "office": "Office of Finance",
+   "title": "FINANCE LESSORS"
+  },
+  {
+   "sic": "6189",
+   "office": "Office of Structured Finance",
+   "title": "ASSET-BACKED SECURITIES"
+  },
+  {
+   "sic": "6199",
+   "office": "Office of Finance or Office of Crypto Assets",
+   "title": "FINANCE SERVICES"
+  },
+  {
+   "sic": "6200",
+   "office": "Office of Crypto Assets",
+   "title": "SECURITY & COMMODITY BROKERS, DEALERS, EXCHANGES & SERVICES"
+  },
+  {
+   "sic": "6500",
+   "office": "Office of Real Estate & Construction",
+   "title": "REAL ESTATE"
+  },
+  {
+   "sic": "6510",
+   "office": "Office of Real Estate & Construction",
+   "title": "REAL ESTATE OPERATORS (NO DEVELOPERS) & LESSORS"
+  },
+  {
+   "sic": "6532",
+   "office": "Office of Real Estate & Construction",
+   "title": "REAL ESTATE DEALERS (FOR THEIR OWN ACCOUNT)"
+  },
+  {
+   "sic": "6770",
+   "office": "Multiple Offices",
+   "title": "BLANK CHECKS"
+  },
+  {
+   "sic": "6795",
+   "office": "Office of Energy & Transportation",
+   "title": "MINERAL ROYALTY TRADERS"
+  },
+  {
+   "sic": "7000",
+   "office": "Office of Real Estate & Construction",
+   "title": "HOTELS, ROOMING HOUSES, CAMPS & OTHER LODGING PLACES"
+  },
+  {
+   "sic": "7200",
+   "office": "Office of Trade & Services",
+   "title": "SERVICES-PERSONAL SERVICES"
+  },
+  {
+   "sic": "7310",
+   "office": "Office of Trade & Services",
+   "title": "SERVICES-ADVERTISING"
+  },
+  {
+   "sic": "7320",
+   "office": "Office of Trade & Services",
+   "title": "SERVICES-CONSUMER CREDIT REPORTING, COLLECTION AGENCIES"
+  },
+  {
+   "sic": "7330",
+   "office": "Office of Trade & Services",
+   "title": "SERVICES-MAILING, REPRODUCTION, COMMERCIAL ART & PHOTOGRAPHY"
+  },
+  {
+   "sic": "7340",
+   "office": "Office of Trade & Services",
+   "title": "SERVICES-TO DWELLINGS & OTHER BUILDINGS"
+  },
+  {
+   "sic": "7350",
+   "office": "Office of Trade & Services",
+   "title": "SERVICES-MISCELLANEOUS EQUIPMENT RENTAL & LEASING"
+  },
+  {
+   "sic": "7370",
+   "office": "Office of Technology",
+   "title": "SERVICES-COMPUTER PROGRAMMING, DATA PROCESSING, ETC."
+  },
+  {
+   "sic": "7380",
+   "office": "Office of Trade & Services",
+   "title": "SERVICES-MISCELLANEOUS BUSINESS SERVICES"
+  },
+  {
+   "sic": "7385",
+   "office": "Office of Trade & Services",
+   "title": "SERVICES-TELEPHONE INTERCONNECT SYSTEMS"
+  },
+  {
+   "sic": "7500",
+   "office": "Office of Trade & Services",
+   "title": "SERVICES-AUTOMOTIVE REPAIR, SERVICES & PARKING"
+  },
+  {
+   "sic": "7510",
+   "office": "Office of Trade & Services",
+   "title": "SERVICES-AUTO RENTAL & LEASING (NO DRIVERS)"
+  },
+  {
+   "sic": "7600",
+   "office": "Office of Trade & Services",
+   "title": "SERVICES-MISCELLANEOUS REPAIR SERVICES"
+  },
+  {
+   "sic": "7830",
+   "office": "Office of Trade & Services",
+   "title": "SERVICES-MOTION PICTURE THEATERS"
+  },
+  {
+   "sic": "7900",
+   "office": "Office of Trade & Services",
+   "title": "SERVICES-AMUSEMENT & RECREATION SERVICES"
+  },
+  {
+   "sic": "7990",
+   "office": "Office of Trade & Services",
+   "title": "SERVICES-MISCELLANEOUS AMUSEMENT & RECREATION"
+  },
+  {
+   "sic": "8000",
+   "office": "Industrial Applications and Services",
+   "title": "SERVICES-HEALTH SERVICES"
+  },
+  {
+   "sic": "8050",
+   "office": "Industrial Applications and Services",
+   "title": "SERVICES-NURSING & PERSONAL CARE FACILITIES"
+  },
+  {
+   "sic": "8060",
+   "office": "Industrial Applications and Services",
+   "title": "SERVICES-HOSPITALS"
+  },
+  {
+   "sic": "8090",
+   "office": "Industrial Applications and Services",
+   "title": "SERVICES-MISC HEALTH & ALLIED SERVICES, NEC"
+  },
+  {
+   "sic": "8200",
+   "office": "Office of Trade & Services",
+   "title": "SERVICES-EDUCATIONAL SERVICES"
+  },
+  {
+   "sic": "8300",
+   "office": "Industrial Applications and Services",
+   "title": "SERVICES-SOCIAL SERVICES"
+  },
+  {
+   "sic": "8600",
+   "office": "Office of Trade & Services",
+   "title": "SERVICES-MEMBERSHIP ORGANIZATIONS"
+  },
+  {
+   "sic": "8700",
+   "office": "Office of Trade & Services",
+   "title": "SERVICES-ENGINEERING, ACCOUNTING, RESEARCH, MANAGEMENT"
+  },
+  {
+   "sic": "8880",
+   "office": "Office of International Corp Fin",
+   "title": "AMERICAN DEPOSITARY RECEIPTS"
+  },
+  {
+   "sic": "8888",
+   "office": "Office of International Corp Fin",
+   "title": "FOREIGN GOVERNMENTS"
+  },
+  {
+   "sic": "8900",
+   "office": "Office of Trade & Services",
+   "title": "SERVICES-SERVICES, NEC"
+  },
+  {
+   "sic": "9995",
+   "office": "Office of Real Estate & Construction",
+   "title": "NON-OPERATING ESTABLISHMENTS"
+  }
+ ]
+}
