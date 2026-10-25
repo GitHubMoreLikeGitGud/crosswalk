@@ -43,6 +43,11 @@ jobs:
           node -e "const d = new Date(); if (d.getTime() - performance.timeOrigin < 399 * 86400000) { console.error('clock not moved'); process.exit(1) } console.log('test clock', d.toISOString())"
           npm test
 
+      - name: UI tests (node --test, no dependencies), also with the clock moved forward 400 days
+        run: |
+          node --test ui/test/*.test.mjs
+          CW_FAKE_CLOCK_DAYS=400 NODE_OPTIONS="--import ./.github/scripts/fake-date.mjs" node --test ui/test/*.test.mjs
+
       - name: Meterless conformance on the vendored engines
         run: |
           (cd engines/hmem/reference && npm install --no-audit --no-fund && npx tsx ../conformance/runner.ts)
