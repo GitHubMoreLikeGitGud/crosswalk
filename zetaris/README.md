@@ -47,7 +47,7 @@ The FEMA join (served state with a Q1-2025 DR declaration): CA 3 utilities, KY 2
 | `utility_state` | 97 (43 utilities, 43 states) | 0.2 s | FK `cik`: 97 / 97 / 0, 81 s; FK `state`: 97 / 97 / 0, 0.7 s |
 | `fema_declaration` | 116 (10 declarations, 8 states) | 1.0 s | FK `state`: 116 / 116 / 0, 2.7 s |
 | `station` | 56 (56 with a state) | 18.7 s | FK `state`: 56 / 56 / 0, 38 s |
-| `revenue_quarter` | 133 (Revenues 34 + 35, RFC 21 + 23, RUOR 9 + 11) | 5.1 s | FK `cik`: failed once with `REST API call failed: Connection refused` on a submissions URL while the gateway warm-up was re-caching the 43 submission views (the DQ evaluation reads the raw REST tables behind `cw.seed_utilities`); not re-run on Day 0 |
+| `revenue_quarter` | 133 (Revenues 34 + 35, RFC 21 + 23, RUOR 9 + 11) | 5.1 s | FK `cik`: failed once with `REST API call failed: Connection refused` on a submissions URL: the DQ evaluation of this FK re-read the raw REST tables behind the parent `utility` (43 SEC requests in a burst; the gateway warm-up had re-cached nothing at that time, 57 already cached), so the cache was bypassed and one SEC call was refused; not re-run on Day 0 |
 
 The demo join inside the USL (fema_declaration -> state <- utility_state) returns the seven states above with their names in 0.9 s. `LIST DQ USL` names the key rules after their columns (`sic` on utility, `cik` and `state` on utility_state, and so on). Reads of `utility` (62 s) and the DQ runs that touch it (81 to 138 s) pay the 43-view resolution; `weather_quarter` is not in the model because no GHCN parquet table is registered under `CW_GHCN` on Day 0.
 
