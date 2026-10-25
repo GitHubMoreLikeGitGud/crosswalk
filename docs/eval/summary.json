@@ -1,0 +1,2561 @@
+{
+  "title": "Crosswalk evaluation (Day 2)",
+  "generated_from": "saved run files (CW_DATA_DIR/runs/<id>/run.json), docs/eval/runs.json, docs/eval/outside-checks.json, docs/eval/manual-baseline.json and the ablation's nvidia-smi samples; no gateway or model call",
+  "code": [
+    "6652e2f",
+    "ee04b0c",
+    "fc130bd"
+  ],
+  "runs": [
+    {
+      "run_id": "r20261025T1546471209",
+      "label": "cold 1",
+      "by": "lane F",
+      "code": "6652e2f",
+      "setting": "think_on",
+      "mode": "cold",
+      "quarter": "CY2025Q1",
+      "started_at": "2026-10-25T07:46:47.471Z",
+      "wall_s": 285.8,
+      "chunks": 9,
+      "skipped_chunks": 0,
+      "planner_calls": 27,
+      "planner_valid": 22,
+      "planner_valid_first_try": 18,
+      "planner_repaired": 4,
+      "fallback_steps": 5,
+      "tokens": {
+        "planner_in": 86014,
+        "planner_out": 22248,
+        "memo_in": 5926,
+        "memo_out": 1019
+      },
+      "median_planner_tok_s": 132.9,
+      "memo_tok_s": 137,
+      "statements": 60,
+      "statement_ms": 85861,
+      "slowest_statement": {
+        "template": "weather_quarter",
+        "ms": 18135
+      },
+      "over_20s": 0,
+      "answer_rows": 12,
+      "answer_sha": "ee290f9cb5f2",
+      "join_rows": 11,
+      "verdicts": {
+        "REJECTED": 4,
+        "VERIFIED": 6,
+        "PARTIAL": 1
+      },
+      "note": {
+        "source": "template",
+        "words": 237,
+        "attempts": 2,
+        "verifier_checked": true,
+        "drafts_rejected_for_words": 1,
+        "final_issues": 0
+      },
+      "usl_matches_governed": true,
+      "live_dq": [
+        "fema_declaration.state 116/116/0",
+        "utility_state.state 97/97/0"
+      ],
+      "checklist_complete": true,
+      "cloud_model_calls": 0
+    },
+    {
+      "run_id": "r20261025T155141e122",
+      "label": "cold 2",
+      "by": "lane F",
+      "code": "6652e2f",
+      "setting": "think_on",
+      "mode": "cold",
+      "quarter": "CY2025Q1",
+      "started_at": "2026-10-25T07:51:41.847Z",
+      "wall_s": 276.4,
+      "chunks": 9,
+      "skipped_chunks": 0,
+      "planner_calls": 27,
+      "planner_valid": 19,
+      "planner_valid_first_try": 18,
+      "planner_repaired": 1,
+      "fallback_steps": 8,
+      "tokens": {
+        "planner_in": 86224,
+        "planner_out": 21117,
+        "memo_in": 3092,
+        "memo_out": 673
+      },
+      "median_planner_tok_s": 133.5,
+      "memo_tok_s": 136.9,
+      "statements": 60,
+      "statement_ms": 86438,
+      "slowest_statement": {
+        "template": "weather_quarter",
+        "ms": 17938
+      },
+      "over_20s": 0,
+      "answer_rows": 12,
+      "answer_sha": "ee290f9cb5f2",
+      "join_rows": 11,
+      "verdicts": {
+        "REJECTED": 4,
+        "VERIFIED": 6,
+        "PARTIAL": 1
+      },
+      "note": {
+        "source": "model",
+        "words": 235,
+        "attempts": 1,
+        "verifier_checked": true,
+        "drafts_rejected_for_words": 0,
+        "final_issues": 0
+      },
+      "usl_matches_governed": true,
+      "live_dq": [
+        "fema_declaration.state 116/116/0",
+        "utility_state.state 97/97/0"
+      ],
+      "checklist_complete": true,
+      "cloud_model_calls": 0
+    },
+    {
+      "run_id": "r20261025T155631f0a7",
+      "label": "warm (CY2024Q1)",
+      "by": "lane F",
+      "code": "ee04b0c",
+      "setting": "think_on",
+      "mode": "warm",
+      "quarter": "CY2024Q1",
+      "started_at": "2026-10-25T07:56:31.362Z",
+      "wall_s": 194.1,
+      "chunks": 8,
+      "skipped_chunks": 6,
+      "planner_calls": 22,
+      "planner_valid": 17,
+      "planner_valid_first_try": 17,
+      "planner_repaired": 0,
+      "fallback_steps": 5,
+      "tokens": {
+        "planner_in": 63511,
+        "planner_out": 17047,
+        "memo_in": 2521,
+        "memo_out": 569
+      },
+      "median_planner_tok_s": 133.9,
+      "memo_tok_s": 137.2,
+      "statements": 46,
+      "statement_ms": 39345,
+      "slowest_statement": {
+        "template": "distinct_counts",
+        "ms": 7481
+      },
+      "over_20s": 0,
+      "answer_rows": 16,
+      "answer_sha": "724904d9e070",
+      "join_rows": 9,
+      "verdicts": {
+        "VERIFIED": 6,
+        "REJECTED": 3
+      },
+      "note": {
+        "source": "model",
+        "words": 250,
+        "attempts": 1,
+        "verifier_checked": true,
+        "drafts_rejected_for_words": 0,
+        "final_issues": 0
+      },
+      "usl_matches_governed": true,
+      "live_dq": [
+        "fema_declaration.state 116/116/0",
+        "utility_state.state 97/97/0"
+      ],
+      "checklist_complete": true,
+      "cloud_model_calls": 0
+    },
+    {
+      "run_id": "r20261025T160020a0bc",
+      "label": "cold 3",
+      "by": "lane F",
+      "code": "fc130bd",
+      "setting": "think_on",
+      "mode": "cold",
+      "quarter": "CY2025Q1",
+      "started_at": "2026-10-25T08:00:20.595Z",
+      "wall_s": 247.7,
+      "chunks": 10,
+      "skipped_chunks": 0,
+      "planner_calls": 28,
+      "planner_valid": 26,
+      "planner_valid_first_try": 25,
+      "planner_repaired": 1,
+      "fallback_steps": 2,
+      "tokens": {
+        "planner_in": 68348,
+        "planner_out": 16677,
+        "memo_in": 5960,
+        "memo_out": 1264
+      },
+      "median_planner_tok_s": 131.4,
+      "memo_tok_s": 138.1,
+      "statements": 61,
+      "statement_ms": 88116,
+      "slowest_statement": {
+        "template": "weather_quarter",
+        "ms": 18090
+      },
+      "over_20s": 0,
+      "answer_rows": 12,
+      "answer_sha": "ee290f9cb5f2",
+      "join_rows": 12,
+      "verdicts": {
+        "VERIFIED": 7,
+        "REJECTED": 4,
+        "PARTIAL": 1
+      },
+      "note": {
+        "source": "template",
+        "words": 247,
+        "attempts": 2,
+        "verifier_checked": true,
+        "drafts_rejected_for_words": 1,
+        "final_issues": 0
+      },
+      "usl_matches_governed": true,
+      "live_dq": [
+        "fema_declaration.state 116/116/0",
+        "utility_state.state 97/97/0"
+      ],
+      "checklist_complete": true,
+      "cloud_model_calls": 0
+    },
+    {
+      "run_id": "r20261025T160836e4df",
+      "label": "ablation: think on",
+      "by": "lane E",
+      "code": "fc130bd",
+      "setting": "think_on",
+      "mode": "cold",
+      "quarter": "CY2025Q1",
+      "started_at": "2026-10-25T08:08:36.729Z",
+      "wall_s": 275.2,
+      "chunks": 9,
+      "skipped_chunks": 0,
+      "planner_calls": 25,
+      "planner_valid": 21,
+      "planner_valid_first_try": 19,
+      "planner_repaired": 2,
+      "fallback_steps": 4,
+      "tokens": {
+        "planner_in": 72092,
+        "planner_out": 21264,
+        "memo_in": 5124,
+        "memo_out": 783
+      },
+      "median_planner_tok_s": 132.9,
+      "memo_tok_s": 137.7,
+      "statements": 56,
+      "statement_ms": 84706,
+      "slowest_statement": {
+        "template": "weather_quarter",
+        "ms": 18073
+      },
+      "over_20s": 0,
+      "answer_rows": 12,
+      "answer_sha": "ee290f9cb5f2",
+      "join_rows": 9,
+      "verdicts": {
+        "PARTIAL": 1,
+        "VERIFIED": 6,
+        "REJECTED": 2
+      },
+      "note": {
+        "source": "model",
+        "words": 220,
+        "attempts": 2,
+        "verifier_checked": true,
+        "drafts_rejected_for_words": 1,
+        "final_issues": 0
+      },
+      "usl_matches_governed": true,
+      "live_dq": [
+        "fema_declaration.state 116/116/0",
+        "utility_state.state 97/97/0"
+      ],
+      "checklist_complete": true,
+      "cloud_model_calls": 0
+    },
+    {
+      "run_id": "r20261025T161313168c",
+      "label": "ablation: think off",
+      "by": "lane E",
+      "code": "fc130bd",
+      "setting": "think_off",
+      "mode": "cold",
+      "quarter": "CY2025Q1",
+      "started_at": "2026-10-25T08:13:13.051Z",
+      "wall_s": 227.9,
+      "chunks": 10,
+      "skipped_chunks": 0,
+      "planner_calls": 28,
+      "planner_valid": 20,
+      "planner_valid_first_try": 19,
+      "planner_repaired": 1,
+      "fallback_steps": 8,
+      "tokens": {
+        "planner_in": 88053,
+        "planner_out": 14523,
+        "memo_in": 5543,
+        "memo_out": 1290
+      },
+      "median_planner_tok_s": 133.1,
+      "memo_tok_s": 137.1,
+      "statements": 60,
+      "statement_ms": 86784,
+      "slowest_statement": {
+        "template": "weather_quarter",
+        "ms": 18090
+      },
+      "over_20s": 0,
+      "answer_rows": 12,
+      "answer_sha": "ee290f9cb5f2",
+      "join_rows": 12,
+      "verdicts": {
+        "VERIFIED": 8,
+        "REJECTED": 3,
+        "PARTIAL": 1
+      },
+      "note": {
+        "source": "template",
+        "words": 245,
+        "attempts": 2,
+        "verifier_checked": true,
+        "drafts_rejected_for_words": 2,
+        "final_issues": 0
+      },
+      "usl_matches_governed": true,
+      "live_dq": [
+        "fema_declaration.state 116/116/0",
+        "utility_state.state 97/97/0"
+      ],
+      "checklist_complete": true,
+      "cloud_model_calls": 0
+    },
+    {
+      "run_id": "r20261025T1617024020",
+      "label": "ablation: no model",
+      "by": "lane E",
+      "code": "fc130bd",
+      "setting": "no_model",
+      "mode": "cold",
+      "quarter": "CY2025Q1",
+      "started_at": "2026-10-25T08:17:02.269Z",
+      "wall_s": 88.4,
+      "chunks": 9,
+      "skipped_chunks": 0,
+      "planner_calls": 0,
+      "planner_valid": 0,
+      "planner_valid_first_try": 0,
+      "planner_repaired": 0,
+      "fallback_steps": 25,
+      "tokens": {
+        "planner_in": 0,
+        "planner_out": 0,
+        "memo_in": 0,
+        "memo_out": 0
+      },
+      "median_planner_tok_s": null,
+      "memo_tok_s": null,
+      "statements": 56,
+      "statement_ms": 85651,
+      "slowest_statement": {
+        "template": "weather_quarter",
+        "ms": 18135
+      },
+      "over_20s": 0,
+      "answer_rows": 12,
+      "answer_sha": "ee290f9cb5f2",
+      "join_rows": 9,
+      "verdicts": {
+        "REJECTED": 2,
+        "VERIFIED": 6,
+        "PARTIAL": 1
+      },
+      "note": {
+        "source": "template",
+        "words": 247,
+        "attempts": 0,
+        "verifier_checked": true,
+        "drafts_rejected_for_words": 0,
+        "final_issues": 0
+      },
+      "usl_matches_governed": true,
+      "live_dq": [
+        "fema_declaration.state 116/116/0",
+        "utility_state.state 97/97/0"
+      ],
+      "checklist_complete": true,
+      "cloud_model_calls": 0
+    }
+  ],
+  "references": [
+    {
+      "run_id": "r20261025T14571773a0",
+      "label": "Day-1 cold reference (before the D15-D18 fixes)",
+      "answer_rows": 12,
+      "answer_sha": "ee290f9cb5f2"
+    },
+    {
+      "run_id": "r20261025T145128a180",
+      "label": "Day-1 warm reference (before the D15-D18 fixes)",
+      "answer_rows": 16,
+      "answer_sha": "724904d9e070"
+    }
+  ],
+  "reproducibility": {
+    "pairs": [
+      {
+        "proposers": {
+          "pair:cw.frames_revenues_cy2025q1.cik~cw.sic_codes.code|lpad10": "model",
+          "pair:cw.seed_submissions_snapshot.hq_state~cw.fema_declarations_dr_2025q1.state|identity": "model",
+          "pair:cw.utility_states.cik~cw.frames_revenues_cy2025q1.cik|lpad10": "model",
+          "pair:cw.utility_states.state~cw.seed_submissions_snapshot.hq_state|identity": "model"
+        },
+        "a": "r20261025T1546471209",
+        "b": "r20261025T155141e122",
+        "answer_rows": [
+          12,
+          12
+        ],
+        "answer_identical": true,
+        "answer_differences": [],
+        "join_rows": [
+          11,
+          11
+        ],
+        "join_common": 9,
+        "join_identical_on_common": true,
+        "governed_identical": true,
+        "governed_compared": 7,
+        "only_in_a": [
+          "pair:cw.frames_revenues_cy2025q1.cik~cw.sic_codes.code|lpad10",
+          "pair:cw.seed_submissions_snapshot.hq_state~cw.fema_declarations_dr_2025q1.state|identity"
+        ],
+        "only_in_b": [
+          "pair:cw.utility_states.cik~cw.frames_revenues_cy2025q1.cik|lpad10",
+          "pair:cw.utility_states.state~cw.seed_submissions_snapshot.hq_state|identity"
+        ]
+      },
+      {
+        "proposers": {
+          "pair:cw.frames_revenues_cy2025q1.cik~cw.sic_codes.code|lpad10": "model",
+          "pair:cw.seed_submissions_snapshot.hq_state~cw.fema_declarations_dr_2025q1.state|identity": "model",
+          "pair:cw.utility_states.state~cw.states.code|identity": "model+baseline",
+          "pair:cw.utility_states.cik~cw.states.fips|identity": "model",
+          "pair:cw.utility_states.state~cw.fema_declarations_dr_2025q1.fips_state_code|identity": "model"
+        },
+        "a": "r20261025T1546471209",
+        "b": "r20261025T160020a0bc",
+        "answer_rows": [
+          12,
+          12
+        ],
+        "answer_identical": true,
+        "answer_differences": [],
+        "join_rows": [
+          11,
+          12
+        ],
+        "join_common": 9,
+        "join_identical_on_common": true,
+        "governed_identical": true,
+        "governed_compared": 7,
+        "only_in_a": [
+          "pair:cw.frames_revenues_cy2025q1.cik~cw.sic_codes.code|lpad10",
+          "pair:cw.seed_submissions_snapshot.hq_state~cw.fema_declarations_dr_2025q1.state|identity"
+        ],
+        "only_in_b": [
+          "pair:cw.utility_states.cik~cw.states.fips|identity",
+          "pair:cw.utility_states.state~cw.fema_declarations_dr_2025q1.fips_state_code|identity",
+          "pair:cw.utility_states.state~cw.states.code|identity"
+        ]
+      },
+      {
+        "proposers": {
+          "pair:cw.frames_revenues_cy2025q1.cik~cw.sic_codes.code|lpad10": "model",
+          "pair:cw.seed_submissions_snapshot.hq_state~cw.fema_declarations_dr_2025q1.state|identity": "model"
+        },
+        "a": "r20261025T1546471209",
+        "b": "r20261025T160836e4df",
+        "answer_rows": [
+          12,
+          12
+        ],
+        "answer_identical": true,
+        "answer_differences": [],
+        "join_rows": [
+          11,
+          9
+        ],
+        "join_common": 9,
+        "join_identical_on_common": true,
+        "governed_identical": true,
+        "governed_compared": 7,
+        "only_in_a": [
+          "pair:cw.frames_revenues_cy2025q1.cik~cw.sic_codes.code|lpad10",
+          "pair:cw.seed_submissions_snapshot.hq_state~cw.fema_declarations_dr_2025q1.state|identity"
+        ],
+        "only_in_b": []
+      },
+      {
+        "proposers": {
+          "pair:cw.frames_revenues_cy2025q1.cik~cw.sic_codes.code|lpad10": "model",
+          "pair:cw.seed_submissions_snapshot.hq_state~cw.fema_declarations_dr_2025q1.state|identity": "model",
+          "pair:cw.seed_submissions_snapshot.hq_state~cw.seed_stations.state|identity": "model+baseline",
+          "pair:cw.utility_states.state~cw.states.fips|identity": "model",
+          "pair:cw.utility_states.state~cw.seed_stations.state|identity": "baseline"
+        },
+        "a": "r20261025T1546471209",
+        "b": "r20261025T161313168c",
+        "answer_rows": [
+          12,
+          12
+        ],
+        "answer_identical": true,
+        "answer_differences": [],
+        "join_rows": [
+          11,
+          12
+        ],
+        "join_common": 9,
+        "join_identical_on_common": true,
+        "governed_identical": true,
+        "governed_compared": 7,
+        "only_in_a": [
+          "pair:cw.frames_revenues_cy2025q1.cik~cw.sic_codes.code|lpad10",
+          "pair:cw.seed_submissions_snapshot.hq_state~cw.fema_declarations_dr_2025q1.state|identity"
+        ],
+        "only_in_b": [
+          "pair:cw.seed_submissions_snapshot.hq_state~cw.seed_stations.state|identity",
+          "pair:cw.utility_states.state~cw.seed_stations.state|identity",
+          "pair:cw.utility_states.state~cw.states.fips|identity"
+        ]
+      },
+      {
+        "proposers": {
+          "pair:cw.frames_revenues_cy2025q1.cik~cw.sic_codes.code|lpad10": "model",
+          "pair:cw.seed_submissions_snapshot.hq_state~cw.fema_declarations_dr_2025q1.state|identity": "model"
+        },
+        "a": "r20261025T1546471209",
+        "b": "r20261025T1617024020",
+        "answer_rows": [
+          12,
+          12
+        ],
+        "answer_identical": true,
+        "answer_differences": [],
+        "join_rows": [
+          11,
+          9
+        ],
+        "join_common": 9,
+        "join_identical_on_common": true,
+        "governed_identical": true,
+        "governed_compared": 7,
+        "only_in_a": [
+          "pair:cw.frames_revenues_cy2025q1.cik~cw.sic_codes.code|lpad10",
+          "pair:cw.seed_submissions_snapshot.hq_state~cw.fema_declarations_dr_2025q1.state|identity"
+        ],
+        "only_in_b": []
+      },
+      {
+        "proposers": {
+          "pair:cw.utility_states.cik~cw.frames_revenues_cy2025q1.cik|lpad10": "model",
+          "pair:cw.utility_states.state~cw.seed_submissions_snapshot.hq_state|identity": "model",
+          "pair:cw.utility_states.state~cw.states.code|identity": "model+baseline",
+          "pair:cw.utility_states.cik~cw.states.fips|identity": "model",
+          "pair:cw.utility_states.state~cw.fema_declarations_dr_2025q1.fips_state_code|identity": "model"
+        },
+        "a": "r20261025T155141e122",
+        "b": "r20261025T160020a0bc",
+        "answer_rows": [
+          12,
+          12
+        ],
+        "answer_identical": true,
+        "answer_differences": [],
+        "join_rows": [
+          11,
+          12
+        ],
+        "join_common": 9,
+        "join_identical_on_common": true,
+        "governed_identical": true,
+        "governed_compared": 7,
+        "only_in_a": [
+          "pair:cw.utility_states.cik~cw.frames_revenues_cy2025q1.cik|lpad10",
+          "pair:cw.utility_states.state~cw.seed_submissions_snapshot.hq_state|identity"
+        ],
+        "only_in_b": [
+          "pair:cw.utility_states.cik~cw.states.fips|identity",
+          "pair:cw.utility_states.state~cw.fema_declarations_dr_2025q1.fips_state_code|identity",
+          "pair:cw.utility_states.state~cw.states.code|identity"
+        ]
+      },
+      {
+        "proposers": {
+          "pair:cw.utility_states.cik~cw.frames_revenues_cy2025q1.cik|lpad10": "model",
+          "pair:cw.utility_states.state~cw.seed_submissions_snapshot.hq_state|identity": "model"
+        },
+        "a": "r20261025T155141e122",
+        "b": "r20261025T160836e4df",
+        "answer_rows": [
+          12,
+          12
+        ],
+        "answer_identical": true,
+        "answer_differences": [],
+        "join_rows": [
+          11,
+          9
+        ],
+        "join_common": 9,
+        "join_identical_on_common": true,
+        "governed_identical": true,
+        "governed_compared": 7,
+        "only_in_a": [
+          "pair:cw.utility_states.cik~cw.frames_revenues_cy2025q1.cik|lpad10",
+          "pair:cw.utility_states.state~cw.seed_submissions_snapshot.hq_state|identity"
+        ],
+        "only_in_b": []
+      },
+      {
+        "proposers": {
+          "pair:cw.utility_states.cik~cw.frames_revenues_cy2025q1.cik|lpad10": "model",
+          "pair:cw.utility_states.state~cw.seed_submissions_snapshot.hq_state|identity": "model",
+          "pair:cw.seed_submissions_snapshot.hq_state~cw.seed_stations.state|identity": "model+baseline",
+          "pair:cw.utility_states.state~cw.states.fips|identity": "model",
+          "pair:cw.utility_states.state~cw.seed_stations.state|identity": "baseline"
+        },
+        "a": "r20261025T155141e122",
+        "b": "r20261025T161313168c",
+        "answer_rows": [
+          12,
+          12
+        ],
+        "answer_identical": true,
+        "answer_differences": [],
+        "join_rows": [
+          11,
+          12
+        ],
+        "join_common": 9,
+        "join_identical_on_common": true,
+        "governed_identical": true,
+        "governed_compared": 7,
+        "only_in_a": [
+          "pair:cw.utility_states.cik~cw.frames_revenues_cy2025q1.cik|lpad10",
+          "pair:cw.utility_states.state~cw.seed_submissions_snapshot.hq_state|identity"
+        ],
+        "only_in_b": [
+          "pair:cw.seed_submissions_snapshot.hq_state~cw.seed_stations.state|identity",
+          "pair:cw.utility_states.state~cw.seed_stations.state|identity",
+          "pair:cw.utility_states.state~cw.states.fips|identity"
+        ]
+      },
+      {
+        "proposers": {
+          "pair:cw.utility_states.cik~cw.frames_revenues_cy2025q1.cik|lpad10": "model",
+          "pair:cw.utility_states.state~cw.seed_submissions_snapshot.hq_state|identity": "model"
+        },
+        "a": "r20261025T155141e122",
+        "b": "r20261025T1617024020",
+        "answer_rows": [
+          12,
+          12
+        ],
+        "answer_identical": true,
+        "answer_differences": [],
+        "join_rows": [
+          11,
+          9
+        ],
+        "join_common": 9,
+        "join_identical_on_common": true,
+        "governed_identical": true,
+        "governed_compared": 7,
+        "only_in_a": [
+          "pair:cw.utility_states.cik~cw.frames_revenues_cy2025q1.cik|lpad10",
+          "pair:cw.utility_states.state~cw.seed_submissions_snapshot.hq_state|identity"
+        ],
+        "only_in_b": []
+      },
+      {
+        "proposers": {
+          "pair:cw.utility_states.state~cw.states.code|identity": "model+baseline",
+          "pair:cw.utility_states.cik~cw.states.fips|identity": "model",
+          "pair:cw.utility_states.state~cw.fema_declarations_dr_2025q1.fips_state_code|identity": "model"
+        },
+        "a": "r20261025T160020a0bc",
+        "b": "r20261025T160836e4df",
+        "answer_rows": [
+          12,
+          12
+        ],
+        "answer_identical": true,
+        "answer_differences": [],
+        "join_rows": [
+          12,
+          9
+        ],
+        "join_common": 9,
+        "join_identical_on_common": true,
+        "governed_identical": true,
+        "governed_compared": 7,
+        "only_in_a": [
+          "pair:cw.utility_states.cik~cw.states.fips|identity",
+          "pair:cw.utility_states.state~cw.fema_declarations_dr_2025q1.fips_state_code|identity",
+          "pair:cw.utility_states.state~cw.states.code|identity"
+        ],
+        "only_in_b": []
+      },
+      {
+        "proposers": {
+          "pair:cw.utility_states.state~cw.states.code|identity": "model+baseline",
+          "pair:cw.utility_states.cik~cw.states.fips|identity": "model",
+          "pair:cw.utility_states.state~cw.fema_declarations_dr_2025q1.fips_state_code|identity": "model",
+          "pair:cw.seed_submissions_snapshot.hq_state~cw.seed_stations.state|identity": "model+baseline",
+          "pair:cw.utility_states.state~cw.states.fips|identity": "model",
+          "pair:cw.utility_states.state~cw.seed_stations.state|identity": "baseline"
+        },
+        "a": "r20261025T160020a0bc",
+        "b": "r20261025T161313168c",
+        "answer_rows": [
+          12,
+          12
+        ],
+        "answer_identical": true,
+        "answer_differences": [],
+        "join_rows": [
+          12,
+          12
+        ],
+        "join_common": 9,
+        "join_identical_on_common": true,
+        "governed_identical": true,
+        "governed_compared": 7,
+        "only_in_a": [
+          "pair:cw.utility_states.cik~cw.states.fips|identity",
+          "pair:cw.utility_states.state~cw.fema_declarations_dr_2025q1.fips_state_code|identity",
+          "pair:cw.utility_states.state~cw.states.code|identity"
+        ],
+        "only_in_b": [
+          "pair:cw.seed_submissions_snapshot.hq_state~cw.seed_stations.state|identity",
+          "pair:cw.utility_states.state~cw.seed_stations.state|identity",
+          "pair:cw.utility_states.state~cw.states.fips|identity"
+        ]
+      },
+      {
+        "proposers": {
+          "pair:cw.utility_states.state~cw.states.code|identity": "model+baseline",
+          "pair:cw.utility_states.cik~cw.states.fips|identity": "model",
+          "pair:cw.utility_states.state~cw.fema_declarations_dr_2025q1.fips_state_code|identity": "model"
+        },
+        "a": "r20261025T160020a0bc",
+        "b": "r20261025T1617024020",
+        "answer_rows": [
+          12,
+          12
+        ],
+        "answer_identical": true,
+        "answer_differences": [],
+        "join_rows": [
+          12,
+          9
+        ],
+        "join_common": 9,
+        "join_identical_on_common": true,
+        "governed_identical": true,
+        "governed_compared": 7,
+        "only_in_a": [
+          "pair:cw.utility_states.cik~cw.states.fips|identity",
+          "pair:cw.utility_states.state~cw.fema_declarations_dr_2025q1.fips_state_code|identity",
+          "pair:cw.utility_states.state~cw.states.code|identity"
+        ],
+        "only_in_b": []
+      },
+      {
+        "proposers": {
+          "pair:cw.seed_submissions_snapshot.hq_state~cw.seed_stations.state|identity": "model+baseline",
+          "pair:cw.utility_states.state~cw.states.fips|identity": "model",
+          "pair:cw.utility_states.state~cw.seed_stations.state|identity": "baseline"
+        },
+        "a": "r20261025T160836e4df",
+        "b": "r20261025T161313168c",
+        "answer_rows": [
+          12,
+          12
+        ],
+        "answer_identical": true,
+        "answer_differences": [],
+        "join_rows": [
+          9,
+          12
+        ],
+        "join_common": 9,
+        "join_identical_on_common": true,
+        "governed_identical": true,
+        "governed_compared": 7,
+        "only_in_a": [],
+        "only_in_b": [
+          "pair:cw.seed_submissions_snapshot.hq_state~cw.seed_stations.state|identity",
+          "pair:cw.utility_states.state~cw.seed_stations.state|identity",
+          "pair:cw.utility_states.state~cw.states.fips|identity"
+        ]
+      },
+      {
+        "proposers": {},
+        "a": "r20261025T160836e4df",
+        "b": "r20261025T1617024020",
+        "answer_rows": [
+          12,
+          12
+        ],
+        "answer_identical": true,
+        "answer_differences": [],
+        "join_rows": [
+          9,
+          9
+        ],
+        "join_common": 9,
+        "join_identical_on_common": true,
+        "governed_identical": true,
+        "governed_compared": 7,
+        "only_in_a": [],
+        "only_in_b": []
+      },
+      {
+        "proposers": {
+          "pair:cw.seed_submissions_snapshot.hq_state~cw.seed_stations.state|identity": "model+baseline",
+          "pair:cw.utility_states.state~cw.states.fips|identity": "model",
+          "pair:cw.utility_states.state~cw.seed_stations.state|identity": "baseline"
+        },
+        "a": "r20261025T161313168c",
+        "b": "r20261025T1617024020",
+        "answer_rows": [
+          12,
+          12
+        ],
+        "answer_identical": true,
+        "answer_differences": [],
+        "join_rows": [
+          12,
+          9
+        ],
+        "join_common": 9,
+        "join_identical_on_common": true,
+        "governed_identical": true,
+        "governed_compared": 7,
+        "only_in_a": [
+          "pair:cw.seed_submissions_snapshot.hq_state~cw.seed_stations.state|identity",
+          "pair:cw.utility_states.state~cw.seed_stations.state|identity",
+          "pair:cw.utility_states.state~cw.states.fips|identity"
+        ],
+        "only_in_b": []
+      }
+    ],
+    "cold_runs": 6,
+    "all_answers_identical": true,
+    "governed_join_map_identical": true,
+    "reference_matches": [
+      {
+        "run_id": "r20261025T1546471209",
+        "reference": "r20261025T14571773a0",
+        "identical": true
+      },
+      {
+        "run_id": "r20261025T155141e122",
+        "reference": "r20261025T14571773a0",
+        "identical": true
+      },
+      {
+        "run_id": "r20261025T155631f0a7",
+        "reference": "r20261025T145128a180",
+        "identical": true
+      },
+      {
+        "run_id": "r20261025T160020a0bc",
+        "reference": "r20261025T14571773a0",
+        "identical": true
+      },
+      {
+        "run_id": "r20261025T160836e4df",
+        "reference": "r20261025T14571773a0",
+        "identical": true
+      },
+      {
+        "run_id": "r20261025T161313168c",
+        "reference": "r20261025T14571773a0",
+        "identical": true
+      },
+      {
+        "run_id": "r20261025T1617024020",
+        "reference": "r20261025T14571773a0",
+        "identical": true
+      }
+    ]
+  },
+  "answer": {
+    "run_id": "r20261025T1546471209",
+    "quarter": "CY2025Q1",
+    "previous": "CY2024Q1",
+    "weather_status": "measured",
+    "rows": [
+      {
+        "ticker": "AEP",
+        "name": "AMERICAN ELECTRIC POWER CO INC",
+        "states": "OK 1, WV 1",
+        "declarations": 2,
+        "revenue_tag": "Revenues",
+        "revenue_change_pct": 8.7,
+        "revenue_note": null,
+        "tdd_change_pct": 16.86,
+        "stations": 9
+      },
+      {
+        "ticker": "DUK",
+        "name": "Duke Energy CORP",
+        "states": "KY 1, SC 1",
+        "declarations": 2,
+        "revenue_tag": "RUOR",
+        "revenue_change_pct": 7.53,
+        "revenue_note": null,
+        "tdd_change_pct": 16.47,
+        "stations": 9
+      },
+      {
+        "ticker": "AEE",
+        "name": "AMEREN CORP",
+        "states": "MO 1",
+        "declarations": 1,
+        "revenue_tag": "Revenues",
+        "revenue_change_pct": 15.47,
+        "revenue_note": null,
+        "tdd_change_pct": 17.2,
+        "stations": 3
+      },
+      {
+        "ticker": "D",
+        "name": "DOMINION ENERGY, INC",
+        "states": "SC 1",
+        "declarations": 1,
+        "revenue_tag": "Revenues",
+        "revenue_change_pct": 12.22,
+        "revenue_note": null,
+        "tdd_change_pct": 16.01,
+        "stations": 3
+      },
+      {
+        "ticker": "EIX",
+        "name": "EDISON INTERNATIONAL",
+        "states": "CA 1",
+        "declarations": 1,
+        "revenue_tag": "Revenues",
+        "revenue_change_pct": -6.55,
+        "revenue_note": null,
+        "tdd_change_pct": 2.96,
+        "stations": 2
+      },
+      {
+        "ticker": "EVRG",
+        "name": "Evergy, Inc.",
+        "states": "MO 1",
+        "declarations": 1,
+        "revenue_tag": "Revenues",
+        "revenue_change_pct": 3.27,
+        "revenue_note": null,
+        "tdd_change_pct": 22.89,
+        "stations": 2
+      },
+      {
+        "ticker": "FE",
+        "name": "FIRSTENERGY CORP",
+        "states": "WV 1",
+        "declarations": 1,
+        "revenue_tag": "Revenues",
+        "revenue_change_pct": 14.54,
+        "revenue_note": null,
+        "tdd_change_pct": 16.19,
+        "stations": 9
+      },
+      {
+        "ticker": "OGE",
+        "name": "OGE ENERGY CORP.",
+        "states": "OK 1",
+        "declarations": 1,
+        "revenue_tag": "Revenues",
+        "revenue_change_pct": 25.28,
+        "revenue_note": null,
+        "tdd_change_pct": 11.88,
+        "stations": 1
+      },
+      {
+        "ticker": "PCG",
+        "name": "PG&E Corp",
+        "states": "CA 1",
+        "declarations": 1,
+        "revenue_tag": "Revenues",
+        "revenue_change_pct": 2.08,
+        "revenue_note": null,
+        "tdd_change_pct": 2.96,
+        "stations": 2
+      },
+      {
+        "ticker": "POR",
+        "name": "PORTLAND GENERAL ELECTRIC CO /OR/",
+        "states": "OR 1",
+        "declarations": 1,
+        "revenue_tag": "Revenues",
+        "revenue_change_pct": -0.11,
+        "revenue_note": null,
+        "tdd_change_pct": 1.13,
+        "stations": 1
+      },
+      {
+        "ticker": "PPL",
+        "name": "PPL Corp",
+        "states": "KY 1",
+        "declarations": 1,
+        "revenue_tag": "Revenues",
+        "revenue_change_pct": 8.68,
+        "revenue_note": null,
+        "tdd_change_pct": 13.99,
+        "stations": 4
+      },
+      {
+        "ticker": "SRE",
+        "name": "SEMPRA",
+        "states": "CA 1",
+        "declarations": 1,
+        "revenue_tag": "RFC",
+        "revenue_change_pct": null,
+        "revenue_note": "a year earlier the first available tag is Revenues, not RevenueFromContractWithCustomerExcludingAssessedTax: not compared",
+        "tdd_change_pct": 2.96,
+        "stations": 2
+      }
+    ]
+  },
+  "l2": {
+    "rows": [
+      {
+        "run_id": "r20261025T1546471209",
+        "label": "cold 1",
+        "setting": "think_on",
+        "mode": "cold",
+        "model": {
+          "proposed_by": "planner",
+          "made": 2,
+          "valid": 2,
+          "verified": 0,
+          "partial": 0,
+          "rejected": 2,
+          "invalid_schema": 0,
+          "unmeasurable": 0,
+          "verified_keys": [],
+          "recalled_keys": []
+        },
+        "baseline": {
+          "proposed_by": "baseline",
+          "made": 6,
+          "valid": 6,
+          "verified": 5,
+          "partial": 0,
+          "rejected": 1,
+          "invalid_schema": 0,
+          "unmeasurable": 0,
+          "verified_keys": [
+            "cik",
+            "loc",
+            "pair:cw.seed_submissions_snapshot.cik10~cw.utility_states.cik|identity",
+            "sic",
+            "station"
+          ],
+          "recalled_keys": []
+        }
+      },
+      {
+        "run_id": "r20261025T155141e122",
+        "label": "cold 2",
+        "setting": "think_on",
+        "mode": "cold",
+        "model": {
+          "proposed_by": "planner",
+          "made": 3,
+          "valid": 3,
+          "verified": 1,
+          "partial": 0,
+          "rejected": 2,
+          "invalid_schema": 0,
+          "unmeasurable": 0,
+          "verified_keys": [
+            "fema_fips"
+          ],
+          "recalled_keys": []
+        },
+        "baseline": {
+          "proposed_by": "baseline",
+          "made": 6,
+          "valid": 6,
+          "verified": 5,
+          "partial": 0,
+          "rejected": 1,
+          "invalid_schema": 0,
+          "unmeasurable": 0,
+          "verified_keys": [
+            "cik",
+            "loc",
+            "pair:cw.seed_submissions_snapshot.cik10~cw.utility_states.cik|identity",
+            "sic",
+            "station"
+          ],
+          "recalled_keys": []
+        }
+      },
+      {
+        "run_id": "r20261025T155631f0a7",
+        "label": "warm (CY2024Q1)",
+        "setting": "think_on",
+        "mode": "warm",
+        "model": {
+          "proposed_by": "planner",
+          "made": 1,
+          "valid": 1,
+          "verified": 0,
+          "partial": 0,
+          "rejected": 1,
+          "invalid_schema": 0,
+          "unmeasurable": 0,
+          "verified_keys": [],
+          "recalled_keys": []
+        },
+        "baseline": {
+          "proposed_by": "baseline",
+          "made": 6,
+          "valid": 6,
+          "verified": 5,
+          "partial": 0,
+          "rejected": 1,
+          "invalid_schema": 0,
+          "unmeasurable": 0,
+          "verified_keys": [
+            "cik",
+            "loc",
+            "pair:cw.seed_submissions_snapshot.cik10~cw.utility_states.cik|identity",
+            "sic",
+            "station"
+          ],
+          "recalled_keys": [
+            "cik",
+            "loc",
+            "pair:cw.seed_submissions_snapshot.cik10~cw.utility_states.cik|identity",
+            "sic",
+            "station"
+          ]
+        }
+      },
+      {
+        "run_id": "r20261025T160020a0bc",
+        "label": "cold 3",
+        "setting": "think_on",
+        "mode": "cold",
+        "model": {
+          "proposed_by": "planner",
+          "made": 3,
+          "valid": 3,
+          "verified": 1,
+          "partial": 0,
+          "rejected": 2,
+          "invalid_schema": 0,
+          "unmeasurable": 0,
+          "verified_keys": [
+            "pair:cw.utility_states.state~cw.states.code|identity"
+          ],
+          "recalled_keys": []
+        },
+        "baseline": {
+          "proposed_by": "baseline",
+          "made": 6,
+          "valid": 6,
+          "verified": 5,
+          "partial": 0,
+          "rejected": 1,
+          "invalid_schema": 0,
+          "unmeasurable": 0,
+          "verified_keys": [
+            "cik",
+            "loc",
+            "pair:cw.seed_submissions_snapshot.cik10~cw.utility_states.cik|identity",
+            "sic",
+            "station"
+          ],
+          "recalled_keys": []
+        }
+      },
+      {
+        "run_id": "r20261025T160836e4df",
+        "label": "ablation: think on",
+        "setting": "think_on",
+        "mode": "cold",
+        "model": {
+          "proposed_by": "planner",
+          "made": 1,
+          "valid": 1,
+          "verified": 0,
+          "partial": 1,
+          "rejected": 0,
+          "invalid_schema": 0,
+          "unmeasurable": 0,
+          "verified_keys": [],
+          "recalled_keys": []
+        },
+        "baseline": {
+          "proposed_by": "baseline",
+          "made": 6,
+          "valid": 6,
+          "verified": 5,
+          "partial": 0,
+          "rejected": 1,
+          "invalid_schema": 0,
+          "unmeasurable": 0,
+          "verified_keys": [
+            "cik",
+            "loc",
+            "pair:cw.seed_submissions_snapshot.cik10~cw.utility_states.cik|identity",
+            "sic",
+            "station"
+          ],
+          "recalled_keys": []
+        }
+      },
+      {
+        "run_id": "r20261025T161313168c",
+        "label": "ablation: think off",
+        "setting": "think_off",
+        "mode": "cold",
+        "model": {
+          "proposed_by": "planner",
+          "made": 2,
+          "valid": 2,
+          "verified": 1,
+          "partial": 0,
+          "rejected": 1,
+          "invalid_schema": 0,
+          "unmeasurable": 0,
+          "verified_keys": [
+            "pair:cw.seed_submissions_snapshot.hq_state~cw.seed_stations.state|identity"
+          ],
+          "recalled_keys": []
+        },
+        "baseline": {
+          "proposed_by": "baseline",
+          "made": 6,
+          "valid": 6,
+          "verified": 5,
+          "partial": 0,
+          "rejected": 1,
+          "invalid_schema": 0,
+          "unmeasurable": 0,
+          "verified_keys": [
+            "cik",
+            "pair:cw.seed_submissions_snapshot.cik10~cw.utility_states.cik|identity",
+            "pair:cw.utility_states.state~cw.seed_stations.state|identity",
+            "sic",
+            "station"
+          ],
+          "recalled_keys": []
+        }
+      },
+      {
+        "run_id": "r20261025T1617024020",
+        "label": "ablation: no model",
+        "setting": "no_model",
+        "mode": "cold",
+        "model": {
+          "proposed_by": null,
+          "made": 0,
+          "valid": 0,
+          "verified": 0,
+          "partial": 0,
+          "rejected": 0,
+          "invalid_schema": 0,
+          "unmeasurable": 0,
+          "verified_keys": [],
+          "recalled_keys": []
+        },
+        "baseline": {
+          "proposed_by": "baseline",
+          "made": 6,
+          "valid": 6,
+          "verified": 5,
+          "partial": 0,
+          "rejected": 1,
+          "invalid_schema": 0,
+          "unmeasurable": 0,
+          "verified_keys": [
+            "cik",
+            "loc",
+            "pair:cw.seed_submissions_snapshot.cik10~cw.utility_states.cik|identity",
+            "sic",
+            "station"
+          ],
+          "recalled_keys": []
+        }
+      }
+    ],
+    "totals": {
+      "model": {
+        "made": 12,
+        "valid": 12,
+        "verified": 3,
+        "partial": 1,
+        "rejected": 8,
+        "invalid_schema": 0,
+        "unmeasurable": 0
+      },
+      "baseline": {
+        "made": 36,
+        "valid": 36,
+        "verified": 30,
+        "partial": 0,
+        "rejected": 6,
+        "invalid_schema": 0,
+        "unmeasurable": 0
+      }
+    },
+    "cold_totals": {
+      "model": {
+        "made": 11,
+        "valid": 11,
+        "verified": 3,
+        "partial": 1,
+        "rejected": 7,
+        "invalid_schema": 0,
+        "unmeasurable": 0
+      },
+      "baseline": {
+        "made": 30,
+        "valid": 30,
+        "verified": 25,
+        "partial": 0,
+        "rejected": 5,
+        "invalid_schema": 0,
+        "unmeasurable": 0
+      }
+    },
+    "keys_found": {
+      "model": [
+        "fema_fips",
+        "pair:cw.seed_submissions_snapshot.hq_state~cw.seed_stations.state|identity",
+        "pair:cw.utility_states.state~cw.states.code|identity"
+      ],
+      "baseline": [
+        "cik",
+        "loc",
+        "pair:cw.seed_submissions_snapshot.cik10~cw.utility_states.cik|identity",
+        "pair:cw.utility_states.state~cw.seed_stations.state|identity",
+        "sic",
+        "station"
+      ],
+      "only_model": [
+        "fema_fips",
+        "pair:cw.seed_submissions_snapshot.hq_state~cw.seed_stations.state|identity",
+        "pair:cw.utility_states.state~cw.states.code|identity"
+      ],
+      "only_baseline": [
+        "cik",
+        "loc",
+        "pair:cw.seed_submissions_snapshot.cik10~cw.utility_states.cik|identity",
+        "pair:cw.utility_states.state~cw.seed_stations.state|identity",
+        "sic",
+        "station"
+      ],
+      "both": [],
+      "model_beyond_any_baseline": []
+    },
+    "winner": "baseline",
+    "runs_counted": 6,
+    "cold_runs_counted": 5
+  },
+  "outside": {
+    "label": "measured",
+    "note": "Fetched outside Zetaris over HTTPS and compared with the cached views read through the gateway. Counts and state codes only.",
+    "fema": [
+      {
+        "quarter": "CY2025Q1",
+        "outside": {
+          "source": "OpenFEMA API over HTTPS (DisasterDeclarationsSummaries, declarationType DR, declarationDate in the quarter)",
+          "url": "https://www.fema.gov/api/open/v2/DisasterDeclarationsSummaries?%24filter=declarationType%20eq%20%27DR%27%20and%20declarationDate%20ge%20%272025-01-01T00%3A00%3A00.000Z%27%20and%20declarationDate%20lt%20%272025-04-01T00%3A00%3A00.000Z%27&%24top=1000",
+          "fetch_ms": 192,
+          "rows": 116,
+          "declarations": 10,
+          "states": 8,
+          "by_state": {
+            "AK": 3,
+            "CA": 1,
+            "KY": 1,
+            "MO": 1,
+            "OK": 1,
+            "OR": 1,
+            "SC": 1,
+            "WV": 1
+          }
+        },
+        "zetaris": {
+          "template": "fema_declarations",
+          "object": "cw.fema_declarations_dr_2025q1",
+          "sql": "SELECT disaster_number, state, declaration_date, incident_type, declaration_title, declaration_type, fips_state_code, fips_county_code, designated_area FROM cw.fema_declarations_dr_2025q1 ORDER BY disaster_number, fips_county_code",
+          "elapsed_ms": 203,
+          "cache_state": "hit",
+          "rows": 116,
+          "declarations": 10,
+          "states": 8,
+          "by_state": {
+            "AK": 3,
+            "CA": 1,
+            "KY": 1,
+            "MO": 1,
+            "OK": 1,
+            "OR": 1,
+            "SC": 1,
+            "WV": 1
+          }
+        },
+        "equal": true
+      },
+      {
+        "quarter": "CY2024Q1",
+        "outside": {
+          "source": "OpenFEMA API over HTTPS (DisasterDeclarationsSummaries, declarationType DR, declarationDate in the quarter)",
+          "url": "https://www.fema.gov/api/open/v2/DisasterDeclarationsSummaries?%24filter=declarationType%20eq%20%27DR%27%20and%20declarationDate%20ge%20%272024-01-01T00%3A00%3A00.000Z%27%20and%20declarationDate%20lt%20%272024-04-01T00%3A00%3A00.000Z%27&%24top=1000",
+          "fetch_ms": 97,
+          "rows": 72,
+          "declarations": 14,
+          "states": 11,
+          "by_state": {
+            "AK": 1,
+            "CA": 1,
+            "ME": 2,
+            "MI": 1,
+            "ND": 1,
+            "NH": 1,
+            "NY": 1,
+            "RI": 3,
+            "VT": 1,
+            "WA": 1,
+            "WV": 1
+          }
+        },
+        "zetaris": {
+          "template": "fema_declarations",
+          "object": "cw.fema_declarations_dr_2024q1",
+          "sql": "SELECT disaster_number, state, declaration_date, incident_type, declaration_title, declaration_type, fips_state_code, fips_county_code, designated_area FROM cw.fema_declarations_dr_2024q1 ORDER BY disaster_number, fips_county_code",
+          "elapsed_ms": 163,
+          "cache_state": "hit",
+          "rows": 72,
+          "declarations": 14,
+          "states": 11,
+          "by_state": {
+            "AK": 1,
+            "CA": 1,
+            "ME": 2,
+            "MI": 1,
+            "ND": 1,
+            "NH": 1,
+            "NY": 1,
+            "RI": 3,
+            "VT": 1,
+            "WA": 1,
+            "WV": 1
+          }
+        },
+        "equal": true
+      }
+    ],
+    "ten_k": [
+      {
+        "cik": "0001711269",
+        "ticker": "EVRG",
+        "name": "Evergy, Inc.",
+        "filing": {
+          "form": "10-K",
+          "report_date": "2024-12-31",
+          "filing_date": "2025-02-27",
+          "bytes": 8229562,
+          "fetch_ms": 539
+        },
+        "seed_states": [
+          "KS",
+          "MO"
+        ],
+        "seed_source": "FY2024 Form 10-K Item 1 (Business) service-territory description; hand-curated 2026-10-24, electric service states only, capped at 6",
+        "filing_states": [
+          "KS",
+          "MO"
+        ],
+        "in_filing_not_in_seed": [],
+        "in_seed_not_in_filing": [],
+        "service_sentences_found": 8,
+        "equal": true
+      },
+      {
+        "cik": "0000922224",
+        "ticker": "PPL",
+        "name": "PPL Corp",
+        "filing": {
+          "form": "10-K",
+          "report_date": "2024-12-31",
+          "filing_date": "2025-02-13",
+          "bytes": 8639243,
+          "fetch_ms": 529
+        },
+        "seed_states": [
+          "KY",
+          "PA",
+          "RI"
+        ],
+        "seed_source": "FY2024 Form 10-K Item 1 (Business) service-territory description; hand-curated 2026-10-24, electric service states only, capped at 6",
+        "filing_states": [
+          "KY",
+          "PA",
+          "RI",
+          "VA"
+        ],
+        "in_filing_not_in_seed": [
+          "VA"
+        ],
+        "in_seed_not_in_filing": [],
+        "service_sentences_found": 8,
+        "equal": false
+      }
+    ]
+  },
+  "manual": {
+    "label": "measured",
+    "note": "The statements a data person needs to find and verify the five keys (a cik, b loc, c FEMA state, d station, e SIC) on the same cached views were run one at a time through the gateway (127.0.0.1:8803) after the ablation runs finished, each result read before the next statement was chosen. Measured: the statements, their gateway elapsed_ms, and the decisions taken. The session time (first step to the end of the last statement) is reported for completeness but is NOT a measure of how long a person would take: the SQL was not typed from scratch (each statement is a gateway reader template: DESCRIBE, SELECT ... LIMIT 5, distinct counts, the match-rate count and its orphans, or a named join-map statement where the counted side needs a transform the generic statement does not apply), so the time to write that SQL and to read results at human speed is not measured. Steps 8, 9, 11, 23, 28 and 29 use the named join-map statements because the comparison needs LPAD or SUBSTR on the right-hand side, a three-view union or a per-utility row count.",
+    "statements": 27,
+    "failed_statements": 0,
+    "lookups": 2,
+    "statement_ms_total": 33680,
+    "session_wall_s": 179.5,
+    "decisions": 24,
+    "by_class": {
+      "probe": 14,
+      "measure (generic match_rate)": 7,
+      "measure (named join-map statement)": 6
+    },
+    "keys": [
+      {
+        "key": "a: frames cik (LPAD 10) to submissions cik10",
+        "verdict": "VERIFIED",
+        "matched": 42,
+        "total": 43,
+        "orphans": [
+          "IDACORP 0001057877"
+        ]
+      },
+      {
+        "key": "b: frames loc (SUBSTR 4,2) to submissions business state",
+        "verdict": "VERIFIED",
+        "matched": 42,
+        "total": 42,
+        "orphans": []
+      },
+      {
+        "key": "c: FEMA state to served state (utility_states)",
+        "verdict": "PARTIAL",
+        "matched": 7,
+        "total": 8,
+        "orphans": [
+          "AK"
+        ]
+      },
+      {
+        "key": "c (reference): FEMA FIPS state code to the state reference",
+        "verdict": "VERIFIED",
+        "matched": 8,
+        "total": 8,
+        "orphans": []
+      },
+      {
+        "key": "d: seed station id to the GHCN inventory id",
+        "verdict": "VERIFIED",
+        "matched": 56,
+        "total": 56,
+        "orphans": []
+      },
+      {
+        "key": "e: submissions SIC to the SIC reference (utility rows; 3 of 4 codes)",
+        "verdict": "VERIFIED",
+        "matched": 42,
+        "total": 43,
+        "orphans": [
+          "MGE ENERGY 0001161728 (4900)"
+        ]
+      }
+    ],
+    "steps": [
+      {
+        "n": 1,
+        "at": "2026-10-25T08:18:39.400Z",
+        "template": "lookup",
+        "params": {
+          "what": "zetaris/manifest.json: the registered views and their sources"
+        },
+        "elapsed_ms": 0,
+        "rows": 0,
+        "result": "10 sources; candidate views: cw.seed_submissions_snapshot (43 utilities), cw.frames_<tag>_<period> (SEC revenue), cw.fema_declarations_dr_2025q1, cw.utility_states, cw.states, cw.seed_stations, cw.stations, cw.sic_codes",
+        "decision": "start with the utility list (snapshot) and one revenue view"
+      },
+      {
+        "n": 2,
+        "at": "2026-10-25T08:18:55.959Z",
+        "template": "describe_object",
+        "params": {
+          "object": "cw.seed_submissions_snapshot"
+        },
+        "elapsed_ms": 84,
+        "wall_ms": 140,
+        "rows": 6,
+        "result": "cik10, name, ticker, sic, hq_state, snapshot_at (all strings)",
+        "decision": "candidate keys: cik10 (to revenue), sic (to the SIC reference), hq_state (to the frames loc)"
+      },
+      {
+        "n": 3,
+        "at": "2026-10-25T08:18:57.031Z",
+        "template": "sample_rows",
+        "params": {
+          "object": "cw.seed_submissions_snapshot"
+        },
+        "elapsed_ms": 70,
+        "wall_ms": 122,
+        "rows": 5,
+        "result": "cik10 is a 10-character zero-padded string; hq_state two letters; sic four digits",
+        "decision": ""
+      },
+      {
+        "n": 4,
+        "at": "2026-10-25T08:19:04.674Z",
+        "template": "distinct_counts",
+        "params": {
+          "object": "cw.seed_submissions_snapshot",
+          "column": "cik10"
+        },
+        "elapsed_ms": 114,
+        "wall_ms": 185,
+        "rows": 1,
+        "result": "43 rows, 43 distinct cik10, no nulls",
+        "decision": "cik10 is the utility's primary key"
+      },
+      {
+        "n": 5,
+        "at": "2026-10-25T08:19:05.818Z",
+        "template": "describe_object",
+        "params": {
+          "object": "cw.frames_revenues_cy2025q1"
+        },
+        "elapsed_ms": 102,
+        "wall_ms": 159,
+        "rows": 7,
+        "result": "cik is a bigint; loc a string",
+        "decision": ""
+      },
+      {
+        "n": 6,
+        "at": "2026-10-25T08:19:06.913Z",
+        "template": "sample_rows",
+        "params": {
+          "object": "cw.frames_revenues_cy2025q1"
+        },
+        "elapsed_ms": 145,
+        "wall_ms": 213,
+        "rows": 5,
+        "result": "cik is an unpadded integer (2098); loc is 'US-CT' style; the view holds every SEC filer, not just utilities",
+        "decision": "first try: join the snapshot's cik10 to the frames cik as they are"
+      },
+      {
+        "n": 7,
+        "at": "2026-10-25T08:19:16.116Z",
+        "template": "match_rate",
+        "params": {
+          "left_object": "cw.seed_submissions_snapshot",
+          "left_column": "cik10",
+          "right_object": "cw.frames_revenues_cy2025q1",
+          "right_column": "cik",
+          "transform": "identity"
+        },
+        "elapsed_ms": 359,
+        "wall_ms": 413,
+        "rows": 1,
+        "result": "0 of 43 utilities match: the frames cik is not zero-padded",
+        "decision": "pad the frames cik to 10 digits (LPAD) and count the utilities found under any of the three revenue tags (one statement over the three frames views)"
+      },
+      {
+        "n": 8,
+        "at": "2026-10-25T08:19:24.301Z",
+        "template": "joinmap_cik",
+        "params": {
+          "period": "CY2025Q1"
+        },
+        "elapsed_ms": 744,
+        "wall_ms": 802,
+        "rows": 1,
+        "result": "42 of 43 utilities found once the frames cik is padded",
+        "decision": "key a (cik, LPAD to 10) VERIFIED at 0.977; look at the one orphan"
+      },
+      {
+        "n": 9,
+        "at": "2026-10-25T08:19:26.070Z",
+        "template": "joinmap_cik_orphans",
+        "params": {
+          "period": "CY2025Q1"
+        },
+        "elapsed_ms": 568,
+        "wall_ms": 619,
+        "rows": 1,
+        "result": "IDACORP has no CY2025Q1 fact under any of the three tags",
+        "decision": "keep the orphan as a named gap, not a key failure"
+      },
+      {
+        "n": 10,
+        "at": "2026-10-25T08:19:36.261Z",
+        "template": "lookup",
+        "params": {
+          "what": "frames loc format: 'US-' plus the two-letter state (seen in the sample rows); the snapshot holds the business-address state hq_state"
+        },
+        "elapsed_ms": 0,
+        "rows": 0,
+        "result": "",
+        "decision": "strip 'US-' (SUBSTR from 4, length 2) and compare with hq_state for the matched utilities"
+      },
+      {
+        "n": 11,
+        "at": "2026-10-25T08:19:37.192Z",
+        "template": "joinmap_loc",
+        "params": {
+          "period": "CY2025Q1"
+        },
+        "elapsed_ms": 681,
+        "wall_ms": 718,
+        "rows": 1,
+        "result": "42 of 42 frames utilities report the same state as their business address",
+        "decision": "key b (loc SUBSTR(4,2) to hq_state) VERIFIED at 1.000"
+      },
+      {
+        "n": 12,
+        "at": "2026-10-25T08:19:46.991Z",
+        "template": "describe_object",
+        "params": {
+          "object": "cw.fema_declarations_dr_2025q1"
+        },
+        "elapsed_ms": 142,
+        "wall_ms": 216,
+        "rows": 9,
+        "result": "state (two letters), fips_state_code (string), disaster_number",
+        "decision": "join on state; FIPS as a cross-check against the state reference"
+      },
+      {
+        "n": 13,
+        "at": "2026-10-25T08:19:48.106Z",
+        "template": "sample_rows",
+        "params": {
+          "object": "cw.fema_declarations_dr_2025q1"
+        },
+        "elapsed_ms": 183,
+        "wall_ms": 230,
+        "rows": 5,
+        "result": "one row per designated county; state two letters; fips_state_code two digits",
+        "decision": "count distinct states (not rows) when matching"
+      },
+      {
+        "n": 14,
+        "at": "2026-10-25T08:19:55.533Z",
+        "template": "describe_object",
+        "params": {
+          "object": "cw.utility_states"
+        },
+        "elapsed_ms": 50,
+        "wall_ms": 99,
+        "rows": 2,
+        "result": "cik (string), state: one row per utility and served state",
+        "decision": "match the declared states against the served states"
+      },
+      {
+        "n": 15,
+        "at": "2026-10-25T08:19:56.520Z",
+        "template": "match_rate",
+        "params": {
+          "left_object": "cw.fema_declarations_dr_2025q1",
+          "left_column": "state",
+          "right_object": "cw.utility_states",
+          "right_column": "state",
+          "transform": "identity"
+        },
+        "elapsed_ms": 326,
+        "wall_ms": 376,
+        "rows": 1,
+        "result": "7 of 8 declared states are served by a seed utility",
+        "decision": "key c is PARTIAL (0.875); list the orphan"
+      },
+      {
+        "n": 16,
+        "at": "2026-10-25T08:20:04.497Z",
+        "template": "match_rate_orphans",
+        "params": {
+          "left_object": "cw.fema_declarations_dr_2025q1",
+          "left_column": "state",
+          "right_object": "cw.utility_states",
+          "right_column": "state",
+          "transform": "identity"
+        },
+        "elapsed_ms": 246,
+        "wall_ms": 299,
+        "rows": 1,
+        "result": "AK is the orphan: no seed utility serves Alaska",
+        "decision": "keep AK as the named orphan of a PARTIAL key"
+      },
+      {
+        "n": 17,
+        "at": "2026-10-25T08:20:05.806Z",
+        "template": "match_rate",
+        "params": {
+          "left_object": "cw.fema_declarations_dr_2025q1",
+          "left_column": "fips_state_code",
+          "right_object": "cw.states",
+          "right_column": "fips",
+          "transform": "identity"
+        },
+        "elapsed_ms": 234,
+        "wall_ms": 272,
+        "rows": 1,
+        "result": "8 of 8 declared FIPS state codes are in the state reference",
+        "decision": "the state reference (FIPS) is the governed parent of a declaration; VERIFIED 1.000"
+      },
+      {
+        "n": 18,
+        "at": "2026-10-25T08:20:16.095Z",
+        "template": "describe_object",
+        "params": {
+          "object": "cw.states"
+        },
+        "elapsed_ms": 74,
+        "wall_ms": 145,
+        "rows": 3,
+        "result": "code, name, fips (the reference used in step 17; described after the fact)",
+        "decision": ""
+      },
+      {
+        "n": 19,
+        "at": "2026-10-25T08:20:23.287Z",
+        "template": "describe_object",
+        "params": {
+          "object": "cw.seed_stations"
+        },
+        "elapsed_ms": 82,
+        "wall_ms": 129,
+        "rows": 3,
+        "result": "id, state, name: the 56 stations of the seed utilities",
+        "decision": ""
+      },
+      {
+        "n": 20,
+        "at": "2026-10-25T08:20:24.340Z",
+        "template": "describe_object",
+        "params": {
+          "object": "cw.stations"
+        },
+        "elapsed_ms": 5167,
+        "wall_ms": 5236,
+        "rows": 5,
+        "result": "id, state, name, latitude, longitude: the GHCN station inventory",
+        "decision": "join on the 11-character station id"
+      },
+      {
+        "n": 21,
+        "at": "2026-10-25T08:20:30.527Z",
+        "template": "sample_rows",
+        "params": {
+          "object": "cw.stations"
+        },
+        "elapsed_ms": 7403,
+        "wall_ms": 7459,
+        "rows": 5,
+        "result": "ids are 11 characters; non-US stations have a blank state",
+        "decision": "match the seed ids against the inventory ids as they are (identity)"
+      },
+      {
+        "n": 22,
+        "at": "2026-10-25T08:20:46.108Z",
+        "template": "match_rate",
+        "params": {
+          "left_object": "cw.seed_stations",
+          "left_column": "id",
+          "right_object": "cw.stations",
+          "right_column": "id",
+          "transform": "identity"
+        },
+        "elapsed_ms": 7855,
+        "wall_ms": 12728,
+        "rows": 1,
+        "result": "56 of 56 seed station ids are in the inventory",
+        "decision": "key d (station id) VERIFIED at 1.000; check the seed's state against the inventory's state too"
+      },
+      {
+        "n": 23,
+        "at": "2026-10-25T08:21:05.527Z",
+        "template": "joinmap_station",
+        "params": {},
+        "elapsed_ms": 7704,
+        "wall_ms": 7772,
+        "rows": 1,
+        "result": "56 of 56 match, and the state agrees for all 56",
+        "decision": ""
+      },
+      {
+        "n": 24,
+        "at": "2026-10-25T08:21:19.920Z",
+        "template": "describe_object",
+        "params": {
+          "object": "cw.sic_codes"
+        },
+        "elapsed_ms": 101,
+        "wall_ms": 139,
+        "rows": 6,
+        "result": "code (string), description, division, major group",
+        "decision": "join the snapshot's sic to code"
+      },
+      {
+        "n": 25,
+        "at": "2026-10-25T08:21:21.010Z",
+        "template": "sample_rows",
+        "params": {
+          "object": "cw.sic_codes"
+        },
+        "elapsed_ms": 141,
+        "wall_ms": 194,
+        "rows": 5,
+        "result": "codes are four-character zero-padded strings, like the snapshot's sic",
+        "decision": "identity, no transform"
+      },
+      {
+        "n": 26,
+        "at": "2026-10-25T08:21:28.710Z",
+        "template": "match_rate",
+        "params": {
+          "left_object": "cw.seed_submissions_snapshot",
+          "left_column": "sic",
+          "right_object": "cw.sic_codes",
+          "right_column": "code",
+          "transform": "identity"
+        },
+        "elapsed_ms": 255,
+        "wall_ms": 328,
+        "rows": 1,
+        "result": "3 of 4 distinct SIC codes found (0.750 by codes)",
+        "decision": "a code count misreads an attribute key: count utilities (rows) instead"
+      },
+      {
+        "n": 27,
+        "at": "2026-10-25T08:21:29.961Z",
+        "template": "match_rate_orphans",
+        "params": {
+          "left_object": "cw.seed_submissions_snapshot",
+          "left_column": "sic",
+          "right_object": "cw.sic_codes",
+          "right_column": "code",
+          "transform": "identity"
+        },
+        "elapsed_ms": 260,
+        "wall_ms": 298,
+        "rows": 1,
+        "result": "4900 is the code the reference lacks",
+        "decision": "find which utilities carry 4900 and count matched utilities"
+      },
+      {
+        "n": 28,
+        "at": "2026-10-25T08:21:37.246Z",
+        "template": "joinmap_sic",
+        "params": {},
+        "elapsed_ms": 326,
+        "wall_ms": 384,
+        "rows": 1,
+        "result": "42 of 43 utilities carry a SIC code the reference holds (3 of 4 distinct codes)",
+        "decision": "key e (SIC) VERIFIED at 0.977 by utility rows, the code reading beside it"
+      },
+      {
+        "n": 29,
+        "at": "2026-10-25T08:21:38.552Z",
+        "template": "joinmap_sic_orphans",
+        "params": {},
+        "elapsed_ms": 264,
+        "wall_ms": 307,
+        "rows": 1,
+        "result": "MGE Energy (0001161728) carries 4900, absent from the reference",
+        "decision": "keep MGE as the named orphan"
+      }
+    ]
+  },
+  "agent_vs_manual": {
+    "cold_wall_s_median": 275.8,
+    "warm_wall_s_median": 194.1,
+    "cold_statements_median": 60,
+    "warm_statements_median": 46,
+    "cold_statement_s_median": 86.1,
+    "warm_statement_s_median": 39.3,
+    "no_model_wall_s": 88.4,
+    "no_model_statements": 56,
+    "no_model_statement_s": 85.7,
+    "manual_statements": 27,
+    "manual_statement_s": 33.7,
+    "manual_session_s": 179.5,
+    "manual_decisions": 24
+  },
+  "ablation": [
+    {
+      "setting": "think_on",
+      "run_id": "r20261025T160836e4df",
+      "wall_s": 275.2,
+      "chunks": 9,
+      "planner_calls": 25,
+      "planner_valid": 21,
+      "planner_valid_first_try": 19,
+      "planner_repaired": 2,
+      "fallback_steps": 4,
+      "tokens_out": 22047,
+      "median_tok_s": 132.9,
+      "memo_tok_s": 137.7,
+      "model": {
+        "proposed_by": "planner",
+        "made": 1,
+        "valid": 1,
+        "verified": 0,
+        "partial": 1,
+        "rejected": 0,
+        "invalid_schema": 0,
+        "unmeasurable": 0,
+        "verified_keys": [],
+        "recalled_keys": []
+      },
+      "note": {
+        "source": "model",
+        "words": 220,
+        "attempts": 2,
+        "verifier_checked": true,
+        "drafts_rejected_for_words": 1,
+        "final_issues": 0
+      },
+      "answer_identical_to_think_on": null,
+      "gpu": {
+        "run_id": "r20261025T160836e4df",
+        "samples": 540,
+        "mem_first_mib": 6936,
+        "mem_peak_mib": 6959,
+        "mem_min_mib": 3778,
+        "util_median_pct": 81,
+        "util_peak_pct": 99,
+        "ollama_model": "nemotron-3-nano:4b",
+        "ollama_size_vram_mib": 2881,
+        "ollama_context": 8192,
+        "quantization": "Q4_K_M",
+        "parameters": "4.0B",
+        "resident_before": true
+      }
+    },
+    {
+      "setting": "think_off",
+      "run_id": "r20261025T161313168c",
+      "wall_s": 227.9,
+      "chunks": 10,
+      "planner_calls": 28,
+      "planner_valid": 20,
+      "planner_valid_first_try": 19,
+      "planner_repaired": 1,
+      "fallback_steps": 8,
+      "tokens_out": 15813,
+      "median_tok_s": 133.1,
+      "memo_tok_s": 137.1,
+      "model": {
+        "proposed_by": "planner",
+        "made": 2,
+        "valid": 2,
+        "verified": 1,
+        "partial": 0,
+        "rejected": 1,
+        "invalid_schema": 0,
+        "unmeasurable": 0,
+        "verified_keys": [
+          "pair:cw.seed_submissions_snapshot.hq_state~cw.seed_stations.state|identity"
+        ],
+        "recalled_keys": []
+      },
+      "note": {
+        "source": "template",
+        "words": 245,
+        "attempts": 2,
+        "verifier_checked": true,
+        "drafts_rejected_for_words": 2,
+        "final_issues": 0
+      },
+      "answer_identical_to_think_on": true,
+      "gpu": {
+        "run_id": "r20261025T161313168c",
+        "samples": 448,
+        "mem_first_mib": 6932,
+        "mem_peak_mib": 7873,
+        "mem_min_mib": 3777,
+        "util_median_pct": 73,
+        "util_peak_pct": 99,
+        "ollama_model": "nemotron-3-nano:4b",
+        "ollama_size_vram_mib": 2881,
+        "ollama_context": 8192,
+        "quantization": "Q4_K_M",
+        "parameters": "4.0B",
+        "resident_before": true
+      }
+    },
+    {
+      "setting": "no_model",
+      "run_id": "r20261025T1617024020",
+      "wall_s": 88.4,
+      "chunks": 9,
+      "planner_calls": 0,
+      "planner_valid": 0,
+      "planner_valid_first_try": 0,
+      "planner_repaired": 0,
+      "fallback_steps": 25,
+      "tokens_out": 0,
+      "median_tok_s": null,
+      "memo_tok_s": null,
+      "model": {
+        "proposed_by": null,
+        "made": 0,
+        "valid": 0,
+        "verified": 0,
+        "partial": 0,
+        "rejected": 0,
+        "invalid_schema": 0,
+        "unmeasurable": 0,
+        "verified_keys": [],
+        "recalled_keys": []
+      },
+      "note": {
+        "source": "template",
+        "words": 247,
+        "attempts": 0,
+        "verifier_checked": true,
+        "drafts_rejected_for_words": 0,
+        "final_issues": 0
+      },
+      "answer_identical_to_think_on": true,
+      "gpu": {
+        "run_id": "r20261025T1617024020",
+        "samples": 175,
+        "mem_first_mib": 7341,
+        "mem_peak_mib": 7482,
+        "mem_min_mib": 7335,
+        "util_median_pct": 16,
+        "util_peak_pct": 19,
+        "ollama_model": "nemotron-3-nano:4b",
+        "ollama_size_vram_mib": 2881,
+        "ollama_context": 8192,
+        "quantization": "Q4_K_M",
+        "parameters": "4.0B",
+        "resident_before": true
+      }
+    }
+  ],
+  "timings": {
+    "tools": [
+      {
+        "name": "probe_source",
+        "n": 63,
+        "runs": 7,
+        "median_ms": 551,
+        "p90_ms": 27190,
+        "max_ms": 28073,
+        "total_ms": 226727
+      },
+      {
+        "name": "answer",
+        "n": 7,
+        "runs": 7,
+        "median_ms": 37439,
+        "p90_ms": 37777,
+        "max_ms": 37777,
+        "total_ms": 226642
+      },
+      {
+        "name": "measure_key",
+        "n": 67,
+        "runs": 7,
+        "median_ms": 668,
+        "p90_ms": 1479,
+        "max_ms": 7824,
+        "total_ms": 86053
+      },
+      {
+        "name": "finalize",
+        "n": 7,
+        "runs": 7,
+        "median_ms": 6349,
+        "p90_ms": 10075,
+        "max_ms": 10075,
+        "total_ms": 44492
+      },
+      {
+        "name": "compile_usl",
+        "n": 7,
+        "runs": 7,
+        "median_ms": 4389,
+        "p90_ms": 5607,
+        "max_ms": 5607,
+        "total_ms": 31725
+      },
+      {
+        "name": "register_source",
+        "n": 10,
+        "runs": 7,
+        "median_ms": 421,
+        "p90_ms": 497,
+        "max_ms": 541,
+        "total_ms": 4187
+      },
+      {
+        "name": "search_catalogue",
+        "n": 7,
+        "runs": 7,
+        "median_ms": 218,
+        "p90_ms": 259,
+        "max_ms": 259,
+        "total_ms": 1569
+      },
+      {
+        "name": "propose_keys",
+        "n": 7,
+        "runs": 7,
+        "median_ms": 2,
+        "p90_ms": 7,
+        "max_ms": 7,
+        "total_ms": 18
+      },
+      {
+        "name": "not_tested",
+        "n": 7,
+        "runs": 7,
+        "median_ms": 1,
+        "p90_ms": 1,
+        "max_ms": 1,
+        "total_ms": 4
+      }
+    ],
+    "statements": [
+      {
+        "name": "weather_quarter",
+        "class": "answer (weather)",
+        "n": 12,
+        "runs": 7,
+        "median_ms": 18042,
+        "p90_ms": 18135,
+        "max_ms": 18135,
+        "total_ms": 215944
+      },
+      {
+        "name": "distinct_counts",
+        "class": "probe",
+        "n": 119,
+        "runs": 7,
+        "median_ms": 130,
+        "p90_ms": 7436,
+        "max_ms": 7735,
+        "total_ms": 119579
+      },
+      {
+        "name": "sample_rows",
+        "class": "probe",
+        "n": 63,
+        "runs": 7,
+        "median_ms": 139,
+        "p90_ms": 7283,
+        "max_ms": 7607,
+        "total_ms": 58441
+      },
+      {
+        "name": "joinmap_station",
+        "class": "measure (named join-map statement)",
+        "n": 6,
+        "runs": 7,
+        "median_ms": 7702,
+        "p90_ms": 7783,
+        "max_ms": 7783,
+        "total_ms": 46192
+      },
+      {
+        "name": "describe_object",
+        "class": "probe",
+        "n": 63,
+        "runs": 7,
+        "median_ms": 98,
+        "p90_ms": 4913,
+        "max_ms": 5066,
+        "total_ms": 39462
+      },
+      {
+        "name": "dq_run",
+        "class": "live DQ",
+        "n": 14,
+        "runs": 7,
+        "median_ms": 1752,
+        "p90_ms": 4619,
+        "max_ms": 4804,
+        "total_ms": 31241
+      },
+      {
+        "name": "answer_revenue",
+        "class": "answer",
+        "n": 14,
+        "runs": 7,
+        "median_ms": 494,
+        "p90_ms": 516,
+        "max_ms": 523,
+        "total_ms": 6821
+      },
+      {
+        "name": "match_rate",
+        "class": "measure (generic match_rate)",
+        "n": 23,
+        "runs": 7,
+        "median_ms": 245,
+        "p90_ms": 325,
+        "max_ms": 457,
+        "total_ms": 5759
+      },
+      {
+        "name": "joinmap_cik_control",
+        "class": "measure (named join-map statement)",
+        "n": 7,
+        "runs": 7,
+        "median_ms": 660,
+        "p90_ms": 746,
+        "max_ms": 746,
+        "total_ms": 4749
+      },
+      {
+        "name": "joinmap_cik",
+        "class": "measure (named join-map statement)",
+        "n": 6,
+        "runs": 7,
+        "median_ms": 715,
+        "p90_ms": 804,
+        "max_ms": 804,
+        "total_ms": 4350
+      },
+      {
+        "name": "joinmap_loc",
+        "class": "measure (named join-map statement)",
+        "n": 6,
+        "runs": 7,
+        "median_ms": 708,
+        "p90_ms": 754,
+        "max_ms": 754,
+        "total_ms": 4267
+      },
+      {
+        "name": "joinmap_cik_orphans",
+        "class": "measure (named join-map statement)",
+        "n": 6,
+        "runs": 7,
+        "median_ms": 609,
+        "p90_ms": 691,
+        "max_ms": 691,
+        "total_ms": 3639
+      },
+      {
+        "name": "match_rate_orphans",
+        "class": "measure (generic match_rate)",
+        "n": 14,
+        "runs": 7,
+        "median_ms": 247,
+        "p90_ms": 314,
+        "max_ms": 393,
+        "total_ms": 3508
+      },
+      {
+        "name": "answer_fema_utilities",
+        "class": "answer",
+        "n": 7,
+        "runs": 7,
+        "median_ms": 387,
+        "p90_ms": 395,
+        "max_ms": 395,
+        "total_ms": 2657
+      },
+      {
+        "name": "joinmap_fema_state",
+        "class": "measure (named join-map statement)",
+        "n": 7,
+        "runs": 7,
+        "median_ms": 291,
+        "p90_ms": 320,
+        "max_ms": 320,
+        "total_ms": 2032
+      },
+      {
+        "name": "joinmap_sic",
+        "class": "measure (named join-map statement)",
+        "n": 6,
+        "runs": 7,
+        "median_ms": 323,
+        "p90_ms": 356,
+        "max_ms": 356,
+        "total_ms": 1970
+      },
+      {
+        "name": "joinmap_fema_state_orphans",
+        "class": "measure (named join-map statement)",
+        "n": 7,
+        "runs": 7,
+        "median_ms": 245,
+        "p90_ms": 273,
+        "max_ms": 273,
+        "total_ms": 1752
+      },
+      {
+        "name": "joinmap_fema_fips",
+        "class": "measure (named join-map statement)",
+        "n": 6,
+        "runs": 7,
+        "median_ms": 281,
+        "p90_ms": 311,
+        "max_ms": 311,
+        "total_ms": 1663
+      },
+      {
+        "name": "joinmap_sic_orphans",
+        "class": "measure (named join-map statement)",
+        "n": 6,
+        "runs": 7,
+        "median_ms": 256,
+        "p90_ms": 306,
+        "max_ms": 306,
+        "total_ms": 1565
+      },
+      {
+        "name": "catalogue_list",
+        "class": "catalogue",
+        "n": 7,
+        "runs": 7,
+        "median_ms": 180,
+        "p90_ms": 214,
+        "max_ms": 214,
+        "total_ms": 1310
+      }
+    ],
+    "classes": [
+      {
+        "name": "probe",
+        "n": 245,
+        "runs": 7,
+        "median_ms": 106,
+        "p90_ms": 4995,
+        "max_ms": 7735,
+        "total_ms": 217482
+      },
+      {
+        "name": "answer (weather)",
+        "n": 12,
+        "runs": 7,
+        "median_ms": 18042,
+        "p90_ms": 18135,
+        "max_ms": 18135,
+        "total_ms": 215944
+      },
+      {
+        "name": "measure (named join-map statement)",
+        "n": 63,
+        "runs": 7,
+        "median_ms": 356,
+        "p90_ms": 804,
+        "max_ms": 7783,
+        "total_ms": 72179
+      },
+      {
+        "name": "live DQ",
+        "n": 14,
+        "runs": 7,
+        "median_ms": 1752,
+        "p90_ms": 4619,
+        "max_ms": 4804,
+        "total_ms": 31241
+      },
+      {
+        "name": "answer",
+        "n": 21,
+        "runs": 7,
+        "median_ms": 469,
+        "p90_ms": 509,
+        "max_ms": 523,
+        "total_ms": 9478
+      },
+      {
+        "name": "measure (generic match_rate)",
+        "n": 37,
+        "runs": 7,
+        "median_ms": 245,
+        "p90_ms": 325,
+        "max_ms": 457,
+        "total_ms": 9267
+      },
+      {
+        "name": "catalogue",
+        "n": 7,
+        "runs": 7,
+        "median_ms": 180,
+        "p90_ms": 214,
+        "max_ms": 214,
+        "total_ms": 1310
+      }
+    ],
+    "planner": {
+      "name": "planner call (model)",
+      "n": 157,
+      "runs": 7,
+      "median_ms": 4509,
+      "p90_ms": 10261,
+      "max_ms": 26294,
+      "total_ms": 970122
+    },
+    "over_20s": 0
+  },
+  "did_not_go_well": [
+    "The model loses the key-proposal comparison. Over the five cold runs with the model it made 11 proposals and 3 were VERIFIED; the deterministic baseline made 30 and 25 were VERIFIED. Every key the model got VERIFIED (the FEMA FIPS key, utility_states.state ~ states.code, hq_state ~ seed_stations.state) was also measured in the same run from the baseline's measure queue. On this data the runs do not show the model finding a key the baseline misses.",
+    "The no-model run reached the identical answer and the same governed join-map keys in 88.4 s, against 247.7-285.8 s for the cold runs with the model. On this question the planner and the note add time, not keys; what the model adds is the choice among probed columns, and the runs measure that choice as weaker than the baseline's.",
+    "Several model choices are pairs nobody would try: utility_states.cik ~ states.fips (0 of 43), utility_states.state ~ the FEMA fips_state_code (0 of 43), the frames cik ~ sic_codes.code under lpad10 (0 of 1,937). Lightning SQL refuses each as REJECTED, which is the design, but each costs a planner step and a statement.",
+    "A VERIFIED rate measures value containment, not meaning: hq_state ~ seed_stations.state (28 of 28, model and baseline queue) and utility_states.state ~ seed_stations.state (43 of 43, baseline) are VERIFIED because two lists of US state codes overlap. Neither is a join key anyone would use, and the join map shows them beside the governed keys without saying so.",
+    "The planner's replies: 125 of 157 planner calls were valid over the six runs with the model, and the host took 2 to 8 checklist steps itself per run (fallback steps), 8 in the think-off run.",
+    "The note: the model's draft was replaced by the 250-word template in 3 of the 6 runs with the model (word or length issues). In cold 2 a draft saying revenue 'held up' while EIX and POR fell passed the verifier at that code; the rule gap was fixed afterwards (c090bc1), and the runs on fc130bd carry the fix.",
+    "The curated served states have a gap the outside check found: PPL's FY2024 10-K names Virginia (Kentucky Utilities serves its Virginia customers as Old Dominion Power), which seeds/utilities.json leaves out. No Virginia major-disaster declaration is dated in Q1 2025 or Q1 2024, so neither answer changes; the seed file is not edited in this lane.",
+    "cw.stations is the slow object: probing it costs about 27 s per cold run (DESCRIBE about 5 s, five rows about 7 s, two distinct counts about 7 s each) and its join-map statement 7.7 s; the two weather statements take 18 s each.",
+    "The whole-card VRAM figures cannot be attributed to the model: the model stayed resident through all three ablation runs and other programs share the card, so the no-model run's card peak (7,482 MiB) is above the think-on run's (6,959 MiB). Only Ollama's own figure (2,881 MiB) is the model's.",
+    "The manual baseline ran pre-written statements, so a person's time is not measured; the user gain is stated in statements and decisions, not minutes."
+  ],
+  "not_measured": [
+    "A person's time to find, write and read the manual-baseline SQL (the session time in section 4 is not a person's time).",
+    "More than one run per ablation setting, and think off or no model on the warm question.",
+    "A second quantisation of the model (only Q4_K_M was run) and VRAM with the model unloaded (it stayed resident under Ollama's keep-alive).",
+    "Revenue against the companies' own reports: the answer compares SEC frames values year on year under the first available tag; no 10-Q figure was checked.",
+    "Served states of the other 41 seed utilities against their 10-Ks (two were checked).",
+    "Run-time registration on Day 2: every registration in these runs answered already_registered; the evidence of a live registration is the Day-1 warm run r20261025T1413091c1c, and FEMA CY2023Q1 and frames CY2022Q1 stay unregistered for the recorded warm question (D19).",
+    "The full onboarding DQ run on Day 2: the onboarding DQ file is from 25 Oct 13:46 SGT; each question runs the two fast DQ rules live.",
+    "Statement times under concurrent question load: every run here ran alone."
+  ]
+}

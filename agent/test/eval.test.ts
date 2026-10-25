@@ -1,208 +1,265 @@
-import { readFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
-  attributionSections,
+  answerCanonical,
   buildReport,
-  coveragePerUtility,
+  compareRuns,
+  gpuSummary,
+  isGoverned,
+  keyFamily,
+  l2Section,
+  manualSummary,
+  median,
   renderMarkdown,
-  runMode,
-  stationCoverage,
-  summariseRun,
+  sideTally,
+  statementClass,
+  toolTimings,
   type EvalRun,
-  type JoinMapFile,
-  type SeedStation,
-  type SeedUtility,
+  type ManualSession,
+  type Selection,
+  type SelectedRun,
 } from "../src/eval/report.ts";
+import { readGpuDir } from "../src/eval/run.ts";
+import { femaCounts, femaUrl, htmlText, serviceSentences } from "../src/eval/outside.ts";
 
-// A trimmed copy of a saved run (fixtures/eval-run.json): accession numbers kept, filing values,
-// memo text and most rows removed; degree-day rows kept for 12 stations.
-const fixture = (): EvalRun => JSON.parse(readFileSync(new URL("./fixtures/eval-run.json", import.meta.url), "utf8")) as EvalRun;
-const utilities = (JSON.parse(readFileSync(new URL("../../seeds/utilities.json", import.meta.url), "utf8")) as { utilities: SeedUtility[] }).utilities;
-const stations = (JSON.parse(readFileSync(new URL("../../seeds/stations.json", import.meta.url), "utf8")) as { stations: SeedStation[] }).stations;
+// Synthetic-value copies of two saved runs (fixtures/make_server_fixtures.py): structure, SQL text,
+// counts and timings from the runs; revenue values, accession numbers and degree days synthetic.
+const load = (f: string): EvalRun => JSON.parse(readFileSync(new URL(`./fixtures/${f}`, import.meta.url), "utf8")) as EvalRun;
+const cold = () => load("server-run-cold.json");
+const warm = () => load("server-run-warm.json");
+const clone = (r: EvalRun, id: string): EvalRun => ({ ...(JSON.parse(JSON.stringify(r)) as EvalRun), run_id: id });
+const sel = (run_id: string, setting: SelectedRun["setting"] = "think_on", by = "lane E"): SelectedRun => ({ run_id, label: run_id, by, code: "abc1234", setting });
 
-function coldClone(run: EvalRun, id: string, startedAt: string): EvalRun {
-  const c = JSON.parse(JSON.stringify(run)) as EvalRun;
-  c.run_id = id;
-  c.started_at = startedAt;
-  c.skipped_steps = [];
-  c.summary = { ...c.summary, chunks: 5, planner_calls: 9, planner_valid_first_try: 9, planner_repaired: 0 };
-  c.wall_ms = 84146;
-  return c;
-}
-
-describe("eval report: per-run summary", () => {
-  it("reads planner validity, memo outcome, E-complete and E-cov from the run file", () => {
-    const run = fixture();
-    const s = summariseRun(run, "fixture");
-    expect(s.run_id).toBe(run.run_id);
-    expect(s.mode).toBe("warm");
-    expect(runMode(run)).toBe("warm");
-    expect(s.chunks).toBe(4);
-    expect(s.planner_calls).toBe(8);
-    expect(s.valid_first_try).toBe(7);
-    expect(s.repaired).toBe(1);
-    expect(s.repairs_think_off).toBeNull();
-    expect(s.fallbacks).toBe(0);
-    expect(s.memo.source).toBe("model");
-    expect(s.memo.words).toBe(184);
-    expect(s.memo.attempts).toBe(1);
-    expect(s.memo.drafts).toEqual([{ attempt: 1, ok: true, words: 184, unknown_numbers: 0 }]);
-    expect(s.evidence.records).toBe(20);
-    expect(s.evidence.complete_fields).toBe(20);
-    expect(s.evidence.unresolved_object_names).toBe(0);
-    expect(s.evidence.e_complete).toBe(20);
-    expect(s.evidence.e_complete_ratio).toBe(1);
-    expect(s.evidence.matches_run_quality).toBe(true);
-    expect(s.claims).toMatchObject({ total: 19, with_evidence: 19, e_cov: 1, matches_run_quality: true });
-    expect(s.skipped_steps).toEqual([{ item: "tag_chosen", memoryId: "mem-49" }]);
-    expect(s.weather_quarter_ms.current).toBeGreaterThan(10_000);
-    expect(s.weather_quarter_ms.previous).toBeGreaterThan(10_000);
-    expect(s.cloud_model_calls).toBe(0);
-    expect(s.refused_hosts).toBe(0);
-    expect(s.model).toBe("nemotron-3-nano:4b");
+describe("eval report: keys", () => {
+  it("folds periods and quarters into the key family", () => {
+    expect(keyFamily("cik@CY2025Q1")).toBe("cik");
+    expect(keyFamily("station@all")).toBe("station");
+    expect(keyFamily("pair:cw.frames_revenues_cy2024q1.cik~cw.utility_states.cik|lpad10")).toBe("pair:cw.frames_revenues_<period>.cik~cw.utility_states.cik|lpad10");
+    expect(keyFamily("pair:cw.utility_states.state~cw.fema_declarations_dr_2025q1.state|identity")).toBe("pair:cw.utility_states.state~cw.fema_declarations_dr_<quarter>.state|identity");
+    expect(isGoverned("fema_fips@CY2024Q1")).toBe(true);
+    expect(isGoverned("pair:cw.utility_states.state~cw.states.code|identity")).toBe(false);
   });
 
-  it("counts an unresolved object name ({tag}) and a missing required field as incomplete", () => {
-    const run = fixture();
-    const sql = run.evidence.find((e) => e.kind === "zetaris_sql")!;
-    sql.zetaris_object = "cw.frames_{tag}_{period}";
-    const tool = run.evidence.find((e) => e.kind === "tool")!;
-    delete (tool as { derived_from?: string[] }).derived_from;
-    const s = summariseRun(run, "fixture");
-    expect(s.evidence.unresolved_object_names).toBe(1);
-    expect(s.evidence.complete_fields).toBe(19);
-    expect(s.evidence.e_complete).toBe(18);
-    expect(s.evidence.matches_run_quality).toBe(false);
-  });
-
-  it("E-cov drops when a claim cites nothing", () => {
-    const run = fixture();
-    run.card.claims[0]!.evidenceIds = [];
-    const s = summariseRun(run, "fixture");
-    expect(s.claims.with_evidence).toBe(18);
-    expect(s.claims.e_cov).toBeCloseTo(18 / 19, 12);
+  it("classes statements by template", () => {
+    expect(statementClass("distinct_counts")).toBe("probe");
+    expect(statementClass("joinmap_cik_orphans")).toBe("measure (named join-map statement)");
+    expect(statementClass("match_rate_orphans")).toBe("measure (generic match_rate)");
+    expect(statementClass("weather_quarter")).toBe("answer (weather)");
+    expect(statementClass("answer_revenue")).toBe("answer");
+    expect(statementClass("dq_run")).toBe("live DQ");
+    expect(statementClass(null)).toBe("registrar plan (DESCRIBE, cache check)");
   });
 });
 
-describe("eval report: coverage per utility", () => {
-  it("takes the minimum over a utility's stations per period and marks utilities whose stations are not all in the rows", () => {
-    const run = fixture();
-    const cov = stationCoverage(run);
-    expect(Object.keys(cov).sort()).toEqual(["CY2024Q1", "CY2025Q1"]);
-    expect(cov["CY2025Q1"]!.size).toBe(12);
-    const section = coveragePerUtility(run, utilities, ["CY2025Q1", "CY2024Q1"]);
-    expect(section.from_run).toBe(run.run_id);
-    expect(section.utilities).toHaveLength(utilities.length);
-    const fe = section.utilities.find((u) => u.cik === "0001031296")!;
-    expect(fe.complete).toBe(true);
-    expect(fe.stations).toBe(9);
-    expect(fe.coverage["CY2025Q1"]).toBe(1);
-    expect(fe.coverage["CY2024Q1"]).toBe(1);
-    expect(fe.min).toBe(1);
-    const kept = new Set(cov["CY2025Q1"]!.keys());
-    const expectedComplete = utilities.filter((u) => u.station_ids.every((s) => kept.has(s))).length;
-    expect(section.summary.with_every_station).toBe(expectedComplete);
-    expect(section.summary.not_covered).toBe(utilities.length - expectedComplete);
-    const partial = section.utilities.find((u) => !u.complete)!;
-    expect(partial.min).toBeNull();
-    expect(partial.present).toBeLessThan(partial.stations);
+describe("eval report: reproducibility", () => {
+  it("finds two copies of a run identical on the answer and the join map", () => {
+    const p = compareRuns(cold(), clone(cold(), "r2"));
+    expect(p.answer_identical).toBe(true);
+    expect(p.answer_rows).toEqual([12, 12]);
+    expect(p.join_common).toBe(7);
+    expect(p.join_identical_on_common).toBe(true);
+    expect(p.governed_identical).toBe(true);
+    expect(p.governed_compared).toBe(7);
   });
 
-  it("with no run every utility is not covered", () => {
-    const section = coveragePerUtility(null, utilities, ["CY2025Q1", "CY2024Q1"]);
-    expect(section.from_run).toBeNull();
-    expect(section.summary.with_every_station).toBe(0);
-    expect(section.summary.min_coverage).toBeNull();
+  it("names the utility whose answer row differs and a key only one run measured", () => {
+    const b = clone(cold(), "r2");
+    b.answer!.rows[0]!.revenue!.change = 0.5;
+    b.join_map!.push({ id: "k9", key: "pair:cw.utility_states.state~cw.states.code|identity", proposed_by: ["planner", "baseline (queue)"], verdict: "VERIFIED", left_rows: 43, matched_rows: 43, orphans: [] });
+    const p = compareRuns(cold(), b);
+    expect(p.answer_identical).toBe(false);
+    expect(p.answer_differences).toEqual([cold().answer!.rows[0]!.cik]);
+    expect(p.only_in_b).toEqual(["pair:cw.utility_states.state~cw.states.code|identity"]);
+    expect(p.proposers).toEqual({ "pair:cw.utility_states.state~cw.states.code|identity": "model+baseline" });
+    expect(p.governed_identical).toBe(true);
   });
-});
 
-describe("eval report: attribution", () => {
-  it("quotes the latest run's attribution with its bootstrap and says whether every run of the utility agrees", () => {
-    const run = fixture();
-    const one = attributionSections([run]);
-    expect(one).toHaveLength(1);
-    expect(one[0]!.from_run).toBe(run.run_id);
-    expect(one[0]!.beta).toBe(run.card.attribution!.beta);
-    expect(one[0]!.bootstrap).toEqual({ resamples: 300, valid: 300, skipped_zero_variance: 0, seed: 7 });
-    expect(one[0]!.weather.lo).toBe(run.card.attribution!.ranges.weather.lo);
-    expect(one[0]!.identical_across_runs).toBe(true);
-    const earlier = coldClone(run, "r-earlier", "2026-10-24T12:00:00.000Z");
-    earlier.card.attribution!.beta = 0.4;
-    const two = attributionSections([run, earlier]);
-    expect(two[0]!.from_run).toBe(run.run_id);
-    expect(two[0]!.runs).toEqual(["r-earlier", run.run_id]);
-    expect(two[0]!.identical_across_runs).toBe(false);
+  it("flags a governed key whose numbers moved", () => {
+    const b = clone(cold(), "r2");
+    const sic = b.join_map!.find((r) => r.key === "sic@all")!;
+    sic.matched_rows = 41;
+    const p = compareRuns(cold(), b);
+    expect(p.governed_identical).toBe(false);
+    expect(p.join_identical_on_common).toBe(false);
+  });
+
+  it("compares answers without provenance or timings", () => {
+    const b = clone(cold(), "r2");
+    (b.answer!.rows[0] as unknown as { provenance: unknown }).provenance = { changed: true };
+    expect(JSON.stringify(answerCanonical(b))).toBe(JSON.stringify(answerCanonical(cold())));
   });
 });
 
-describe("eval report: whole report and markdown", () => {
-  it("marks absent inputs as not measured, names the runs it used and compares cold with warm", () => {
-    const warm = fixture();
-    const cold = coldClone(warm, "r-cold-fixture", "2026-10-24T12:00:00.000Z");
-    const report = buildReport({ runs: [{ run: warm, source: "fixture" }, { run: cold, source: "fixture" }], dq: null, joinmap: null, utilities, stations, now: new Date("2026-10-24T14:00:00Z") });
-    expect(report.inputs.runs.map((r) => r.run_id)).toEqual(["r-cold-fixture", warm.run_id]);
-    expect(report.inputs.dq_file).toBe(false);
-    expect(report.join_map).toBeNull();
-    expect(report.dq).toBeNull();
-    expect(report.peers?.count).toBe(39);
-    expect(report.peers?.excluded).toHaveLength(3);
-    expect(report.peers?.identical_across_runs).toBe(true);
-    expect(report.totals).toMatchObject({ runs: 2, planner_calls: 17, valid_first_try: 16, repaired: 1, repairs_think_off: null, fallbacks: 0, memo_drafts: 2, memo_drafts_with_unknown_numbers: 0, cloud_model_calls: 0 });
-    const withThinkOff = coldClone(warm, "r-think-off", "2026-10-24T12:10:00.000Z");
-    withThinkOff.summary.planner_repairs_think_off = 1;
-    const r2 = buildReport({ runs: [{ run: warm, source: "fixture" }, { run: withThinkOff, source: "fixture" }], dq: null, joinmap: null, utilities, stations });
-    expect(r2.totals.repairs_think_off).toBe(1);
-    expect(renderMarkdown(r2)).toContain("(1 of them with think off)");
-    expect(report.cold_vs_warm.all.cold.chunks_mean).toBe(5);
-    expect(report.cold_vs_warm.all.warm.chunks_mean).toBe(4);
-    expect(report.cold_vs_warm.all.cold.run_ids).toEqual(["r-cold-fixture"]);
-    expect(report.cold_vs_warm.per_cik["0001031296"]!.warm.runs).toBe(1);
-    const md = renderMarkdown(report);
-    expect(md).toContain("# Crosswalk evaluation report");
-    expect(md).toContain(warm.run_id);
-    expect(md).toContain("Not measured (no join-map file)");
-    expect(md).toContain("Not measured (no DQ onboarding file)");
-    expect(md).toContain("| all, cold | 1 | 5.00 |");
-    expect(md).toContain("| all, warm | 1 | 4.00 |");
-    expect(md).not.toMatch(/\{\w+\}/u);
-    expect(md).not.toMatch(/[A-Za-z]:\\/u);
-    expect(md).not.toMatch(/@\w+\./u);
+describe("eval report: L2 tallies", () => {
+  it("reads each side's tally and the keys the join map holds VERIFIED", () => {
+    const m = sideTally(cold(), "model");
+    expect(m).toMatchObject({ proposed_by: "planner", made: 3, verified: 0, partial: 1, unmeasurable: 2, verified_keys: [] });
+    const b = sideTally(cold(), "baseline");
+    expect(b.verified).toBe(3);
+    expect(b.verified_keys).toEqual(["cik", "sic", "station"]);
+    expect(b.recalled_keys).toEqual([]);
   });
 
-  it("renders the join map and the DQ file when present", () => {
-    const run = fixture();
-    const joinmap: JoinMapFile = {
-      measured_at: "2026-10-24T21:00:00+0800",
-      bound_s: 60,
-      login: "admin",
-      elapsed_s: 12.3,
-      statements: [{ id: "usl_station_rows", group: "station_state", elapsed_ms: 44736, row_count: 57, measured: true, timeout: false, error: null, sql_sha256: "00" }],
-      results: {
-        seeds: 43,
-        cik_lpad: { "Revenues.CY2025Q1": { tag: "Revenues", period: "CY2025Q1", seeds: 43, lpad_matched: 34, in_count: 34, agree: true, elapsed_ms: 6271 } },
-        cik_no_lpad_control: { matched: 0, elapsed_ms: 6281, measured: true },
-        cik_any_tag: { CY2025Q1: { seeds_with_a_fact: 42, seeds: 43, elapsed_ms: 508, measured: true } },
-        loc: { "Revenues.CY2025Q1": { tag: "Revenues", period: "CY2025Q1", present: 34, equal: 34, different: 0, missing: 0, elapsed_ms: 6271 } },
-        loc_differing_rows: [],
-        sic: {
-          measured: true,
-          seeds: 43,
-          orphans: [{ cik: "0001161728", name: "MGE ENERGY INC", sic: "4900" }],
-          joined: 42,
-          elapsed_ms: 6834,
-          recorded_run_dq: { source: "test", statement: "RUN DQ sic TABLE t", result: { type: "Foreign Key Constraint", total: 43, valid: 42, invalid: 1 }, elapsed_s: 79.1, invalid_record: { cik: "0001161728", name: "MGE ENERGY INC", ticker: "MGEE", sic: "4900", hq_state: "WI" }, invalid_record_statement: "SHOW DQ INVALID RECORD sic TABLE t", invalid_record_elapsed_s: 93.3, note: "note" },
-        },
-        station: { seed_stations: 56, measured: false, elapsed_ms: 60000, bound_s: 60, timeout: true, error: "timeout", skipped: false },
-      },
+  it("matches a recalled key recorded under the asked quarter and marks it recalled", () => {
+    const b = sideTally(warm(), "baseline");
+    expect(b.verified_keys).toEqual(["cik", "loc", "sic", "station"]);
+    expect(b.recalled_keys).toEqual(["cik", "loc", "sic", "station"]);
+  });
+
+  it("sums both sides, counts only measured keys as found, and names the winner", () => {
+    const s = l2Section([
+      { sel: sel(cold().run_id), run: cold() },
+      { sel: sel(warm().run_id), run: warm() },
+    ]);
+    expect(s.runs_counted).toBe(2);
+    expect(s.totals.model).toMatchObject({ made: 5, verified: 0, partial: 1, unmeasurable: 3, invalid_schema: 1 });
+    expect(s.totals.baseline).toMatchObject({ made: 12, verified: 7 });
+    expect(s.winner).toBe("baseline");
+    expect(s.keys_found.baseline).toEqual(["cik", "sic", "station"]);
+    expect(s.keys_found.only_model).toEqual([]);
+  });
+});
+
+describe("eval report: timings, GPU, manual baseline", () => {
+  it("aggregates tool latencies and statement times and counts statements over 20 s", () => {
+    const t = toolTimings([cold(), warm()]);
+    expect(t.over_20s).toBe(0);
+    const weather = t.statements.find((x) => x.name === "weather_quarter")!;
+    expect(weather.class).toBe("answer (weather)");
+    // two weather statements in the cold run; the warm question's weather is Not-tested
+    expect(weather.n).toBe(2);
+    expect(t.tools.find((x) => x.name === "answer")!.n).toBe(2);
+    expect(t.planner.n).toBe(cold().planner_calls!.length + warm().planner_calls!.length);
+    expect(median([3, 1, 2, 10])).toBe(2.5);
+  });
+
+  it("summarises nvidia-smi samples and the Ollama residency", () => {
+    const g = gpuSummary({
+      run_id: "r1",
+      samples: [
+        { at: "a", mem_mib: 6900, util_pct: 10 },
+        { at: "b", mem_mib: 7400, util_pct: 90 },
+        { at: "c", mem_mib: 7100, util_pct: 40 },
+      ],
+      ollama_before: { models: [] },
+      ollama_mid: { models: [{ name: "m", size_vram: 3 * 1048576, context_length: 8192, details: { parameter_size: "4.0B", quantization_level: "Q4_K_M" } }] },
+    });
+    expect(g).toMatchObject({ samples: 3, mem_first_mib: 6900, mem_peak_mib: 7400, util_median_pct: 40, util_peak_pct: 90, ollama_size_vram_mib: 3, resident_before: false, quantization: "Q4_K_M" });
+  });
+
+  it("reads the driver log, the samples and the run id of each ablation run", () => {
+    const dir = mkdtempSync(join(tmpdir(), "cw-gpu-"));
+    try {
+      writeFileSync(join(dir, "driver.log"), `\uFEFFstart think_on-1 2026-01-01T00:00:00.000 ollama_ps_before {"models":[]}\nend think_on-1 2026-01-01T00:04:00.000 exit 0 shell_s 240 ollama_ps_mid {"models":[{"name":"m","size_vram":1048576}]} ollama_ps_after {"models":[]}\n`);
+      writeFileSync(join(dir, "think_on-1.out"), "saved X:/d/runs/r20260101T000000abcd/run.json\n");
+      writeFileSync(join(dir, "think_on-1.smi.csv"), "2026/01/01 00:00:00.000, 6900, 12\n2026/01/01 00:00:00.500, 7300, 88\n");
+      const g = readGpuDir(dir);
+      expect(g).toHaveLength(1);
+      expect(g[0]!.run_id).toBe("r20260101T000000abcd");
+      expect(g[0]!.samples.map((s) => s.mem_mib)).toEqual([6900, 7300]);
+      expect(gpuSummary(g[0]!).ollama_size_vram_mib).toBe(1);
+      expect(gpuSummary(g[0]!).resident_before).toBe(false);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it("counts statements, lookups and decisions of the manual session", () => {
+    const m: ManualSession = {
+      label: "measured",
+      started_at: "2026-01-01T00:00:00.000Z",
+      finished_at: "2026-01-01T00:10:00.000Z",
+      steps: [
+        { n: 1, at: "2026-01-01T00:00:00.000Z", template: "lookup", params: { what: "manifest" }, elapsed_ms: 0, rows: 0, result: "18 views", decision: "probe the snapshot" },
+        { n: 2, at: "2026-01-01T00:01:00.000Z", template: "describe_object", params: { object: "cw.states" }, elapsed_ms: 80, rows: 3, result: "code, name, fips", decision: "" },
+        { n: 3, at: "2026-01-01T00:02:00.000Z", template: "match_rate", params: {}, elapsed_ms: 400, rows: 1, result: "43/43", decision: "VERIFIED", error: null },
+      ],
+      keys: [{ key: "d station", verdict: "VERIFIED", matched: 56, total: 56, orphans: [] }],
     };
-    const dq = { ran_at: "2026-10-24T19:31:39+0800", rule: "coverage_ok", table: "t.weather_quarter", elapsed_s: 739.3, ok: true, run: { total: 342, valid: 342, invalid: 0, elapsed_s: 557.2 }, invalid_rows: [], statements: [{ template_id: "dq_run_coverage", elapsed_s: 557.2, row_count: 1, error: null }] };
-    const report = buildReport({ runs: [{ run, source: "fixture" }], dq, joinmap, utilities, stations });
-    expect(report.dq?.sic_fk?.result.invalid).toBe(1);
-    const md = renderMarkdown(report);
-    expect(md).toContain("| Revenues | CY2025Q1 | 43 | 34 | 34 | yes | 6,271 |");
-    expect(md).toContain("Control without LPAD (integer string against the zero-padded cik): 0 matched");
-    expect(md).toContain("Not measured: the statement exceeded the 60 s bound");
-    expect(md).toContain("orphan(s): MGE ENERGY INC (CIK 0001161728, SIC 4900)");
-    expect(md).toContain("RUN DQ 342 total / 342 valid / 0 invalid in 557.2 s");
+    const s = manualSummary(m);
+    expect(s).toMatchObject({ statements: 2, lookups: 1, statement_ms_total: 480, decisions: 2, session_wall_s: 600 });
+    expect(s.by_class).toEqual({ probe: 1, "measure (generic match_rate)": 1 });
+  });
+});
+
+describe("eval report: outside checks", () => {
+  it("renders the registrar's OpenFEMA URL for a quarter", () => {
+    expect(femaUrl("CY2025Q1")).toContain("declarationDate%20ge%20%272025-01-01T00%3A00%3A00.000Z%27%20and%20declarationDate%20lt%20%272025-04-01T00%3A00%3A00.000Z%27");
+    expect(femaUrl("CY2024Q4")).toContain("lt%20%272025-01-01T00%3A00%3A00.000Z%27");
+    expect(() => femaUrl("2025Q1")).toThrow();
+  });
+
+  it("counts rows, distinct declarations and states", () => {
+    expect(
+      femaCounts([
+        { disasterNumber: 1, state: "CA" },
+        { disasterNumber: 1, state: "CA" },
+        { disasterNumber: 2, state: "AK" },
+        { disasterNumber: 3, state: "AK" },
+      ]),
+    ).toEqual({ rows: 4, declarations: 3, states: 2, by_state: { AK: 2, CA: 1 } });
+  });
+
+  it("finds the states named in service sentences of a filing", () => {
+    const text = htmlText("<p>The company serves customers in Kansas&#160;and Missouri.</p><p>West Virginia is mentioned elsewhere.</p><div>Its service territory covers West Virginia; it is regulated.</div>");
+    const s = serviceSentences(text);
+    expect(s.states).toEqual(["KS", "MO", "WV"]);
+    expect(s.sentences).toHaveLength(2);
+  });
+});
+
+describe("eval report: build and render", () => {
+  const selection: Selection = {
+    runs: [sel("r20261025T14571773a0"), { ...sel("rCOPY"), setting: "no_model" }, { ...sel("r20261025T145128a180"), by: "lane F" }],
+    references: [{ run_id: "r20261025T14571773a0", label: "Day-1 reference" }],
+    did_not_go_well: ["one thing"],
+    not_measured: ["another thing"],
+  };
+  const runs = new Map<string, EvalRun>([
+    ["r20261025T14571773a0", cold()],
+    ["rCOPY", clone(cold(), "rCOPY")],
+    ["r20261025T145128a180", warm()],
+  ]);
+
+  it("builds every section from the selected runs", () => {
+    const r = buildReport({ selection, runs, gpu: [], manual: null, outside: null });
+    expect(r.runs).toHaveLength(3);
+    expect(r.reproducibility.cold_runs).toBe(2);
+    expect(r.reproducibility.all_answers_identical).toBe(true);
+    expect(r.reproducibility.reference_matches.filter((m) => m.identical)).toHaveLength(2);
+    expect(r.answer!.rows).toHaveLength(12);
+    expect(r.ablation.map((a) => a.setting)).toEqual(["think_on", "no_model"]);
+    expect(r.ablation[1]!.answer_identical_to_think_on).toBe(true);
+    expect(r.l2.runs_counted).toBe(2);
+    expect(r.l2.cold_runs_counted).toBe(1);
+    expect(r.l2.rows).toHaveLength(3);
+  });
+
+  it("refuses a selection that names a run without a file", () => {
+    expect(() => buildReport({ selection: { runs: [sel("rMISSING")] }, runs, gpu: [], manual: null, outside: null })).toThrow(/rMISSING/u);
+  });
+
+  it("renders the seven sections and copies no revenue value or accession number", () => {
+    const md = renderMarkdown(buildReport({ selection, runs, gpu: [], manual: null, outside: null }));
+    for (const h of ["## 1. Reproducibility", "## 2. The model's key proposals", "## 3. Outside checks", "## 4. Manual baseline", "## 5. Nemotron ablation", "## 6. Timings", "## 7. What did not go well", "## Not measured"]) expect(md).toContain(h);
+    const values = cold().answer!.rows.flatMap((r) => [r.revenue?.current, r.revenue?.previous]).filter((v): v is number => typeof v === "number");
+    for (const v of values) expect(md).not.toContain(String(v));
+    expect(md).not.toMatch(/\d{10}-\d{2}-\d{6}/u);
+    expect(md).toContain("+4.00% (Revenues)");
+  });
+});
+
+// The directory helper is used by run.ts only through readGpuDir; keep mkdirSync referenced for a nested layout check.
+describe("eval report: nested GPU directory", () => {
+  it("returns nothing for a directory without a driver log", () => {
+    const dir = mkdtempSync(join(tmpdir(), "cw-gpu-"));
+    try {
+      mkdirSync(join(dir, "sub"));
+      expect(readGpuDir(dir)).toEqual([]);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
   });
 });

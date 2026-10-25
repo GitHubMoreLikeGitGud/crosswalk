@@ -1,0 +1,153 @@
+{
+  "label": "measured",
+  "note": "Fetched outside Zetaris over HTTPS and compared with the cached views read through the gateway. Counts and state codes only.",
+  "fema": [
+    {
+      "quarter": "CY2025Q1",
+      "outside": {
+        "source": "OpenFEMA API over HTTPS (DisasterDeclarationsSummaries, declarationType DR, declarationDate in the quarter)",
+        "url": "https://www.fema.gov/api/open/v2/DisasterDeclarationsSummaries?%24filter=declarationType%20eq%20%27DR%27%20and%20declarationDate%20ge%20%272025-01-01T00%3A00%3A00.000Z%27%20and%20declarationDate%20lt%20%272025-04-01T00%3A00%3A00.000Z%27&%24top=1000",
+        "fetch_ms": 192,
+        "rows": 116,
+        "declarations": 10,
+        "states": 8,
+        "by_state": {
+          "AK": 3,
+          "CA": 1,
+          "KY": 1,
+          "MO": 1,
+          "OK": 1,
+          "OR": 1,
+          "SC": 1,
+          "WV": 1
+        }
+      },
+      "zetaris": {
+        "template": "fema_declarations",
+        "object": "cw.fema_declarations_dr_2025q1",
+        "sql": "SELECT disaster_number, state, declaration_date, incident_type, declaration_title, declaration_type, fips_state_code, fips_county_code, designated_area FROM cw.fema_declarations_dr_2025q1 ORDER BY disaster_number, fips_county_code",
+        "elapsed_ms": 203,
+        "cache_state": "hit",
+        "rows": 116,
+        "declarations": 10,
+        "states": 8,
+        "by_state": {
+          "AK": 3,
+          "CA": 1,
+          "KY": 1,
+          "MO": 1,
+          "OK": 1,
+          "OR": 1,
+          "SC": 1,
+          "WV": 1
+        }
+      },
+      "equal": true
+    },
+    {
+      "quarter": "CY2024Q1",
+      "outside": {
+        "source": "OpenFEMA API over HTTPS (DisasterDeclarationsSummaries, declarationType DR, declarationDate in the quarter)",
+        "url": "https://www.fema.gov/api/open/v2/DisasterDeclarationsSummaries?%24filter=declarationType%20eq%20%27DR%27%20and%20declarationDate%20ge%20%272024-01-01T00%3A00%3A00.000Z%27%20and%20declarationDate%20lt%20%272024-04-01T00%3A00%3A00.000Z%27&%24top=1000",
+        "fetch_ms": 97,
+        "rows": 72,
+        "declarations": 14,
+        "states": 11,
+        "by_state": {
+          "AK": 1,
+          "CA": 1,
+          "ME": 2,
+          "MI": 1,
+          "ND": 1,
+          "NH": 1,
+          "NY": 1,
+          "RI": 3,
+          "VT": 1,
+          "WA": 1,
+          "WV": 1
+        }
+      },
+      "zetaris": {
+        "template": "fema_declarations",
+        "object": "cw.fema_declarations_dr_2024q1",
+        "sql": "SELECT disaster_number, state, declaration_date, incident_type, declaration_title, declaration_type, fips_state_code, fips_county_code, designated_area FROM cw.fema_declarations_dr_2024q1 ORDER BY disaster_number, fips_county_code",
+        "elapsed_ms": 163,
+        "cache_state": "hit",
+        "rows": 72,
+        "declarations": 14,
+        "states": 11,
+        "by_state": {
+          "AK": 1,
+          "CA": 1,
+          "ME": 2,
+          "MI": 1,
+          "ND": 1,
+          "NH": 1,
+          "NY": 1,
+          "RI": 3,
+          "VT": 1,
+          "WA": 1,
+          "WV": 1
+        }
+      },
+      "equal": true
+    }
+  ],
+  "ten_k": [
+    {
+      "cik": "0001711269",
+      "ticker": "EVRG",
+      "name": "Evergy, Inc.",
+      "filing": {
+        "form": "10-K",
+        "report_date": "2024-12-31",
+        "filing_date": "2025-02-27",
+        "bytes": 8229562,
+        "fetch_ms": 539
+      },
+      "seed_states": [
+        "KS",
+        "MO"
+      ],
+      "seed_source": "FY2024 Form 10-K Item 1 (Business) service-territory description; hand-curated 2026-10-24, electric service states only, capped at 6",
+      "filing_states": [
+        "KS",
+        "MO"
+      ],
+      "in_filing_not_in_seed": [],
+      "in_seed_not_in_filing": [],
+      "service_sentences_found": 8,
+      "equal": true
+    },
+    {
+      "cik": "0000922224",
+      "ticker": "PPL",
+      "name": "PPL Corp",
+      "filing": {
+        "form": "10-K",
+        "report_date": "2024-12-31",
+        "filing_date": "2025-02-13",
+        "bytes": 8639243,
+        "fetch_ms": 529
+      },
+      "seed_states": [
+        "KY",
+        "PA",
+        "RI"
+      ],
+      "seed_source": "FY2024 Form 10-K Item 1 (Business) service-territory description; hand-curated 2026-10-24, electric service states only, capped at 6",
+      "filing_states": [
+        "KY",
+        "PA",
+        "RI",
+        "VA"
+      ],
+      "in_filing_not_in_seed": [
+        "VA"
+      ],
+      "in_seed_not_in_filing": [],
+      "service_sentences_found": 8,
+      "equal": false
+    }
+  ]
+}

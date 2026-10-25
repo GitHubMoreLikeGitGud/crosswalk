@@ -1,0 +1,456 @@
+{
+  "label": "measured",
+  "note": "The statements a data person needs to find and verify the five keys (a cik, b loc, c FEMA state, d station, e SIC) on the same cached views were run one at a time through the gateway (127.0.0.1:8803) after the ablation runs finished, each result read before the next statement was chosen. Measured: the statements, their gateway elapsed_ms, and the decisions taken. The session time (first step to the end of the last statement) is reported for completeness but is NOT a measure of how long a person would take: the SQL was not typed from scratch (each statement is a gateway reader template: DESCRIBE, SELECT ... LIMIT 5, distinct counts, the match-rate count and its orphans, or a named join-map statement where the counted side needs a transform the generic statement does not apply), so the time to write that SQL and to read results at human speed is not measured. Steps 8, 9, 11, 23, 28 and 29 use the named join-map statements because the comparison needs LPAD or SUBSTR on the right-hand side, a three-view union or a per-utility row count.",
+  "started_at": "2026-10-25T08:18:39.400Z",
+  "finished_at": "2026-10-25T08:21:38.859Z",
+  "steps": [
+    {
+      "n": 1,
+      "at": "2026-10-25T08:18:39.400Z",
+      "template": "lookup",
+      "params": {
+        "what": "zetaris/manifest.json: the registered views and their sources"
+      },
+      "elapsed_ms": 0,
+      "rows": 0,
+      "result": "10 sources; candidate views: cw.seed_submissions_snapshot (43 utilities), cw.frames_<tag>_<period> (SEC revenue), cw.fema_declarations_dr_2025q1, cw.utility_states, cw.states, cw.seed_stations, cw.stations, cw.sic_codes",
+      "decision": "start with the utility list (snapshot) and one revenue view"
+    },
+    {
+      "n": 2,
+      "at": "2026-10-25T08:18:55.959Z",
+      "template": "describe_object",
+      "params": {
+        "object": "cw.seed_submissions_snapshot"
+      },
+      "elapsed_ms": 84,
+      "wall_ms": 140,
+      "rows": 6,
+      "result": "cik10, name, ticker, sic, hq_state, snapshot_at (all strings)",
+      "decision": "candidate keys: cik10 (to revenue), sic (to the SIC reference), hq_state (to the frames loc)"
+    },
+    {
+      "n": 3,
+      "at": "2026-10-25T08:18:57.031Z",
+      "template": "sample_rows",
+      "params": {
+        "object": "cw.seed_submissions_snapshot"
+      },
+      "elapsed_ms": 70,
+      "wall_ms": 122,
+      "rows": 5,
+      "result": "cik10 is a 10-character zero-padded string; hq_state two letters; sic four digits",
+      "decision": ""
+    },
+    {
+      "n": 4,
+      "at": "2026-10-25T08:19:04.674Z",
+      "template": "distinct_counts",
+      "params": {
+        "object": "cw.seed_submissions_snapshot",
+        "column": "cik10"
+      },
+      "elapsed_ms": 114,
+      "wall_ms": 185,
+      "rows": 1,
+      "result": "43 rows, 43 distinct cik10, no nulls",
+      "decision": "cik10 is the utility's primary key"
+    },
+    {
+      "n": 5,
+      "at": "2026-10-25T08:19:05.818Z",
+      "template": "describe_object",
+      "params": {
+        "object": "cw.frames_revenues_cy2025q1"
+      },
+      "elapsed_ms": 102,
+      "wall_ms": 159,
+      "rows": 7,
+      "result": "cik is a bigint; loc a string",
+      "decision": ""
+    },
+    {
+      "n": 6,
+      "at": "2026-10-25T08:19:06.913Z",
+      "template": "sample_rows",
+      "params": {
+        "object": "cw.frames_revenues_cy2025q1"
+      },
+      "elapsed_ms": 145,
+      "wall_ms": 213,
+      "rows": 5,
+      "result": "cik is an unpadded integer (2098); loc is 'US-CT' style; the view holds every SEC filer, not just utilities",
+      "decision": "first try: join the snapshot's cik10 to the frames cik as they are"
+    },
+    {
+      "n": 7,
+      "at": "2026-10-25T08:19:16.116Z",
+      "template": "match_rate",
+      "params": {
+        "left_object": "cw.seed_submissions_snapshot",
+        "left_column": "cik10",
+        "right_object": "cw.frames_revenues_cy2025q1",
+        "right_column": "cik",
+        "transform": "identity"
+      },
+      "elapsed_ms": 359,
+      "wall_ms": 413,
+      "rows": 1,
+      "result": "0 of 43 utilities match: the frames cik is not zero-padded",
+      "decision": "pad the frames cik to 10 digits (LPAD) and count the utilities found under any of the three revenue tags (one statement over the three frames views)"
+    },
+    {
+      "n": 8,
+      "at": "2026-10-25T08:19:24.301Z",
+      "template": "joinmap_cik",
+      "params": {
+        "period": "CY2025Q1"
+      },
+      "elapsed_ms": 744,
+      "wall_ms": 802,
+      "rows": 1,
+      "result": "42 of 43 utilities found once the frames cik is padded",
+      "decision": "key a (cik, LPAD to 10) VERIFIED at 0.977; look at the one orphan"
+    },
+    {
+      "n": 9,
+      "at": "2026-10-25T08:19:26.070Z",
+      "template": "joinmap_cik_orphans",
+      "params": {
+        "period": "CY2025Q1"
+      },
+      "elapsed_ms": 568,
+      "wall_ms": 619,
+      "rows": 1,
+      "result": "IDACORP has no CY2025Q1 fact under any of the three tags",
+      "decision": "keep the orphan as a named gap, not a key failure"
+    },
+    {
+      "n": 10,
+      "at": "2026-10-25T08:19:36.261Z",
+      "template": "lookup",
+      "params": {
+        "what": "frames loc format: 'US-' plus the two-letter state (seen in the sample rows); the snapshot holds the business-address state hq_state"
+      },
+      "elapsed_ms": 0,
+      "rows": 0,
+      "result": "",
+      "decision": "strip 'US-' (SUBSTR from 4, length 2) and compare with hq_state for the matched utilities"
+    },
+    {
+      "n": 11,
+      "at": "2026-10-25T08:19:37.192Z",
+      "template": "joinmap_loc",
+      "params": {
+        "period": "CY2025Q1"
+      },
+      "elapsed_ms": 681,
+      "wall_ms": 718,
+      "rows": 1,
+      "result": "42 of 42 frames utilities report the same state as their business address",
+      "decision": "key b (loc SUBSTR(4,2) to hq_state) VERIFIED at 1.000"
+    },
+    {
+      "n": 12,
+      "at": "2026-10-25T08:19:46.991Z",
+      "template": "describe_object",
+      "params": {
+        "object": "cw.fema_declarations_dr_2025q1"
+      },
+      "elapsed_ms": 142,
+      "wall_ms": 216,
+      "rows": 9,
+      "result": "state (two letters), fips_state_code (string), disaster_number",
+      "decision": "join on state; FIPS as a cross-check against the state reference"
+    },
+    {
+      "n": 13,
+      "at": "2026-10-25T08:19:48.106Z",
+      "template": "sample_rows",
+      "params": {
+        "object": "cw.fema_declarations_dr_2025q1"
+      },
+      "elapsed_ms": 183,
+      "wall_ms": 230,
+      "rows": 5,
+      "result": "one row per designated county; state two letters; fips_state_code two digits",
+      "decision": "count distinct states (not rows) when matching"
+    },
+    {
+      "n": 14,
+      "at": "2026-10-25T08:19:55.533Z",
+      "template": "describe_object",
+      "params": {
+        "object": "cw.utility_states"
+      },
+      "elapsed_ms": 50,
+      "wall_ms": 99,
+      "rows": 2,
+      "result": "cik (string), state: one row per utility and served state",
+      "decision": "match the declared states against the served states"
+    },
+    {
+      "n": 15,
+      "at": "2026-10-25T08:19:56.520Z",
+      "template": "match_rate",
+      "params": {
+        "left_object": "cw.fema_declarations_dr_2025q1",
+        "left_column": "state",
+        "right_object": "cw.utility_states",
+        "right_column": "state",
+        "transform": "identity"
+      },
+      "elapsed_ms": 326,
+      "wall_ms": 376,
+      "rows": 1,
+      "result": "7 of 8 declared states are served by a seed utility",
+      "decision": "key c is PARTIAL (0.875); list the orphan"
+    },
+    {
+      "n": 16,
+      "at": "2026-10-25T08:20:04.497Z",
+      "template": "match_rate_orphans",
+      "params": {
+        "left_object": "cw.fema_declarations_dr_2025q1",
+        "left_column": "state",
+        "right_object": "cw.utility_states",
+        "right_column": "state",
+        "transform": "identity"
+      },
+      "elapsed_ms": 246,
+      "wall_ms": 299,
+      "rows": 1,
+      "result": "AK is the orphan: no seed utility serves Alaska",
+      "decision": "keep AK as the named orphan of a PARTIAL key"
+    },
+    {
+      "n": 17,
+      "at": "2026-10-25T08:20:05.806Z",
+      "template": "match_rate",
+      "params": {
+        "left_object": "cw.fema_declarations_dr_2025q1",
+        "left_column": "fips_state_code",
+        "right_object": "cw.states",
+        "right_column": "fips",
+        "transform": "identity"
+      },
+      "elapsed_ms": 234,
+      "wall_ms": 272,
+      "rows": 1,
+      "result": "8 of 8 declared FIPS state codes are in the state reference",
+      "decision": "the state reference (FIPS) is the governed parent of a declaration; VERIFIED 1.000"
+    },
+    {
+      "n": 18,
+      "at": "2026-10-25T08:20:16.095Z",
+      "template": "describe_object",
+      "params": {
+        "object": "cw.states"
+      },
+      "elapsed_ms": 74,
+      "wall_ms": 145,
+      "rows": 3,
+      "result": "code, name, fips (the reference used in step 17; described after the fact)",
+      "decision": ""
+    },
+    {
+      "n": 19,
+      "at": "2026-10-25T08:20:23.287Z",
+      "template": "describe_object",
+      "params": {
+        "object": "cw.seed_stations"
+      },
+      "elapsed_ms": 82,
+      "wall_ms": 129,
+      "rows": 3,
+      "result": "id, state, name: the 56 stations of the seed utilities",
+      "decision": ""
+    },
+    {
+      "n": 20,
+      "at": "2026-10-25T08:20:24.340Z",
+      "template": "describe_object",
+      "params": {
+        "object": "cw.stations"
+      },
+      "elapsed_ms": 5167,
+      "wall_ms": 5236,
+      "rows": 5,
+      "result": "id, state, name, latitude, longitude: the GHCN station inventory",
+      "decision": "join on the 11-character station id"
+    },
+    {
+      "n": 21,
+      "at": "2026-10-25T08:20:30.527Z",
+      "template": "sample_rows",
+      "params": {
+        "object": "cw.stations"
+      },
+      "elapsed_ms": 7403,
+      "wall_ms": 7459,
+      "rows": 5,
+      "result": "ids are 11 characters; non-US stations have a blank state",
+      "decision": "match the seed ids against the inventory ids as they are (identity)"
+    },
+    {
+      "n": 22,
+      "at": "2026-10-25T08:20:46.108Z",
+      "template": "match_rate",
+      "params": {
+        "left_object": "cw.seed_stations",
+        "left_column": "id",
+        "right_object": "cw.stations",
+        "right_column": "id",
+        "transform": "identity"
+      },
+      "elapsed_ms": 7855,
+      "wall_ms": 12728,
+      "rows": 1,
+      "result": "56 of 56 seed station ids are in the inventory",
+      "decision": "key d (station id) VERIFIED at 1.000; check the seed's state against the inventory's state too"
+    },
+    {
+      "n": 23,
+      "at": "2026-10-25T08:21:05.527Z",
+      "template": "joinmap_station",
+      "params": {},
+      "elapsed_ms": 7704,
+      "wall_ms": 7772,
+      "rows": 1,
+      "result": "56 of 56 match, and the state agrees for all 56",
+      "decision": ""
+    },
+    {
+      "n": 24,
+      "at": "2026-10-25T08:21:19.920Z",
+      "template": "describe_object",
+      "params": {
+        "object": "cw.sic_codes"
+      },
+      "elapsed_ms": 101,
+      "wall_ms": 139,
+      "rows": 6,
+      "result": "code (string), description, division, major group",
+      "decision": "join the snapshot's sic to code"
+    },
+    {
+      "n": 25,
+      "at": "2026-10-25T08:21:21.010Z",
+      "template": "sample_rows",
+      "params": {
+        "object": "cw.sic_codes"
+      },
+      "elapsed_ms": 141,
+      "wall_ms": 194,
+      "rows": 5,
+      "result": "codes are four-character zero-padded strings, like the snapshot's sic",
+      "decision": "identity, no transform"
+    },
+    {
+      "n": 26,
+      "at": "2026-10-25T08:21:28.710Z",
+      "template": "match_rate",
+      "params": {
+        "left_object": "cw.seed_submissions_snapshot",
+        "left_column": "sic",
+        "right_object": "cw.sic_codes",
+        "right_column": "code",
+        "transform": "identity"
+      },
+      "elapsed_ms": 255,
+      "wall_ms": 328,
+      "rows": 1,
+      "result": "3 of 4 distinct SIC codes found (0.750 by codes)",
+      "decision": "a code count misreads an attribute key: count utilities (rows) instead"
+    },
+    {
+      "n": 27,
+      "at": "2026-10-25T08:21:29.961Z",
+      "template": "match_rate_orphans",
+      "params": {
+        "left_object": "cw.seed_submissions_snapshot",
+        "left_column": "sic",
+        "right_object": "cw.sic_codes",
+        "right_column": "code",
+        "transform": "identity"
+      },
+      "elapsed_ms": 260,
+      "wall_ms": 298,
+      "rows": 1,
+      "result": "4900 is the code the reference lacks",
+      "decision": "find which utilities carry 4900 and count matched utilities"
+    },
+    {
+      "n": 28,
+      "at": "2026-10-25T08:21:37.246Z",
+      "template": "joinmap_sic",
+      "params": {},
+      "elapsed_ms": 326,
+      "wall_ms": 384,
+      "rows": 1,
+      "result": "42 of 43 utilities carry a SIC code the reference holds (3 of 4 distinct codes)",
+      "decision": "key e (SIC) VERIFIED at 0.977 by utility rows, the code reading beside it"
+    },
+    {
+      "n": 29,
+      "at": "2026-10-25T08:21:38.552Z",
+      "template": "joinmap_sic_orphans",
+      "params": {},
+      "elapsed_ms": 264,
+      "wall_ms": 307,
+      "rows": 1,
+      "result": "MGE Energy (0001161728) carries 4900, absent from the reference",
+      "decision": "keep MGE as the named orphan"
+    }
+  ],
+  "keys": [
+    {
+      "key": "a: frames cik (LPAD 10) to submissions cik10",
+      "verdict": "VERIFIED",
+      "matched": 42,
+      "total": 43,
+      "orphans": [
+        "IDACORP 0001057877"
+      ]
+    },
+    {
+      "key": "b: frames loc (SUBSTR 4,2) to submissions business state",
+      "verdict": "VERIFIED",
+      "matched": 42,
+      "total": 42,
+      "orphans": []
+    },
+    {
+      "key": "c: FEMA state to served state (utility_states)",
+      "verdict": "PARTIAL",
+      "matched": 7,
+      "total": 8,
+      "orphans": [
+        "AK"
+      ]
+    },
+    {
+      "key": "c (reference): FEMA FIPS state code to the state reference",
+      "verdict": "VERIFIED",
+      "matched": 8,
+      "total": 8,
+      "orphans": []
+    },
+    {
+      "key": "d: seed station id to the GHCN inventory id",
+      "verdict": "VERIFIED",
+      "matched": 56,
+      "total": 56,
+      "orphans": []
+    },
+    {
+      "key": "e: submissions SIC to the SIC reference (utility rows; 3 of 4 codes)",
+      "verdict": "VERIFIED",
+      "matched": 42,
+      "total": 43,
+      "orphans": [
+        "MGE ENERGY 0001161728 (4900)"
+      ]
+    }
+  ]
+}

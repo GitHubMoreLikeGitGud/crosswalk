@@ -1,0 +1,38 @@
+{
+  "note": "The runs this evaluation reads. Day-2 runs only (after the D15-D18 fixes); the two Day-1 runs are references for the answer comparison. 'by' names the lane that ran it; 'code' is the commit the agent, gateway and prompts were at.",
+  "runs": [
+    { "run_id": "r20261025T1546471209", "label": "cold 1", "by": "lane F", "code": "6652e2f", "setting": "think_on" },
+    { "run_id": "r20261025T155141e122", "label": "cold 2", "by": "lane F", "code": "6652e2f", "setting": "think_on" },
+    { "run_id": "r20261025T155631f0a7", "label": "warm (CY2024Q1)", "by": "lane F", "code": "ee04b0c", "setting": "think_on" },
+    { "run_id": "r20261025T160020a0bc", "label": "cold 3", "by": "lane F", "code": "fc130bd", "setting": "think_on" },
+    { "run_id": "r20261025T160836e4df", "label": "ablation: think on", "by": "lane E", "code": "fc130bd", "setting": "think_on" },
+    { "run_id": "r20261025T161313168c", "label": "ablation: think off", "by": "lane E", "code": "fc130bd", "setting": "think_off" },
+    { "run_id": "r20261025T1617024020", "label": "ablation: no model", "by": "lane E", "code": "fc130bd", "setting": "no_model" }
+  ],
+  "references": [
+    { "run_id": "r20261025T14571773a0", "label": "Day-1 cold reference (before the D15-D18 fixes)" },
+    { "run_id": "r20261025T145128a180", "label": "Day-1 warm reference (before the D15-D18 fixes)" }
+  ],
+  "did_not_go_well": [
+    "The model loses the key-proposal comparison. Over the five cold runs with the model it made 11 proposals and 3 were VERIFIED; the deterministic baseline made 30 and 25 were VERIFIED. Every key the model got VERIFIED (the FEMA FIPS key, utility_states.state ~ states.code, hq_state ~ seed_stations.state) was also measured in the same run from the baseline's measure queue. On this data the runs do not show the model finding a key the baseline misses.",
+    "The no-model run reached the identical answer and the same governed join-map keys in 88.4 s, against 247.7-285.8 s for the cold runs with the model. On this question the planner and the note add time, not keys; what the model adds is the choice among probed columns, and the runs measure that choice as weaker than the baseline's.",
+    "Several model choices are pairs nobody would try: utility_states.cik ~ states.fips (0 of 43), utility_states.state ~ the FEMA fips_state_code (0 of 43), the frames cik ~ sic_codes.code under lpad10 (0 of 1,937). Lightning SQL refuses each as REJECTED, which is the design, but each costs a planner step and a statement.",
+    "A VERIFIED rate measures value containment, not meaning: hq_state ~ seed_stations.state (28 of 28, model and baseline queue) and utility_states.state ~ seed_stations.state (43 of 43, baseline) are VERIFIED because two lists of US state codes overlap. Neither is a join key anyone would use, and the join map shows them beside the governed keys without saying so.",
+    "The planner's replies: 125 of 157 planner calls were valid over the six runs with the model, and the host took 2 to 8 checklist steps itself per run (fallback steps), 8 in the think-off run.",
+    "The note: the model's draft was replaced by the 250-word template in 3 of the 6 runs with the model (word or length issues). In cold 2 a draft saying revenue 'held up' while EIX and POR fell passed the verifier at that code; the rule gap was fixed afterwards (c090bc1), and the runs on fc130bd carry the fix.",
+    "The curated served states have a gap the outside check found: PPL's FY2024 10-K names Virginia (Kentucky Utilities serves its Virginia customers as Old Dominion Power), which seeds/utilities.json leaves out. No Virginia major-disaster declaration is dated in Q1 2025 or Q1 2024, so neither answer changes; the seed file is not edited in this lane.",
+    "cw.stations is the slow object: probing it costs about 27 s per cold run (DESCRIBE about 5 s, five rows about 7 s, two distinct counts about 7 s each) and its join-map statement 7.7 s; the two weather statements take 18 s each.",
+    "The whole-card VRAM figures cannot be attributed to the model: the model stayed resident through all three ablation runs and other programs share the card, so the no-model run's card peak (7,482 MiB) is above the think-on run's (6,959 MiB). Only Ollama's own figure (2,881 MiB) is the model's.",
+    "The manual baseline ran pre-written statements, so a person's time is not measured; the user gain is stated in statements and decisions, not minutes."
+  ],
+  "not_measured": [
+    "A person's time to find, write and read the manual-baseline SQL (the session time in section 4 is not a person's time).",
+    "More than one run per ablation setting, and think off or no model on the warm question.",
+    "A second quantisation of the model (only Q4_K_M was run) and VRAM with the model unloaded (it stayed resident under Ollama's keep-alive).",
+    "Revenue against the companies' own reports: the answer compares SEC frames values year on year under the first available tag; no 10-Q figure was checked.",
+    "Served states of the other 41 seed utilities against their 10-Ks (two were checked).",
+    "Run-time registration on Day 2: every registration in these runs answered already_registered; the evidence of a live registration is the Day-1 warm run r20261025T1413091c1c, and FEMA CY2023Q1 and frames CY2022Q1 stay unregistered for the recorded warm question (D19).",
+    "The full onboarding DQ run on Day 2: the onboarding DQ file is from 25 Oct 13:46 SGT; each question runs the two fast DQ rules live.",
+    "Statement times under concurrent question load: every run here ran alone."
+  ]
+}

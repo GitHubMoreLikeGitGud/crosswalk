@@ -1,16 +1,16 @@
-// Writes the evaluation report from files only: every data/runs/<id>/run.json (plus any extra
-// directory of saved run files given with --runs), data/dq/latest.json and data/eval/joinmap.json
-// (scripts/eval_joinmap.py). Outputs: data/eval/report.json, docs/eval-report.json (the same
-// document) and docs/eval-report.md. No gateway call, no model call.
+// Writes the evaluation report from files only: the runs named in docs/eval/runs.json, read from
+// <data>/runs/<id>/run.json (data = CW_DATA_DIR, else <repo>/data) or from any extra directory given
+// with --runs; docs/eval/outside-checks.json (src/eval/outside.ts); docs/eval/manual-baseline.json
+// (src/eval/manual.ts); and the ablation driver's GPU samples (--gpu <dir>: driver.log plus one
+// <tag>.smi.csv and <tag>.out per run). Outputs: docs/eval-report.md, docs/eval/summary.json and
+// <data>/eval/report.json (served by GET /api/eval). No gateway call, no model call.
 //
-//   npx tsx src/eval/run.ts [--runs <dir>]... [--data <dir>] [--docs <dir>]
-//
-// The data directory is CW_DATA_DIR when set, else <repo>/data.
+//   npx tsx src/eval/run.ts [--runs <dir>]... [--gpu <dir>]... [--data <dir>] [--docs <dir>]
 
-import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { buildReport, renderMarkdown, type DqFile, type EvalRun, type JoinMapFile, type SeedStation, type SeedUtility } from "./report.ts";
+import { buildReport, renderMarkdown, type EvalRun, type GpuSamples, type ManualSession, type OllamaPs, type OutsideChecks, type Selection } from "./report.ts";
 
 const REPO_ROOT = fileURLToPath(new URL("../../../", import.meta.url));
 
@@ -18,87 +18,99 @@ function readJson<T>(path: string): T {
   return JSON.parse(readFileSync(path, "utf8")) as T;
 }
 
-function isRun(x: unknown): x is EvalRun {
-  const r = x as Partial<EvalRun> | null;
-  return !!r && typeof r === "object" && typeof r.run_id === "string" && typeof r.cik === "string" && !!r.summary && !!r.card;
+function findRun(id: string, dirs: string[]): EvalRun | null {
+  for (const d of dirs) {
+    const p = join(d, id, "run.json");
+    if (existsSync(p)) return readJson<EvalRun>(p);
+  }
+  return null;
 }
 
-/** Run files in a directory: <dir>/<id>/run.json (the run store) and <dir>/*.json (saved copies). */
-function collectRuns(dir: string, label: string): { run: EvalRun; source: string }[] {
-  const out: { run: EvalRun; source: string }[] = [];
-  if (!existsSync(dir)) return out;
-  for (const name of readdirSync(dir)) {
-    const p = join(dir, name);
-    let doc: unknown;
-    try {
-      if (statSync(p).isDirectory()) {
-        const f = join(p, "run.json");
-        if (!existsSync(f)) continue;
-        doc = readJson(f);
-      } else if (name.endsWith(".json")) {
-        doc = readJson(p);
-      } else continue;
-    } catch {
-      continue;
-    }
-    if (isRun(doc)) out.push({ run: doc, source: label });
+function parsePs(text: string | undefined): OllamaPs | null {
+  if (!text) return null;
+  try {
+    return JSON.parse(text) as OllamaPs;
+  } catch {
+    return null;
+  }
+}
+
+/** GPU samples of the ablation driver: driver.log names each tag's start and end with Ollama /api/ps reads; <tag>.out names the run id. */
+export function readGpuDir(dir: string): GpuSamples[] {
+  const log = join(dir, "driver.log");
+  if (!existsSync(log)) return [];
+  const starts = new Map<string, string>();
+  const ends = new Map<string, string>();
+  for (const line of readFileSync(log, "utf8").replace(/^﻿/u, "").split(/\r?\n/u)) {
+    const s = /^﻿?start (\S+) \S+ ollama_ps_before (.*)$/u.exec(line);
+    if (s) starts.set(s[1]!, s[2]!);
+    const e = /^﻿?end (\S+) .*? ollama_ps_mid (.*)$/u.exec(line);
+    if (e) ends.set(e[1]!, e[2]!);
+  }
+  const out: GpuSamples[] = [];
+  for (const tag of starts.keys()) {
+    const outFile = join(dir, `${tag}.out`);
+    const smiFile = join(dir, `${tag}.smi.csv`);
+    if (!existsSync(outFile) || !existsSync(smiFile)) continue;
+    const m = /runs[\\/](r\d{8}T\d{6}[0-9a-f]{4})[\\/]run\.json/u.exec(readFileSync(outFile, "utf8"));
+    if (!m) continue;
+    const samples = readFileSync(smiFile, "utf8")
+      .split(/\r?\n/u)
+      .map((l) => l.split(",").map((x) => x.trim()))
+      .filter((p) => p.length === 3 && /^\d+$/u.test(p[1]!) && /^\d+$/u.test(p[2]!))
+      .map((p) => ({ at: p[0]!, mem_mib: Number(p[1]), util_pct: Number(p[2]) }));
+    const [mid, after] = (ends.get(tag) ?? "").split(" ollama_ps_after ");
+    out.push({ run_id: m[1]!, samples, ollama_before: parsePs(starts.get(tag)), ollama_mid: parsePs(mid), ollama_after: parsePs(after) });
   }
   return out;
 }
 
-function parseArgs(argv: string[]): { runs: string[]; data: string; docs: string } {
-  const extra: string[] = [];
+function parseArgs(argv: string[]): { runs: string[]; gpu: string[]; data: string; docs: string } {
+  const runs: string[] = [];
+  const gpu: string[] = [];
   let data = process.env.CW_DATA_DIR ? resolve(process.env.CW_DATA_DIR) : join(REPO_ROOT, "data");
   let docs = join(REPO_ROOT, "docs");
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i]!;
     const v = argv[i + 1];
-    if (a === "--runs" && v) {
-      extra.push(resolve(v));
-      i++;
-    } else if (a === "--data" && v) {
-      data = resolve(v);
-      i++;
-    } else if (a === "--docs" && v) {
-      docs = resolve(v);
-      i++;
-    } else {
-      throw new Error(`unknown argument ${a}`);
-    }
+    if (a === "--runs" && v) (runs.push(resolve(v)), i++);
+    else if (a === "--gpu" && v) (gpu.push(resolve(v)), i++);
+    else if (a === "--data" && v) (data = resolve(v), i++);
+    else if (a === "--docs" && v) (docs = resolve(v), i++);
+    else throw new Error(`unknown argument ${a}`);
   }
-  return { runs: extra, data, docs };
+  return { runs, gpu, data, docs };
 }
 
 export function main(argv = process.argv.slice(2)): void {
   const args = parseArgs(argv);
-  const seen = new Map<string, { run: EvalRun; source: string }>();
-  for (const r of collectRuns(join(args.data, "runs"), "data/runs")) seen.set(r.run.run_id, r);
-  args.runs.forEach((dir, i) => {
-    for (const r of collectRuns(dir, `saved copy ${i + 1}`)) if (!seen.has(r.run.run_id)) seen.set(r.run.run_id, r);
+  const evalDocs = join(args.docs, "eval");
+  const selection = readJson<Selection>(join(evalDocs, "runs.json"));
+  const dirs = [join(args.data, "runs"), ...args.runs];
+  const runs = new Map<string, EvalRun>();
+  for (const id of [...selection.runs.map((r) => r.run_id), ...(selection.references ?? []).map((r) => r.run_id)]) {
+    const run = findRun(id, dirs);
+    if (run) runs.set(id, run);
+  }
+  const outsidePath = join(evalDocs, "outside-checks.json");
+  const manualPath = join(evalDocs, "manual-baseline.json");
+  const report = buildReport({
+    selection,
+    runs,
+    gpu: args.gpu.flatMap(readGpuDir),
+    manual: existsSync(manualPath) ? readJson<ManualSession>(manualPath) : null,
+    outside: existsSync(outsidePath) ? readJson<OutsideChecks>(outsidePath) : null,
   });
-  const dqPath = join(args.data, "dq", "latest.json");
-  const jmPath = join(args.data, "eval", "joinmap.json");
-  const dq = existsSync(dqPath) ? readJson<DqFile>(dqPath) : null;
-  const joinmap = existsSync(jmPath) ? readJson<JoinMapFile>(jmPath) : null;
-  const utilities = readJson<{ utilities: SeedUtility[] }>(join(REPO_ROOT, "seeds", "utilities.json")).utilities;
-  const stations = readJson<{ stations: SeedStation[] }>(join(REPO_ROOT, "seeds", "stations.json")).stations;
-
-  const report = buildReport({ runs: [...seen.values()], dq, joinmap, utilities, stations });
-  const md = renderMarkdown(report);
   const json = `${JSON.stringify(report, null, 2)}\n`;
-
-  const evalDir = join(args.data, "eval");
-  mkdirSync(evalDir, { recursive: true });
-  mkdirSync(args.docs, { recursive: true });
-  writeFileSync(join(evalDir, "report.json"), json, "utf8");
-  writeFileSync(join(args.docs, "eval-report.json"), json, "utf8");
-  writeFileSync(join(args.docs, "eval-report.md"), `${md}\n`, "utf8");
-
-  const t = report.totals;
-  console.log(`runs ${report.runs.length} (${report.runs.map((r) => `${r.run_id} ${r.mode}`).join(", ")})`);
-  console.log(`planner ${t.planner_calls} calls, ${t.valid_first_try} valid first try, ${t.repaired} repaired, ${t.fallbacks} fallback; evidence ${t.evidence_complete}/${t.evidence_records}; claims ${t.claims_with_evidence}/${t.claims}`);
-  console.log(`coverage: ${report.coverage.summary.with_every_station}/${report.coverage.summary.utilities} utilities covered from run ${report.coverage.from_run ?? "n/a"}; dq ${dq ? "present" : "absent"}; joinmap ${joinmap ? "present" : "absent"}`);
-  console.log(`wrote ${join(evalDir, "report.json")}, ${join(args.docs, "eval-report.json")}, ${join(args.docs, "eval-report.md")}`);
+  mkdirSync(join(args.data, "eval"), { recursive: true });
+  writeFileSync(join(args.data, "eval", "report.json"), json, "utf8");
+  writeFileSync(join(evalDocs, "summary.json"), json, "utf8");
+  writeFileSync(join(args.docs, "eval-report.md"), `${renderMarkdown(report)}\n`, "utf8");
+  console.log(`runs ${report.runs.length}: ${report.runs.map((r) => `${r.run_id} ${r.mode} ${r.setting} ${r.wall_s} s`).join("; ")}`);
+  console.log(`reproducibility: ${report.reproducibility.pairs.length} pairs, answers identical ${report.reproducibility.all_answers_identical}, governed keys identical ${report.reproducibility.governed_join_map_identical}`);
+  console.log(`L2: model ${JSON.stringify(report.l2.totals.model)} baseline ${JSON.stringify(report.l2.totals.baseline)} winner ${report.l2.winner}`);
+  console.log(`ablation: ${report.ablation.map((a) => `${a.setting} ${a.wall_s} s peak ${a.gpu?.mem_peak_mib ?? "n/a"} MiB`).join("; ")}`);
+  console.log(`wrote docs/eval-report.md, docs/eval/summary.json and ${join(args.data, "eval", "report.json")}`);
 }
 
 const invoked = process.argv[1] ? resolve(process.argv[1]) === fileURLToPath(import.meta.url) : false;
