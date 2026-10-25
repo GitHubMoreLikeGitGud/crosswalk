@@ -68,7 +68,7 @@ The first seven rows are the governed keys; their numbers are identical in every
 | `station.state -> state` | key (d) measured VERIFIED in this run |
 | `revenue_quarter.cik -> utility` (lpad10) | key (a) measured VERIFIED in this run |
 
-The onboarding pass (`npm run onboard`, 25 Oct 2026 13:46 SGT) ran all six rules with `RUN DQ`; one row is **DQ invalid**: `utility.sic` 43 total / 42 valid / 1 invalid, and `SHOW DQ INVALID RECORD` names MGE Energy (`0001161728`, MGEE, SIC 4900), whose code is not in the company_dns SIC list. It is the same company the SIC key lists as its orphan: the join map found it by measuring, the semantic layer by its rule.
+The onboarding pass (`npm run onboard`, 25 Oct 2026 13:46 SGT) ran all six rules with `RUN DQ`; one row is **DQ invalid**: `utility.sic` 43 total / 42 valid / 1 invalid, and `SHOW DQ INVALID RECORD` names MGE Energy (`0001161728`, MGEE, SIC 4900), whose code is not in the company_dns SIC list. It is the same company the SIC key lists as its orphan: the join map found it by measuring, the semantic layer by its rule. The gap is in the reference, not in MGE Energy's filing: 4900 is on SEC's own SIC code list, and 172 of that list's 444 codes are missing from company_dns (`scripts/sic_outside_check.py`, [`eval/sic-check.json`](eval/sic-check.json)).
 
 ## 4. The answer
 
