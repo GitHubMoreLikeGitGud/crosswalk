@@ -102,7 +102,7 @@ Medians: 300.7 s with the model, 124.3 s without.
 | `utility_states.state ~ fema.fips_state_code` | substr(4,2) | 0 / 1 | 1 |
 
 - **Right columns, wrong side counted:** three of the eight pair columns that do hold the same two-letter state codes, but count the wider table. Counted from the FEMA side, the same pairs measure 8 of 8 (VERIFIED) and 7 of 8 (PARTIAL), as the hand measurement below shows.
-- **The answer's keys were never proposed:** none of the model's proposals touched the CIKs, the station ids or the FIPS codes.
+- **The answer's keys were never proposed:** none of the model's proposals was the CIK pair (frames and snapshot), the station pair or the FIPS pair (FEMA and the state reference). Three of them did read `utility_states.cik` and three FEMA's `fips_state_code` (one read both), each paired with the wrong column.
 
 **The baseline** (`agent/src/tools/baselineKeys.ts`) classifies a column by its name (cik, state, fips, sic, code, station id), so on `c1`, `c2`, ... it proposed nothing. With nothing to measure, `keys_proposed` failed twice, and every later checklist step that needs keys failed with it; the run ended after 5 chunks with the template note.
 
