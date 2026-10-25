@@ -6,6 +6,7 @@
     "ee04b0c",
     "fc130bd"
   ],
+  "code_note": "Code: the agent, gateway, prompts, seeds and Zetaris SQL are the same at fc130bd (the last four runs) and at the commit that carries this report; between them only the UI, the Cursor task records, this report and its tools (agent/src/eval) changed. The first three runs used earlier Day-2 commits (6652e2f, ee04b0c) whose later changes touched the note, the memory context and the evidence labels, not the answer or the join-map statements.",
   "runs": [
     {
       "run_id": "r20261025T1546471209",

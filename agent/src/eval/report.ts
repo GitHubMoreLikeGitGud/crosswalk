@@ -128,6 +128,8 @@ export interface SelectedRun {
 
 export interface Selection {
   runs: SelectedRun[];
+  /** What changed in the code between the runs and the commit that carries the report (L8), stated by whoever selected the runs. */
+  code_note?: string;
   /** Day-1 reference runs whose answers the Day-2 runs are compared with (the binding numbers of SPEC 11.4). */
   references?: { run_id: string; label: string }[];
   did_not_go_well?: string[];
@@ -653,6 +655,7 @@ export interface EvalReport {
   title: string;
   generated_from: string;
   code: string[];
+  code_note: string | null;
   runs: RunLine[];
   references: { run_id: string; label: string; answer_rows: number; answer_sha: string }[];
   reproducibility: { pairs: PairCompare[]; cold_runs: number; all_answers_identical: boolean; governed_join_map_identical: boolean; reference_matches: { run_id: string; reference: string; identical: boolean }[] };
@@ -759,6 +762,7 @@ export function buildReport(inp: BuildInputs): EvalReport {
     title: "Crosswalk evaluation (Day 2)",
     generated_from: "saved run files (CW_DATA_DIR/runs/<id>/run.json), docs/eval/runs.json, docs/eval/outside-checks.json, docs/eval/manual-baseline.json and the ablation's nvidia-smi samples; no gateway or model call",
     code: [...new Set(inp.selection.runs.map((r) => r.code))],
+    code_note: inp.selection.code_note ?? null,
     runs: lines,
     references: refs.map((r) => ({ run_id: r.run_id, label: r.label, answer_rows: inp.runs.get(r.run_id)!.answer?.rows.length ?? 0, answer_sha: sha12(answerCanonical(inp.runs.get(r.run_id)!)) })),
     reproducibility: {
@@ -823,6 +827,10 @@ export function renderMarkdown(r: EvalReport): string {
   out.push(
     `Every number below is measured and copied from a saved run file or a measured side file; nothing is projected or estimated unless it says so. Runs were made on code ${r.code.map((c) => `\`${c}\``).join(", ")} with \`nemotron-3-nano:4b\` through local Ollama (0 cloud model calls) and Zetaris Lightning 2.4.3.1 through the gateway. The summary JSON is \`docs/eval/summary.json\`; both files are regenerated from the saved runs with \`cd agent && npx tsx src/eval/run.ts --runs <dir of the ablation runs> --gpu <dir of its samples>\` (no gateway or model call). Revenue appears only as the year-on-year change the answer shows.`,
   );
+  if (r.code_note) {
+    out.push("");
+    out.push(r.code_note);
+  }
   out.push("");
   out.push("## Headline");
   out.push("");

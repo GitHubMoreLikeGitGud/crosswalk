@@ -2,6 +2,8 @@
 
 Every number below is measured and copied from a saved run file or a measured side file; nothing is projected or estimated unless it says so. Runs were made on code `6652e2f`, `ee04b0c`, `fc130bd` with `nemotron-3-nano:4b` through local Ollama (0 cloud model calls) and Zetaris Lightning 2.4.3.1 through the gateway. The summary JSON is `docs/eval/summary.json`; both files are regenerated from the saved runs with `cd agent && npx tsx src/eval/run.ts --runs <dir of the ablation runs> --gpu <dir of its samples>` (no gateway or model call). Revenue appears only as the year-on-year change the answer shows.
 
+Code: the agent, gateway, prompts, seeds and Zetaris SQL are the same at fc130bd (the last four runs) and at the commit that carries this report; between them only the UI, the Cursor task records, this report and its tools (agent/src/eval) changed. The first three runs used earlier Day-2 commits (6652e2f, ee04b0c) whose later changes touched the note, the memory context and the evidence labels, not the answer or the join-map statements.
+
 ## Headline
 
 - **Reproducible:** 6 cold runs of the demo question (think on, think off, no model) give the same 12-row answer in every field (yes) and the same numbers and orphans for the 7 governed join-map keys (yes).

@@ -1,5 +1,6 @@
 {
   "note": "The runs this evaluation reads. Day-2 runs only (after the D15-D18 fixes); the two Day-1 runs are references for the answer comparison. 'by' names the lane that ran it; 'code' is the commit the agent, gateway and prompts were at.",
+  "code_note": "Code: the agent, gateway, prompts, seeds and Zetaris SQL are the same at fc130bd (the last four runs) and at the commit that carries this report; between them only the UI, the Cursor task records, this report and its tools (agent/src/eval) changed. The first three runs used earlier Day-2 commits (6652e2f, ee04b0c) whose later changes touched the note, the memory context and the evidence labels, not the answer or the join-map statements.",
   "runs": [
     { "run_id": "r20261025T1546471209", "label": "cold 1", "by": "lane F", "code": "6652e2f", "setting": "think_on" },
     { "run_id": "r20261025T155141e122", "label": "cold 2", "by": "lane F", "code": "6652e2f", "setting": "think_on" },
