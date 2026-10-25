@@ -1,0 +1,59 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Agent tests and type checks
+        working-directory: agent
+        run: |
+          npm ci
+          npm test
+          npm run typecheck
+          npx tsc --noEmit -p tsconfig.tools.json
+
+      - name: Agent tests with the clock moved forward 400 days (no test reads today's date)
+        working-directory: agent
+        env:
+          NODE_OPTIONS: --import ../.github/scripts/fake-date.mjs
+          CW_FAKE_CLOCK_DAYS: "400"
+        run: |
+          node -e "const d = new Date(); if (d.getTime() - performance.timeOrigin < 399 * 86400000) { console.error('clock not moved'); process.exit(1) } console.log('test clock', d.toISOString())"
+          npm test
+
+      - name: Meterless conformance on the vendored engines
+        run: |
+          (cd engines/hmem/reference && npm install --no-audit --no-fund && npx tsx ../conformance/runner.ts)
+          (cd engines/markovian/reference && npm install --no-audit --no-fund && npx tsx ../conformance/runner.ts)
+          (cd engines/world-model/reference && npm install --no-audit --no-fund && npx tsx ../conformance/runner.ts && npx tsx scripts/idempotency-check.ts)
+
+      - name: H-MEM conformance with the Crosswalk subclass
+        working-directory: agent
+        run: HMEM_IMPL="$PWD/src/memory/hmemFacade.ts" npx tsx ../engines/hmem/conformance/runner.ts
+
+      - name: Gateway tests (no Zetaris, no secrets; the live tests skip)
+        run: |
+          python -m pip install -r gateway/requirements-dev.txt
+          python -X utf8 -m pytest gateway/tests -q
