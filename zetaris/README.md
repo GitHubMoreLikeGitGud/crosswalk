@@ -1,0 +1,56 @@
+# Zetaris objects (Crosswalk)
+
+Everything Crosswalk reads goes through Zetaris Lightning 2.4.3.1 (local Docker): REST tables for OpenFEMA, SEC EDGAR and company_dns, a CSV filestore table for the GHCN station inventory, SchemaStore views in the container `cw` (every one cached), inline-VALUES views for the committed seed files, and the USL `crosswalk_usl` with primary and foreign keys whose DQ rules list the orphans. The SQL lives in `sql/NN_cw_*_create.sql` / `_select.sql` pairs declared in `manifest.json`; `sql/won-reference/` is the sister entry's SQL, reference only, never run here.
+
+Runner: `.venv/Scripts/python -X utf8 -m gateway.run_sql zetaris/sql/<file>.sql [--dry-run] [--skip-exists] [--timeout 900]` (admin login from `.env.local`, every statement through the `onboard` allowlist, logged to `data/evidence/sql_log.jsonl`). `CREATE LIGHTNING DATABASE` and `CREATE SCHEMASTORE CONTAINER` accept no `IF NOT EXISTS` on 2.4.3.1: rerun with `--skip-exists`. A `DESCRIBE BY` text may contain letters, digits, spaces and `_ . - ,` only (a parenthesis is refused).
+
+All counts and timings below were measured on 2026-10-25 (statement time as the driver reports it; wall time adds about 1 s of JDBC start-up per `run_sql` call).
+
+## Objects
+
+| File | Objects | Independent check | Result |
+|---|---|---|---|
+| `01_cw_fema` | `CW_FEMA.declarations_dr_2025q1` -> `cw.fema_declarations_dr_2025q1` (DR declarations declared in Q1 2025, `$filter` percent-encoded, `$top=1000`); `CW_FEMA.datasets_catalogue` -> `cw.fema_catalogue`; container `cw` | the same URL fetched outside Zetaris: 116 rows, 10 distinct `disasterNumber`, states AK 4 / CA 1 / KY 69 / MO 14 / OK 8 / OR 5 / SC 3 / WV 12, incident types Severe Storm 107 / Fire 6 / Flood 3; catalogue 44 rows, 43 distinct names | `COUNT(*)` 116; 10 declarations / 8 states; the same per-state and per-type counts; 0 rows outside the filter; catalogue 44 / 43. All 8 statements in 5.2 s wall (CREATE REST 0.42 s and 0.31 s, CACHE 1.0 s and 2.1 s) |
+| `02_cw_stations` | `CW_GHCN.ghcnd_stations_txt` (one-column CSV: `delimiter "\|"`, `quote ""`, `header "false"`, `inferSchema "false"`; column `_c0` holds the 85-character line) -> `cw.stations` (`SUBSTR(_c0, 1, 11)` id, `SUBSTR(_c0, 39, 2)` state, `TRIM(SUBSTR(_c0, 42, 30))` name, latitude, longitude) | the file downloaded outside Zetaris: 133,039 lines, no `\|` or U+0001 in any line (24 lines carry a double quote, 82 a comma), 78,568 US lines all with a state, 56 seed ids present | 133,039 rows / 133,039 distinct ids; 78,568 US with a state; 52 distinct US states and territories; seeds 56 / 56 states equal / 0 missing. CREATE FILESTORE 3.5 s, view 2.5 s, CACHE 11.6 s; a read of the cached view costs about 7.5 s (filestore source resolution, as the sister entry measured for parquet) |
+| `03_cw_sec` | `CW_SEC.frames_<tag>_<period>` -> `cw.frames_<tag>_<period>` for Revenues, RevenueFromContractWithCustomerExcludingAssessedTax, RegulatedAndUnregulatedOperatingRevenue x CY2025Q1, CY2024Q1; `CW_SEC.submissions_<cik10>` -> `cw.submission_<cik10>` for the 43 seeds | the sister entry's source `data` lengths of 2026-10-24 | 1,937 / 2,095 / 2,546 / 2,654 / 20 / 22 facts, one row per filer; 148 statements, 148 ok, 68 s wall (slowest single statement 3.4 s) |
+| `04_cw_dns` | `CW_DNS.sic_codes_v4_raw` -> `cw.sic_codes` | the response `total` 1,005 | 1,005 rows, 1,005 distinct four-digit codes; 4911 / 4931 / 4932 present; 5 statements in 3.2 s |
+| `05_cw_seeds` | `cw.states` (51), `cw.utility_states` (97 pairs), `cw.seed_stations` (56) as `SELECT ... FROM VALUES`; `cw.seed_utilities` = the 43 submission views `UNION ALL` + seed tickers | `seeds/*.json` | 51 / 51 / 51; 97 pairs, 43 utilities, 43 states, 0 orphans against `cw.states`; 56; 43 utilities, 40 with a ticker, SIC 4911 x 25, 4931 x 16, 4932 x 1, 4900 x 1 (MGE Energy). CACHE of `cw.seed_utilities` 18.4 s; every read of it about 17 s (the planner resolves the 43 underlying views on each read, cache or not) |
+| `06_cw_joinmap` | the five join keys over cached views (no registration) | SPEC section 2 definition | table below |
+| `07_cw_usl` | `lightning.metastore.crosswalk.crosswalk_usl`: `state`, `sic_code`, `utility`, `utility_state`, `fema_declaration`, `station`, `revenue_quarter` | the view counts above | table below |
+
+A probe view `cw.probe_values` (two VALUES rows, created to test that a SchemaStore view over inline VALUES is accepted) exists uncached; nothing is ever dropped from code.
+
+## Join map (06_cw_joinmap_select.sql; match rate = matched distinct left keys / distinct left keys)
+
+| Key | Left | Right | Transform | left / matched | Rate | Verdict | Orphans | Time |
+|---|---|---|---|---|---|---|---|---|
+| (a) cik | `cw.seed_utilities.cik` | frames `cik` over the three CY2025Q1 views | lpad10 | 43 / 42 | 0.977 | VERIFIED | IDACORP (no CY2025Q1 fact under any tag) | 17.8 s |
+| (a) control, no LPAD | same | `CAST(cik AS STRING)` | identity | 43 / 0 | 0 | REJECTED | all | 17.2 s |
+| (b) loc | seed filers in CY2025Q1 frames, `SUBSTR(loc, 4, 2)` | `cw.seed_utilities.hq_state` | substr(4,2) | 42 / 42 | 1.000 | VERIFIED | none | 18.0 s |
+| (c) FEMA state | `cw.fema_declarations_dr_2025q1.state` | `cw.utility_states.state` | identity | 8 / 7 | 0.875 | PARTIAL | AK | 0.37 s |
+| (c) FEMA FIPS | `fips_state_code` | `cw.states.fips` | identity | 8 / 8 | 1.000 | VERIFIED | none | 0.30 s |
+| (d) station | `cw.seed_stations.id` | `cw.stations.id` | identity | 56 / 56 (56 states equal) | 1.000 | VERIFIED | none | 7.7 s |
+| (e) SIC, distinct codes | `cw.seed_utilities.sic` | `cw.sic_codes.code` | identity | 4 / 3 | 0.750 | REJECTED by distinct codes | 4900 | 17.0 s |
+| (e) SIC, by utility | 43 utilities | same | identity | 43 / 42 | 0.977 | VERIFIED by rows | MGE Energy (4900) | 17.4 s |
+
+The FEMA join (served state with a Q1-2025 DR declaration): CA 3 utilities, KY 2, MO 2, OK 2, OR 1, SC 2, WV 2; one declaration per state in the filter. A view may be referenced once per statement: a second reference to `cw.seed_utilities` fails with `MISSING_ATTRIBUTES.RESOLVED_ATTRIBUTE_APPEAR_IN_OPERATION`.
+
+## USL (07_cw_usl_*.sql)
+
+`CREATE NAMESPACE IF NOT EXISTS` x 2, `COMPILE USL` (seven tables, one statement, 51 ms), 8 `UPDATE USL ... DESCRIPTION`, 7 `ACTIVATE USL TABLE ... AS SELECT` from the cached views (state first as the test that activation from a SchemaStore view works; it does): 18 statements, 18 ok, 26 s wall (utility activation 16 s, station 7.3 s, the rest under 1 s). Activation is from cached views rather than the raw REST tables because a raw REST table re-fetches its endpoint on every read.
+
+| Table | Rows | Read time | RUN DQ (rule, total / valid / invalid, time) |
+|---|---|---|---|
+| `state` | 51 | 0.14 s | (PK only) |
+| `sic_code` | 1,005 | 0.37 s | (PK only) |
+| `utility` | 43 (4 SIC codes) | 62 s | FK `sic`: 43 / 42 / 1, 138 s (MGE Energy, SIC 4900 absent from company_dns) |
+| `utility_state` | 97 (43 utilities, 43 states) | 0.2 s | FK `cik`: 97 / 97 / 0, 81 s; FK `state`: 97 / 97 / 0, 0.7 s |
+| `fema_declaration` | 116 (10 declarations, 8 states) | 1.0 s | FK `state`: 116 / 116 / 0, 2.7 s |
+| `station` | 56 (56 with a state) | 18.7 s | FK `state`: 56 / 56 / 0, 38 s |
+| `revenue_quarter` | 133 (Revenues 34 + 35, RFC 21 + 23, RUOR 9 + 11) | 5.1 s | FK `cik`: failed once with `REST API call failed: Connection refused` on a submissions URL while the gateway warm-up was re-caching the 43 submission views (the DQ evaluation reads the raw REST tables behind `cw.seed_utilities`); not re-run on Day 0 |
+
+The demo join inside the USL (fema_declaration -> state <- utility_state) returns the seven states above with their names in 0.9 s. `LIST DQ USL` names the key rules after their columns (`sic` on utility, `cik` and `state` on utility_state, and so on). Reads of `utility` (62 s) and the DQ runs that touch it (81 to 138 s) pay the 43-view resolution; `weather_quarter` is not in the model because no GHCN parquet table is registered under `CW_GHCN` on Day 0.
+
+## Gateway
+
+Reader templates (`POST /sql/template`): `fema_declarations(quarter)`, `fema_by_state(quarter)` (live: 8 rows in 292 ms), `catalogue_list()`, `stations_lookup(ids)`, `joinmap_cik(period)`, `joinmap_cik_orphans(period)`, `joinmap_loc(period)`, `joinmap_fema_state(quarter)` (live: 8 / 7 in 332 ms), `joinmap_fema_state_orphans(quarter)`, `joinmap_station()`, `joinmap_sic()`, `joinmap_sic_orphans()`, `dq_run_sic()`, `dq_invalid_sic()`. `quarter` is the kind `fema_quarter` (`^CY\d{4}Q[1-4]$`); the renderer derives the object suffix (`2025q1`) and the percent-encoded quarter bounds from it. Registrar plans (`POST /registrar/<action>`, signed contract): `register_fema(quarter)` and `register_stations()` (raw table -> view -> DESCRIBE -> CACHE). `www.fema.gov` (https) is allowlisted next to `data.sec.gov` and `company-dns.mediumroast.io`. The warm-up re-caches the 57 views of `CACHE_TARGETS` (frames, submissions, SIC, FEMA, seeds, stations last). The inherited Weather-or-Not templates stay until the Day-1 lane replaces them.

@@ -1,0 +1,107 @@
+{
+  "_comment": "Crosswalk Zetaris objects in onboarding order; each create script has a _select.sql verification pair. Status is from the Day-0 gate runs against Zetaris Lightning 2.4.3.1 (local Docker) on 2026-10-25; counts and timings in README.md. The user-agent placeholder in REST scripts is replaced from CW_USER_AGENT at run time. sql/won-reference/ is the sister entry's SQL, reference only, never run here.",
+  "version": 1,
+  "sources": [
+    {
+      "id": "cw_fema",
+      "kind": "rest",
+      "script": "zetaris/sql/01_cw_fema_create.sql",
+      "select": "zetaris/sql/01_cw_fema_select.sql",
+      "status": "verified",
+      "requires": [],
+      "hosts": ["www.fema.gov"],
+      "summary": "OpenFEMA DisasterDeclarationsSummaries v2 filtered to major disasters (DR) declared in Q1 2025 (116 designated areas, 10 declarations, 8 states; equals the response fetched outside Zetaris) and the OpenFemaDataSets v1 catalogue (44 rows, 43 distinct names); container cw created here; both views cached (2026-10-25)",
+      "objects": {
+        "database": "CW_FEMA",
+        "container": "cw",
+        "raw": ["CW_FEMA.declarations_dr_2025q1", "CW_FEMA.datasets_catalogue"],
+        "views": ["cw.fema_declarations_dr_2025q1", "cw.fema_catalogue"]
+      }
+    },
+    {
+      "id": "cw_stations",
+      "kind": "filestore-csv",
+      "script": "zetaris/sql/02_cw_stations_create.sql",
+      "select": "zetaris/sql/02_cw_stations_select.sql",
+      "status": "verified",
+      "requires": ["cw_fema"],
+      "hosts": ["s3a://noaa-ghcn-pds/"],
+      "summary": "NOAA GHCN-Daily station inventory ghcnd-stations.txt as a one-column CSV (delimiter '|', never in the file) parsed with SUBSTR into id, state, name, latitude, longitude; 133,039 rows (= the file's line count), 78,568 US stations with a state, the 56 seed stations present with 56/56 states equal to seeds/stations.json; view cached (2026-10-25)",
+      "objects": {
+        "database": "CW_GHCN",
+        "raw": "CW_GHCN.ghcnd_stations_txt",
+        "view": "cw.stations"
+      }
+    },
+    {
+      "id": "cw_sec",
+      "kind": "rest",
+      "script": "zetaris/sql/03_cw_sec_create.sql",
+      "select": "zetaris/sql/03_cw_sec_select.sql",
+      "status": "verified",
+      "requires": ["cw_fema"],
+      "hosts": ["data.sec.gov"],
+      "summary": "SEC EDGAR XBRL frames for Revenues, RevenueFromContractWithCustomerExcludingAssessedTax and RegulatedAndUnregulatedOperatingRevenue x CY2025Q1, CY2024Q1 (1,937 / 2,095 / 2,546 / 2,654 / 20 / 22 facts, equal to the sister entry's source counts) and the submissions profile of the 43 seed utilities; 148 statements in 68 s; every view cached (2026-10-25)",
+      "objects": {
+        "database": "CW_SEC",
+        "container": "cw",
+        "frames": ["cw.frames_<tag>_<period>"],
+        "submission": ["cw.submission_<cik10>"]
+      }
+    },
+    {
+      "id": "cw_dns",
+      "kind": "rest",
+      "script": "zetaris/sql/04_cw_dns_create.sql",
+      "select": "zetaris/sql/04_cw_dns_select.sql",
+      "status": "verified",
+      "requires": ["cw_fema"],
+      "hosts": ["company-dns.mediumroast.io"],
+      "summary": "company_dns SIC reference V4, 1,005 codes (1,005 distinct, all four digits), raw table and view cw.sic_codes cached (2026-10-25)",
+      "objects": {
+        "database": "CW_DNS",
+        "raw": "CW_DNS.sic_codes_v4_raw",
+        "view": "cw.sic_codes"
+      }
+    },
+    {
+      "id": "cw_seeds",
+      "kind": "values-views",
+      "script": "zetaris/sql/05_cw_seeds_create.sql",
+      "select": "zetaris/sql/05_cw_seeds_select.sql",
+      "status": "verified",
+      "requires": ["cw_sec"],
+      "hosts": [],
+      "summary": "The committed seed files as SchemaStore views over inline VALUES: cw.states (51), cw.utility_states (97 pairs, 43 utilities, 43 states, 0 orphans against cw.states), cw.seed_stations (56), and cw.seed_utilities (43 rows from the 43 cached submission views with the seed ticker: 40 with a ticker; SIC 4911 x 25, 4931 x 16, 4932 x 1, 4900 x 1 = MGE Energy); all cached (2026-10-25)",
+      "objects": {
+        "container": "cw",
+        "views": ["cw.states", "cw.utility_states", "cw.seed_stations", "cw.seed_utilities"]
+      }
+    },
+    {
+      "id": "cw_joinmap",
+      "kind": "measurement",
+      "script": "zetaris/sql/06_cw_joinmap_select.sql",
+      "status": "verified",
+      "requires": ["cw_fema", "cw_stations", "cw_sec", "cw_dns", "cw_seeds"],
+      "hosts": [],
+      "summary": "The five join keys measured over cached views (match rate = matched distinct left keys / distinct left keys): (a) cik lpad10 43/42 = 0.977 VERIFIED (orphan IDACORP, no CY2025Q1 fact); (b) loc substr(4,2) vs business state 42/42 = 1.0; (c) FEMA state vs served states 8/7 = 0.875 PARTIAL (orphan AK), FEMA FIPS vs state reference 8/8; (d) seed station id vs inventory 56/56 with 56/56 states equal; (e) SIC vs sic_codes 4/3 = 0.75 by distinct codes, 43/42 = 0.977 by utility (orphan MGE Energy 4900). Every statement under 19 s (2026-10-25)"
+    },
+    {
+      "id": "cw_usl",
+      "kind": "usl",
+      "script": "zetaris/sql/07_cw_usl_create.sql",
+      "select": "zetaris/sql/07_cw_usl_select.sql",
+      "status": "verified",
+      "requires": ["cw_fema", "cw_stations", "cw_sec", "cw_dns", "cw_seeds"],
+      "hosts": [],
+      "summary": "USL crosswalk_usl in lightning.metastore.crosswalk: state, sic_code, utility, utility_state, fema_declaration, station, revenue_quarter with PK/FK and descriptions, each activated from a cached view (51 / 1,005 / 43 / 97 / 116 / 56 / 133 rows); RUN DQ per FK: utility.sic 43 / 42 / 1 (MGE Energy, SIC 4900 absent from company_dns), utility_state.cik 97 / 97 / 0, utility_state.state 97 / 97 / 0, fema_declaration.state 116 / 116 / 0, station.state 56 / 56 / 0 (2026-10-25); weather_quarter not in the model (no GHCN parquet registered on Day 0)",
+      "objects": {
+        "namespace": "lightning.metastore.crosswalk",
+        "usl": "lightning.metastore.crosswalk.crosswalk_usl",
+        "tables": ["state", "sic_code", "utility", "utility_state", "fema_declaration", "station", "revenue_quarter"],
+        "dq": ["primary and foreign key rules named after their columns (LIST DQ USL)"]
+      }
+    }
+  ]
+}

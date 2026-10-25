@@ -49,11 +49,17 @@ SEC_UTILITIES = templates.SEED_CIKS  # the 43 seeds of seeds/utilities.json (sub
 SEC_CONCEPTS = tuple((c, "Revenues") for c in ("0001326160", "0000092122", "0000072903", "0000065984", "0001031296", "0000004904")) + (
     ("0001326160", "RegulatedAndUnregulatedOperatingRevenue"), ("0000072903", "RegulatedAndUnregulatedOperatingRevenue"),
     ("0001031296", "RevenueFromContractWithCustomerExcludingAssessedTax"), ("0000004904", "RevenueFromContractWithCustomerExcludingAssessedTax"))
-# Empty until the Zetaris lane has registered the CW_* objects: a warm-up over names that do not exist yet
-# would only log failed CACHE statements. Weather-or-Not's list was cache_targets_for(SEC tags x periods,
-# SEC_CONCEPTS, SEC_UTILITIES) + templates.GHCN_VIEWS (the parquet views last: each CACHE scans a 9-file
-# partition on S3, about 40 s; the SEC views take a second each). CW_CACHE_TARGETS overrides either way.
-CACHE_TARGETS: tuple[str, ...] = ()
+# The Crosswalk objects registered on Day 0 (zetaris/manifest.json): the six frames views and the 43
+# submission views (03_cw_sec), the SIC reference (04_cw_dns), the FEMA quarter and the catalogue (01_cw_fema),
+# the seed views (05_cw_seeds; seed_utilities reads the 43 submission views, so it comes after them) and the
+# stations inventory last (02_cw_stations; its CACHE scans the 11 MB file on S3, about 12 s). No companyconcept
+# views are registered for Crosswalk. CW_CACHE_TARGETS overrides either way.
+CACHE_TARGETS: tuple[str, ...] = templates.cache_targets_for(
+    [(t, p) for t in SEC_TAGS for p in SEC_PERIODS], [], list(SEC_UTILITIES)) + (
+    "cw.fema_declarations_dr_2025q1", "cw.fema_catalogue",
+    "cw.states", "cw.utility_states", "cw.seed_stations", "cw.seed_utilities",
+    "cw.stations",
+)
 
 
 class TemplateRequest(BaseModel):

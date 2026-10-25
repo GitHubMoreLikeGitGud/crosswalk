@@ -90,6 +90,7 @@ export const PARAM_PATTERNS = {
   station_list: /^US[A-Z0-9]{9}(,US[A-Z0-9]{9}){0,59}$/u,
   element: /^(TMAX|TMIN)$/u,
   sic: /^\d{4}$/u,
+  fema_quarter: /^CY\d{4}Q[1-4]$/u,
 } as const;
 export type ParamKind = keyof typeof PARAM_PATTERNS;
 
@@ -127,6 +128,24 @@ export const TEMPLATE_PARAMS: Record<string, Record<string, ParamKind>> = {
   // The governed USL copies (keys, descriptions, DQ): slow reads for the evidence drawer, not the hot path.
   usl_utility: { cik10: "cik10" },
   usl_revenue: { cik10: "cik10", period: "period" },
+  // Crosswalk reads (zetaris/sql/01_cw_fema, 02_cw_stations, 05_cw_seeds): one quarter of FEMA major-disaster
+  // declarations (cw.fema_declarations_dr_<yyyy>q<n>), the OpenFEMA catalogue, the stations inventory lookup.
+  fema_declarations: { quarter: "fema_quarter" },
+  fema_by_state: { quarter: "fema_quarter" },
+  catalogue_list: {},
+  stations_lookup: { ids: "station_list" },
+  // The join map (zetaris/sql/06_cw_joinmap_select.sql): left_keys and matched_keys per key, plus orphan samples.
+  joinmap_cik: { period: "period" },
+  joinmap_cik_orphans: { period: "period" },
+  joinmap_loc: { period: "period" },
+  joinmap_fema_state: { quarter: "fema_quarter" },
+  joinmap_fema_state_orphans: { quarter: "fema_quarter" },
+  joinmap_station: {},
+  joinmap_sic: {},
+  joinmap_sic_orphans: {},
+  // DQ on the Crosswalk USL: the FK rule sic on utility (one invalid row expected, MGE Energy).
+  dq_run_sic: {},
+  dq_invalid_sic: {},
 };
 
 /** Client-side bound per template id where the gateway sets its own bound (gateway/templates.py
@@ -138,6 +157,8 @@ export const TEMPLATE_TIMEOUT_MS: Record<string, number> = {
   dq_invalid: 630_000,
   dq_run_coverage: 630_000,
   usl_utility: 330_000,
+  dq_run_sic: 630_000,
+  dq_invalid_sic: 630_000,
 };
 
 /** Parameter kinds per registrar action, mirroring gateway/templates.py REGISTRAR_PLANS. Each
@@ -147,6 +168,8 @@ export const REGISTRAR_PARAMS: Record<string, Record<string, ParamKind>> = {
   register_frames: { tag: "tag", period: "period" },
   register_concept: { cik10: "cik10", tag: "tag" },
   register_submission: { cik10: "cik10" },
+  register_fema: { quarter: "fema_quarter" },
+  register_stations: {},
 };
 
 export class BadParams extends Error {

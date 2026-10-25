@@ -65,6 +65,7 @@ PARAM_PATTERNS = {
     "station_list": re.compile(r"^US[A-Z0-9]{9}(,US[A-Z0-9]{9}){0,59}$"),  # 1 to 60 ids, comma-separated (56 seed stations)
     "element": re.compile(r"^(TMAX|TMIN)$"),
     "sic": re.compile(r"^\d{4}$"),
+    "fema_quarter": re.compile(r"^CY\d{4}Q[1-4]$"),  # a calendar quarter of FEMA declarations (any quarter, unlike period)
 }
 
 # How a validated value is written into the SQL. A kind not listed here is substituted as is;
@@ -72,6 +73,23 @@ PARAM_PATTERNS = {
 RENDERERS = {
     "station_list": lambda v: ", ".join(f"'{s}'" for s in v.split(",")),
 }
+
+
+def fema_quarter_bounds(value: str) -> dict[str, str]:
+    """Extra placeholders derived from a validated fema_quarter CY<yyyy>Q<n>: {quarter_slug} (2025q1, the
+    object-name suffix), {quarter_start} and {quarter_end} (ISO instants, [start, end) of the quarter)."""
+    year, q = int(value[2:6]), int(value[7])
+    start_month = 3 * q - 2
+    end_year, end_month = (year + 1, 1) if q == 4 else (year, start_month + 3)
+    return {
+        "quarter_slug": f"{year}q{q}",
+        "quarter_start": f"{year:04d}-{start_month:02d}-01T00%3A00%3A00.000Z",
+        "quarter_end": f"{end_year:04d}-{end_month:02d}-01T00%3A00%3A00.000Z",
+    }
+
+
+# Placeholders derived from a validated value (kind -> function); render() substitutes them too.
+DERIVED = {"fema_quarter": fema_quarter_bounds}
 
 
 class BadParams(ValueError):
@@ -141,6 +159,34 @@ SIC_COLUMNS = "code, description, division, division_desc, major_group, major_gr
 _TP = {"tag": "tag", "period": "period"}
 _CT = {"cik10": "cik10", "tag": "tag"}
 _C = {"cik10": "cik10"}
+
+# Crosswalk objects (zetaris/sql/01_cw_fema_*.sql, 02_cw_stations_*.sql, 05_cw_seeds_*.sql, 06_cw_joinmap_select.sql).
+FEMA_RAW = "CW_FEMA.declarations_dr_{quarter_slug}"
+FEMA_VIEW = "cw.fema_declarations_dr_{quarter_slug}"
+FEMA_CATALOGUE_RAW = "CW_FEMA.datasets_catalogue"
+FEMA_CATALOGUE_VIEW = "cw.fema_catalogue"
+STATIONS_RAW = "CW_GHCN.ghcnd_stations_txt"
+STATIONS_VIEW = "cw.stations"
+SEED_UTILITIES_VIEW = "cw.seed_utilities"
+UTILITY_STATES_VIEW = "cw.utility_states"
+SEED_STATIONS_VIEW = "cw.seed_stations"
+STATES_VIEW = "cw.states"
+FEMA_COLUMNS = ("disaster_number, state, declaration_date, incident_type, declaration_title, declaration_type, "
+                "fips_state_code, fips_county_code, designated_area")
+FEMA_ENDPOINT = ("https://www.fema.gov/api/open/v2/DisasterDeclarationsSummaries?%24filter=declarationType%20eq%20%27DR%27"
+                 "%20and%20declarationDate%20ge%20%27{quarter_start}%27%20and%20declarationDate%20lt%20%27{quarter_end}%27&%24top=1000")
+_FQ = {"quarter": "fema_quarter"}
+_NONE = {}
+# The three CY2025Q1-style frames views of one period as one key set, LPAD applied to the integer cik.
+_FRAMES_CIKS = " UNION ".join(
+    f"SELECT DISTINCT LPAD(CAST(cik AS STRING), 10, '0') AS k FROM cw.frames_{t}_{{period}}"
+    for t in ("Revenues", "RevenueFromContractWithCustomerExcludingAssessedTax", "RegulatedAndUnregulatedOperatingRevenue"))
+_FRAMES_LOCS = " UNION ".join(
+    f"SELECT DISTINCT LPAD(CAST(cik AS STRING), 10, '0') AS cik, loc, SUBSTR(loc, 4, 2) AS loc_state FROM cw.frames_{t}_{{period}}"
+    for t in ("Revenues", "RevenueFromContractWithCustomerExcludingAssessedTax", "RegulatedAndUnregulatedOperatingRevenue"))
+_FRAMES_VIEWS_OF_PERIOD = tuple(
+    f"cw.frames_{t}_{{period}}" for t in ("Revenues", "RevenueFromContractWithCustomerExcludingAssessedTax", "RegulatedAndUnregulatedOperatingRevenue"))
+_MATCH = "SELECT COUNT(DISTINCT l.k) AS left_keys, COUNT(DISTINCT CASE WHEN r.k IS NOT NULL THEN l.k END) AS matched_keys"
 
 # GHCN and the USL (reference SQL: zetaris/sql/won-reference/04_won_ghcn_*.sql, 05_won_usl_*.sql).
 USL = "lightning.metastore.crosswalk.crosswalk_usl"
@@ -237,7 +283,83 @@ TEMPLATES: dict[str, Template] = {
            {"cik10": "cik10", "period": "period"}, (f"{USL}.revenue_quarter",), USL_REVENUE_VIEWS,
            "One filer's revenue facts for one calendar quarter from the USL revenue_quarter table, every tag it reported under "
            "(val as DOUBLE, accn of the filing frames served, is_comparative when that filing is later than the period's year)."),
+        # -- Crosswalk reads (zetaris/sql/01, 02, 05, 06): FEMA declarations, the catalogue, the stations inventory --
+        _t("fema_declarations", f"SELECT {FEMA_COLUMNS} FROM {FEMA_VIEW} ORDER BY disaster_number, fips_county_code",
+           {"quarter": "fema_quarter"}, (FEMA_VIEW,), (FEMA_VIEW,),
+           "Every major-disaster designated area declared in one calendar quarter (cached OpenFEMA view): disaster_number, state, "
+           "declaration_date, incident_type, declaration_title, declaration_type, fips_state_code, fips_county_code, designated_area."),
+        _t("fema_by_state", f"SELECT state, COUNT(*) AS designated_areas, COUNT(DISTINCT disaster_number) AS declarations "
+           f"FROM {FEMA_VIEW} GROUP BY state ORDER BY state",
+           {"quarter": "fema_quarter"}, (FEMA_VIEW,), (FEMA_VIEW,),
+           "Designated areas and distinct declarations per state for one quarter's major disasters."),
+        _t("catalogue_list", f"SELECT name, version, title, api_endpoint, last_dataset_refresh FROM {FEMA_CATALOGUE_VIEW} ORDER BY name, version",
+           {}, (FEMA_CATALOGUE_VIEW,), (FEMA_CATALOGUE_VIEW,),
+           "The OpenFEMA dataset catalogue (one row per dataset and version): the live part of search_catalogue."),
+        _t("stations_lookup", f"SELECT id, state, name, latitude, longitude FROM {STATIONS_VIEW} WHERE id IN ({{ids}}) ORDER BY id",
+           {"ids": "station_list"}, (STATIONS_VIEW,), (STATIONS_VIEW,),
+           "Station id, state (columns 39-40 of ghcnd-stations.txt), name and coordinates for up to 60 GHCN station ids "
+           "(the cached one-column CSV parsed with SUBSTR; about 8 s of filestore resolution per call)."),
+        # -- the join map: match rate = matched distinct left keys / distinct left keys, over cached views only ------------
+        _t("joinmap_cik", f"{_MATCH} FROM (SELECT DISTINCT cik AS k FROM {SEED_UTILITIES_VIEW}) l LEFT JOIN ({_FRAMES_CIKS}) r ON r.k = l.k",
+           {"period": "period"}, (SEED_UTILITIES_VIEW,) + _FRAMES_VIEWS_OF_PERIOD, (SEED_UTILITIES_VIEW,) + _FRAMES_VIEWS_OF_PERIOD,
+           "Key (a): seed submissions cik (10-digit string) vs frames cik under lpad10, over the three frames views of one period."),
+        _t("joinmap_cik_orphans", f"SELECT u.cik AS orphan_cik, u.name FROM {SEED_UTILITIES_VIEW} u LEFT JOIN ({_FRAMES_CIKS}) r ON r.k = u.cik "
+           f"WHERE r.k IS NULL ORDER BY u.cik LIMIT 10",
+           {"period": "period"}, (SEED_UTILITIES_VIEW,) + _FRAMES_VIEWS_OF_PERIOD, (SEED_UTILITIES_VIEW,) + _FRAMES_VIEWS_OF_PERIOD,
+           "Key (a) orphans: seed filers with no fact in the period under any of the three tags."),
+        _t("joinmap_loc", f"SELECT COUNT(DISTINCT l.cik) AS left_keys, COUNT(DISTINCT CASE WHEN l.loc_state = r.hq_state THEN l.cik END) AS matched_keys "
+           f"FROM ({_FRAMES_LOCS}) l JOIN {SEED_UTILITIES_VIEW} r ON r.cik = l.cik",
+           {"period": "period"}, (SEED_UTILITIES_VIEW,) + _FRAMES_VIEWS_OF_PERIOD, (SEED_UTILITIES_VIEW,) + _FRAMES_VIEWS_OF_PERIOD,
+           "Key (b): frames loc US-XX under substr(4,2) vs the submissions business-address state, for the seed filers present in the period."),
+        _t("joinmap_fema_state", f"{_MATCH} FROM (SELECT DISTINCT state AS k FROM {FEMA_VIEW}) l "
+           f"LEFT JOIN (SELECT DISTINCT state AS k FROM {UTILITY_STATES_VIEW}) r ON r.k = l.k",
+           {"quarter": "fema_quarter"}, (FEMA_VIEW, UTILITY_STATES_VIEW), (FEMA_VIEW, UTILITY_STATES_VIEW),
+           "Key (c): FEMA state (two letters) vs the seed utilities' served states under identity."),
+        _t("joinmap_fema_state_orphans", f"SELECT l.k AS orphan_state FROM (SELECT DISTINCT state AS k FROM {FEMA_VIEW}) l "
+           f"LEFT JOIN (SELECT DISTINCT state AS k FROM {UTILITY_STATES_VIEW}) r ON r.k = l.k WHERE r.k IS NULL ORDER BY l.k LIMIT 10",
+           {"quarter": "fema_quarter"}, (FEMA_VIEW, UTILITY_STATES_VIEW), (FEMA_VIEW, UTILITY_STATES_VIEW),
+           "Key (c) orphans: FEMA states no seed utility serves."),
+        _t("joinmap_station", f"SELECT COUNT(DISTINCT l.k) AS left_keys, COUNT(DISTINCT CASE WHEN r.id IS NOT NULL THEN l.k END) AS matched_keys, "
+           f"COUNT(DISTINCT CASE WHEN r.state = l.state THEN l.k END) AS state_equal "
+           f"FROM (SELECT DISTINCT id AS k, state FROM {SEED_STATIONS_VIEW}) l LEFT JOIN {STATIONS_VIEW} r ON r.id = l.k",
+           {}, (SEED_STATIONS_VIEW, STATIONS_VIEW), (SEED_STATIONS_VIEW, STATIONS_VIEW),
+           "Key (d): seed station id vs the stations inventory id under identity, with the count of matched stations whose state agrees."),
+        _t("joinmap_sic", f"{_MATCH}, COUNT(DISTINCT l.cik) AS left_rows, COUNT(DISTINCT CASE WHEN r.k IS NOT NULL THEN l.cik END) AS matched_rows "
+           f"FROM (SELECT cik, sic AS k FROM {SEED_UTILITIES_VIEW}) l LEFT JOIN (SELECT DISTINCT code AS k FROM {SIC_VIEW}) r ON r.k = l.k",
+           {}, (SEED_UTILITIES_VIEW, SIC_VIEW), (SEED_UTILITIES_VIEW, SIC_VIEW),
+           "Key (e): submissions SIC vs sic_codes.code under identity, as distinct codes (left_keys) and as utilities (left_rows)."),
+        _t("joinmap_sic_orphans", f"SELECT l.sic AS orphan_sic, l.cik, l.name FROM {SEED_UTILITIES_VIEW} l "
+           f"LEFT JOIN (SELECT DISTINCT code AS k FROM {SIC_VIEW}) r ON r.k = l.sic WHERE r.k IS NULL ORDER BY l.sic, l.cik LIMIT 10",
+           {}, (SEED_UTILITIES_VIEW, SIC_VIEW), (SEED_UTILITIES_VIEW, SIC_VIEW),
+           "Key (e) orphans: seed utilities whose SIC the reference lacks (MGE Energy, 4900)."),
+        # -- DQ on the Crosswalk USL: the FK rule sic on utility (expect one invalid row, MGE Energy) ---------------------
+        _t("dq_run_sic", f"RUN DQ sic TABLE {USL}.utility", {}, (f"{USL}.utility",), (SEED_UTILITIES_VIEW, SIC_VIEW),
+           "Run the FK rule utility.sic -> sic_code.sic: total, valid and invalid counts.", timeout_s=DQ_TIMEOUT_S),
+        _t("dq_invalid_sic", f"SHOW DQ INVALID RECORD sic TABLE {USL}.utility", {}, (f"{USL}.utility",), (SEED_UTILITIES_VIEW, SIC_VIEW),
+           "Every utility row that fails the FK rule sic (the SIC orphans).", timeout_s=DQ_TIMEOUT_S),
         # -- registrar templates: only inside a plan (POST /registrar/<action>) ----------------------
+        _t("registrar_fema_table",
+           f'CREATE LIGHTNING REST TABLE declarations_dr_{{quarter_slug}} FROM CW_FEMA REQUEST( endpoint "{FEMA_ENDPOINT}", {REST_REQUEST_TAIL}',
+           {"quarter": "fema_quarter"}, (FEMA_RAW,), (), "One quarter of FEMA major-disaster declarations as a raw REST table (filter percent-encoded).", "registrar"),
+        _t("registrar_fema_view",
+           f"CREATE SCHEMASTORE VIEW fema_declarations_dr_{{quarter_slug}} WITH CONTAINER cw AS SELECT d.`disasterNumber` AS disaster_number, "
+           f"d.state AS state, d.`declarationDate` AS declaration_date, d.`incidentType` AS incident_type, d.`declarationTitle` AS declaration_title, "
+           f"d.`declarationType` AS declaration_type, d.`fipsStateCode` AS fips_state_code, d.`fipsCountyCode` AS fips_county_code, "
+           f"d.`designatedArea` AS designated_area FROM {FEMA_RAW} LATERAL VIEW explode(`DisasterDeclarationsSummaries`) AS d",
+           {"quarter": "fema_quarter"}, (FEMA_VIEW,), (FEMA_RAW,), "The declarations exploded, one row per designated area.", "registrar"),
+        _t("registrar_fema_describe", f"DESCRIBE {FEMA_VIEW}", {"quarter": "fema_quarter"}, (FEMA_VIEW,), (), "Columns of the FEMA view."),
+        _t("registrar_fema_cache", f"CACHE TABLE {FEMA_VIEW}", {"quarter": "fema_quarter"}, (FEMA_VIEW,), (FEMA_VIEW,), "Cache the FEMA view.", "registrar"),
+        _t("registrar_stations_table",
+           f'CREATE LIGHTNING FILESTORE TABLE ghcnd_stations_txt FROM CW_GHCN FORMAT CSV OPTIONS ( PATH "s3a://noaa-ghcn-pds/ghcnd-stations.txt", '
+           f'delimiter "|", quote "", header "false", inferSchema "false", isS3BucketPublic "true", useS3PathStyleAccess "true", s3Endpoint "s3.us-east-1.amazonaws.com" )',
+           {}, (STATIONS_RAW,), (), "The GHCN station inventory as a one-column CSV (a delimiter that never occurs in the file).", "registrar"),
+        _t("registrar_stations_view",
+           f"CREATE SCHEMASTORE VIEW stations WITH CONTAINER cw AS SELECT SUBSTR(_c0, 1, 11) AS id, SUBSTR(_c0, 39, 2) AS state, "
+           f"TRIM(SUBSTR(_c0, 42, 30)) AS name, CAST(TRIM(SUBSTR(_c0, 13, 8)) AS DOUBLE) AS latitude, CAST(TRIM(SUBSTR(_c0, 22, 9)) AS DOUBLE) AS longitude "
+           f"FROM {STATIONS_RAW}",
+           {}, (STATIONS_VIEW,), (STATIONS_RAW,), "The inventory parsed with SUBSTR (1-based spans from readme.txt).", "registrar"),
+        _t("registrar_stations_describe", f"DESCRIBE {STATIONS_VIEW}", {}, (STATIONS_VIEW,), (), "Columns of the stations view."),
+        _t("registrar_stations_cache", f"CACHE TABLE {STATIONS_VIEW}", {}, (STATIONS_VIEW,), (STATIONS_VIEW,), "Cache the stations view (one S3 scan).", "registrar"),
         _t("registrar_frames_table",
            f'CREATE LIGHTNING REST TABLE frames_{{tag}}_{{period}} FROM CW_SEC REQUEST( '
            f'endpoint "https://data.sec.gov/api/xbrl/frames/us-gaap/{{tag}}/USD/{{period}}.json", {REST_REQUEST_TAIL}',
@@ -288,6 +410,10 @@ REGISTRAR_PLANS: dict[str, Plan] = {
               "Register one filer's companyconcept history (cik10, tag): raw REST table, flattened view, DESCRIBE, CACHE."),
         _plan("register_submission", _C, "registrar_submission",
               "Register one filer's submissions profile (cik10): raw REST table, scalar view, DESCRIBE, CACHE."),
+        _plan("register_fema", _FQ, "registrar_fema",
+              "Register one calendar quarter of FEMA major-disaster declarations (quarter CY<yyyy>Q<n>): raw REST table, exploded view, DESCRIBE, CACHE."),
+        _plan("register_stations", _NONE, "registrar_stations",
+              "Register the GHCN station inventory ghcnd-stations.txt: one-column CSV filestore table, SUBSTR view, DESCRIBE, CACHE."),
     ]
 }
 
@@ -324,6 +450,8 @@ def render(template_id: str, params: dict | None) -> tuple[Template, str]:
     sql = t.sql
     for name, value in values.items():
         sql = sql.replace("{" + name + "}", RENDERERS.get(t.params[name], lambda v: v)(value))
+        for extra, rendered in DERIVED.get(t.params[name], lambda v: {})(value).items():
+            sql = sql.replace("{" + extra + "}", rendered)
     return t, sql
 
 

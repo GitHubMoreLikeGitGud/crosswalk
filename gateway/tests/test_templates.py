@@ -4,7 +4,8 @@ from gateway import allowlist, templates
 from gateway.templates import BadParams, Plan, Step, Template, render
 
 SAMPLES = {"cik10": "0001326160", "tag": "Revenues", "period": "CY2025Q1", "year": "2025", "quarter": "1",
-           "station": "USW00013740", "station_list": "USW00013740,USW00013722", "element": "TMAX", "sic": "4931"}
+           "station": "USW00013740", "station_list": "USW00013740,USW00013722", "element": "TMAX", "sic": "4931",
+           "fema_quarter": "CY2025Q1"}
 USL = "lightning.metastore.crosswalk.crosswalk_usl"
 
 FRAMES_CREATE = Template(
@@ -101,6 +102,8 @@ def test_usl_and_dq_templates_render_to_fixed_reader_statements():
     ("station_list", "", False),
     ("element", "TMAX", True), ("element", "TMIN", True), ("element", "PRCP", False), ("element", "tmax", False),
     ("sic", "4931", True), ("sic", "0111", True), ("sic", "491", False), ("sic", "49311", False), ("sic", "4931'", False),
+    ("fema_quarter", "CY2025Q1", True), ("fema_quarter", "CY2024Q4", True), ("fema_quarter", "CY2025Q5", False),
+    ("fema_quarter", "2025Q1", False), ("fema_quarter", "CY2025Q1'", False),
 ])
 def test_param_patterns(kind, value, ok):
     if ok:
@@ -253,3 +256,71 @@ def test_plan_params_take_the_plan_parameters_from_a_request_body():
     for bad in ({"tag": "Revenues"}, {"tag": "Revenues", "period": "CY2025Q4"}, {"tag": 1, "period": "CY2025Q1"}):
         with pytest.raises(BadParams):
             templates.plan_params(plan, bad)
+
+
+def test_fema_quarter_derives_the_object_suffix_and_the_percent_encoded_quarter_bounds():
+    assert templates.fema_quarter_bounds("CY2025Q1") == {
+        "quarter_slug": "2025q1", "quarter_start": "2025-01-01T00%3A00%3A00.000Z", "quarter_end": "2025-04-01T00%3A00%3A00.000Z"}
+    assert templates.fema_quarter_bounds("CY2024Q4") == {
+        "quarter_slug": "2024q4", "quarter_start": "2024-10-01T00%3A00%3A00.000Z", "quarter_end": "2025-01-01T00%3A00%3A00.000Z"}
+    _, table = render("registrar_fema_table", {"quarter": "CY2025Q1"})
+    assert table.startswith("CREATE LIGHTNING REST TABLE declarations_dr_2025q1 FROM CW_FEMA REQUEST(")
+    assert ("%24filter=declarationType%20eq%20%27DR%27%20and%20declarationDate%20ge%20%272025-01-01T00%3A00%3A00.000Z%27"
+            "%20and%20declarationDate%20lt%20%272025-04-01T00%3A00%3A00.000Z%27&%24top=1000") in table
+    assert " " not in table.split('endpoint "')[1].split('"')[0]  # the URL carries no raw space, $ or quote
+    assert "$" not in table and "{" not in table
+    _, view = render("registrar_fema_view", {"quarter": "CY2025Q1"})
+    assert view.startswith("CREATE SCHEMASTORE VIEW fema_declarations_dr_2025q1 WITH CONTAINER cw AS SELECT")
+    assert "LATERAL VIEW explode(`DisasterDeclarationsSummaries`) AS d" in view and "FROM CW_FEMA.declarations_dr_2025q1" in view
+    assert render("fema_by_state", {"quarter": "CY2025Q1"})[1].endswith("FROM cw.fema_declarations_dr_2025q1 GROUP BY state ORDER BY state")
+
+
+def test_crosswalk_reader_templates_read_the_cached_views():
+    _, sql = render("fema_declarations", {"quarter": "CY2025Q1"})
+    assert sql.startswith("SELECT disaster_number, state, declaration_date, incident_type") and "FROM cw.fema_declarations_dr_2025q1" in sql
+    assert render("catalogue_list", {})[1] == ("SELECT name, version, title, api_endpoint, last_dataset_refresh FROM cw.fema_catalogue "
+                                               "ORDER BY name, version")
+    _, sql = render("stations_lookup", {"ids": "USW00013740,USW00013722"})
+    assert "FROM cw.stations WHERE id IN ('USW00013740', 'USW00013722') ORDER BY id" in sql
+    with pytest.raises(BadParams):
+        render("stations_lookup", {"ids": "USW00013740','USW00013722"})
+
+
+def test_joinmap_templates_measure_distinct_left_keys_over_cached_views():
+    _, a = render("joinmap_cik", {"period": "CY2025Q1"})
+    assert a.startswith("SELECT COUNT(DISTINCT l.k) AS left_keys, COUNT(DISTINCT CASE WHEN r.k IS NOT NULL THEN l.k END) AS matched_keys")
+    assert "FROM (SELECT DISTINCT cik AS k FROM cw.seed_utilities) l LEFT JOIN (" in a
+    assert a.count("LPAD(CAST(cik AS STRING), 10, '0')") == 3 and "cw.frames_Revenues_CY2025Q1" in a
+    assert "cw.frames_RegulatedAndUnregulatedOperatingRevenue_CY2025Q1" in a and "CY2024" not in a
+    _, b = render("joinmap_loc", {"period": "CY2024Q1"})
+    assert "SUBSTR(loc, 4, 2) AS loc_state" in b and "l.loc_state = r.hq_state" in b and "CY2024Q1" in b
+    _, c = render("joinmap_fema_state", {"quarter": "CY2025Q1"})
+    assert "FROM (SELECT DISTINCT state AS k FROM cw.fema_declarations_dr_2025q1) l" in c and "cw.utility_states" in c
+    _, d = render("joinmap_station", {})
+    assert "FROM cw.seed_stations) l LEFT JOIN cw.stations r ON r.id = l.k" in d and "state_equal" in d
+    _, e = render("joinmap_sic", {})
+    assert "cw.seed_utilities" in e and "cw.sic_codes" in e and "left_rows" in e
+    for tid in ("joinmap_cik_orphans", "joinmap_fema_state_orphans", "joinmap_sic_orphans"):
+        params = {name: SAMPLES[kind] for name, kind in templates.TEMPLATES[tid].params.items()}
+        sql = render(tid, params)[1]
+        assert sql.endswith("LIMIT 10") and "IS NULL" in sql
+    # a view is referenced once per statement (a second reference to cw.seed_utilities fails to resolve on 2.4.3.1)
+    assert render("joinmap_cik_orphans", {"period": "CY2025Q1"})[1].count("cw.seed_utilities") == 1
+    for tid in ("joinmap_cik", "joinmap_loc", "joinmap_fema_state", "joinmap_station", "joinmap_sic"):
+        assert templates.TEMPLATES[tid].role == "reader" and "CW_" not in templates.TEMPLATES[tid].sql  # cached views only, never raw tables
+
+
+def test_crosswalk_registrar_plans():
+    fema = templates.REGISTRAR_PLANS["register_fema"]
+    assert fema.params == {"quarter": "fema_quarter"}
+    assert [templates.TEMPLATES[s.template_id].sql.split()[0] for s in fema.steps] == ["CREATE", "CREATE", "DESCRIBE", "CACHE"]
+    stations = templates.REGISTRAR_PLANS["register_stations"]
+    assert stations.params == {}
+    _, table = render("registrar_stations_table", {})
+    assert table.startswith("CREATE LIGHTNING FILESTORE TABLE ghcnd_stations_txt FROM CW_GHCN FORMAT CSV OPTIONS (")
+    assert 'PATH "s3a://noaa-ghcn-pds/ghcnd-stations.txt"' in table and 'delimiter "|"' in table and 'quote ""' in table
+    assert allowlist.check(table, "registrar") == "register"
+    _, view = render("registrar_stations_view", {})
+    assert "SUBSTR(_c0, 1, 11) AS id, SUBSTR(_c0, 39, 2) AS state" in view and "FROM CW_GHCN.ghcnd_stations_txt" in view
+    assert render("dq_run_sic", {})[1] == f"RUN DQ sic TABLE {USL}.utility"
+    assert render("dq_invalid_sic", {})[1] == f"SHOW DQ INVALID RECORD sic TABLE {USL}.utility"
