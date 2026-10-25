@@ -54,4 +54,4 @@ Spoken by a synthetic text-to-speech voice. Times are the start of each line in 
 | FEMA's Q1 2023 declarations registered in 1.6 seconds | the warm run on camera (its register_source row, 1.6 s) |
 | eight measure steps skipped | the warm run on camera (its timeline: 8 measure steps not run; its footer: 8 skipped) |
 | 25 of 30 (baseline) and 3 of 11 (model) VERIFIED; the baseline wins | `docs/eval-report.md` section 2 (5 cold runs with the model) |
-| 179.5 seconds and 24 decisions by hand; the agent asks for none | `docs/eval-report.md` section 4 (manual baseline) |
+| 179.5 seconds and 24 decisions by hand; the agent asks for none | `docs/eval-report.md` section 4 (manual baseline). The 179.5 s is the session time of statements pre-written as gateway templates, not a person's time to write and read them; the spoken "an expert" says more than that section measures |
