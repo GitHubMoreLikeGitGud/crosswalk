@@ -756,6 +756,7 @@ export function noteMaterial(ctx: QuestionContext): { allowed: AllowedNumber[]; 
   };
   const findings: string[] = [];
   const keyFindings: string[] = [];
+  const genericFindings: string[] = [];
   const answerFindings: string[] = [];
   const facts = noteFacts(ctx);
   const m = /^CY(\d{4})Q([1-4])$/u.exec(ctx.quarter)!;
@@ -770,8 +771,13 @@ export function noteMaterial(ctx: QuestionContext): { allowed: AllowedNumber[]; 
     for (const o of k.orphans) for (const tok of o.match(/\d+/gu) ?? []) add(`${k.route} orphan identifier`, tok);
     // Transform names are identifiers that carry digits (lpad10, substr(4,2)); the number check would otherwise refuse a note that names them.
     for (const tok of `${k.proposal.transform} ${k.label ?? ""} ${k.key ?? ""}`.match(/\d+/gu) ?? []) add("transform or key name", tok);
-    keyFindings.push(`Key ${k.label}: ${k.matched_rows} of ${k.left_rows} matched (${num(k.rate, 3)}), ${k.verdict}${k.orphans.length ? `; orphans ${k.orphans.join("; ")}` : ""}${k.from_memory ? ` (recalled from memory; measured as ${k.key})` : ""}.`);
+    // At most three orphans per key in the note (the join map lists ten); the governed keys' findings come first.
+    const orphanText = k.orphans.length ? `; orphans ${k.orphans.slice(0, 3).join("; ")}${k.orphans.length > 3 ? " and others" : ""}` : "";
+    const line = `Key ${k.label}: ${k.matched_rows} of ${k.left_rows} matched (${num(k.rate, 3)}), ${k.verdict}${orphanText}${k.from_memory ? ` (recalled from memory; measured as ${k.key})` : ""}.`;
+    if (k.route === "match_rate") genericFindings.push(line);
+    else keyFindings.push(line);
   }
+  keyFindings.push(...genericFindings);
   for (const [v, n] of Object.entries(facts.verdicts)) add(`join map ${v} keys`, String(n));
   const summary = `The join map has ${facts.verdicts.VERIFIED} VERIFIED, ${facts.verdicts.PARTIAL} PARTIAL and ${facts.verdicts.REJECTED} REJECTED keys.`;
   findings.push(summary, ...keyFindings);
