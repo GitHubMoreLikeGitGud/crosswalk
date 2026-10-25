@@ -15,7 +15,7 @@ alwaysApply: false
 
 ## H-MEM
 
-- `new HMEM({ persistDir: "data/hmem", actor: "won-agent", minerFn })`. `minerFn` calls Nemotron with think off and strict JSON array output; the reference's model-free path is the fallback.
+- `new HMEM({ persistDir: "data/hmem", actor: "cw-agent", minerFn })`. `minerFn` calls Nemotron with think off and strict JSON array output; the reference's model-free path is the fallback.
 - Every tool result becomes fact records with provenance `{zetaris_object, sql_sha256, endpoint, accn, filed, licence, retrieved_at, latency_ms, cache_state}` and `source: "zetaris:<object>"`. Tags: `utility:<cik10>`, `tag:<xbrl tag>`, `period:<CYyyyyQn>`, `station:<id>`, `state:<XX>`, `sic:<code>`, `filing:<accn>`.
 - `recast_comparative` conflicts (the comparative column of the current filing differs from the value first filed for the same period) are queued as `conflict_detected` and resolved by rule R1 (use the comparative as reported in the current filing), with the resolution recorded; both values and both accession numbers stay in the ledger. The analyst can override in the UI (actor `analyst`); the override is logged, nothing is deleted.
 - `tag_choice` and `station_choice` facts persist across runs; a warm run skips the probe chunks and counts the skipped chunks.
@@ -24,10 +24,10 @@ alwaysApply: false
 
 ## World Model
 
-- `new WorldModel({ storage: "local", namespace: "weatherornot", directory: "data/world", conflictPolicy: "most-recent-wins" })`.
+- `new WorldModel({ storage: "local", namespace: "crosswalk", directory: "data/world", conflictPolicy: "most-recent-wins" })`.
 - Entities: utility (`sec:<cik10>`), state, station (`ghcn:<id>`), sic, filing (`sec:<accn>`), quarter. Relationships: `serves` (valid-from/to), `represented_by`, `peer_of`, `reported_in`, `recasts`.
 - Provenance `at` comes from the source record (filing `filed` date, GHCN `DATE`), never from retrieval time, so re-ingest is idempotent (empty diff; reference check).
-- The vendored `control-plane/live.html` shows only its own seed data; never present it as showing Weather-or-Not data.
+- The vendored `control-plane/live.html` shows only its own seed data; never present it as showing Crosswalk data.
 
 ## Markovian
 
@@ -40,4 +40,4 @@ alwaysApply: false
 
 - There is no upstream reference. Our subset (`agent/src/contract/`) is labelled "partial reimplementation" everywhere it is described.
 - Guard: scan every untrusted text (filing names, SIC descriptions, anything read from a source) before any model sees it; on a hit wrap it in `<untrusted>` and raise the flag `untrusted_text`. Never drop text silently.
-- Execution contract: HMAC-SHA256 over canonical JSON with `WON_CONTRACT_SECRET`, policy pack `weather-or-not-scout-subset@1`, surfaces `won-ui` and `won-agent`, expiry 15 minutes, one-shot use. Reads are low risk; the registrar plans (`register_frames`, `register_concept`, `register_submission`) are medium risk; an analyst override of a recast resolution is high risk and needs an `analyst-approval` with a reason on the `won-ui` surface. Verified by both the TypeScript side and the Python registrar (`gateway/contracts.py`), which share a test vector. Describe it as an integrity check, not cryptographic-grade security.
+- Execution contract: HMAC-SHA256 over canonical JSON with `CW_CONTRACT_SECRET`, policy pack `crosswalk-scout-subset@1`, surfaces `cw-ui` and `cw-agent`, expiry 15 minutes, one-shot use. Reads are low risk; the registrar plans (`register_frames`, `register_concept`, `register_submission`) are medium risk; an analyst override of a recast resolution is high risk and needs an `analyst-approval` with a reason on the `cw-ui` surface. Verified by both the TypeScript side and the Python registrar (`gateway/contracts.py`), which share a test vector. Describe it as an integrity check, not cryptographic-grade security.

@@ -10,7 +10,7 @@ alwaysApply: false
 
 | Source | Licence | How we use it |
 |---|---|---|
-| SEC EDGAR XBRL APIs (`frames`, `companyconcept`, `submissions` on data.sec.gov) | US Government work, public domain; SEC fair-access policy | Queried live through Zetaris, never redistributed: no extracted fact values in the repository. Every request carries the declared `User-Agent` from `WON_USER_AGENT`; at most 10 requests per second. Attribution: "Data from SEC EDGAR (sec.gov)". |
+| SEC EDGAR XBRL APIs (`frames`, `companyconcept`, `submissions` on data.sec.gov) | US Government work, public domain; SEC fair-access policy | Queried live through Zetaris, never redistributed: no extracted fact values in the repository. Every request carries the declared `User-Agent` from `CW_USER_AGENT`; at most 10 requests per second. Attribution: "Data from SEC EDGAR (sec.gov)". |
 | NOAA GHCN-Daily parquet (Registry of Open Data on AWS, `s3://noaa-ghcn-pds`) | CC0 / public domain (US Government work); NOAA asks for attribution | Read anonymously from the public bucket as filestore tables. Attribution: "NOAA National Centers for Environmental Information, Global Historical Climatology Network daily (GHCN-Daily)". |
 | company_dns V4 (SIC reference, company-dns.mediumroast.io) | Apache-2.0 | One registration of the SIC code list, called with an identifying `User-Agent`. Attribution to the company_dns project. |
 

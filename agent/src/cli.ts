@@ -1,4 +1,4 @@
-// Weather-or-Not command line.
+// Crosswalk command line.
 //
 //   npm run ask -- --cik 0001031296 --period CY2025Q1 --claim "colder weather" [--json] [--out <file>]
 //                  [--utility FE|"FirstEnergy"] [--think on|off] [--max-chunks 10] [--no-model]
@@ -10,7 +10,7 @@
 //   npm run cli -- runs                          list the saved runs
 //
 // The commands that open data/hmem and data/world (ask, warmup, why) take data/agent.lock.
-// Adapted from ClearShelf (same author, Apache-2.0).
+// Adapted from Weather-or-Not and ClearShelf (same author, Apache-2.0).
 
 import { mkdirSync, writeFileSync } from "node:fs";
 import os from "node:os";
@@ -73,7 +73,7 @@ function bar(x: number, lo: number, hi: number, scale = 0.2): string {
 export function printRun(r: RunResult): string {
   const c = r.card;
   const out: string[] = [];
-  out.push(`Weather-or-Not  ${c.utility?.name ?? r.cik} (CIK ${r.cik})  ${r.period} vs ${r.previous_period}  run ${r.run_id}`);
+  out.push(`Crosswalk  ${c.utility?.name ?? r.cik} (CIK ${r.cik})  ${r.period} vs ${r.previous_period}  run ${r.run_id}`);
   out.push(`Question: ${c.question}`);
   out.push("");
   const v = c.verdict;

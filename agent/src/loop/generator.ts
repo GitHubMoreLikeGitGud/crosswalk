@@ -17,7 +17,7 @@
 //
 // The model never decides: the deterministic tools compute, and the host owns the checklist
 // (the model's echo of it is ignored and counted).
-// Adapted from ClearShelf (same author, Apache-2.0).
+// Adapted from Weather-or-Not and ClearShelf (same author, Apache-2.0).
 
 import type { Generator } from "../../../engines/markovian/reference/src/index.ts";
 import { estimateTokens } from "../../../engines/markovian/reference/src/index.ts";
@@ -112,7 +112,7 @@ export function fitState(state: LoopState, budgetTokens: number): string {
 // ---------- planner prompt and schema ----------
 
 const LOOP_PROTOCOL = `
-Loop protocol (Weather-or-Not host):
+Loop protocol (Crosswalk host):
 - This is one chunk of a bounded chain. The user message holds the goal and, after the first chunk, the CARRYOVER STATE the host wrote at the end of the previous chunk: checklist status, one-line facts with their evidence ids, your earlier hypotheses and next step. Earlier tool results reach you only as those facts.
 - You get at most two steps per chunk. After your first step the host runs the tool and appends its result digest.
 - The host owns the checklist. Copy the host checklist into state.checklist unchanged.

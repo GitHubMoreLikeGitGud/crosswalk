@@ -14,22 +14,22 @@ from gateway.templates import Plan, Step, Template
 
 SECRET = "test" * 10
 ACTION = "register_frames"
-UA = "WeatherOrNot/0.1 test"
+UA = "Crosswalk/0.1 test"
 
 FRAMES_TEMPLATES = [
     Template("registrar_frames_table",
-             'CREATE LIGHTNING REST TABLE frames_{tag}_{period} FROM WON_SEC REQUEST( '
+             'CREATE LIGHTNING REST TABLE frames_{tag}_{period} FROM CW_SEC REQUEST( '
              'endpoint "https://data.sec.gov/api/xbrl/frames/us-gaap/{tag}/USD/{period}.json", method "get", '
              'response_type "json", http_encoding "URLENCODED" ) HEADER ( user-agent "YOUR_APP_NAME YOUR_CONTACT_EMAIL" ) BODY ()',
-             {"tag": "tag", "period": "period"}, ("WON_SEC.frames_{tag}_{period}",), (), "raw frames table", "registrar"),
+             {"tag": "tag", "period": "period"}, ("CW_SEC.frames_{tag}_{period}",), (), "raw frames table", "registrar"),
     Template("registrar_frames_view",
-             "CREATE SCHEMASTORE VIEW frames_{tag}_{period} WITH CONTAINER won AS SELECT f.cik, f.entityName, f.loc, f.val, f.accn "
-             "FROM WON_SEC.frames_{tag}_{period} LATERAL VIEW explode(data) AS f",
-             {"tag": "tag", "period": "period"}, ("won.frames_{tag}_{period}",), ("WON_SEC.frames_{tag}_{period}",), "flattened view", "registrar"),
-    Template("registrar_frames_describe", "DESCRIBE won.frames_{tag}_{period}", {"tag": "tag", "period": "period"},
-             ("won.frames_{tag}_{period}",), (), "columns of the view (no source call)", "reader"),
-    Template("registrar_frames_cache", "CACHE TABLE won.frames_{tag}_{period}", {"tag": "tag", "period": "period"},
-             ("won.frames_{tag}_{period}",), ("won.frames_{tag}_{period}",), "cache the view", "registrar"),
+             "CREATE SCHEMASTORE VIEW frames_{tag}_{period} WITH CONTAINER cw AS SELECT f.cik, f.entityName, f.loc, f.val, f.accn "
+             "FROM CW_SEC.frames_{tag}_{period} LATERAL VIEW explode(data) AS f",
+             {"tag": "tag", "period": "period"}, ("cw.frames_{tag}_{period}",), ("CW_SEC.frames_{tag}_{period}",), "flattened view", "registrar"),
+    Template("registrar_frames_describe", "DESCRIBE cw.frames_{tag}_{period}", {"tag": "tag", "period": "period"},
+             ("cw.frames_{tag}_{period}",), (), "columns of the view (no source call)", "reader"),
+    Template("registrar_frames_cache", "CACHE TABLE cw.frames_{tag}_{period}", {"tag": "tag", "period": "period"},
+             ("cw.frames_{tag}_{period}",), ("cw.frames_{tag}_{period}",), "cache the view", "registrar"),
 ]
 FRAMES_PLAN = Plan(ACTION, {"tag": "tag", "period": "period"},
                    (Step("registrar_frames_table", skip_exists=True), Step("registrar_frames_view", skip_exists=True),
@@ -44,7 +44,7 @@ def contract(action, params, cid="c-reg-1", issued=None):
         "intent": {"primary": action, "parameters": params},
         "risk": {"level": "medium", "flags": [], "approvals": []},
         "toolPlan": [{"tool": f"registrar.{action}", "input": params}],
-        "scope": {"user": "won-agent", "surface": "won-agent", "capabilities": [action]},
+        "scope": {"user": "cw-agent", "surface": "cw-agent", "capabilities": [action]},
         "issuedAt": issued.isoformat().replace("+00:00", "Z"),
         "expiresAt": (issued + timedelta(minutes=15)).isoformat().replace("+00:00", "Z"),
         "policyPackVersion": POLICY_PACK_VERSION, "signedBy": "scout",
@@ -77,7 +77,7 @@ class FakeZetaris:
 
 @pytest.fixture
 def setup(tmp_path, monkeypatch):
-    monkeypatch.setenv("WON_USER_AGENT", UA)
+    monkeypatch.setenv("CW_USER_AGENT", UA)
     for t in FRAMES_TEMPLATES:
         monkeypatch.setitem(templates.TEMPLATES, t.id, t)
     monkeypatch.setitem(templates.REGISTRAR_PLANS, ACTION, FRAMES_PLAN)
@@ -131,13 +131,13 @@ def test_register_frames_runs_the_plan_in_order_with_the_declared_user_agent(set
     assert body["action"] == ACTION and body["params"] == P and body["contract_id"] == "c-reg-1" and body["skipped"] == []
     assert [s["template_id"] for s in body["steps"]] == [s.template_id for s in FRAMES_PLAN.steps]
     assert [s["kind"] for s in body["steps"]] == ["register", "register", "read", "register"]
-    assert conn.sql[0].startswith("CREATE LIGHTNING REST TABLE frames_Revenues_CY2025Q1 FROM WON_SEC")
+    assert conn.sql[0].startswith("CREATE LIGHTNING REST TABLE frames_Revenues_CY2025Q1 FROM CW_SEC")
     assert f'user-agent "{UA}"' in conn.sql[0] and "YOUR_APP_NAME" not in conn.sql[0]
-    assert conn.sql[1].startswith("CREATE SCHEMASTORE VIEW frames_Revenues_CY2025Q1 WITH CONTAINER won AS SELECT")
-    assert conn.sql[2] == "DESCRIBE won.frames_Revenues_CY2025Q1"
-    assert conn.sql[3] == "CACHE TABLE won.frames_Revenues_CY2025Q1"
+    assert conn.sql[1].startswith("CREATE SCHEMASTORE VIEW frames_Revenues_CY2025Q1 WITH CONTAINER cw AS SELECT")
+    assert conn.sql[2] == "DESCRIBE cw.frames_Revenues_CY2025Q1"
+    assert conn.sql[3] == "CACHE TABLE cw.frames_Revenues_CY2025Q1"
     assert body["steps"][2]["rows"] == [["cik", "bigint", None], ["val", "double", None]]
-    assert "won.frames_revenues_cy2025q1" in storage["cached"]
+    assert "cw.frames_revenues_cy2025q1" in storage["cached"]
     # The reply and the log keep the placeholder; the declared User-Agent went on the wire only.
     assert "YOUR_APP_NAME YOUR_CONTACT_EMAIL" in body["steps"][0]["sql"] and UA not in r.text
     log = temp_sql_log.read_text(encoding="utf-8")
@@ -154,7 +154,7 @@ def test_register_frames_runs_the_plan_in_order_with_the_declared_user_agent(set
 
 def test_skip_exists_treats_an_existing_object_as_done(setup):
     client, conn, _, _ = setup
-    conn.fail = {"CREATE LIGHTNING REST TABLE": "Table frames_Revenues_CY2025Q1 already exists in WON_SEC"}
+    conn.fail = {"CREATE LIGHTNING REST TABLE": "Table frames_Revenues_CY2025Q1 already exists in CW_SEC"}
     r = client.post(f"/registrar/{ACTION}", json={**P, "contract": contract(ACTION, P)})
     assert r.status_code == 200, r.text
     body = r.json()
@@ -189,21 +189,21 @@ def test_a_step_that_cannot_be_rendered_or_allowlisted_is_a_plan_error_that_send
     client, conn, _, _ = setup
     c = contract(ACTION, P)
     bad_host = Template("registrar_frames_table",
-                        'CREATE LIGHTNING REST TABLE frames_{tag}_{period} FROM WON_SEC REQUEST( endpoint "https://example.org/{period}.json" ) '
+                        'CREATE LIGHTNING REST TABLE frames_{tag}_{period} FROM CW_SEC REQUEST( endpoint "https://example.org/{period}.json" ) '
                         'HEADER ( user-agent "YOUR_APP_NAME YOUR_CONTACT_EMAIL" ) BODY ()',
-                        {"tag": "tag", "period": "period"}, ("WON_SEC.frames_{tag}_{period}",), (), "host outside the allowlist", "registrar")
+                        {"tag": "tag", "period": "period"}, ("CW_SEC.frames_{tag}_{period}",), (), "host outside the allowlist", "registrar")
     monkeypatch.setitem(templates.TEMPLATES, bad_host.id, bad_host)
     r = client.post(f"/registrar/{ACTION}", json={**P, "contract": c})
     assert r.status_code == 500 and r.json()["code"] == "bad_plan" and "not allowlisted" in r.json()["error"]
     assert r.json()["steps"] == [] and conn.sql == []
     # Without the declared User-Agent no SEC statement is built at all.
     monkeypatch.setitem(templates.TEMPLATES, FRAMES_TEMPLATES[0].id, FRAMES_TEMPLATES[0])
-    monkeypatch.delenv("WON_USER_AGENT")
+    monkeypatch.delenv("CW_USER_AGENT")
     r = client.post(f"/registrar/{ACTION}", json={**P, "contract": c})
-    assert r.status_code == 500 and r.json()["code"] == "bad_plan" and "WON_USER_AGENT" in r.json()["error"]
+    assert r.status_code == 500 and r.json()["code"] == "bad_plan" and "CW_USER_AGENT" in r.json()["error"]
     assert conn.sql == []
     # Nothing was sent, so the same contract still runs the plan once the fault is fixed.
-    monkeypatch.setenv("WON_USER_AGENT", UA)
+    monkeypatch.setenv("CW_USER_AGENT", UA)
     r = client.post(f"/registrar/{ACTION}", json={**P, "contract": c})
     assert r.status_code == 200 and len(conn.sql) == 4
 
@@ -216,7 +216,7 @@ def test_registrar_templates_never_run_through_sql_template(setup):
     assert r.status_code == 403 and conn.sql == []
     # A reader template that belongs to the plan runs normally.
     r = client.post("/sql/template", json={"template_id": "registrar_frames_describe", "params": P})
-    assert r.status_code == 200 and conn.sql == ["DESCRIBE won.frames_Revenues_CY2025Q1"]
+    assert r.status_code == 200 and conn.sql == ["DESCRIBE cw.frames_Revenues_CY2025Q1"]
 
 
 def test_health_lists_the_registrar_actions(setup):

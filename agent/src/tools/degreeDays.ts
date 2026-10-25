@@ -87,8 +87,8 @@ export function degreeDaySql(params: DegreeDaySqlParams): string {
     }
   }
 
-  const defaultTmax = `won.ghcn_${year}_tmax`;
-  const defaultTmin = `won.ghcn_${year}_tmin`;
+  const defaultTmax = `cw.ghcn_${year}_tmax`;
+  const defaultTmin = `cw.ghcn_${year}_tmin`;
   const tmaxTable = params.tmaxTable ?? defaultTmax;
   const tminTable = params.tminTable ?? defaultTmin;
   if (!TABLE_RE.test(tmaxTable)) {

@@ -2,7 +2,7 @@
 // H-MEM (data/hmem), the World Model (data/world), the run store (data/runs) and the
 // registrar port that signs execution contracts. Commands that open data/hmem and
 // data/world take data/agent.lock, so two processes never write the stores at once.
-// Adapted from ClearShelf (same author, Apache-2.0).
+// Adapted from Weather-or-Not and ClearShelf (same author, Apache-2.0).
 
 import { appendFileSync, existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -67,10 +67,10 @@ export function acquireLock(command: string, file = LOCK_FILE): AgentLock {
 }
 
 /** Signs a medium-risk contract for a registrar plan and posts it; the contract id and parameters are logged (never the signature). */
-export function registrarPort(gateway: GatewayClient, user = "won-agent"): RegistrarPort {
+export function registrarPort(gateway: GatewayClient, user = "cw-agent"): RegistrarPort {
   return {
     async register(action: RegistrarAction, params: Record<string, string>): Promise<RegistrarResult> {
-      const contract = issueContract({ action, parameters: params, user, surface: "won-agent" }, loadContractSecret());
+      const contract = issueContract({ action, parameters: params, user, surface: "cw-agent" }, loadContractSecret());
       mkdirSync(fileURLToPath(new URL("contracts/", DATA_DIR_URL)), { recursive: true });
       appendFileSync(CONTRACTS_LOG, `${JSON.stringify({ contractId: contract.contractId, action, params, issuedAt: contract.issuedAt, expiresAt: contract.expiresAt })}\n`, "utf8");
       return gateway.registrar(action, params, contract as unknown as Record<string, unknown>);

@@ -1,6 +1,6 @@
-"""Weather-or-Not Zetaris gateway: named templates over JDBC, on 127.0.0.1:8793.
+"""Crosswalk Zetaris gateway: named templates over JDBC, on 127.0.0.1:8803.
 
-Adapted from ClearShelf (same author, Apache-2.0).
+Adapted from Weather-or-Not and ClearShelf (same author, Apache-2.0).
 
     .venv/Scripts/python -m gateway.app
 
@@ -26,8 +26,8 @@ from . import registrar as registrar_mod
 from .jdbc import LightningConnection, QueryTimeout, ZetarisError, load_env
 from .sqllog import log_statement, sha256
 
-SERVICE = "weather-or-not-gateway"
-PORT = int(os.environ.get("WON_GATEWAY_PORT", "8793"))
+SERVICE = "crosswalk-gateway"
+PORT = int(os.environ.get("CW_GATEWAY_PORT", "8803"))
 MAX_ROWS = 200
 FETCH_LIMIT = 10_000
 QUERY_TIMEOUT_S = float(os.environ.get("GATEWAY_QUERY_TIMEOUT_S", "60"))
@@ -35,9 +35,9 @@ CACHE_TIMEOUT_S = 600.0  # a station-filtered view over the 9 parquet files of a
 RETRY_BASE_S = 60.0  # a failed CACHE waits this long before the next try, doubling each time
 RETRY_MAX_S = 900.0
 TEMPLATE_ROLES = ("reader", "registrar")
-# Objects the warm-up keeps cached in the driver (SchemaStore views and raw WON_* tables the
-# reader templates read). WON_CACHE_TARGETS (comma-separated qualified names) overrides it for
-# a run. SEC: the views of zetaris/sql/01_won_sec_create.sql, 02_won_dns_create.sql and
+# Objects the warm-up keeps cached in the driver (SchemaStore views and raw CW_* tables the
+# reader templates read). CW_CACHE_TARGETS (comma-separated qualified names) overrides it for
+# a run. SEC: the views of won-reference/01_won_sec_create.sql, 02_won_dns_create.sql and
 # 06_won_sec_seeds_create.sql (the frames periods of the two comparison quarters for the three
 # revenue tags; the submissions profile of every seed utility; companyconcept of the four Day-0
 # utilities plus the demo and warm-run utilities; the SIC reference). Periods and filers the
@@ -49,10 +49,11 @@ SEC_UTILITIES = templates.SEED_CIKS  # the 43 seeds of seeds/utilities.json (sub
 SEC_CONCEPTS = tuple((c, "Revenues") for c in ("0001326160", "0000092122", "0000072903", "0000065984", "0001031296", "0000004904")) + (
     ("0001326160", "RegulatedAndUnregulatedOperatingRevenue"), ("0000072903", "RegulatedAndUnregulatedOperatingRevenue"),
     ("0001031296", "RevenueFromContractWithCustomerExcludingAssessedTax"), ("0000004904", "RevenueFromContractWithCustomerExcludingAssessedTax"))
-CACHE_TARGETS: tuple[str, ...] = templates.cache_targets_for(
-    [(t, p) for t in SEC_TAGS for p in SEC_PERIODS], list(SEC_CONCEPTS), list(SEC_UTILITIES)) + templates.GHCN_VIEWS
-# GHCN: the four station-filtered parquet views of zetaris/sql/04_won_ghcn_create.sql come last
-# (each CACHE scans a 9-file partition on S3, about 40 s; the SEC views take a second each).
+# Empty until the Zetaris lane has registered the CW_* objects: a warm-up over names that do not exist yet
+# would only log failed CACHE statements. Weather-or-Not's list was cache_targets_for(SEC tags x periods,
+# SEC_CONCEPTS, SEC_UTILITIES) + templates.GHCN_VIEWS (the parquet views last: each CACHE scans a 9-file
+# partition on S3, about 40 s; the SEC views take a second each). CW_CACHE_TARGETS overrides either way.
+CACHE_TARGETS: tuple[str, ...] = ()
 
 
 class TemplateRequest(BaseModel):
@@ -63,8 +64,8 @@ class TemplateRequest(BaseModel):
 
 def cache_targets() -> list[str]:
     """The cache targets, each checked against the registrar CACHE shape (a name outside
-    won.* / WON_*.* is a configuration error and raises allowlist.Refused)."""
-    env = os.environ.get("WON_CACHE_TARGETS", "").strip()
+    cw.* / CW_*.* is a configuration error and raises allowlist.Refused)."""
+    env = os.environ.get("CW_CACHE_TARGETS", "").strip()
     names = [x.strip() for x in env.split(",") if x.strip()] if env else list(CACHE_TARGETS)
     for n in names:
         allowlist.check(f"CACHE TABLE {n}", "registrar")
@@ -293,7 +294,7 @@ def create_app(gateway: Gateway | None = None, warm_on_start: bool = True, regis
             gw.start_warmup()
         yield
 
-    api = FastAPI(title="Weather-or-Not Zetaris gateway", version="0.1.0", lifespan=lifespan)
+    api = FastAPI(title="Crosswalk Zetaris gateway", version="0.1.0", lifespan=lifespan)
     api.state.gateway = gw
 
     @api.get("/health")

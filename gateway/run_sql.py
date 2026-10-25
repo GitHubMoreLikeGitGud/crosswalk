@@ -1,6 +1,6 @@
 """Run zetaris/sql/*.sql files (or one statement) over JDBC, one statement per call.
 
-Adapted from ClearShelf (same author, Apache-2.0).
+Adapted from Weather-or-Not and ClearShelf (same author, Apache-2.0).
 
     python -m gateway.run_sql zetaris/sql/00_won_base_create.sql --dry-run
     python -m gateway.run_sql zetaris/sql/01_sec_frames_select.sql
@@ -10,11 +10,11 @@ Every statement passes the `onboard` allowlist and is logged to
 data/evidence/sql_log.jsonl with the timeout used. Results print as JSON lines.
 
 Defaults that keep the sources safe without flags:
-- a statement that may call SEC EDGAR (names data.sec.gov or a WON_SEC.* table
+- a statement that may call SEC EDGAR (names data.sec.gov or a CW_SEC.* table
   and is a CREATE, DESCRIBE, CACHE or SELECT) waits until at least
   SEC_MIN_SPACING_S after the previous one, the SEC's 10 requests per second
   (--spacing can only raise this); the User-Agent placeholder in a script is
-  replaced from WON_USER_AGENT and is never hard-coded;
+  replaced from CW_USER_AGENT and is never hard-coded;
 - RUN DQ and SHOW DQ are bounded at DQ_TIMEOUT_S, everything else at
   DEFAULT_TIMEOUT_S (--timeout overrides both).
 COUNT queries and RUN DQ also log their first result rows (result_head).
@@ -35,7 +35,7 @@ from .sqllog import log_statement, sha256
 
 ALREADY_EXISTS = re.compile(r"already exist", re.I)
 CALLS_SOURCE = re.compile(r"^\s*(CREATE\s+LIGHTNING\s+(REST|FILESTORE)\s+TABLE|CACHE\s+TABLE|DESCRIBE)\b", re.I)
-TOUCHES_SEC = re.compile(r"data\.sec\.gov|\bWON_SEC\.", re.I)
+TOUCHES_SEC = re.compile(r"data\.sec\.gov|\bCW_SEC\.", re.I)
 NO_SOURCE_CALL = re.compile(r"^\s*(UNCACHE\s+TABLE|UNCACHE\s+LIGHTNING|SHOW)\b", re.I)
 DQ_STATEMENT = re.compile(r"^\s*(RUN|SHOW)\s+DQ\b", re.I)
 HEAD_LOGGED = re.compile(r"^\s*RUN\s+DQ\b|^\s*SELECT\b.*\bCOUNT\s*\(", re.I | re.S)
@@ -47,7 +47,7 @@ HEAD_ROWS = 5
 
 def touches_sec(sql: str) -> bool:
     """True if the statement may call SEC EDGAR (CREATE, DESCRIBE, CACHE, or a read
-    of a WON_SEC table that is not cached)."""
+    of a CW_SEC table that is not cached)."""
     return bool(TOUCHES_SEC.search(sql)) and not NO_SOURCE_CALL.match(sql)
 
 

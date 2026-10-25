@@ -47,9 +47,9 @@ describe("canonical JSON", () => {
 });
 
 describe("policy", () => {
-  it("names the Weather-or-Not policy pack, surfaces and risk classes", () => {
-    expect(POLICY_PACK_VERSION).toBe("weather-or-not-scout-subset@1");
-    expect([...SURFACES]).toEqual(["won-ui", "won-agent"]);
+  it("names the Crosswalk policy pack, surfaces and risk classes", () => {
+    expect(POLICY_PACK_VERSION).toBe("crosswalk-scout-subset@1");
+    expect([...SURFACES]).toEqual(["cw-ui", "cw-agent"]);
     expect([...REGISTRAR_ACTIONS]).toEqual(["register_frames", "register_concept", "register_submission"]);
     for (const a of REGISTRAR_ACTIONS) expect(riskOf(a)).toBe("medium");
     expect(riskOf("read")).toBe("low");
@@ -62,7 +62,7 @@ const PARAMS = { ...VECTOR_PARAMS };
 const expectFrames = { action: VECTOR_ACTION, params: PARAMS };
 
 function frames(now = T0, params: Record<string, string> = PARAMS): ExecutionContract {
-  return issueContract({ action: "register_frames", parameters: params, user: "won-agent", surface: "won-agent", now }, SECRET);
+  return issueContract({ action: "register_frames", parameters: params, user: "cw-agent", surface: "cw-agent", now }, SECRET);
 }
 
 const OVERRIDE_PARAMS = { conflict_id: "rc-0123456789ab", chosen: "own_filing", reason: "The original filing is the like-for-like base for this period." };
@@ -70,7 +70,7 @@ const expectOverride = { action: "override_recast" as const, params: OVERRIDE_PA
 
 function override(now = T0, reason = "The original filing is the like-for-like base for this period."): ExecutionContract {
   return issueContract(
-    { action: "override_recast", parameters: OVERRIDE_PARAMS, user: "analyst", surface: "won-ui", approvals: [analystApproval(reason, now)], now },
+    { action: "override_recast", parameters: OVERRIDE_PARAMS, user: "analyst", surface: "cw-ui", approvals: [analystApproval(reason, now)], now },
     SECRET,
   );
 }
@@ -102,8 +102,8 @@ describe("issue and verify", () => {
     expect(overrideRecastParamErrors({ conflict_id: "rc-0123456789ab", chosen: "own_filing" })).toEqual(["reason missing"]);
     expect(overrideRecastParamErrors({ ...OVERRIDE_PARAMS, cik: "0001326160" })).toEqual(["unexpected parameter cik"]);
     // Issuing refuses bad parameters; a signed contract with bad parameters is refused on verification.
-    expect(() => issueContract({ action: "override_recast", parameters: { cik: "0001326160", period: "CY2025Q1" }, user: "analyst", surface: "won-ui", approvals: [analystApproval("ok", T0)], now: T0 }, SECRET)).toThrow(/conflict_id missing/);
-    expect(() => issueContract({ action: "override_recast", parameters: { ...OVERRIDE_PARAMS, chosen: "both" }, user: "analyst", surface: "won-ui", approvals: [analystApproval("ok", T0)], now: T0 }, SECRET)).toThrow(/chosen must be one of/);
+    expect(() => issueContract({ action: "override_recast", parameters: { cik: "0001326160", period: "CY2025Q1" }, user: "analyst", surface: "cw-ui", approvals: [analystApproval("ok", T0)], now: T0 }, SECRET)).toThrow(/conflict_id missing/);
+    expect(() => issueContract({ action: "override_recast", parameters: { ...OVERRIDE_PARAMS, chosen: "both" }, user: "analyst", surface: "cw-ui", approvals: [analystApproval("ok", T0)], now: T0 }, SECRET)).toThrow(/chosen must be one of/);
     const c = override();
     const bad = signContract({ ...c, intent: { ...c.intent, parameters: { ...OVERRIDE_PARAMS, chosen: "both" } } } as UnsignedContract, SECRET);
     expect(verifyContract(bad, { action: "override_recast", params: {} }, SECRET, at(1000))).toMatchObject({ ok: false, code: "parameter_mismatch" });
@@ -113,18 +113,18 @@ describe("issue and verify", () => {
   });
 
   it("never issues a high-risk contract without an analyst approval with a reason, or off the UI surface", () => {
-    expect(() => issueContract({ action: "override_recast", parameters: OVERRIDE_PARAMS, user: "x", surface: "won-ui", now: T0 }, SECRET)).toThrow(/analyst approval/);
+    expect(() => issueContract({ action: "override_recast", parameters: OVERRIDE_PARAMS, user: "x", surface: "cw-ui", now: T0 }, SECRET)).toThrow(/analyst approval/);
     expect(() => override(T0, "  ")).toThrow(/analyst approval/);
     expect(() =>
       issueContract(
-        { action: "override_recast", parameters: OVERRIDE_PARAMS, user: "agent", surface: "won-agent", approvals: [analystApproval("ok", T0)], now: T0 },
+        { action: "override_recast", parameters: OVERRIDE_PARAMS, user: "agent", surface: "cw-agent", approvals: [analystApproval("ok", T0)], now: T0 },
         SECRET,
       ),
     ).toThrow(/analyst UI/);
   });
 
   it("takes the risk level from the action, never from the caller", () => {
-    const c = issueContract({ action: "read", parameters: { cik10: "0001326160" }, user: "agent", surface: "won-agent", now: T0 }, SECRET);
+    const c = issueContract({ action: "read", parameters: { cik10: "0001326160" }, user: "agent", surface: "cw-agent", now: T0 }, SECRET);
     expect(c.risk.level).toBe("low");
     const forged = signContract({ ...c, intent: { ...c.intent, primary: "override_recast" } } as UnsignedContract, SECRET);
     expect(verifyContract(forged, { action: "override_recast", params: {} }, SECRET, at(1000))).toMatchObject({ ok: false, code: "risk_mismatch" });
@@ -164,7 +164,7 @@ describe("issue and verify", () => {
     const c = override();
     const stripped = signContract({ ...c, risk: { ...c.risk, approvals: [] } } as UnsignedContract, SECRET);
     expect(verifyContract(stripped, expectOverride, SECRET, at(1000))).toMatchObject({ ok: false, code: "approval_missing" });
-    const moved = signContract({ ...c, scope: { ...c.scope, surface: "won-agent" } } as UnsignedContract, SECRET);
+    const moved = signContract({ ...c, scope: { ...c.scope, surface: "cw-agent" } } as UnsignedContract, SECRET);
     expect(verifyContract(moved, expectOverride, SECRET, at(1000))).toMatchObject({ ok: false, code: "approval_missing" });
   });
 
@@ -176,23 +176,23 @@ describe("issue and verify", () => {
 });
 
 describe("contract secret", () => {
-  const saved = process.env.WON_CONTRACT_SECRET;
+  const saved = process.env.CW_CONTRACT_SECRET;
   afterEach(() => {
-    if (saved === undefined) delete process.env.WON_CONTRACT_SECRET;
-    else process.env.WON_CONTRACT_SECRET = saved;
+    if (saved === undefined) delete process.env.CW_CONTRACT_SECRET;
+    else process.env.CW_CONTRACT_SECRET = saved;
   });
 
-  it("reads WON_CONTRACT_SECRET from the environment and refuses a short one", () => {
-    process.env.WON_CONTRACT_SECRET = SECRET;
+  it("reads CW_CONTRACT_SECRET from the environment and refuses a short one", () => {
+    process.env.CW_CONTRACT_SECRET = SECRET;
     expect(loadContractSecret()).toBe(SECRET);
-    process.env.WON_CONTRACT_SECRET = "short";
+    process.env.CW_CONTRACT_SECRET = "short";
     expect(() => loadContractSecret()).toThrow(/32 characters/);
   });
 });
 
 describe("ContractVerifier", () => {
   it("logs every verdict, consumes contracts once and refuses a replay", () => {
-    const dir = mkdtempSync(join(tmpdir(), "won-contract-"));
+    const dir = mkdtempSync(join(tmpdir(), "cw-contract-"));
     const v = new ContractVerifier(SECRET, "test", dir, () => at(1000));
     const c = frames();
     expect(v.verify(c, expectFrames).ok).toBe(true);
@@ -214,7 +214,7 @@ describe("ContractVerifier", () => {
 
   it("issues with its own secret and accepts what it issued", () => {
     const v = new ContractVerifier(SECRET, "test", null, () => T0);
-    const c = v.issue({ action: "register_concept", parameters: { cik10: "0001326160", tag: "Revenues" }, user: "won-agent", surface: "won-agent" });
+    const c = v.issue({ action: "register_concept", parameters: { cik10: "0001326160", tag: "Revenues" }, user: "cw-agent", surface: "cw-agent" });
     expect(v.verify(c, { action: "register_concept", params: { cik10: "0001326160", tag: "Revenues" } }).ok).toBe(true);
   });
 });

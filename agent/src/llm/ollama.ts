@@ -2,7 +2,7 @@
 // loopback host, any other host is refused and counted, and every response's token
 // counts and durations are reported as measured by Ollama. A host-RAM guard unloads
 // the model before a call when available RAM is low (see docs/nemotron-bench.md).
-// Adapted from ClearShelf (same author, Apache-2.0).
+// Adapted from Weather-or-Not and ClearShelf (same author, Apache-2.0).
 
 import { createHash } from "node:crypto";
 import os from "node:os";
@@ -122,7 +122,7 @@ export interface RamGuardEvent {
 export const DEFAULT_MIN_AVAILABLE_RAM_MIB = 2048;
 
 function ramGuardFromEnv(): RamGuardOptions {
-  const v = Number(process.env.WON_MIN_AVAILABLE_RAM_MIB);
+  const v = Number(process.env.CW_MIN_AVAILABLE_RAM_MIB);
   return { minAvailableMiB: Number.isFinite(v) && v > 0 ? v : DEFAULT_MIN_AVAILABLE_RAM_MIB };
 }
 
@@ -156,7 +156,7 @@ export interface OllamaClientOptions {
   model?: string;
   fetchImpl?: typeof fetch;
   defaultTimeoutMs?: number;
-  /** Host-RAM guard; on by default (WON_MIN_AVAILABLE_RAM_MIB, else 2048 MiB). `false` turns it off. */
+  /** Host-RAM guard; on by default (CW_MIN_AVAILABLE_RAM_MIB, else 2048 MiB). `false` turns it off. */
   ramGuard?: RamGuardOptions | false;
 }
 
@@ -173,7 +173,7 @@ export class OllamaClient {
   constructor(opts: OllamaClientOptions = {}) {
     const base = opts.baseUrl ?? process.env.OLLAMA_URL ?? "http://127.0.0.1:11434";
     this.baseUrl = assertLoopbackUrl(base).origin;
-    this.model = opts.model ?? process.env.WON_MODEL ?? DEFAULT_MODEL;
+    this.model = opts.model ?? process.env.CW_MODEL ?? DEFAULT_MODEL;
     this.fetchImpl = opts.fetchImpl ?? fetch;
     this.defaultTimeoutMs = opts.defaultTimeoutMs ?? 300_000;
     const guard = opts.ramGuard === undefined ? ramGuardFromEnv() : opts.ramGuard;

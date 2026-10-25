@@ -1,4 +1,4 @@
-"""JDBC access to Zetaris Lightning for the Weather-or-Not gateway.
+"""JDBC access to Zetaris Lightning for the Crosswalk gateway.
 
 Adapted from `scripts/zetaris_sql.py` in the Zetaris getting-started repository
 (https://github.com/zetaris/getting-started, commit 6a2fbaa, Apache License 2.0):
@@ -62,12 +62,12 @@ def require(*names: str) -> None:
 
 
 def user_agent() -> str:
-    """The User-Agent sent to source APIs (SEC EDGAR requires a declared one), from WON_USER_AGENT."""
-    ua = os.environ.get("WON_USER_AGENT", "").strip()
+    """The User-Agent sent to source APIs (SEC EDGAR requires a declared one), from CW_USER_AGENT."""
+    ua = os.environ.get("CW_USER_AGENT", "").strip()
     if not ua or "<" in ua or ">" in ua:
-        raise ZetarisError("Set WON_USER_AGENT in .env.local (an app name plus a contact; SEC EDGAR blocks a missing or default User-Agent).")
+        raise ZetarisError("Set CW_USER_AGENT in .env.local (an app name plus a contact; SEC EDGAR blocks a missing or default User-Agent).")
     if '"' in ua or "'" in ua:
-        raise ZetarisError("WON_USER_AGENT must not contain quotes.")
+        raise ZetarisError("CW_USER_AGENT must not contain quotes.")
     return ua
 
 

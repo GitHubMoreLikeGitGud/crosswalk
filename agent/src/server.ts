@@ -1,5 +1,5 @@
-// Weather-or-Not agent server: the HTTP API for the analyst UI, server-sent events on
-// /api/events and the static UI files (ui/), on 127.0.0.1 only (UI_PORT, default 8794).
+// Crosswalk agent server: the HTTP API for the analyst UI, server-sent events on
+// /api/events and the static UI files (ui/), on 127.0.0.1 only (UI_PORT, default 8804).
 //
 // Safety:
 // - The server holds one runtime for its lifetime (it takes <data>/agent.lock) and runs one
@@ -14,7 +14,7 @@
 //
 //   npx tsx src/server.ts            (npm run dev)
 //
-// Adapted from ClearShelf (same author, Apache-2.0).
+// Adapted from Weather-or-Not and ClearShelf (same author, Apache-2.0).
 
 import { createReadStream, existsSync, readFileSync, statSync } from "node:fs";
 import http, { type IncomingMessage, type ServerResponse } from "node:http";
@@ -211,7 +211,7 @@ export function renderMemoMarkdown(run: RunResult | SavedRun, records: EvidenceR
   const c = run.card;
   const u = c.utility;
   const out: string[] = [];
-  out.push(`# Weather-or-Not memo: ${u?.name ?? `CIK ${run.cik}`} (CIK ${run.cik}), ${run.period} vs ${run.previous_period}`);
+  out.push(`# Crosswalk memo: ${u?.name ?? `CIK ${run.cik}`} (CIK ${run.cik}), ${run.period} vs ${run.previous_period}`);
   out.push("");
   out.push(`Run \`${run.run_id}\`, started ${run.started_at}, ${run.wall_ms} ms wall, ${run.markovian.chunks} chunk(s); model ${run.telemetry.model ?? "none"}; memo ${c.memo ? `${c.memo.source}, ${c.memo.words} words` : "none"}.`);
   out.push("");
@@ -304,7 +304,7 @@ export function renderMemoMarkdown(run: RunResult | SavedRun, records: EvidenceR
   return out.join("\n");
 }
 
-export interface WonServer {
+export interface CwServer {
   server: http.Server;
   bus: EventBus;
   /** The run in progress, or null. */
@@ -313,7 +313,7 @@ export interface WonServer {
   close(): Promise<void>;
 }
 
-export function createServer(deps: ServerDeps): WonServer {
+export function createServer(deps: ServerDeps): CwServer {
   const rt = deps.runtime;
   const bus = deps.bus ?? new EventBus();
   const log = deps.log ?? (() => {});
@@ -408,7 +408,7 @@ export function createServer(deps: ServerDeps): WonServer {
       }
       return send(res, 200, {
         ok: true,
-        service: "weather-or-not-agent",
+        service: "crosswalk-agent",
         model: rt.ollama?.model ?? null,
         gateway: rt.gateway.baseUrl,
         gateway_ok: gatewayOk,
@@ -640,7 +640,7 @@ export function createServer(deps: ServerDeps): WonServer {
   }
 
   const server = http.createServer((req, res) => {
-    if (!hostOk(req)) return send(res, 421, { error: "unknown Host; Weather-or-Not answers on 127.0.0.1 only", code: "host" });
+    if (!hostOk(req)) return send(res, 421, { error: "unknown Host; Crosswalk answers on 127.0.0.1 only", code: "host" });
     route(req, res).catch((e: unknown) => {
       if (e instanceof HttpError) return send(res, e.status, { error: e.message, code: e.code });
       log(`error ${req.method} ${req.url}: ${(e as Error).stack ?? e}`);
@@ -656,7 +656,7 @@ export function createServer(deps: ServerDeps): WonServer {
       return busy;
     },
     listen(p: number, host = "127.0.0.1"): Promise<number> {
-      if (host !== "127.0.0.1" && host !== "localhost") throw new Error("Weather-or-Not listens on 127.0.0.1 only");
+      if (host !== "127.0.0.1" && host !== "localhost") throw new Error("Crosswalk listens on 127.0.0.1 only");
       return new Promise((ok, fail) => {
         server.once("error", fail);
         server.listen(p, host, () => {
@@ -686,7 +686,7 @@ export async function main(): Promise<void> {
     rt.close();
     throw e;
   }
-  log(`Weather-or-Not agent server on http://127.0.0.1:${bound} (pid ${process.pid}; gateway ${rt.gateway.baseUrl}; model ${rt.ollama?.model ?? "none"}; data ${DATA_DIR}; ${rt.runs.list().length} saved run(s))`);
+  log(`Crosswalk agent server on http://127.0.0.1:${bound} (pid ${process.pid}; gateway ${rt.gateway.baseUrl}; model ${rt.ollama?.model ?? "none"}; data ${DATA_DIR}; ${rt.runs.list().length} saved run(s))`);
   const stop = () => {
     void app.close();
     rt.close();

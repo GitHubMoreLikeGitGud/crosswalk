@@ -2,7 +2,7 @@ import { mkdtempSync, readFileSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { HMEM, PROVENANCE_HISTORY, provenanceOf, type WonProvenance } from "../src/memory/hmemFacade.ts";
+import { HMEM, PROVENANCE_HISTORY, provenanceOf, type CwProvenance } from "../src/memory/hmemFacade.ts";
 import { ruleR1 } from "../src/memory/recastConflicts.ts";
 import type { EvidenceRecord } from "../src/evidence/store.ts";
 
@@ -10,11 +10,11 @@ let t = 1_700_000_000_000;
 const clock = () => (t += 1000);
 
 function memory(): HMEM {
-  return new HMEM({ actor: "won-agent", clock });
+  return new HMEM({ actor: "cw-agent", clock });
 }
 
-const prov: WonProvenance = {
-  zetaris_object: "won.concept_0000000001_Revenues",
+const prov: CwProvenance = {
+  zetaris_object: "cw.concept_0000000001_Revenues",
   sql_sha256: "abc",
   endpoint: "https://data.sec.gov/api/xbrl/companyconcept/CIK0000000001/us-gaap/Revenues.json",
   accn: "0000000001-24-000001",
@@ -42,8 +42,8 @@ describe("rule R1", () => {
 describe("recast conflicts in H-MEM", () => {
   it("records both values as facts, resolves by R1, supersedes the loser and logs it in the ledger", () => {
     const h = memory();
-    const a = h.addFact({ content: "Revenues CY2024Q1: 1000000000 in 0000000001-24-000001", source: "zetaris:won.concept_0000000001_Revenues", label: "fact", provenance: prov, refs: ["ev-1"], key: "a" });
-    const b = h.addFact({ content: "Revenues CY2024Q1: 980000000 as the comparative in 0000000001-25-000001", source: "zetaris:won.concept_0000000001_Revenues", label: "fact", provenance: { ...prov, accn: later.accn, filed: later.filed }, refs: ["ev-1"], key: "b" });
+    const a = h.addFact({ content: "Revenues CY2024Q1: 1000000000 in 0000000001-24-000001", source: "zetaris:cw.concept_0000000001_Revenues", label: "fact", provenance: prov, refs: ["ev-1"], key: "a" });
+    const b = h.addFact({ content: "Revenues CY2024Q1: 980000000 as the comparative in 0000000001-25-000001", source: "zetaris:cw.concept_0000000001_Revenues", label: "fact", provenance: { ...prov, accn: later.accn, filed: later.filed }, refs: ["ev-1"], key: "b" });
     const { conflict, created } = h.recasts.record({ cik: "0000000001", tag: "Revenues", period: "CY2024Q1", scope: "previous_period", currentYear: 2025, ownFilingMemory: a.memory.id, laterFilingMemory: b.memory.id, ownFiling: own, laterFiling: later, runId: "r1", evidenceIds: ["ev-1"] });
     expect(created).toBe(true);
     expect(conflict.kind).toBe("recast_comparative");
@@ -57,7 +57,7 @@ describe("recast conflicts in H-MEM", () => {
     expect(actions).toContain("conflict_detected");
     expect(actions).toContain("conflict_resolved");
     const resolved = h.ledger.history(a.memory.id).find((e) => e.action === "conflict_resolved")!;
-    expect(resolved.actor).toBe("won-agent");
+    expect(resolved.actor).toBe("cw-agent");
     expect(resolved.details).toMatchObject({ conflictId: conflict.id, rule: "R1", winner: b.memory.id });
     // Idempotent: the same pair is one record.
     const again = h.recasts.record({ cik: "0000000001", tag: "Revenues", period: "CY2024Q1", scope: "previous_period", currentYear: 2025, ownFilingMemory: a.memory.id, laterFilingMemory: b.memory.id, ownFiling: own, laterFiling: later, evidenceIds: ["ev-2"] });
@@ -139,41 +139,41 @@ describe("recast conflicts in H-MEM", () => {
   });
 
   it("refreshes a fact's provenance on reconfirmation: the latest retrieval wins, earlier ones are kept in history, capped (D1)", () => {
-    const dir = mkdtempSync(path.join(os.tmpdir(), "won-hmem-"));
-    const h = new HMEM({ actor: "won-agent", clock, persistDir: dir });
-    const first = { ...prov, zetaris_object: "won.concept_{cik10}_{tag}", evidence_id: "ev-1", run_id: "r1", retrieved_at: "2026-10-24T20:30:00+08:00" };
-    const a = h.addFact({ content: "Revenues CY2025Q1: 5463400000", source: "zetaris:won.concept", label: "fact", provenance: first, refs: ["ev-1"], key: "v1" });
+    const dir = mkdtempSync(path.join(os.tmpdir(), "cw-hmem-"));
+    const h = new HMEM({ actor: "cw-agent", clock, persistDir: dir });
+    const first = { ...prov, zetaris_object: "cw.concept_{cik10}_{tag}", evidence_id: "ev-1", run_id: "r1", retrieved_at: "2026-10-24T20:30:00+08:00" };
+    const a = h.addFact({ content: "Revenues CY2025Q1: 5463400000", source: "zetaris:cw.concept", label: "fact", provenance: first, refs: ["ev-1"], key: "v1" });
     expect(a.created).toBe(true);
     expect(h.provenanceFor(a.memory.id)).toEqual(first);
     expect(h.provenanceFor(a.memory.id)!.history).toBeUndefined();
     // The same fact again from a later run with the filled object name.
-    const second = { ...prov, zetaris_object: "won.concept_0000000001_Revenues", evidence_id: "ev-9", run_id: "r2", retrieved_at: "2026-10-24T21:40:00+08:00", latency_ms: 219 };
-    const again = h.addFact({ content: "Revenues CY2025Q1: 5463400000", source: "zetaris:won.concept", label: "fact", provenance: second, refs: ["ev-9"], key: "v1" });
+    const second = { ...prov, zetaris_object: "cw.concept_0000000001_Revenues", evidence_id: "ev-9", run_id: "r2", retrieved_at: "2026-10-24T21:40:00+08:00", latency_ms: 219 };
+    const again = h.addFact({ content: "Revenues CY2025Q1: 5463400000", source: "zetaris:cw.concept", label: "fact", provenance: second, refs: ["ev-9"], key: "v1" });
     expect(again.created).toBe(false);
     expect(again.memory.id).toBe(a.memory.id);
     const p = h.provenanceFor(a.memory.id)!;
     expect(p).toMatchObject(second);
-    expect(p.zetaris_object).toBe("won.concept_0000000001_Revenues");
+    expect(p.zetaris_object).toBe("cw.concept_0000000001_Revenues");
     expect(p.history).toEqual([first]);
     // why() prints the current provenance, not the placeholder, and names the kept history.
     const why = h.why(a.memory.id).lines.join("\n");
-    expect(why).toContain("Provenance: won.concept_0000000001_Revenues");
+    expect(why).toContain("Provenance: cw.concept_0000000001_Revenues");
     expect(why).not.toContain("{cik10}");
     expect(why).toContain("1 earlier retrieval(s) kept, the first 2026-10-24T20:30:00+08:00");
     expect(h.why(a.memory.id).provenance).toEqual(p);
     // Persisted: provenance.json carries the same shape and no placeholder at the top level.
     const onDisk = JSON.parse(readFileSync(path.join(dir, "provenance.json"), "utf8")) as Record<string, { zetaris_object: string; history?: unknown[] }>;
-    expect(onDisk[a.memory.id]!.zetaris_object).toBe("won.concept_0000000001_Revenues");
+    expect(onDisk[a.memory.id]!.zetaris_object).toBe("cw.concept_0000000001_Revenues");
     expect(onDisk[a.memory.id]!.history).toHaveLength(1);
     // A reload sees the refreshed provenance.
-    expect(new HMEM({ actor: "won-agent", clock, persistDir: dir }).provenanceFor(a.memory.id)).toEqual(p);
+    expect(new HMEM({ actor: "cw-agent", clock, persistDir: dir }).provenanceFor(a.memory.id)).toEqual(p);
     // Reconfirming with the same evidence changes nothing; without provenance keeps the latest.
-    h.addFact({ content: "Revenues CY2025Q1: 5463400000", source: "zetaris:won.concept", label: "fact", provenance: second, refs: ["ev-9"], key: "v1" });
-    h.addFact({ content: "Revenues CY2025Q1: 5463400000", source: "zetaris:won.concept", label: "fact", provenance: null, refs: [], key: "v1" });
+    h.addFact({ content: "Revenues CY2025Q1: 5463400000", source: "zetaris:cw.concept", label: "fact", provenance: second, refs: ["ev-9"], key: "v1" });
+    h.addFact({ content: "Revenues CY2025Q1: 5463400000", source: "zetaris:cw.concept", label: "fact", provenance: null, refs: [], key: "v1" });
     expect(h.provenanceFor(a.memory.id)).toEqual(p);
     // The history is capped at PROVENANCE_HISTORY, most recent first.
     for (let i = 0; i < PROVENANCE_HISTORY + 3; i++) {
-      h.addFact({ content: "Revenues CY2025Q1: 5463400000", source: "zetaris:won.concept", label: "fact", provenance: { ...second, evidence_id: `ev-${100 + i}`, run_id: `r${3 + i}`, retrieved_at: `2026-10-25T0${i}:00:00+08:00` }, refs: [], key: "v1" });
+      h.addFact({ content: "Revenues CY2025Q1: 5463400000", source: "zetaris:cw.concept", label: "fact", provenance: { ...second, evidence_id: `ev-${100 + i}`, run_id: `r${3 + i}`, retrieved_at: `2026-10-25T0${i}:00:00+08:00` }, refs: [], key: "v1" });
     }
     const capped = h.provenanceFor(a.memory.id)!;
     expect(capped.evidence_id).toBe(`ev-${100 + PROVENANCE_HISTORY + 2}`);
@@ -185,7 +185,7 @@ describe("recast conflicts in H-MEM", () => {
   });
 
   it("builds provenance from an evidence record", () => {
-    const ev = { id: "ev-9", run_id: "r", kind: "zetaris_sql", claim: "c", queried_at: "t", zetaris_object: "won.x", sql_sha256: "s", source_url: "u", licence: "l", elapsed_ms: 5, cache_state: "hit", template_id: "frames_fact" } as EvidenceRecord;
-    expect(provenanceOf(ev, { accn: "a", filed: "f" })).toEqual({ zetaris_object: "won.x", sql_sha256: "s", endpoint: "u", accn: "a", filed: "f", licence: "l", retrieved_at: "t", latency_ms: 5, cache_state: "hit", evidence_id: "ev-9", template_id: "frames_fact", run_id: "r" });
+    const ev = { id: "ev-9", run_id: "r", kind: "zetaris_sql", claim: "c", queried_at: "t", zetaris_object: "cw.x", sql_sha256: "s", source_url: "u", licence: "l", elapsed_ms: 5, cache_state: "hit", template_id: "frames_fact" } as EvidenceRecord;
+    expect(provenanceOf(ev, { accn: "a", filed: "f" })).toEqual({ zetaris_object: "cw.x", sql_sha256: "s", endpoint: "u", accn: "a", filed: "f", licence: "l", retrieved_at: "t", latency_ms: 5, cache_state: "hit", evidence_id: "ev-9", template_id: "frames_fact", run_id: "r" });
   });
 });

@@ -1,4 +1,4 @@
-"""Weather-or-Not seed curation. Dev-time curation, not part of the agent.
+"""Crosswalk seed curation. Dev-time curation, not part of the agent.
 
 At run time the agent reads SEC EDGAR and NOAA GHCN only through Zetaris Lightning. This
 script is the documented exception: a developer runs it once to choose which utilities and
@@ -24,7 +24,7 @@ Run from the repo root:
 
 Raw responses are cached in data/curation/ (gitignored). The service-territory states are
 curated from each company's FY2024 Form 10-K, Item 1 (Business) service-territory text and are
-labelled curated:true in the output. WON_USER_AGENT is read from .env.local and never printed.
+labelled curated:true in the output. CW_USER_AGENT is read from .env.local and never printed.
 """
 from __future__ import annotations
 
@@ -213,7 +213,7 @@ class SecClient:
 
     def __init__(self, user_agent: str, refetch: bool = False):
         if not user_agent:
-            sys.exit("WON_USER_AGENT missing from .env.local; refusing to call SEC without it")
+            sys.exit("CW_USER_AGENT missing from .env.local; refusing to call SEC without it")
         self.ua = user_agent
         self.refetch = refetch
         self._last = 0.0
@@ -443,7 +443,7 @@ def main() -> int:
     args = ap.parse_args()
 
     env = load_env(ROOT / ".env.local")
-    sec = SecClient(env.get("WON_USER_AGENT", ""), refetch=args.refetch)
+    sec = SecClient(env.get("CW_USER_AGENT", ""), refetch=args.refetch)
     SEC_DIR.mkdir(parents=True, exist_ok=True)
     run_at = dt.datetime.now(dt.timezone.utc).replace(microsecond=0).isoformat()
 

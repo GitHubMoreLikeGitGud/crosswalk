@@ -1,6 +1,6 @@
 // The analyst-UI server against a mocked runtime: no model, no gateway, no real H-MEM or
 // World Model. Synthetic run, utility and conflict values only (no SEC or NOAA figures).
-// WON_DATA_DIR points at a temporary directory for the whole file; config.ts resolves its paths
+// CW_DATA_DIR points at a temporary directory for the whole file; config.ts resolves its paths
 // at import time, so every runtime import below is dynamic and comes after the assignment.
 
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
@@ -9,10 +9,10 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import type { RunResult } from "../src/loop/investigate.ts";
-import type { AskFn, ServerRuntime, WonServer } from "../src/server.ts";
+import type { AskFn, ServerRuntime, CwServer } from "../src/server.ts";
 
-const DATA = mkdtempSync(join(tmpdir(), "won-server-data-"));
-process.env.WON_DATA_DIR = DATA;
+const DATA = mkdtempSync(join(tmpdir(), "cw-server-data-"));
+process.env.CW_DATA_DIR = DATA;
 
 const { DATA_DIR, DATA_PATHS } = await import("../src/config.ts");
 const { ContractVerifier } = await import("../src/contract/scout.ts");
@@ -88,7 +88,7 @@ function syntheticRun(id: string, over: Partial<Pick<RunResult, "cik" | "period"
         params: { tag: "Revenues", period: "CY2025Q1", cik10: CIK },
         sql: "SELECT 1",
         sql_sha256: "ab".repeat(32),
-        zetaris_object: "won.frames_Revenues_CY2025Q1",
+        zetaris_object: "cw.frames_Revenues_CY2025Q1",
         source_url: "https://data.sec.gov/api/xbrl/frames/us-gaap/Revenues/USD/CY2025Q1.json",
         licence: "synthetic licence text",
         source_cached_at: null,
@@ -136,7 +136,7 @@ function fakeRuntime(root: string) {
   const hmem = {
     why: (id: string) =>
       id === "mem-1"
-        ? { memory: { id, content: "synthetic fact" }, provenance: { zetaris_object: "won.frames_Revenues_CY2025Q1" }, ledger: [], conflicts: [], related: { supersedes: null, supersededBy: null }, lines: ["synthetic fact (source synthetic)"] }
+        ? { memory: { id, content: "synthetic fact" }, provenance: { zetaris_object: "cw.frames_Revenues_CY2025Q1" }, ledger: [], conflicts: [], related: { supersedes: null, supersededBy: null }, lines: ["synthetic fact (source synthetic)"] }
         : { memory: null, provenance: null, ledger: [], conflicts: [], related: { supersedes: null, supersededBy: null }, lines: [`No memory ${id}.`] },
     recasts: {
       all: () => [conflict],
@@ -157,7 +157,7 @@ function fakeRuntime(root: string) {
     neighbourhood: (cik: string) => (cik === CIK ? { utility: { id: `utility:sec:${CIK}`, type: "utility", name: "Synthetic Power Co" }, edges: [{ type: "serves", dir: "out", other: "state:us:XX", otherType: "state", otherName: "XX", attrs: {}, validFrom: "2024-01-01" }] } : { utility: null, edges: [] }),
     timeline: (cik: string) => (cik === CIK ? [{ seq: 1, at: "2024-01-01T00:00:00.000Z", kind: "upsertEntity", summary: "utility synthetic" }] : []),
   };
-  const gateway = { baseUrl: "http://127.0.0.1:8793", health: async () => ({ ok: true, templates: Array.from({ length: 28 }, (_, i) => `t${i}`) }) };
+  const gateway = { baseUrl: "http://127.0.0.1:8803", health: async () => ({ ok: true, templates: Array.from({ length: 28 }, (_, i) => `t${i}`) }) };
   const seeds = {
     generatedAt: "synthetic",
     peerSic: ["4911"],
@@ -186,17 +186,17 @@ function fakeAsk(opts: { fail?: boolean; delayMs?: number } = {}): AskFn {
   };
 }
 
-let app: WonServer | null = null;
+let app: CwServer | null = null;
 afterEach(async () => {
   await app?.close();
   app = null;
 });
 
 async function start(o: { ask?: AskFn; defaultVerifier?: boolean } = {}) {
-  const root = mkdtempSync(join(tmpdir(), "won-server-"));
+  const root = mkdtempSync(join(tmpdir(), "cw-server-"));
   const uiDir = join(root, "ui");
   mkdirSync(uiDir);
-  writeFileSync(join(uiDir, "index.html"), "<!doctype html><title>won-test</title>");
+  writeFileSync(join(uiDir, "index.html"), "<!doctype html><title>cw-test</title>");
   writeFileSync(join(uiDir, "app.js"), "export const x = 1;");
   writeFileSync(join(root, "secret.txt"), "not served");
   const fake = fakeRuntime(root);
@@ -279,7 +279,7 @@ function eventsOf(text: string): { id: number; type: string; data: Record<string
 }
 
 describe("server: reads", () => {
-  it("WON_DATA_DIR points config and the stores at the temporary directory", () => {
+  it("CW_DATA_DIR points config and the stores at the temporary directory", () => {
     expect(DATA_DIR).toBe(DATA);
     expect(DATA_PATHS.runs.startsWith(DATA)).toBe(true);
     expect(DATA_PATHS.lock).toBe(join(DATA, "agent.lock"));
@@ -313,7 +313,7 @@ describe("server: reads", () => {
     const { base } = await start();
     const one = await call(base, `/api/run/${RUN}/evidence/ev-${RUN}-01`);
     expect(one.status).toBe(200);
-    expect(one.body).toMatchObject({ id: `ev-${RUN}-01`, template_id: "frames_fact", zetaris_object: "won.frames_Revenues_CY2025Q1", elapsed_ms: 12 });
+    expect(one.body).toMatchObject({ id: `ev-${RUN}-01`, template_id: "frames_fact", zetaris_object: "cw.frames_Revenues_CY2025Q1", elapsed_ms: 12 });
     const all = await call(base, `/api/run/${RUN}/evidence`);
     expect(all.body.records).toHaveLength(2);
     expect((await call(base, `/api/run/${RUN}/evidence/ev-${RUN}-99`)).status).toBe(404);
@@ -326,10 +326,10 @@ describe("server: reads", () => {
     const r = await call(base, `/api/run/${RUN}/memo.md`);
     expect(r.status).toBe(200);
     expect(r.type).toContain("text/markdown");
-    expect(r.text).toContain("# Weather-or-Not memo: Synthetic Power Co");
+    expect(r.text).toContain("# Crosswalk memo: Synthetic Power Co");
     expect(r.text).toContain("Synthetic memo: revenue +10.0%, degree days +20.0%.");
     expect(r.text).toContain("## Citations");
-    expect(r.text).toContain(`| ev-${RUN}-01 | zetaris_sql | frames_fact | won.frames_Revenues_CY2025Q1 | https://data.sec.gov/api/xbrl/frames/us-gaap/Revenues/USD/CY2025Q1.json | 2026-01-01T00:00:01+00:00 | 12 ms |`);
+    expect(r.text).toContain(`| ev-${RUN}-01 | zetaris_sql | frames_fact | cw.frames_Revenues_CY2025Q1 | https://data.sec.gov/api/xbrl/frames/us-gaap/Revenues/USD/CY2025Q1.json | 2026-01-01T00:00:01+00:00 | 12 ms |`);
     expect(r.text).toContain(`| ev-${RUN}-02 | tool | from ev-${RUN}-01 |`);
     expect(r.text).toContain("| Weather | +5.0% | [+1.0%, +9.0%] |");
     expect(r.text).toContain("- synthetic item not tested");
@@ -375,7 +375,7 @@ describe("server: reads", () => {
     expect(t.body.chart).toHaveLength(1);
   });
 
-  it("GET /api/eval is 404 until eval/report.json exists under WON_DATA_DIR, then serves it", async () => {
+  it("GET /api/eval is 404 until eval/report.json exists under CW_DATA_DIR, then serves it", async () => {
     const { base } = await start();
     expect(existsSync(DATA_PATHS.evalReport)).toBe(false);
     const miss = await call(base, "/api/eval");
@@ -490,7 +490,7 @@ describe("server: the signed override path", () => {
     const signed = await call(base, "/api/approvals/sign", { action: "override_recast", params });
     expect(signed.status).toBe(200);
     const contract = signed.body.contract;
-    expect(contract).toMatchObject({ intent: { primary: "override_recast", parameters: params }, risk: { level: "high" }, scope: { user: "analyst", surface: "won-ui" }, signedBy: "scout" });
+    expect(contract).toMatchObject({ intent: { primary: "override_recast", parameters: params }, risk: { level: "high" }, scope: { user: "analyst", surface: "cw-ui" }, signedBy: "scout" });
     expect(contract.risk.approvals[0]).toMatchObject({ kind: "analyst-approval", by: "analyst", decision: "approve", reason: params.reason });
     expect(contract.signature).toMatch(/^[0-9a-f]{64}$/u);
     // A different chosen side than the contract names: parameter mismatch, nothing written.
@@ -526,8 +526,8 @@ describe("server: the signed override path", () => {
     expect((await call(base, "/api/approvals/sign", { action: "override_recast", params: { ...params, extra: "x" } })).status).toBe(400);
   });
 
-  it("the default verifier keeps its ledger under WON_DATA_DIR/contracts", async () => {
-    process.env.WON_CONTRACT_SECRET = VECTOR_SECRET;
+  it("the default verifier keeps its ledger under CW_DATA_DIR/contracts", async () => {
+    process.env.CW_CONTRACT_SECRET = VECTOR_SECRET;
     try {
       const { base } = await start({ defaultVerifier: true });
       expect((await call(base, "/api/override", { conflict_id: CONFLICT, chosen: "later_filing", reason: "no contract" })).status).toBe(403);
@@ -535,7 +535,7 @@ describe("server: the signed override path", () => {
       expect(existsSync(log)).toBe(true);
       expect(readFileSync(log, "utf8")).toContain('"code":"missing"');
     } finally {
-      delete process.env.WON_CONTRACT_SECRET;
+      delete process.env.CW_CONTRACT_SECRET;
     }
   });
 });
@@ -563,7 +563,7 @@ describe("server: transport safety and static files", () => {
     const idx = await fetch(`${base}/`);
     expect(idx.status).toBe(200);
     expect(idx.headers.get("content-type")).toContain("text/html");
-    expect(await idx.text()).toContain("<title>won-test</title>");
+    expect(await idx.text()).toContain("<title>cw-test</title>");
     const js = await fetch(`${base}/app.js`);
     expect(js.status).toBe(200);
     expect(js.headers.get("content-type")).toContain("text/javascript");
@@ -588,7 +588,7 @@ describe("server: transport safety and static files", () => {
   });
 
   it("serves nothing when no UI directory is configured", async () => {
-    const root = mkdtempSync(join(tmpdir(), "won-server-noui-"));
+    const root = mkdtempSync(join(tmpdir(), "cw-server-noui-"));
     const fake = fakeRuntime(root);
     app = createServer({ runtime: fake.rt, ask: fakeAsk(), verifier: new ContractVerifier(VECTOR_SECRET, "server", join(root, "contracts")), uiDir: null });
     const port = await app.listen(0);

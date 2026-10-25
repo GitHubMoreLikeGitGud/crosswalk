@@ -12,11 +12,11 @@ export const VECTOR: UnsignedContract = {
   intent: { primary: VECTOR_ACTION, parameters: { ...VECTOR_PARAMS, note: "Café \"quoted\" \\ tab\t line\n é ü \u{1F36B}" } },
   risk: { level: "medium", flags: ["vector"], approvals: [] },
   toolPlan: [{ tool: "registrar.register_frames", input: { ...VECTOR_PARAMS } }],
-  scope: { user: "won-agent", surface: "won-agent", capabilities: [VECTOR_ACTION] },
+  scope: { user: "cw-agent", surface: "cw-agent", capabilities: [VECTOR_ACTION] },
   issuedAt: "2026-10-25T10:00:00.000Z",
   expiresAt: "2026-10-25T10:15:00.000Z",
   policyPackVersion: POLICY_PACK_VERSION,
   signedBy: "scout",
 };
 
-export const VECTOR_SIGNATURE = "d866632ded462eab3818c913692f3e81c7ca47d8f4da94e826977a791744faeb";
+export const VECTOR_SIGNATURE = "5ee92a7e14ec244da0ae603ef465588a0b4d223635187afc37a73a26ac5feeba";

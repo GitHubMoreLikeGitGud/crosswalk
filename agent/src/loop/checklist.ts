@@ -8,7 +8,7 @@
 //   na           does not apply to this question (no revenue fact under any tag, so nothing to attribute)
 //   unavailable  the component is not wired in this build (recorded as a gap, never silently passed)
 //   failed       the tool failed twice; the card reports the gap
-// Adapted from ClearShelf (same author, Apache-2.0); the items are Weather-or-Not's.
+// Adapted from Weather-or-Not and ClearShelf (same author, Apache-2.0); the items are Crosswalk's.
 
 import { CHECKLIST_ITEMS, type ChecklistItemId, type ToolName } from "../llm/schemas.ts";
 

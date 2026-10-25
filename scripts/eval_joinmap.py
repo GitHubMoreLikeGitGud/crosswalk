@@ -17,11 +17,11 @@ stations of seeds/stations.json:
   (c) station -> state: the USL station table against seeds/stations.json (the one statement
       that reads a GHCN-backed object; it costs 44 to 88 s on this instance, so it runs last
       and is recorded as not measured when it exceeds the bound);
-  (d) the SIC orphan among the seeds (submissions `sic` LEFT JOIN won.sic_codes), measured in
+  (d) the SIC orphan among the seeds (submissions `sic` LEFT JOIN cw.sic_codes), measured in
       plain SQL; the RUN DQ result of the USL utility FK rule is quoted from the onboarding
       record in zetaris/README.md, not re-run (each DQ run on that table takes minutes).
 
-GHCN views (won.ghcn_*) are never read here. Every statement is logged to
+GHCN views (cw.ghcn_*) are never read here. Every statement is logged to
 data/evidence/sql_log.jsonl with its sha256 and timing. The output document holds every
 statement's text, elapsed ms, row count and rows, plus the structured results that
 agent/src/eval/run.ts folds into docs/eval-report.md.

@@ -4,4 +4,4 @@
 
 SHA-256 of the file: `106a8653267e658b7e299d451da30a01b35da185a86ddf0103069c4b6702db11`.
 
-It holds 10 cases: 7 injections and 3 clean controls. `agent/test/guard.test.ts` runs the Weather-or-Not guard (a partial reimplementation of Scout's injection check, adapted from ClearShelf, same author) on all of them. The food-domain fixtures in `../food-injection.ts` are synthetic (carried over from ClearShelf, same author) and exercise the guard's decision-tampering family.
+It holds 10 cases: 7 injections and 3 clean controls. `agent/test/guard.test.ts` runs the Crosswalk guard (a partial reimplementation of Scout's injection check, adapted from ClearShelf, same author) on all of them. The food-domain fixtures in `../food-injection.ts` are synthetic (carried over from ClearShelf, same author) and exercise the guard's decision-tampering family.

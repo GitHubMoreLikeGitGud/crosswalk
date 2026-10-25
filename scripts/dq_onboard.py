@@ -1,4 +1,4 @@
-"""Onboarding data-quality pass for the Weather-or-Not USL; writes data/dq/latest.json.
+"""Onboarding data-quality pass for the Crosswalk USL; writes data/dq/latest.json.
 
     .venv/Scripts/python scripts/dq_onboard.py                 # RUN DQ coverage_ok, then SHOW DQ INVALID RECORD coverage_ok
     .venv/Scripts/python scripts/dq_onboard.py --skip-run      # the invalid records only (about half the time)

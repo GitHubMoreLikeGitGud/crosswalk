@@ -14,7 +14,7 @@ import * as evaluation from "./views/eval.js";
 
 const VIEWS = { ask, card, memory, graph, eval: evaluation };
 const TITLES = { ask: "Ask", card: "Answer card", memory: "Memory and why", graph: "Graph", eval: "Evaluation" };
-const PRODUCT = "Weather-or-Not";
+const PRODUCT = "Crosswalk";
 
 let cleanup = null;
 

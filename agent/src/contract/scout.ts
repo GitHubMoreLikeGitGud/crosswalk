@@ -3,12 +3,12 @@
 // contractId, traceId, intent{primary, parameters}, risk{level, flags, approvals[]},
 // toolPlan, scope{user, surface, capabilities[]}, issuedAt, expiresAt (+15 min at most),
 // policyPackVersion, signature, signedBy "scout". The signature is HMAC-SHA256 over the
-// canonical JSON of the contract without its signature, keyed by WON_CONTRACT_SECRET. As
+// canonical JSON of the contract without its signature, keyed by CW_CONTRACT_SECRET. As
 // in Scout's own docs, this is an integrity check (it catches mutated, hand-crafted,
 // expired or replayed contracts), not cryptographic-grade security. The Python registrar
 // verifies the same contracts before it runs a plan (gateway/contracts.py); both sides
 // share the canonical encoding below and a test vector (agent/test/fixtures/contract-vector.ts).
-// Adapted from ClearShelf (same author, Apache-2.0).
+// Adapted from Weather-or-Not and ClearShelf (same author, Apache-2.0).
 
 import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
 import { appendFileSync, existsSync, mkdirSync, readFileSync } from "node:fs";
@@ -16,7 +16,7 @@ import { fileURLToPath } from "node:url";
 import { DATA_DIR_URL, REPO_ROOT_URL } from "../config.ts";
 import type { RecastSide } from "../memory/recastConflicts.ts";
 
-export const POLICY_PACK_VERSION = "weather-or-not-scout-subset@1";
+export const POLICY_PACK_VERSION = "crosswalk-scout-subset@1";
 export const CONTRACT_TTL_MS = 15 * 60_000;
 const CLOCK_SKEW_MS = 60_000;
 
@@ -74,10 +74,10 @@ export function overrideRecastParams(contract: ExecutionContract): OverrideRecas
 /** The actions the gateway registrar runs (POST /registrar/<action>). */
 export const REGISTRAR_ACTIONS = ["register_frames", "register_concept", "register_submission"] as const satisfies readonly ContractAction[];
 
-export const SURFACES = ["won-ui", "won-agent"] as const;
+export const SURFACES = ["cw-ui", "cw-agent"] as const;
 export type Surface = (typeof SURFACES)[number];
 /** High-risk contracts are issued for, and accepted from, this surface only. */
-export const APPROVAL_SURFACE: Surface = "won-ui";
+export const APPROVAL_SURFACE: Surface = "cw-ui";
 
 export const APPROVER = "analyst";
 
@@ -174,19 +174,19 @@ function assertSecret(secret: string): void {
   if (typeof secret !== "string" || secret.length < 32) throw new ContractError("contract secret missing or shorter than 32 characters");
 }
 
-/** WON_CONTRACT_SECRET from the environment, else that one key from the repo-root .env.local. Never logged. */
+/** CW_CONTRACT_SECRET from the environment, else that one key from the repo-root .env.local. Never logged. */
 export function loadContractSecret(): string {
-  let s = process.env.WON_CONTRACT_SECRET;
+  let s = process.env.CW_CONTRACT_SECRET;
   if (!s) {
     const envPath = fileURLToPath(new URL(".env.local", REPO_ROOT_URL));
     if (existsSync(envPath)) {
       for (const line of readFileSync(envPath, "utf8").split(/\r?\n/u)) {
-        const m = /^\s*WON_CONTRACT_SECRET\s*=\s*(.*?)\s*$/u.exec(line);
+        const m = /^\s*CW_CONTRACT_SECRET\s*=\s*(.*?)\s*$/u.exec(line);
         if (m) s = m[1]!.replace(/^(["'])(.*)\1$/u, "$2");
       }
     }
   }
-  if (!s) throw new ContractError("WON_CONTRACT_SECRET is not set (.env.local)");
+  if (!s) throw new ContractError("CW_CONTRACT_SECRET is not set (.env.local)");
   assertSecret(s);
   return s;
 }

@@ -7,15 +7,15 @@ from gateway.jdbc import QueryResult
 
 FRAMES_URL = "https://data.sec.gov/api/xbrl/frames/us-gaap/Revenues/USD/CY2025Q1.json"
 SEC_FILE = f'''
-CREATE LIGHTNING REST TABLE frames_revenues_cy2025q1 FROM WON_SEC REQUEST(
+CREATE LIGHTNING REST TABLE frames_revenues_cy2025q1 FROM CW_SEC REQUEST(
     endpoint "{FRAMES_URL}", method "get", response_type "json", http_encoding "URLENCODED"
 ) HEADER ( user-agent "YOUR_APP_NAME YOUR_CONTACT_EMAIL" ) BODY ();
-DESCRIBE WON_SEC.frames_revenues_cy2025q1;
-CACHE TABLE WON_SEC.frames_revenues_cy2025q1;
-SELECT COUNT(*) AS n FROM WON_SEC.frames_revenues_cy2025q1;
-UNCACHE TABLE WON_SEC.frames_revenues_cy2025q1;
+DESCRIBE CW_SEC.frames_revenues_cy2025q1;
+CACHE TABLE CW_SEC.frames_revenues_cy2025q1;
+SELECT COUNT(*) AS n FROM CW_SEC.frames_revenues_cy2025q1;
+UNCACHE TABLE CW_SEC.frames_revenues_cy2025q1;
 SELECT 1;
-RUN DQ coverage_ok TABLE lightning.metastore.weatherornot.weather_or_not_usl.weather_quarter
+RUN DQ coverage_ok TABLE lightning.metastore.crosswalk.crosswalk_usl.weather_quarter
 '''
 
 
@@ -44,7 +44,7 @@ class FakeConnection:
 @pytest.fixture
 def runner(tmp_path, monkeypatch):
     monkeypatch.setattr(run_sql, "load_env", lambda *a, **k: None)
-    monkeypatch.setenv("WON_USER_AGENT", "WeatherOrNot/0.1 test")
+    monkeypatch.setenv("CW_USER_AGENT", "Crosswalk/0.1 test")
     monkeypatch.setattr(run_sql, "LightningConnection", FakeConnection)
     sleeps = []
     monkeypatch.setattr(run_sql.time, "sleep", lambda s: sleeps.append(s))
@@ -68,9 +68,9 @@ def test_user_agent_is_filled_on_the_wire_and_kept_out_of_the_log(runner, temp_s
     f, _ = runner
     assert run_sql.main([str(f)]) == 0
     create = FakeConnection.instances[-1].calls[0][0]
-    assert 'user-agent "WeatherOrNot/0.1 test"' in create and "YOUR_APP_NAME" not in create
+    assert 'user-agent "Crosswalk/0.1 test"' in create and "YOUR_APP_NAME" not in create
     log = temp_sql_log.read_text(encoding="utf-8")
-    assert "YOUR_APP_NAME YOUR_CONTACT_EMAIL" in log and "WeatherOrNot/0.1 test" not in log
+    assert "YOUR_APP_NAME YOUR_CONTACT_EMAIL" in log and "Crosswalk/0.1 test" not in log
 
 
 def test_spacing_flag_only_raises_the_sec_floor(runner):
@@ -86,7 +86,7 @@ def test_dq_timeout_default_and_logged(runner, temp_sql_log):
     f, _ = runner
     assert run_sql.main([str(f)]) == 0
     calls = dict(FakeConnection.instances[-1].calls)
-    assert calls["RUN DQ coverage_ok TABLE lightning.metastore.weatherornot.weather_or_not_usl.weather_quarter"] == 120.0
+    assert calls["RUN DQ coverage_ok TABLE lightning.metastore.crosswalk.crosswalk_usl.weather_quarter"] == 120.0
     assert calls["SELECT 1"] == 600.0
     logged = [json.loads(line) for line in temp_sql_log.read_text(encoding="utf-8").splitlines()]
     assert all("timeout_s" in r for r in logged)

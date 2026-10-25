@@ -3,7 +3,7 @@ gateway/templates.py (an ordered list of registrar templates, for example the CR
 LIGHTNING REST TABLE, CREATE SCHEMASTORE VIEW and CACHE TABLE of a frames period the agent
 has not registered yet) under a medium-risk execution contract.
 
-Adapted from ClearShelf (same author, Apache-2.0).
+Adapted from Weather-or-Not and ClearShelf (same author, Apache-2.0).
 
 Before any statement is sent: the plan's parameters are validated with the template
 patterns (400), then the contract is checked for this action and these parameters

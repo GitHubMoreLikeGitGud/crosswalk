@@ -90,7 +90,7 @@ export function unknownNumbers(memo: string, allowed: readonly AllowedNumber[]):
 /** Deterministic fallback: the same findings as prose, every number from the allowed list. */
 export function templateMemo(m: MemoInput): string {
   const paras = [
-    `Weather-or-Not checked ${m.utility}'s ${m.period} revenue change against management's claim of "${m.claim}". ${m.findings[0] ?? ""}`.trim(),
+    `Crosswalk checked ${m.utility}'s ${m.period} revenue change against management's claim of "${m.claim}". ${m.findings[0] ?? ""}`.trim(),
     m.findings.slice(1, 4).join(" "),
     m.findings.slice(4).join(" "),
     `Verdict: the claim is ${m.verdict}; confidence ${m.confidence}; data-quality gate ${m.dq}. Not tested: ${m.notTested.join("; ")}.`,

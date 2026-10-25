@@ -2,9 +2,9 @@
 // below that are unset, the repo-root .env.local is read. No other key is ever read
 // from that file, so credentials and the contract secret never enter the agent process.
 // Every runtime data path (runs, hmem, world, evidence, dq, contracts, agent.lock, eval,
-// markovian) derives from WON_DATA_DIR (default <repo>/data), so a server and the CLI
+// markovian) derives from CW_DATA_DIR (default <repo>/data), so a server and the CLI
 // can work on separate copies of the state.
-// Adapted from ClearShelf (same author, Apache-2.0).
+// Adapted from Weather-or-Not and ClearShelf (same author, Apache-2.0).
 
 import { existsSync, readFileSync } from "node:fs";
 import { resolve, sep } from "node:path";
@@ -13,19 +13,19 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 export const REPO_ROOT_URL = new URL("../../", import.meta.url);
 export const REPO_ROOT = fileURLToPath(REPO_ROOT_URL);
 
-export const DEFAULT_GATEWAY_URL = "http://127.0.0.1:8793";
+export const DEFAULT_GATEWAY_URL = "http://127.0.0.1:8803";
 export const DEFAULT_OLLAMA_URL = "http://127.0.0.1:11434";
 export const DEFAULT_MODEL = "nemotron-3-nano:4b";
-export const DEFAULT_UI_PORT = 8794;
+export const DEFAULT_UI_PORT = 8804;
 
 const ALLOWED_KEYS = [
   "GATEWAY_URL",
   "OLLAMA_URL",
-  "WON_MODEL",
-  "WON_MODEL_FALLBACK",
-  "WON_THINK",
-  "WON_MIN_AVAILABLE_RAM_MIB",
-  "WON_DATA_DIR",
+  "CW_MODEL",
+  "CW_MODEL_FALLBACK",
+  "CW_THINK",
+  "CW_MIN_AVAILABLE_RAM_MIB",
+  "CW_DATA_DIR",
   "UI_PORT",
   "ZETARIS_GETTING_STARTED_DIR",
 ] as const;
@@ -72,11 +72,11 @@ function applyEnvFile(): void {
 
 function resolveDataDir(): string {
   applyEnvFile();
-  const raw = process.env.WON_DATA_DIR?.trim();
+  const raw = process.env.CW_DATA_DIR?.trim();
   return raw ? resolve(raw) : fileURLToPath(new URL("data", REPO_ROOT_URL));
 }
 
-/** The data directory: WON_DATA_DIR (environment, then .env.local; a relative value is taken from the working directory), default <repo>/data. Absolute, no trailing separator. */
+/** The data directory: CW_DATA_DIR (environment, then .env.local; a relative value is taken from the working directory), default <repo>/data. Absolute, no trailing separator. */
 export const DATA_DIR = resolveDataDir();
 /** The same directory as a file URL with a trailing slash, so `new URL("runs/", DATA_DIR_URL)` names a child. */
 export const DATA_DIR_URL = pathToFileURL(DATA_DIR.endsWith(sep) ? DATA_DIR : `${DATA_DIR}${sep}`);
@@ -116,7 +116,7 @@ export function loadConfig(): Config {
   loaded = {
     gatewayUrl: process.env.GATEWAY_URL ?? DEFAULT_GATEWAY_URL,
     ollamaUrl: process.env.OLLAMA_URL ?? DEFAULT_OLLAMA_URL,
-    model: process.env.WON_MODEL ?? DEFAULT_MODEL,
+    model: process.env.CW_MODEL ?? DEFAULT_MODEL,
     repoRoot: REPO_ROOT,
     dataDir: DATA_DIR,
     uiPort: parsePort(process.env.UI_PORT, DEFAULT_UI_PORT),

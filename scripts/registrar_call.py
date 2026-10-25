@@ -1,4 +1,4 @@
-"""Call a Weather-or-Not gateway registrar plan with a freshly signed execution contract.
+"""Call a Crosswalk gateway registrar plan with a freshly signed execution contract.
 
     .venv/Scripts/python scripts/registrar_call.py register_frames tag=Revenues period=CY2025Q2
     .venv/Scripts/python scripts/registrar_call.py register_submission cik10=0000753308 --note "seed utility"
@@ -6,7 +6,7 @@
 An operator's tool for registering a Zetaris object by hand (a frames period, a filer's
 companyconcept history or submissions profile) through the same contract-checked endpoint the
 agent uses; the agent signs its own contracts (agent/src/contract/scout.ts). Reads
-WON_CONTRACT_SECRET and GATEWAY_URL from .env.local (gateway.jdbc.load_env), posts
+CW_CONTRACT_SECRET and GATEWAY_URL from .env.local (gateway.jdbc.load_env), posts
 POST <gateway>/registrar/<action> and prints the reply as JSON. The reply keeps the User-Agent
 placeholder; the declared value goes to Zetaris only. Exit status 0 on HTTP 200.
 """
@@ -27,7 +27,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from gateway import contracts, templates  # noqa: E402
 from gateway.jdbc import load_env  # noqa: E402
 
-DEFAULT_GATEWAY = "http://127.0.0.1:8793"
+DEFAULT_GATEWAY = "http://127.0.0.1:8803"
 
 
 def make_contract(action: str, params: dict[str, str], secret: str, note: str | None = None, ttl_s: int = 600) -> dict:
@@ -39,7 +39,7 @@ def make_contract(action: str, params: dict[str, str], secret: str, note: str | 
         "intent": {"primary": action, "parameters": params},
         "risk": {"level": contracts.risk_level(action) or "medium", "flags": [], "approvals": []},
         "toolPlan": [{"tool": f"registrar.{action}", "input": params}],
-        "scope": {"user": "operator", "surface": "won-agent", "capabilities": [action]},
+        "scope": {"user": "operator", "surface": "cw-agent", "capabilities": [action]},
         "issuedAt": iso(issued),
         "expiresAt": iso(issued + timedelta(seconds=ttl_s)),
         "policyPackVersion": contracts.POLICY_PACK_VERSION,

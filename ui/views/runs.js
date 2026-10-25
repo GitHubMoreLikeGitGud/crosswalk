@@ -4,7 +4,7 @@
 
 import { api, rememberEvidence, sessionGet, sessionSet } from "../lib.js";
 
-const CURRENT = "won.currentRun";
+const CURRENT = "cw.currentRun";
 const cache = new Map();
 
 export function currentRunId() {

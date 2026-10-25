@@ -201,8 +201,8 @@ describe("degreeDaySql", () => {
       quarter: 1,
       stations: ["USW00013740", "USW00094728", "USW00013740"],
     });
-    expect(sql).toContain("won.ghcn_2025_tmax");
-    expect(sql).toContain("won.ghcn_2025_tmin");
+    expect(sql).toContain("cw.ghcn_2025_tmax");
+    expect(sql).toContain("cw.ghcn_2025_tmin");
     expect(sql.match(/'USW00013740'/g)?.length).toBe(1);
     expect(sql).toContain("'USW00094728'");
     expect(sql).toContain("'20250101'");
@@ -252,7 +252,7 @@ describe("degreeDaySql", () => {
     });
     expect(custom).toContain("cache.tmax_view");
     expect(custom).toContain("cache.tmin_view");
-    expect(custom).not.toContain("won.ghcn_2025_tmax");
+    expect(custom).not.toContain("cw.ghcn_2025_tmax");
   });
 
   it("throws on invalid inputs", () => {
@@ -278,7 +278,7 @@ describe("degreeDaySql", () => {
         year: 2025,
         quarter: 1,
         stations: ["USW00013740"],
-        tmaxTable: "won.ghcn'bad",
+        tmaxTable: "cw.ghcn'bad",
       }),
     ).toThrow();
     expect(() =>
@@ -286,7 +286,7 @@ describe("degreeDaySql", () => {
         year: 2025,
         quarter: 1,
         stations: ["USW00013740"],
-        tmaxTable: "won.ghcn bad",
+        tmaxTable: "cw.ghcn bad",
       }),
     ).toThrow();
     expect(() =>

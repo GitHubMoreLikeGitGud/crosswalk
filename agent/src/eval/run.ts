@@ -5,7 +5,7 @@
 //
 //   npx tsx src/eval/run.ts [--runs <dir>]... [--data <dir>] [--docs <dir>]
 //
-// The data directory is WON_DATA_DIR when set, else <repo>/data.
+// The data directory is CW_DATA_DIR when set, else <repo>/data.
 
 import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
@@ -48,7 +48,7 @@ function collectRuns(dir: string, label: string): { run: EvalRun; source: string
 
 function parseArgs(argv: string[]): { runs: string[]; data: string; docs: string } {
   const extra: string[] = [];
-  let data = process.env.WON_DATA_DIR ? resolve(process.env.WON_DATA_DIR) : join(REPO_ROOT, "data");
+  let data = process.env.CW_DATA_DIR ? resolve(process.env.CW_DATA_DIR) : join(REPO_ROOT, "data");
   let docs = join(REPO_ROOT, "docs");
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i]!;

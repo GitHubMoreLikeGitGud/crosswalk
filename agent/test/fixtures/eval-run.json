@@ -356,21 +356,21 @@
    "params": {
     "cik10": "0001031296"
    },
-   "sql": "SELECT cik, name, sic, `sicDescription`, state FROM won.submission_0001031296",
+   "sql": "SELECT cik, name, sic, `sicDescription`, state FROM cw.submission_0001031296",
    "sql_sha256": "9b654cb9dff075730703ccb5123e7e5820bca9c5196fd48ccc0860ac1f412428",
-   "zetaris_object": "won.submission_0001031296",
+   "zetaris_object": "cw.submission_0001031296",
    "zetaris_objects": [
-    "won.submission_0001031296"
+    "cw.submission_0001031296"
    ],
    "raw_objects": [
-    "won.submission_0001031296"
+    "cw.submission_0001031296"
    ],
    "source_url": "https://data.sec.gov/submissions/CIK0001031296.json",
    "licence": "SEC EDGAR (US government work, public domain); fair-access policy: at most 10 requests per second with a declared User-Agent; queried live, never redistributed",
    "source_cached_at": "2026-10-24T19:16:44+0800",
    "sources": [
     {
-     "object": "won.submission_0001031296",
+     "object": "cw.submission_0001031296",
      "url": "https://data.sec.gov/submissions/CIK0001031296.json",
      "licence": "SEC EDGAR (US government work, public domain); fair-access policy: at most 10 requests per second with a declared User-Agent; queried live, never redistributed",
      "cached_at": "2026-10-24T19:16:44+0800"
@@ -403,21 +403,21 @@
     "tag": "Revenues",
     "year": "2025"
    },
-   "sql": "SELECT fy, fp, form, filed, accn, `start`, `end`, val FROM won.concept_0001031296_Revenues WHERE CAST(substr(`end`, 1, 4) AS INT) BETWEEN 2025 - 1 AND 2025 ORDER BY `end`, filed, accn",
+   "sql": "SELECT fy, fp, form, filed, accn, `start`, `end`, val FROM cw.concept_0001031296_Revenues WHERE CAST(substr(`end`, 1, 4) AS INT) BETWEEN 2025 - 1 AND 2025 ORDER BY `end`, filed, accn",
    "sql_sha256": "2d404bc696f458069cd21b124f2503db5be9c6c378925dcc2bc997401f732a02",
-   "zetaris_object": "won.concept_0001031296_Revenues",
+   "zetaris_object": "cw.concept_0001031296_Revenues",
    "zetaris_objects": [
-    "won.concept_0001031296_Revenues"
+    "cw.concept_0001031296_Revenues"
    ],
    "raw_objects": [
-    "won.concept_0001031296_Revenues"
+    "cw.concept_0001031296_Revenues"
    ],
    "source_url": "https://data.sec.gov/api/xbrl/companyconcept/CIK0001031296/us-gaap/Revenues.json",
    "licence": "SEC EDGAR (US government work, public domain); fair-access policy: at most 10 requests per second with a declared User-Agent; queried live, never redistributed",
    "source_cached_at": "2026-10-24T19:17:21+0800",
    "sources": [
     {
-     "object": "won.concept_0001031296_Revenues",
+     "object": "cw.concept_0001031296_Revenues",
      "url": "https://data.sec.gov/api/xbrl/companyconcept/CIK0001031296/us-gaap/Revenues.json",
      "licence": "SEC EDGAR (US government work, public domain); fair-access policy: at most 10 requests per second with a declared User-Agent; queried live, never redistributed",
      "cached_at": "2026-10-24T19:17:21+0800"
@@ -452,21 +452,21 @@
     "tag": "Revenues",
     "period": "CY2025Q1"
    },
-   "sql": "SELECT cik, `entityName`, loc, `start`, `end`, CAST(val AS DOUBLE) AS val, accn FROM won.frames_Revenues_CY2025Q1 WHERE CAST(cik AS BIGINT) IN (...) ORDER BY cik",
+   "sql": "SELECT cik, `entityName`, loc, `start`, `end`, CAST(val AS DOUBLE) AS val, accn FROM cw.frames_Revenues_CY2025Q1 WHERE CAST(cik AS BIGINT) IN (...) ORDER BY cik",
    "sql_sha256": "33ce55e4089f855387e8d2a9bd00e086b14cff6cfb4970773c56b8f0a31e2112",
-   "zetaris_object": "won.frames_Revenues_CY2025Q1",
+   "zetaris_object": "cw.frames_Revenues_CY2025Q1",
    "zetaris_objects": [
-    "won.frames_Revenues_CY2025Q1"
+    "cw.frames_Revenues_CY2025Q1"
    ],
    "raw_objects": [
-    "won.frames_Revenues_CY2025Q1"
+    "cw.frames_Revenues_CY2025Q1"
    ],
    "source_url": "https://data.sec.gov/api/xbrl/frames/us-gaap/Revenues/USD/CY2025Q1.json",
    "licence": "SEC EDGAR (US government work, public domain); fair-access policy: at most 10 requests per second with a declared User-Agent; queried live, never redistributed",
    "source_cached_at": "2026-10-24T19:38:24+0800",
    "sources": [
     {
-     "object": "won.frames_Revenues_CY2025Q1",
+     "object": "cw.frames_Revenues_CY2025Q1",
      "url": "https://data.sec.gov/api/xbrl/frames/us-gaap/Revenues/USD/CY2025Q1.json",
      "licence": "SEC EDGAR (US government work, public domain); fair-access policy: at most 10 requests per second with a declared User-Agent; queried live, never redistributed",
      "cached_at": "2026-10-24T19:38:24+0800"
@@ -500,21 +500,21 @@
     "tag": "Revenues",
     "period": "CY2024Q1"
    },
-   "sql": "SELECT cik, `entityName`, loc, `start`, `end`, CAST(val AS DOUBLE) AS val, accn FROM won.frames_Revenues_CY2024Q1 WHERE CAST(cik AS BIGINT) IN (...) ORDER BY cik",
+   "sql": "SELECT cik, `entityName`, loc, `start`, `end`, CAST(val AS DOUBLE) AS val, accn FROM cw.frames_Revenues_CY2024Q1 WHERE CAST(cik AS BIGINT) IN (...) ORDER BY cik",
    "sql_sha256": "e1f73905195018898c5d9f4215b8b85240d92f66408dbecea29d1304e572f551",
-   "zetaris_object": "won.frames_Revenues_CY2024Q1",
+   "zetaris_object": "cw.frames_Revenues_CY2024Q1",
    "zetaris_objects": [
-    "won.frames_Revenues_CY2024Q1"
+    "cw.frames_Revenues_CY2024Q1"
    ],
    "raw_objects": [
-    "won.frames_Revenues_CY2024Q1"
+    "cw.frames_Revenues_CY2024Q1"
    ],
    "source_url": "https://data.sec.gov/api/xbrl/frames/us-gaap/Revenues/USD/CY2024Q1.json",
    "licence": "SEC EDGAR (US government work, public domain); fair-access policy: at most 10 requests per second with a declared User-Agent; queried live, never redistributed",
    "source_cached_at": "2026-10-24T17:11:45+0800",
    "sources": [
     {
-     "object": "won.frames_Revenues_CY2024Q1",
+     "object": "cw.frames_Revenues_CY2024Q1",
      "url": "https://data.sec.gov/api/xbrl/frames/us-gaap/Revenues/USD/CY2024Q1.json",
      "licence": "SEC EDGAR (US government work, public domain); fair-access policy: at most 10 requests per second with a declared User-Agent; queried live, never redistributed",
      "cached_at": "2026-10-24T17:11:45+0800"
@@ -548,21 +548,21 @@
     "tag": "RevenueFromContractWithCustomerExcludingAssessedTax",
     "period": "CY2025Q1"
    },
-   "sql": "SELECT cik, `entityName`, loc, `start`, `end`, CAST(val AS DOUBLE) AS val, accn FROM won.frames_RevenueFromContractWithCustomerExcludingAssessedTax_CY2025Q1 WHERE CAST(cik AS BIGINT) IN (...) ORDER BY cik",
+   "sql": "SELECT cik, `entityName`, loc, `start`, `end`, CAST(val AS DOUBLE) AS val, accn FROM cw.frames_RevenueFromContractWithCustomerExcludingAssessedTax_CY2025Q1 WHERE CAST(cik AS BIGINT) IN (...) ORDER BY cik",
    "sql_sha256": "c89e5b78361023a102b4b0f0869332e463a4b71972c1c959266be15231c8e75f",
-   "zetaris_object": "won.frames_RevenueFromContractWithCustomerExcludingAssessedTax_CY2025Q1",
+   "zetaris_object": "cw.frames_RevenueFromContractWithCustomerExcludingAssessedTax_CY2025Q1",
    "zetaris_objects": [
-    "won.frames_RevenueFromContractWithCustomerExcludingAssessedTax_CY2025Q1"
+    "cw.frames_RevenueFromContractWithCustomerExcludingAssessedTax_CY2025Q1"
    ],
    "raw_objects": [
-    "won.frames_RevenueFromContractWithCustomerExcludingAssessedTax_CY2025Q1"
+    "cw.frames_RevenueFromContractWithCustomerExcludingAssessedTax_CY2025Q1"
    ],
    "source_url": "https://data.sec.gov/api/xbrl/frames/us-gaap/RevenueFromContractWithCustomerExcludingAssessedTax/USD/CY2025Q1.json",
    "licence": "SEC EDGAR (US government work, public domain); fair-access policy: at most 10 requests per second with a declared User-Agent; queried live, never redistributed",
    "source_cached_at": "2026-10-24T17:11:46+0800",
    "sources": [
     {
-     "object": "won.frames_RevenueFromContractWithCustomerExcludingAssessedTax_CY2025Q1",
+     "object": "cw.frames_RevenueFromContractWithCustomerExcludingAssessedTax_CY2025Q1",
      "url": "https://data.sec.gov/api/xbrl/frames/us-gaap/RevenueFromContractWithCustomerExcludingAssessedTax/USD/CY2025Q1.json",
      "licence": "SEC EDGAR (US government work, public domain); fair-access policy: at most 10 requests per second with a declared User-Agent; queried live, never redistributed",
      "cached_at": "2026-10-24T17:11:46+0800"
@@ -596,21 +596,21 @@
     "tag": "RevenueFromContractWithCustomerExcludingAssessedTax",
     "period": "CY2024Q1"
    },
-   "sql": "SELECT cik, `entityName`, loc, `start`, `end`, CAST(val AS DOUBLE) AS val, accn FROM won.frames_RevenueFromContractWithCustomerExcludingAssessedTax_CY2024Q1 WHERE CAST(cik AS BIGINT) IN (...) ORDER BY cik",
+   "sql": "SELECT cik, `entityName`, loc, `start`, `end`, CAST(val AS DOUBLE) AS val, accn FROM cw.frames_RevenueFromContractWithCustomerExcludingAssessedTax_CY2024Q1 WHERE CAST(cik AS BIGINT) IN (...) ORDER BY cik",
    "sql_sha256": "225577b9b0c73d9fe028b09d5011b7fbf3f893cfa0124ce16eca5f20b54f4e4e",
-   "zetaris_object": "won.frames_RevenueFromContractWithCustomerExcludingAssessedTax_CY2024Q1",
+   "zetaris_object": "cw.frames_RevenueFromContractWithCustomerExcludingAssessedTax_CY2024Q1",
    "zetaris_objects": [
-    "won.frames_RevenueFromContractWithCustomerExcludingAssessedTax_CY2024Q1"
+    "cw.frames_RevenueFromContractWithCustomerExcludingAssessedTax_CY2024Q1"
    ],
    "raw_objects": [
-    "won.frames_RevenueFromContractWithCustomerExcludingAssessedTax_CY2024Q1"
+    "cw.frames_RevenueFromContractWithCustomerExcludingAssessedTax_CY2024Q1"
    ],
    "source_url": "https://data.sec.gov/api/xbrl/frames/us-gaap/RevenueFromContractWithCustomerExcludingAssessedTax/USD/CY2024Q1.json",
    "licence": "SEC EDGAR (US government work, public domain); fair-access policy: at most 10 requests per second with a declared User-Agent; queried live, never redistributed",
    "source_cached_at": "2026-10-24T17:11:47+0800",
    "sources": [
     {
-     "object": "won.frames_RevenueFromContractWithCustomerExcludingAssessedTax_CY2024Q1",
+     "object": "cw.frames_RevenueFromContractWithCustomerExcludingAssessedTax_CY2024Q1",
      "url": "https://data.sec.gov/api/xbrl/frames/us-gaap/RevenueFromContractWithCustomerExcludingAssessedTax/USD/CY2024Q1.json",
      "licence": "SEC EDGAR (US government work, public domain); fair-access policy: at most 10 requests per second with a declared User-Agent; queried live, never redistributed",
      "cached_at": "2026-10-24T17:11:47+0800"
@@ -644,21 +644,21 @@
     "tag": "RegulatedAndUnregulatedOperatingRevenue",
     "period": "CY2025Q1"
    },
-   "sql": "SELECT cik, `entityName`, loc, `start`, `end`, CAST(val AS DOUBLE) AS val, accn FROM won.frames_RegulatedAndUnregulatedOperatingRevenue_CY2025Q1 WHERE CAST(cik AS BIGINT) IN (...) ORDER BY cik",
+   "sql": "SELECT cik, `entityName`, loc, `start`, `end`, CAST(val AS DOUBLE) AS val, accn FROM cw.frames_RegulatedAndUnregulatedOperatingRevenue_CY2025Q1 WHERE CAST(cik AS BIGINT) IN (...) ORDER BY cik",
    "sql_sha256": "45898512569c72a7181b1042887c67ac9c6e2f077ff8c0a40f184c7fe61fbdc8",
-   "zetaris_object": "won.frames_RegulatedAndUnregulatedOperatingRevenue_CY2025Q1",
+   "zetaris_object": "cw.frames_RegulatedAndUnregulatedOperatingRevenue_CY2025Q1",
    "zetaris_objects": [
-    "won.frames_RegulatedAndUnregulatedOperatingRevenue_CY2025Q1"
+    "cw.frames_RegulatedAndUnregulatedOperatingRevenue_CY2025Q1"
    ],
    "raw_objects": [
-    "won.frames_RegulatedAndUnregulatedOperatingRevenue_CY2025Q1"
+    "cw.frames_RegulatedAndUnregulatedOperatingRevenue_CY2025Q1"
    ],
    "source_url": "https://data.sec.gov/api/xbrl/frames/us-gaap/RegulatedAndUnregulatedOperatingRevenue/USD/CY2025Q1.json",
    "licence": "SEC EDGAR (US government work, public domain); fair-access policy: at most 10 requests per second with a declared User-Agent; queried live, never redistributed",
    "source_cached_at": "2026-10-24T17:11:49+0800",
    "sources": [
     {
-     "object": "won.frames_RegulatedAndUnregulatedOperatingRevenue_CY2025Q1",
+     "object": "cw.frames_RegulatedAndUnregulatedOperatingRevenue_CY2025Q1",
      "url": "https://data.sec.gov/api/xbrl/frames/us-gaap/RegulatedAndUnregulatedOperatingRevenue/USD/CY2025Q1.json",
      "licence": "SEC EDGAR (US government work, public domain); fair-access policy: at most 10 requests per second with a declared User-Agent; queried live, never redistributed",
      "cached_at": "2026-10-24T17:11:49+0800"
@@ -692,21 +692,21 @@
     "tag": "RegulatedAndUnregulatedOperatingRevenue",
     "period": "CY2024Q1"
    },
-   "sql": "SELECT cik, `entityName`, loc, `start`, `end`, CAST(val AS DOUBLE) AS val, accn FROM won.frames_RegulatedAndUnregulatedOperatingRevenue_CY2024Q1 WHERE CAST(cik AS BIGINT) IN (...) ORDER BY cik",
+   "sql": "SELECT cik, `entityName`, loc, `start`, `end`, CAST(val AS DOUBLE) AS val, accn FROM cw.frames_RegulatedAndUnregulatedOperatingRevenue_CY2024Q1 WHERE CAST(cik AS BIGINT) IN (...) ORDER BY cik",
    "sql_sha256": "32c45abe4127f93a85ba129c6f1ee8310dd8ad2398302fcd351c879ee7960ca7",
-   "zetaris_object": "won.frames_RegulatedAndUnregulatedOperatingRevenue_CY2024Q1",
+   "zetaris_object": "cw.frames_RegulatedAndUnregulatedOperatingRevenue_CY2024Q1",
    "zetaris_objects": [
-    "won.frames_RegulatedAndUnregulatedOperatingRevenue_CY2024Q1"
+    "cw.frames_RegulatedAndUnregulatedOperatingRevenue_CY2024Q1"
    ],
    "raw_objects": [
-    "won.frames_RegulatedAndUnregulatedOperatingRevenue_CY2024Q1"
+    "cw.frames_RegulatedAndUnregulatedOperatingRevenue_CY2024Q1"
    ],
    "source_url": "https://data.sec.gov/api/xbrl/frames/us-gaap/RegulatedAndUnregulatedOperatingRevenue/USD/CY2024Q1.json",
    "licence": "SEC EDGAR (US government work, public domain); fair-access policy: at most 10 requests per second with a declared User-Agent; queried live, never redistributed",
    "source_cached_at": "2026-10-24T17:11:50+0800",
    "sources": [
     {
-     "object": "won.frames_RegulatedAndUnregulatedOperatingRevenue_CY2024Q1",
+     "object": "cw.frames_RegulatedAndUnregulatedOperatingRevenue_CY2024Q1",
      "url": "https://data.sec.gov/api/xbrl/frames/us-gaap/RegulatedAndUnregulatedOperatingRevenue/USD/CY2024Q1.json",
      "licence": "SEC EDGAR (US government work, public domain); fair-access policy: at most 10 requests per second with a declared User-Agent; queried live, never redistributed",
      "cached_at": "2026-10-24T17:11:50+0800"
@@ -760,29 +760,29 @@
     "quarter": "1",
     "station_list": "USW00003017,USW00003927,USW00003940,USW00012839,USW00012842,USW00012916,USW00012960,USW00013722,USW00013737,USW00013739,USW00013781,USW00013866,USW00013874,USW00013876,USW00013883,USW00013963,USW00013967,USW00013994,USW00013996,USW00014734,USW00014739,USW00014740,USW00014745,USW00014765,USW00014820,USW00014821,USW00014836,USW00014837,USW00014839,USW00014842,USW00014913,USW00014922,USW00014933,USW00014944,USW00022521,USW00023050,USW00023174,USW00023183,USW00023234,USW00024011,USW00024018,USW00024033,USW00024090,USW00024131,USW00024229,USW00024233,USW00093720,USW00093721,USW00093730,USW00093817,USW00093819,USW00093821,USW00094728,USW00094823,USW00094846,USW00094847"
    },
-   "sql": "SELECT x.ID AS station_id, 2025 AS year, 1 AS quarter, SUM(GREATEST(0, 65 - (((x.DATA_VALUE + n.DATA_VALUE) / 2.0) / 10.0 * 9.0 / 5.0 + 32))) AS hdd, SUM(GREATEST(0, (((x.DATA_VALUE + n.DATA_VALUE) / 2.0) / 10.0 * 9.0 / 5.0 + 32) - 65)) AS cdd, COUNT(*) AS days_observed, CASE 1 WHEN 1 THEN CASE WHEN 2025 % 4 = 0 THEN 91 ELSE 90 END WHEN 2 THEN 91 ELSE 92 END AS days_in_quarter, COUNT(*) / CAST(CASE 1 WHEN 1 THEN CASE WHEN 2025 % 4 = 0 THEN 91 ELSE 90 END WHEN 2 THEN 91 ELSE 92 END AS DOUBLE) AS coverage FROM won.ghcn_2025_tmax x JOIN won.ghcn_2025_tmin n ON n.ID = x.ID AND n.DATE = x.DATE WHERE x.ID IN ('USW00003017', 'USW00003927', 'USW00003940', 'USW00012839', 'USW00012842', 'USW00012916', 'USW00012960', 'USW00013722', 'USW00013737', 'USW00013739', 'USW00013781', 'USW00013866', 'USW00013874', 'USW00013876', 'USW00013883', 'USW00013963', 'USW00013967', 'USW00013994', 'USW00013996', 'USW00014734', 'USW00014739', 'USW00014740', 'USW00014745', 'USW00014765', 'USW00014820', 'USW00014821', 'USW00014836', 'USW00014837', 'USW00014839', 'USW00014842', 'USW00014913', 'USW00014922', 'USW00014933', 'USW00014944', 'USW00022521', 'USW00023050', 'USW00023174', 'USW00023183', 'USW00023234', 'USW00024011', 'USW00024018', 'USW00024033', 'USW00024090', 'USW00024131', 'USW00024229', 'USW00024233', 'USW00093720', 'USW00093721', 'USW00093730', 'USW00093817', 'USW00093819', 'USW00093821', 'USW00094728', 'USW00094823', 'USW00094846', 'USW00094847') AND CAST(substr(x.DATE, 5, 2) AS INT) BETWEEN 3 * 1 - 2 AND 3 * 1 AND (x.Q_FLAG IS NULL OR x.Q_FLAG = '') AND (n.Q_FLAG IS NULL OR n.Q_FLAG = '') GROUP BY x.ID ORDER BY x.ID",
+   "sql": "SELECT x.ID AS station_id, 2025 AS year, 1 AS quarter, SUM(GREATEST(0, 65 - (((x.DATA_VALUE + n.DATA_VALUE) / 2.0) / 10.0 * 9.0 / 5.0 + 32))) AS hdd, SUM(GREATEST(0, (((x.DATA_VALUE + n.DATA_VALUE) / 2.0) / 10.0 * 9.0 / 5.0 + 32) - 65)) AS cdd, COUNT(*) AS days_observed, CASE 1 WHEN 1 THEN CASE WHEN 2025 % 4 = 0 THEN 91 ELSE 90 END WHEN 2 THEN 91 ELSE 92 END AS days_in_quarter, COUNT(*) / CAST(CASE 1 WHEN 1 THEN CASE WHEN 2025 % 4 = 0 THEN 91 ELSE 90 END WHEN 2 THEN 91 ELSE 92 END AS DOUBLE) AS coverage FROM cw.ghcn_2025_tmax x JOIN cw.ghcn_2025_tmin n ON n.ID = x.ID AND n.DATE = x.DATE WHERE x.ID IN ('USW00003017', 'USW00003927', 'USW00003940', 'USW00012839', 'USW00012842', 'USW00012916', 'USW00012960', 'USW00013722', 'USW00013737', 'USW00013739', 'USW00013781', 'USW00013866', 'USW00013874', 'USW00013876', 'USW00013883', 'USW00013963', 'USW00013967', 'USW00013994', 'USW00013996', 'USW00014734', 'USW00014739', 'USW00014740', 'USW00014745', 'USW00014765', 'USW00014820', 'USW00014821', 'USW00014836', 'USW00014837', 'USW00014839', 'USW00014842', 'USW00014913', 'USW00014922', 'USW00014933', 'USW00014944', 'USW00022521', 'USW00023050', 'USW00023174', 'USW00023183', 'USW00023234', 'USW00024011', 'USW00024018', 'USW00024033', 'USW00024090', 'USW00024131', 'USW00024229', 'USW00024233', 'USW00093720', 'USW00093721', 'USW00093730', 'USW00093817', 'USW00093819', 'USW00093821', 'USW00094728', 'USW00094823', 'USW00094846', 'USW00094847') AND CAST(substr(x.DATE, 5, 2) AS INT) BETWEEN 3 * 1 - 2 AND 3 * 1 AND (x.Q_FLAG IS NULL OR x.Q_FLAG = '') AND (n.Q_FLAG IS NULL OR n.Q_FLAG = '') GROUP BY x.ID ORDER BY x.ID",
    "sql_sha256": "b56eb3d9b8f43b7e6c1eb3b6a6dc42546c0579094414793ddffd506356e3f5f0",
-   "zetaris_object": "won.ghcn_2025_tmax",
+   "zetaris_object": "cw.ghcn_2025_tmax",
    "zetaris_objects": [
-    "won.ghcn_2025_tmax",
-    "won.ghcn_2025_tmin"
+    "cw.ghcn_2025_tmax",
+    "cw.ghcn_2025_tmin"
    ],
    "raw_objects": [
-    "won.ghcn_2025_tmax",
-    "won.ghcn_2025_tmin"
+    "cw.ghcn_2025_tmax",
+    "cw.ghcn_2025_tmin"
    ],
    "source_url": "s3a://noaa-ghcn-pds/parquet/by_year/YEAR=2025/ELEMENT=TMAX/",
    "licence": "NOAA GHCN-Daily on the AWS Open Data public bucket (US government work, public domain; cite NOAA NCEI)",
    "source_cached_at": "2026-10-24T17:08:29+0800",
    "sources": [
     {
-     "object": "won.ghcn_2025_tmax",
+     "object": "cw.ghcn_2025_tmax",
      "url": "s3a://noaa-ghcn-pds/parquet/by_year/YEAR=2025/ELEMENT=TMAX/",
      "licence": "NOAA GHCN-Daily on the AWS Open Data public bucket (US government work, public domain; cite NOAA NCEI)",
      "cached_at": "2026-10-24T17:08:29+0800"
     },
     {
-     "object": "won.ghcn_2025_tmin",
+     "object": "cw.ghcn_2025_tmin",
      "url": "s3a://noaa-ghcn-pds/parquet/by_year/YEAR=2025/ELEMENT=TMIN/",
      "licence": "NOAA GHCN-Daily on the AWS Open Data public bucket (US government work, public domain; cite NOAA NCEI)",
      "cached_at": "2026-10-24T17:09:11+0800"
@@ -939,29 +939,29 @@
     "quarter": "1",
     "station_list": "USW00003017,USW00003927,USW00003940,USW00012839,USW00012842,USW00012916,USW00012960,USW00013722,USW00013737,USW00013739,USW00013781,USW00013866,USW00013874,USW00013876,USW00013883,USW00013963,USW00013967,USW00013994,USW00013996,USW00014734,USW00014739,USW00014740,USW00014745,USW00014765,USW00014820,USW00014821,USW00014836,USW00014837,USW00014839,USW00014842,USW00014913,USW00014922,USW00014933,USW00014944,USW00022521,USW00023050,USW00023174,USW00023183,USW00023234,USW00024011,USW00024018,USW00024033,USW00024090,USW00024131,USW00024229,USW00024233,USW00093720,USW00093721,USW00093730,USW00093817,USW00093819,USW00093821,USW00094728,USW00094823,USW00094846,USW00094847"
    },
-   "sql": "SELECT x.ID AS station_id, 2024 AS year, 1 AS quarter, SUM(GREATEST(0, 65 - (((x.DATA_VALUE + n.DATA_VALUE) / 2.0) / 10.0 * 9.0 / 5.0 + 32))) AS hdd, SUM(GREATEST(0, (((x.DATA_VALUE + n.DATA_VALUE) / 2.0) / 10.0 * 9.0 / 5.0 + 32) - 65)) AS cdd, COUNT(*) AS days_observed, CASE 1 WHEN 1 THEN CASE WHEN 2024 % 4 = 0 THEN 91 ELSE 90 END WHEN 2 THEN 91 ELSE 92 END AS days_in_quarter, COUNT(*) / CAST(CASE 1 WHEN 1 THEN CASE WHEN 2024 % 4 = 0 THEN 91 ELSE 90 END WHEN 2 THEN 91 ELSE 92 END AS DOUBLE) AS coverage FROM won.ghcn_2024_tmax x JOIN won.ghcn_2024_tmin n ON n.ID = x.ID AND n.DATE = x.DATE WHERE x.ID IN ('USW00003017', 'USW00003927', 'USW00003940', 'USW00012839', 'USW00012842', 'USW00012916', 'USW00012960', 'USW00013722', 'USW00013737', 'USW00013739', 'USW00013781', 'USW00013866', 'USW00013874', 'USW00013876', 'USW00013883', 'USW00013963', 'USW00013967', 'USW00013994', 'USW00013996', 'USW00014734', 'USW00014739', 'USW00014740', 'USW00014745', 'USW00014765', 'USW00014820', 'USW00014821', 'USW00014836', 'USW00014837', 'USW00014839', 'USW00014842', 'USW00014913', 'USW00014922', 'USW00014933', 'USW00014944', 'USW00022521', 'USW00023050', 'USW00023174', 'USW00023183', 'USW00023234', 'USW00024011', 'USW00024018', 'USW00024033', 'USW00024090', 'USW00024131', 'USW00024229', 'USW00024233', 'USW00093720', 'USW00093721', 'USW00093730', 'USW00093817', 'USW00093819', 'USW00093821', 'USW00094728', 'USW00094823', 'USW00094846', 'USW00094847') AND CAST(substr(x.DATE, 5, 2) AS INT) BETWEEN 3 * 1 - 2 AND 3 * 1 AND (x.Q_FLAG IS NULL OR x.Q_FLAG = '') AND (n.Q_FLAG IS NULL OR n.Q_FLAG = '') GROUP BY x.ID ORDER BY x.ID",
+   "sql": "SELECT x.ID AS station_id, 2024 AS year, 1 AS quarter, SUM(GREATEST(0, 65 - (((x.DATA_VALUE + n.DATA_VALUE) / 2.0) / 10.0 * 9.0 / 5.0 + 32))) AS hdd, SUM(GREATEST(0, (((x.DATA_VALUE + n.DATA_VALUE) / 2.0) / 10.0 * 9.0 / 5.0 + 32) - 65)) AS cdd, COUNT(*) AS days_observed, CASE 1 WHEN 1 THEN CASE WHEN 2024 % 4 = 0 THEN 91 ELSE 90 END WHEN 2 THEN 91 ELSE 92 END AS days_in_quarter, COUNT(*) / CAST(CASE 1 WHEN 1 THEN CASE WHEN 2024 % 4 = 0 THEN 91 ELSE 90 END WHEN 2 THEN 91 ELSE 92 END AS DOUBLE) AS coverage FROM cw.ghcn_2024_tmax x JOIN cw.ghcn_2024_tmin n ON n.ID = x.ID AND n.DATE = x.DATE WHERE x.ID IN ('USW00003017', 'USW00003927', 'USW00003940', 'USW00012839', 'USW00012842', 'USW00012916', 'USW00012960', 'USW00013722', 'USW00013737', 'USW00013739', 'USW00013781', 'USW00013866', 'USW00013874', 'USW00013876', 'USW00013883', 'USW00013963', 'USW00013967', 'USW00013994', 'USW00013996', 'USW00014734', 'USW00014739', 'USW00014740', 'USW00014745', 'USW00014765', 'USW00014820', 'USW00014821', 'USW00014836', 'USW00014837', 'USW00014839', 'USW00014842', 'USW00014913', 'USW00014922', 'USW00014933', 'USW00014944', 'USW00022521', 'USW00023050', 'USW00023174', 'USW00023183', 'USW00023234', 'USW00024011', 'USW00024018', 'USW00024033', 'USW00024090', 'USW00024131', 'USW00024229', 'USW00024233', 'USW00093720', 'USW00093721', 'USW00093730', 'USW00093817', 'USW00093819', 'USW00093821', 'USW00094728', 'USW00094823', 'USW00094846', 'USW00094847') AND CAST(substr(x.DATE, 5, 2) AS INT) BETWEEN 3 * 1 - 2 AND 3 * 1 AND (x.Q_FLAG IS NULL OR x.Q_FLAG = '') AND (n.Q_FLAG IS NULL OR n.Q_FLAG = '') GROUP BY x.ID ORDER BY x.ID",
    "sql_sha256": "861109012737bc4c2cf589e1065eba07f67e1f2d742a7af648703aedfcd7d522",
-   "zetaris_object": "won.ghcn_2024_tmax",
+   "zetaris_object": "cw.ghcn_2024_tmax",
    "zetaris_objects": [
-    "won.ghcn_2024_tmax",
-    "won.ghcn_2024_tmin"
+    "cw.ghcn_2024_tmax",
+    "cw.ghcn_2024_tmin"
    ],
    "raw_objects": [
-    "won.ghcn_2024_tmax",
-    "won.ghcn_2024_tmin"
+    "cw.ghcn_2024_tmax",
+    "cw.ghcn_2024_tmin"
    ],
    "source_url": "s3a://noaa-ghcn-pds/parquet/by_year/YEAR=2024/ELEMENT=TMAX/",
    "licence": "NOAA GHCN-Daily on the AWS Open Data public bucket (US government work, public domain; cite NOAA NCEI)",
    "source_cached_at": "2026-10-24T17:09:57+0800",
    "sources": [
     {
-     "object": "won.ghcn_2024_tmax",
+     "object": "cw.ghcn_2024_tmax",
      "url": "s3a://noaa-ghcn-pds/parquet/by_year/YEAR=2024/ELEMENT=TMAX/",
      "licence": "NOAA GHCN-Daily on the AWS Open Data public bucket (US government work, public domain; cite NOAA NCEI)",
      "cached_at": "2026-10-24T17:09:57+0800"
     },
     {
-     "object": "won.ghcn_2024_tmin",
+     "object": "cw.ghcn_2024_tmin",
      "url": "s3a://noaa-ghcn-pds/parquet/by_year/YEAR=2024/ELEMENT=TMIN/",
      "licence": "NOAA GHCN-Daily on the AWS Open Data public bucket (US government work, public domain; cite NOAA NCEI)",
      "cached_at": "2026-10-24T17:10:38+0800"
@@ -1129,20 +1129,20 @@
    "claim": "evidence 14 (dq)",
    "template_id": "dq_run_coverage",
    "params": {},
-   "sql": "RUN DQ coverage_ok TABLE lightning.metastore.weatherornot.weather_or_not_usl.weather_quarter",
+   "sql": "RUN DQ coverage_ok TABLE lightning.metastore.crosswalk.crosswalk_usl.weather_quarter",
    "sql_sha256": "381303d9e998841f55b402b1b6ba43ef87762372c2b2f9a1a8d056323264b0e8",
-   "zetaris_object": "lightning.metastore.weatherornot.weather_or_not_usl.weather_quarter",
+   "zetaris_object": "lightning.metastore.crosswalk.crosswalk_usl.weather_quarter",
    "zetaris_objects": [
-    "lightning.metastore.weatherornot.weather_or_not_usl.weather_quarter"
+    "lightning.metastore.crosswalk.crosswalk_usl.weather_quarter"
    ],
    "raw_objects": [
-    "won.ghcn_2025_tmax",
-    "won.ghcn_2025_tmin",
-    "won.ghcn_2024_tmax",
-    "won.ghcn_2024_tmin"
+    "cw.ghcn_2025_tmax",
+    "cw.ghcn_2025_tmin",
+    "cw.ghcn_2024_tmax",
+    "cw.ghcn_2024_tmin"
    ],
-   "source_url": "zetaris-usl:weather_or_not_usl",
-   "licence": "Weather-or-Not USL (governed copies of the SEC and NOAA objects above)",
+   "source_url": "zetaris-usl:crosswalk_usl",
+   "licence": "Crosswalk USL (governed copies of the SEC and NOAA objects above)",
    "source_cached_at": null,
    "columns": [
     "name",
@@ -1170,20 +1170,20 @@
    "claim": "evidence 15 (dq)",
    "template_id": "dq_invalid",
    "params": {},
-   "sql": "SHOW DQ INVALID RECORD coverage_ok TABLE lightning.metastore.weatherornot.weather_or_not_usl.weather_quarter",
+   "sql": "SHOW DQ INVALID RECORD coverage_ok TABLE lightning.metastore.crosswalk.crosswalk_usl.weather_quarter",
    "sql_sha256": "6092b2c0008c9b4accaf163ade2bb2b3f8164a748e38ab351541261a39de7fa6",
-   "zetaris_object": "lightning.metastore.weatherornot.weather_or_not_usl.weather_quarter",
+   "zetaris_object": "lightning.metastore.crosswalk.crosswalk_usl.weather_quarter",
    "zetaris_objects": [
-    "lightning.metastore.weatherornot.weather_or_not_usl.weather_quarter"
+    "lightning.metastore.crosswalk.crosswalk_usl.weather_quarter"
    ],
    "raw_objects": [
-    "won.ghcn_2025_tmax",
-    "won.ghcn_2025_tmin",
-    "won.ghcn_2024_tmax",
-    "won.ghcn_2024_tmin"
+    "cw.ghcn_2025_tmax",
+    "cw.ghcn_2025_tmin",
+    "cw.ghcn_2024_tmax",
+    "cw.ghcn_2024_tmin"
    ],
-   "source_url": "zetaris-usl:weather_or_not_usl",
-   "licence": "Weather-or-Not USL (governed copies of the SEC and NOAA objects above)",
+   "source_url": "zetaris-usl:crosswalk_usl",
+   "licence": "Crosswalk USL (governed copies of the SEC and NOAA objects above)",
    "source_cached_at": null,
    "columns": [
     "station_id",

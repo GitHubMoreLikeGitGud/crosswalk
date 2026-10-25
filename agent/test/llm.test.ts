@@ -65,7 +65,7 @@ describe("tool catalog and prompts", () => {
 
   it("renders the planner and memo prompts for this domain, with no leftover from the sister project", () => {
     const planner = render(loadPrompt("planner"), { chain_label: "test", tools: "- x" });
-    expect(planner).toContain("Weather-or-Not");
+    expect(planner).toContain("Crosswalk");
     expect(planner).toContain("finalize is used only after");
     const memo = loadPrompt("memo");
     expect(memo).toContain("ALLOWED NUMBERS");
@@ -75,11 +75,11 @@ describe("tool catalog and prompts", () => {
 });
 
 describe("job settings", () => {
-  it("keeps the memo think off and forces think off everywhere with WON_THINK=off", () => {
+  it("keeps the memo think off and forces think off everywhere with CW_THINK=off", () => {
     expect(jobSettings("memo", {}).think).toBe(false);
     expect(jobSettings("planner", {})).toEqual(ADOPTED_JOB_SETTINGS.planner);
     for (const job of Object.keys(ADOPTED_JOB_SETTINGS) as JobName[]) {
-      expect(jobSettings(job, { WON_THINK: "off" }).think).toBe(false);
+      expect(jobSettings(job, { CW_THINK: "off" }).think).toBe(false);
     }
   });
 });

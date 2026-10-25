@@ -1,4 +1,4 @@
-// Weather-or-Not's H-MEM: the vendored reference HMEM, subclassed. The reference contract
+// Crosswalk's H-MEM: the vendored reference HMEM, subclassed. The reference contract
 // is unchanged (the engine's conformance suite runs against this module); the subclass adds
 // what the weather-attribution agent needs:
 //   - facts with Zetaris provenance {zetaris_object, sql_sha256, endpoint, accn, filed,
@@ -14,7 +14,7 @@
 //   - source notes seeded at boot (seed.ts) and retrieved per tool for the planner's context.
 // Runtime state lives in data/hmem (gitignored): state.json and ledger.jsonl from the
 // reference, plus provenance.json, recast_conflicts.json and seed.json.
-// Adapted from ClearShelf (same author, Apache-2.0).
+// Adapted from Weather-or-Not and ClearShelf (same author, Apache-2.0).
 
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
@@ -37,7 +37,7 @@ export type { HMEMOptions, LedgerEntry, MemoryRecord } from "../../../engines/hm
 export type { RecastConflict } from "./recastConflicts.ts";
 
 export const HMEM_DIR = fileURLToPath(new URL("hmem/", DATA_DIR_URL));
-export const AGENT_ACTOR = "won-agent";
+export const AGENT_ACTOR = "cw-agent";
 export const ANALYST = "analyst";
 
 /** Retrieval threshold for loop context; the reference default (0.35) suits short memories, not source notes. */
@@ -60,7 +60,7 @@ const stable = (v: unknown): string => JSON.stringify(v, (_k, x) => (x && typeof
 // ---------------------------------------------------------------- provenance
 
 /** What every fact records about where its number came from (SPEC 7). */
-export interface WonProvenance {
+export interface CwProvenance {
   zetaris_object: string | null;
   sql_sha256: string | null;
   endpoint: string | null;
@@ -79,12 +79,12 @@ export interface WonProvenance {
 export const PROVENANCE_HISTORY = 5;
 
 /** What provenance.json holds per memory: the latest retrieval, plus the earlier ones (most recent first). */
-export interface StoredProvenance extends WonProvenance {
-  history?: WonProvenance[];
+export interface StoredProvenance extends CwProvenance {
+  history?: CwProvenance[];
 }
 
 /** Provenance from a Zetaris evidence record (plus the filing the fact names, when it names one). */
-export function provenanceOf(ev: EvidenceRecord, extra: { accn?: string | null; filed?: string | null } = {}): WonProvenance {
+export function provenanceOf(ev: EvidenceRecord, extra: { accn?: string | null; filed?: string | null } = {}): CwProvenance {
   return {
     zetaris_object: ev.zetaris_object ?? null,
     sql_sha256: ev.sql_sha256 ?? null,
@@ -109,7 +109,7 @@ export interface FactInput {
   /** "zetaris:<object>", "tool:<name>", "seed:<file>". */
   source: string;
   label: string;
-  provenance?: WonProvenance | null;
+  provenance?: CwProvenance | null;
   /** Evidence ids and other references. */
   refs?: string[];
   tags?: string[];
@@ -137,7 +137,7 @@ export interface WhyTrace {
   lines: string[];
 }
 
-export interface WonHMEMOptions extends HMEMOptions {
+export interface CwHMEMOptions extends HMEMOptions {
   persistDir?: string;
 }
 
@@ -148,7 +148,7 @@ export class HMEM extends ReferenceHMEM {
   private provenance: Record<string, StoredProvenance> = {};
   private seeded: Record<string, { sha12: string; memoryIds: string[]; via: string; at: string }> = {};
 
-  constructor(opts: WonHMEMOptions = {}) {
+  constructor(opts: CwHMEMOptions = {}) {
     super(opts);
     this.actor = opts.actor ?? "system";
     this.persistDir = opts.persistDir ?? null;
@@ -239,7 +239,7 @@ export class HMEM extends ReferenceHMEM {
   }
 
   /** Stores the latest provenance of a fact; the previous entry goes to the front of `history` (capped). Returns whether anything changed. */
-  private refreshProvenance(memoryId: string, prov: WonProvenance): boolean {
+  private refreshProvenance(memoryId: string, prov: CwProvenance): boolean {
     const prev = this.provenance[memoryId];
     if (prev && prev.evidence_id !== null && prev.evidence_id === prov.evidence_id && prev.retrieved_at === prov.retrieved_at) return false;
     let next: StoredProvenance = { ...prov };
@@ -259,10 +259,10 @@ export class HMEM extends ReferenceHMEM {
 
   // ------------------------------------------------------------ choices that persist across runs
 
-  rememberTagChoice(cik: string, period: string, tag: RevenueTag, prov: WonProvenance | null, refs: string[]): FactResult {
+  rememberTagChoice(cik: string, period: string, tag: RevenueTag, prov: CwProvenance | null, refs: string[]): FactResult {
     return this.addFact({
       content: `Revenue tag for CIK ${cik} in ${period}: ${tag} (the first tag with a frames fact in the probe order Revenues, RevenueFromContractWithCustomerExcludingAssessedTax, RegulatedAndUnregulatedOperatingRevenue).`,
-      source: `zetaris:${prov?.zetaris_object ?? "won.frames"}`,
+      source: `zetaris:${prov?.zetaris_object ?? "cw.frames"}`,
       label: "tag_choice (SEC frames probe through Zetaris)",
       provenance: prov,
       refs,
@@ -284,7 +284,7 @@ export class HMEM extends ReferenceHMEM {
     return { tag, memory: m };
   }
 
-  rememberStationChoice(cik: string, stations: string[], prov: WonProvenance | null, refs: string[]): FactResult {
+  rememberStationChoice(cik: string, stations: string[], prov: CwProvenance | null, refs: string[]): FactResult {
     const list = [...stations].sort();
     return this.addFact({
       content: `Stations for CIK ${cik}: ${list.join(", ")} (GHCN first-order airport stations, one or two per served state, from the curated seed list).`,
@@ -399,7 +399,7 @@ export class HMEM extends ReferenceHMEM {
   }
 }
 
-/** The agent's H-MEM: persisted under data/hmem, actor won-agent. */
+/** The agent's H-MEM: persisted under data/hmem, actor cw-agent. */
 export function openMemory(opts: { persistDir?: string | null; clock?: () => number } = {}): HMEM {
   const persistDir = opts.persistDir === undefined ? HMEM_DIR : opts.persistDir;
   return new HMEM({ persistDir: persistDir ?? undefined, actor: AGENT_ACTOR, clock: opts.clock });

@@ -1,19 +1,19 @@
 """Statement allowlist for the gateway's Zetaris connections.
 
-Adapted from ClearShelf (same author, Apache-2.0).
+Adapted from Weather-or-Not and ClearShelf (same author, Apache-2.0).
 
 Roles, each a superset of the one before:
 - reader:    SELECT, SHOW (SHOW DQ included), DESCRIBE, LOAD USL, LIST DQ, RUN DQ
-- registrar: + CREATE LIGHTNING DATABASE WON_*, CREATE SCHEMASTORE CONTAINER won,
-               CREATE [OR REPLACE] SCHEMASTORE VIEW ... WITH CONTAINER won AS SELECT ...,
-               CREATE LIGHTNING REST TABLE ... FROM WON_* (allowlisted https hosts only),
-               CREATE LIGHTNING FILESTORE TABLE ... FROM WON_* (the noaa-ghcn-pds bucket only),
-               CACHE / UNCACHE TABLE won.* and WON_*.*, UNCACHE LIGHTNING FILESTORE TABLE,
-               CREATE NAMESPACE IF NOT EXISTS lightning.metastore[.weatherornot],
-               COMPILE USL weather_or_not_usl DEPLOY NAMESPACE lightning.metastore.weatherornot,
-               ACTIVATE USL TABLE lightning.metastore.weatherornot.*, REGISTER DQ on that USL
+- registrar: + CREATE LIGHTNING DATABASE CW_*, CREATE SCHEMASTORE CONTAINER cw,
+               CREATE [OR REPLACE] SCHEMASTORE VIEW ... WITH CONTAINER cw AS SELECT ...,
+               CREATE LIGHTNING REST TABLE ... FROM CW_* (allowlisted https hosts only),
+               CREATE LIGHTNING FILESTORE TABLE ... FROM CW_* (the noaa-ghcn-pds bucket only),
+               CACHE / UNCACHE TABLE cw.* and CW_*.*, UNCACHE LIGHTNING FILESTORE TABLE,
+               CREATE NAMESPACE IF NOT EXISTS lightning.metastore[.crosswalk],
+               COMPILE USL crosswalk_usl DEPLOY NAMESPACE lightning.metastore.crosswalk,
+               ACTIVATE USL TABLE lightning.metastore.crosswalk.*, REGISTER DQ on that USL
 - onboard:   + UPDATE USL ... SET DESCRIPTION, UPDATE DQ (expression only, same name),
-               REMOVE USL weather_or_not_usl (the CLI's role; the HTTP gateway never uses it)
+               REMOVE USL crosswalk_usl (the CLI's role; the HTTP gateway never uses it)
 
 Always refused: DROP, GRANT, REVOKE, INVALIDATE CACHE, OFFSITE*, port 8889, more than one
 statement, and a trailing semicolon. The one multi-part statement is COMPILE USL, and every
@@ -31,10 +31,10 @@ REST_HOSTS = {
     "company-dns.mediumroast.io": "https",
 }
 FILESTORE_BUCKETS = ("s3a://noaa-ghcn-pds/",)
-CONTAINER = "won"
-DB = r"WON_[A-Z]+"
-NAMESPACE = "lightning.metastore.weatherornot"
-USL_NAME = "weather_or_not_usl"
+CONTAINER = "cw"
+DB = r"CW_[A-Z]+"
+NAMESPACE = "lightning.metastore.crosswalk"
+USL_NAME = "crosswalk_usl"
 USL = f"{NAMESPACE}.{USL_NAME}"
 
 _ID = r"[A-Za-z_][A-Za-z0-9_]*"
@@ -59,7 +59,7 @@ _CONTAINER = re.compile(rf"^\s*CREATE\s+SCHEMASTORE\s+CONTAINER\s+{CONTAINER}\s*
 _VIEW = re.compile(
     rf"^\s*CREATE\s+(OR\s+REPLACE\s+)?SCHEMASTORE\s+VIEW\s+"
     rf"(?:{_ID}\s+WITH\s+CONTAINER\s+{CONTAINER}|{CONTAINER}\.{_ID})\s+AS\s+SELECT\b", re.I)
-_NAMESPACE = re.compile(r"^\s*CREATE\s+NAMESPACE\s+IF\s+NOT\s+EXISTS\s+lightning\.metastore(\.weatherornot)?\s*$", re.I)
+_NAMESPACE = re.compile(r"^\s*CREATE\s+NAMESPACE\s+IF\s+NOT\s+EXISTS\s+lightning\.metastore(\.crosswalk)?\s*$", re.I)
 _CACHE = re.compile(rf"^\s*(CACHE|UNCACHE)\s+TABLE\s+(IF\s+EXISTS\s+)?(?:{CONTAINER}|{DB})\.{_ID}\s*$", re.I)
 _UNCACHE_FILESTORE = re.compile(rf"^\s*UNCACHE\s+LIGHTNING\s+FILESTORE\s+TABLE\s+{_ID}\s+FROM\s+{DB}\s*$", re.I)
 _ACTIVATE = re.compile(rf"^\s*ACTIVATE\s+USL\s+TABLE\s+{_USL_TABLE}\s+AS\s+SELECT\b", re.I)
@@ -95,7 +95,7 @@ def _strip_literals(sql: str) -> str:
 
 
 def _check_compile(bare: str) -> None:
-    """COMPILE USL weather_or_not_usl ... DDL CREATE TABLE ...; CREATE TABLE ...
+    """COMPILE USL crosswalk_usl ... DDL CREATE TABLE ...; CREATE TABLE ...
     `bare` has literals blanked, so semicolons inside quotes do not split."""
     head = _COMPILE_HEAD.match(bare)
     if not head:
@@ -121,7 +121,7 @@ def _rest_ok(sql: str, bare: str) -> bool:
     if REST_HOSTS.get(u.hostname or "") != u.scheme or port is not None:
         raise Refused(f"endpoint host not allowlisted: {u.scheme}://{u.netloc}")
     if re.search(r"\bAUTH\s+BY\b", bare, re.I):
-        raise Refused("AUTH BY is not used by Weather-or-Not")
+        raise Refused("AUTH BY is not used by Crosswalk")
     return True
 
 

@@ -1,6 +1,6 @@
 """Cache state of the raw tables and views, read from the Zetaris driver's Spark UI.
 
-Adapted from ClearShelf (same author, Apache-2.0).
+Adapted from Weather-or-Not and ClearShelf (same author, Apache-2.0).
 
 Measured on 2026-10-23 (Zetaris 2.4.3.1): CACHE TABLE is held by the driver,
 not the JDBC session. A table cached on one connection answers from cache on
@@ -22,7 +22,7 @@ from urllib.request import urlopen
 from .sqllog import LOG_PATH
 
 SPARK_UI = os.environ.get("ZETARIS_SPARK_UI", "http://127.0.0.1:4040")
-_CACHE_STMT = re.compile(r"^\s*CACHE\s+TABLE\s+((?:won|WON_[A-Z]+)\.[A-Za-z0-9_]+)\s*$", re.I)
+_CACHE_STMT = re.compile(r"^\s*CACHE\s+TABLE\s+((?:cw|CW_[A-Z]+)\.[A-Za-z0-9_]+)\s*$", re.I)
 
 
 def spark_storage(timeout: float = 2.0) -> dict | None:

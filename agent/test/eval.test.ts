@@ -65,7 +65,7 @@ describe("eval report: per-run summary", () => {
   it("counts an unresolved object name ({tag}) and a missing required field as incomplete", () => {
     const run = fixture();
     const sql = run.evidence.find((e) => e.kind === "zetaris_sql")!;
-    sql.zetaris_object = "won.frames_{tag}_{period}";
+    sql.zetaris_object = "cw.frames_{tag}_{period}";
     const tool = run.evidence.find((e) => e.kind === "tool")!;
     delete (tool as { derived_from?: string[] }).derived_from;
     const s = summariseRun(run, "fixture");
@@ -158,7 +158,7 @@ describe("eval report: whole report and markdown", () => {
     expect(report.cold_vs_warm.all.cold.run_ids).toEqual(["r-cold-fixture"]);
     expect(report.cold_vs_warm.per_cik["0001031296"]!.warm.runs).toBe(1);
     const md = renderMarkdown(report);
-    expect(md).toContain("# Weather-or-Not evaluation report");
+    expect(md).toContain("# Crosswalk evaluation report");
     expect(md).toContain(warm.run_id);
     expect(md).toContain("Not measured (no join-map file)");
     expect(md).toContain("Not measured (no DQ onboarding file)");

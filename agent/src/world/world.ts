@@ -16,7 +16,7 @@
 //   "<scope>#<key>" so every target keeps its own open edge.
 // - An edge whose attributes change is closed by relating the same context to the target
 //   "retracted" at the new source time; "retracted" is never an entity.
-// Adapted from ClearShelf (same author, Apache-2.0).
+// Adapted from Weather-or-Not and ClearShelf (same author, Apache-2.0).
 
 import { fileURLToPath } from "node:url";
 import {
@@ -33,7 +33,7 @@ import {
 import { DATA_DIR_URL } from "../config.ts";
 import type { StationQuarter } from "../tools/degreeDays.ts";
 
-export const WORLD_NAMESPACE = "weatherornot";
+export const WORLD_NAMESPACE = "crosswalk";
 export const WORLD_DIR = fileURLToPath(new URL("world/", DATA_DIR_URL));
 export const RETRACTED = "retracted";
 
@@ -199,7 +199,7 @@ export interface TimelineLine {
 // ---------------------------------------------------------------- the graph
 
 export interface WeatherWorldOptions {
-  /** Directory for `.world/weatherornot.json`; null keeps everything in memory. */
+  /** Directory for `.world/crosswalk.json`; null keeps everything in memory. */
   directory?: string | null;
   clock?: () => Date;
 }
@@ -375,7 +375,7 @@ export class WeatherWorld {
 
   async ingestRecast(r: RecastInput): Promise<void> {
     const at = toIsoUtc(r.to.filed) ?? UNKNOWN_AT;
-    const src = provenance(r.meta, at, "won-agent:recast-rule");
+    const src = provenance(r.meta, at, "cw-agent:recast-rule");
     for (const side of [r.from, r.to]) {
       await this.upsert({ type: "filing", externalKey: { system: "sec", id: side.accn }, name: null, attrs: { accn: side.accn, cik: r.cik }, source: provenance(r.meta, toIsoUtc(side.filed) ?? at) });
     }
@@ -384,7 +384,7 @@ export class WeatherWorld {
 
   async ingestPeers(p: PeersInput): Promise<void> {
     const at = toIsoUtc(p.at) ?? UNKNOWN_AT;
-    const src = provenance(p.meta, at, "won-agent:peer-set");
+    const src = provenance(p.meta, at, "cw-agent:peer-set");
     const tid = utilityId(p.targetCik);
     for (const peer of p.peers) {
       await this.setEdge(tid, "peer_of", utilityId(peer.cik), "peer", `${p.period}|${peer.cik}`, { period: p.period, g: peer.g, dw: peer.dw, tag: peer.tag }, src, "sync");

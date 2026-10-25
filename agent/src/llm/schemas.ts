@@ -2,7 +2,7 @@
 // validator for the schema subset we use. Ollama's `format` constrains decoding with the
 // same schema, but the host still validates: constrained decoding can stop early
 // (num_predict) and an older Ollama build may ignore keywords it does not support.
-// Adapted from ClearShelf (same author, Apache-2.0); the jobs are Weather-or-Not's.
+// Adapted from Weather-or-Not and ClearShelf (same author, Apache-2.0); the jobs are Crosswalk's.
 
 import { REVENUE_TAGS, type RevenueTag } from "../tools/frames.ts";
 

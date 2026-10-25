@@ -4,7 +4,7 @@
 // MAX_EVIDENCE_ROWS), the Zetaris object, the raw source objects, the source endpoint and
 // licence, the latency and cache state, and both timestamps: when the gateway ran the query
 // (queried_at, the retrieval time) and when it last cached the source.
-// Adapted from ClearShelf (same author, Apache-2.0); the sources are Weather-or-Not's.
+// Adapted from Weather-or-Not and ClearShelf (same author, Apache-2.0); the sources are Crosswalk's.
 
 import { appendFileSync, mkdirSync } from "node:fs";
 import { randomBytes } from "node:crypto";
@@ -77,7 +77,7 @@ export const LICENCES = {
   sec: "SEC EDGAR (US government work, public domain); fair-access policy: at most 10 requests per second with a declared User-Agent; queried live, never redistributed",
   noaa: "NOAA GHCN-Daily on the AWS Open Data public bucket (US government work, public domain; cite NOAA NCEI)",
   dns: "company_dns (Apache-2.0) serving the US SIC code list",
-  usl: "Weather-or-Not USL (governed copies of the SEC and NOAA objects above)",
+  usl: "Crosswalk USL (governed copies of the SEC and NOAA objects above)",
 } as const;
 
 const S3_GHCN = "s3a://noaa-ghcn-pds/parquet/by_year";
@@ -85,16 +85,16 @@ const S3_GHCN = "s3a://noaa-ghcn-pds/parquet/by_year";
 /** Source endpoint and licence for a raw Zetaris object (as the gateway names it). */
 export function sourceFor(rawObject: string): { url: string; licence: string } {
   const o = rawObject;
-  let m = /^won\.frames_([A-Za-z]+)_(CY\d{4}Q[1-3])$/u.exec(o);
+  let m = /^cw\.frames_([A-Za-z]+)_(CY\d{4}Q[1-3])$/u.exec(o);
   if (m) return { url: `https://data.sec.gov/api/xbrl/frames/us-gaap/${m[1]}/USD/${m[2]}.json`, licence: LICENCES.sec };
-  m = /^won\.concept_(\d{10})_([A-Za-z]+)$/u.exec(o);
+  m = /^cw\.concept_(\d{10})_([A-Za-z]+)$/u.exec(o);
   if (m) return { url: `https://data.sec.gov/api/xbrl/companyconcept/CIK${m[1]}/us-gaap/${m[2]}.json`, licence: LICENCES.sec };
-  m = /^won\.submission_(\d{10})$/u.exec(o);
+  m = /^cw\.submission_(\d{10})$/u.exec(o);
   if (m) return { url: `https://data.sec.gov/submissions/CIK${m[1]}.json`, licence: LICENCES.sec };
-  if (o === "won.sic_codes" || o === "WON_DNS.sic_codes_v4_raw") return { url: "https://company-dns.mediumroast.io/V4.0/na/sic/code/%25", licence: LICENCES.dns };
-  m = /^won\.ghcn_(\d{4})_(tmax|tmin)$/u.exec(o);
+  if (o === "cw.sic_codes" || o === "CW_DNS.sic_codes_v4_raw") return { url: "https://company-dns.mediumroast.io/V4.0/na/sic/code/%25", licence: LICENCES.dns };
+  m = /^cw\.ghcn_(\d{4})_(tmax|tmin)$/u.exec(o);
   if (m) return { url: `${S3_GHCN}/YEAR=${m[1]}/ELEMENT=${m[2]!.toUpperCase()}/`, licence: LICENCES.noaa };
-  if (o.startsWith("lightning.metastore.weatherornot.")) return { url: "zetaris-usl:weather_or_not_usl", licence: LICENCES.usl };
+  if (o.startsWith("lightning.metastore.crosswalk.")) return { url: "zetaris-usl:crosswalk_usl", licence: LICENCES.usl };
   return { url: "unknown", licence: "unknown" };
 }
 
@@ -180,7 +180,7 @@ export class EvidenceStore {
    */
   fromTemplate(res: TemplateResult, claim: string, opts: { kind?: "zetaris_sql" | "dq"; dqSource?: "zetaris_dq" | "dq_equivalent_sql"; details?: Record<string, unknown> } = {}): EvidenceRecord {
     const details: Record<string, unknown> = { ...(opts.details ?? {}) };
-    // The gateway names a template's objects with their parameter placeholders (won.ghcn_{year}_tmax); the record names the object read.
+    // The gateway names a template's objects with their parameter placeholders (cw.ghcn_{year}_tmax); the record names the object read.
     const fill = (o: string) => o.replace(/\{(\w+)\}/gu, (m, k: string) => res.params[k] ?? m);
     const objects = res.objects.map(fill);
     const raw = res.raw_objects.map(fill);

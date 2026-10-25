@@ -65,13 +65,13 @@ export function fakeGateway(resolve: Resolver, opts: { registrarOk?: boolean } =
       sql,
       sql_sha256: sha(sql),
       objects: [`fake.${body.template_id}`],
-      raw_objects: [`won.fake_${body.template_id}`],
+      raw_objects: [`cw.fake_${body.template_id}`],
       cache_state: r.cache_state ?? "hit",
-      source_cached_at: { [`won.fake_${body.template_id}`]: "2026-10-24T00:00:00+08:00" },
+      source_cached_at: { [`cw.fake_${body.template_id}`]: "2026-10-24T00:00:00+08:00" },
     };
     return new Response(JSON.stringify(resp), { status: 200 });
   }) as typeof fetch;
-  return { client: new GatewayClient({ baseUrl: "http://127.0.0.1:8793", fetchImpl, warmRetries: 0 }), calls, registrarCalls, registered };
+  return { client: new GatewayClient({ baseUrl: "http://127.0.0.1:8803", fetchImpl, warmRetries: 0 }), calls, registrarCalls, registered };
 }
 
 function empty(templateId: string): TemplateResponse {

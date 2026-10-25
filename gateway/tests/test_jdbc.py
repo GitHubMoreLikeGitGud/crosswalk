@@ -20,26 +20,26 @@ def test_split_keeps_compile_usl_whole():
 
 
 def test_user_agent_substitution(monkeypatch):
-    monkeypatch.setenv("WON_USER_AGENT", "WeatherOrNot/0.1 test")
-    assert apply_user_agent('user-agent "YOUR_APP_NAME YOUR_CONTACT_EMAIL"') == 'user-agent "WeatherOrNot/0.1 test"'
+    monkeypatch.setenv("CW_USER_AGENT", "Crosswalk/0.1 test")
+    assert apply_user_agent('user-agent "YOUR_APP_NAME YOUR_CONTACT_EMAIL"') == 'user-agent "Crosswalk/0.1 test"'
     assert apply_user_agent("SELECT 1") == "SELECT 1"
 
 
-@pytest.mark.parametrize("ua", ["", "WeatherOrNot/0.1 <owner-contact>", 'WeatherOrNot "x"'])
+@pytest.mark.parametrize("ua", ["", "Crosswalk/0.1 <owner-contact>", 'Crosswalk "x"'])
 def test_user_agent_refuses_placeholders(monkeypatch, ua):
-    monkeypatch.setenv("WON_USER_AGENT", ua)
+    monkeypatch.setenv("CW_USER_AGENT", ua)
     with pytest.raises(ZetarisError):
         apply_user_agent('user-agent "YOUR_APP_NAME YOUR_CONTACT_EMAIL"')
 
 
 def test_load_env_strips_crlf_and_does_not_override(tmp_path, monkeypatch):
     env = tmp_path / ".env.local"
-    env.write_bytes(b'A_WON_TEST=from_file\r\nB_WON_TEST="quoted"\r\n# C_WON_TEST=x\r\n')
-    monkeypatch.setenv("A_WON_TEST", "preset")
-    monkeypatch.delenv("B_WON_TEST", raising=False)
-    monkeypatch.delenv("C_WON_TEST", raising=False)
+    env.write_bytes(b'A_CW_TEST=from_file\r\nB_CW_TEST="quoted"\r\n# C_CW_TEST=x\r\n')
+    monkeypatch.setenv("A_CW_TEST", "preset")
+    monkeypatch.delenv("B_CW_TEST", raising=False)
+    monkeypatch.delenv("C_CW_TEST", raising=False)
     jdbc.load_env(env)
-    assert os.environ["A_WON_TEST"] == "preset"
-    assert os.environ["B_WON_TEST"] == "quoted"
-    assert "C_WON_TEST" not in os.environ
-    monkeypatch.delenv("B_WON_TEST")
+    assert os.environ["A_CW_TEST"] == "preset"
+    assert os.environ["B_CW_TEST"] == "quoted"
+    assert "C_CW_TEST" not in os.environ
+    monkeypatch.delenv("B_CW_TEST")

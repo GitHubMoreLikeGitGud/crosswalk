@@ -1,4 +1,4 @@
-"""Weather-or-Not demo pick. Dev-time curation, not part of the agent.
+"""Crosswalk demo pick. Dev-time curation, not part of the agent.
 
 Implements the attribution method of the build spec (section 2) in plain Python (json, pyarrow)
 directly against the SEC XBRL frames API and the NOAA GHCN parquet, for every seed utility and
@@ -28,7 +28,7 @@ Run from the repo root (seeds/ must exist, see scripts/curate-seeds.py):
 
 Raw SEC responses and the filtered GHCN rows are cached in data/curation/ (gitignored). The report
 contains SEC fact values and must stay in the private notes until the agent reproduces them.
-WON_USER_AGENT is read from .env.local and never printed.
+CW_USER_AGENT is read from .env.local and never printed.
 """
 from __future__ import annotations
 
@@ -90,7 +90,7 @@ class SecClient:
 
     def __init__(self, user_agent: str, refetch: bool = False):
         if not user_agent:
-            sys.exit("WON_USER_AGENT missing from .env.local; refusing to call SEC without it")
+            sys.exit("CW_USER_AGENT missing from .env.local; refusing to call SEC without it")
         self.ua = user_agent
         self.refetch = refetch
         self._last = 0.0
@@ -432,7 +432,7 @@ def main() -> int:
 
     quarters = [int(x) for x in args.quarters.split(",")]
     env = load_env(ROOT / ".env.local")
-    sec = SecClient(env.get("WON_USER_AGENT", ""), refetch=args.refetch)
+    sec = SecClient(env.get("CW_USER_AGENT", ""), refetch=args.refetch)
     utilities = json.loads((SEEDS_DIR / "utilities.json").read_text(encoding="utf-8"))["utilities"]
     stations = json.loads((SEEDS_DIR / "stations.json").read_text(encoding="utf-8"))["stations"]
     station_ids = [s["id"] for s in stations]
@@ -554,7 +554,7 @@ def main() -> int:
 
     no_rev = [r for r in rows if r["g"] is None]
     md = []
-    md.append(f"# DEMO-PICK: Weather-or-Not demo candidate ranking (private; holds SEC fact values)\n")
+    md.append(f"# DEMO-PICK: Crosswalk demo candidate ranking (private; holds SEC fact values)\n")
     md.append(f"Generated {run_at} by `{cmdline}` in {elapsed} s ({sec.requests} SEC requests this run; cached responses reused).  ")
     md.append(f"Year {args.year} vs {args.year - 1}, quarters {quarters}. Seeds: {len(utilities)} utilities, {len(stations)} stations. "
               f"Eligibility: peers >= {args.min_peers}, target coverage >= {args.min_coverage}, not Dominion.\n")

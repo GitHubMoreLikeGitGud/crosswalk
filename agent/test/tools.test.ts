@@ -20,14 +20,14 @@ let clockMs = 1_700_000_000_000;
 const clock = () => (clockMs += 1000);
 
 function dqFile(invalid: Record<string, unknown>[] = []): string {
-  const dir = mkdtempSync(path.join(os.tmpdir(), "won-dq-"));
+  const dir = mkdtempSync(path.join(os.tmpdir(), "cw-dq-"));
   const file = path.join(dir, "latest.json");
   writeFileSync(
     file,
     JSON.stringify({
       ran_at: "2026-10-24T19:31:39+0800",
       rule: "coverage_ok",
-      table: "lightning.metastore.weatherornot.weather_or_not_usl.weather_quarter",
+      table: "lightning.metastore.crosswalk.crosswalk_usl.weather_quarter",
       elapsed_s: 739.3,
       ok: true,
       run: { total: 342, valid: 342 - invalid.length, invalid: invalid.length },
@@ -51,7 +51,7 @@ interface Harness {
 function harness(opts: { registrar?: boolean; missingFrames?: Set<string>; missingConcept?: boolean; dq?: string | null; hmem?: HMEM; world?: WeatherWorld } = {}): Harness {
   const seeds = syntheticSeeds();
   const gw = fakeGateway(syntheticResolver(seeds, { missingFrames: opts.missingFrames, missingConcept: opts.missingConcept }));
-  const hmem = opts.hmem ?? new HMEM({ actor: "won-agent", clock });
+  const hmem = opts.hmem ?? new HMEM({ actor: "cw-agent", clock });
   const world = opts.world ?? new WeatherWorld({ directory: null, clock: () => new Date(clock()) });
   const deps: ToolDeps = {
     gateway: gw.client,
@@ -60,7 +60,7 @@ function harness(opts: { registrar?: boolean; missingFrames?: Set<string>; missi
     seeds,
     hmem,
     world,
-    dqFile: opts.dq === null ? path.join(os.tmpdir(), "won-no-such-dq.json") : (opts.dq ?? dqFile()),
+    dqFile: opts.dq === null ? path.join(os.tmpdir(), "cw-no-such-dq.json") : (opts.dq ?? dqFile()),
     ...(opts.registrar
       ? {
           registrar: {
@@ -278,7 +278,7 @@ describe("the tool chain on the synthetic question (no model: every step is the 
     const gw = fakeGateway((t, p) => {
       if (t === "concept_window" && first) {
         first = false;
-        return { error: "TABLE_OR_VIEW_NOT_FOUND won.concept", status: 502 };
+        return { error: "TABLE_OR_VIEW_NOT_FOUND cw.concept", status: 502 };
       }
       return base(t, p);
     });
@@ -316,12 +316,12 @@ describe("the tool chain on the synthetic question (no model: every step is the 
       elapsed_ms: 10,
       sql: "SELECT 1",
       sql_sha256: "s",
-      objects: ["won.ghcn_{year}_tmax", "won.ghcn_{year}_tmin"],
-      raw_objects: ["won.ghcn_2025_tmax", "won.ghcn_2025_tmin"],
+      objects: ["cw.ghcn_{year}_tmax", "cw.ghcn_{year}_tmin"],
+      raw_objects: ["cw.ghcn_2025_tmax", "cw.ghcn_2025_tmin"],
       executed_at: "t",
       cache_state: "hit",
       cache_detail: {},
-      source_cached_at: { "won.ghcn_2025_tmax": "c" },
+      source_cached_at: { "cw.ghcn_2025_tmax": "c" },
       error: null,
       params: { year: "2025", quarter: "1", station_list: "USW00000001" },
       http_status: 200,
@@ -329,8 +329,8 @@ describe("the tool chain on the synthetic question (no model: every step is the 
       warm_retries: 0,
     };
     const ev = store.fromTemplate(res, "x");
-    expect(ev.zetaris_object).toBe("won.ghcn_2025_tmax");
-    expect(ev.zetaris_objects).toEqual(["won.ghcn_2025_tmax", "won.ghcn_2025_tmin"]);
+    expect(ev.zetaris_object).toBe("cw.ghcn_2025_tmax");
+    expect(ev.zetaris_objects).toEqual(["cw.ghcn_2025_tmax", "cw.ghcn_2025_tmin"]);
     expect(ev.source_url).toContain("YEAR=2025/ELEMENT=TMAX");
     expect(ev.source_cached_at).toBe("c");
   });

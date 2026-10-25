@@ -1,9 +1,9 @@
-"""Re-cache every Weather-or-Not view before a demo and print the timings.
+"""Re-cache every Crosswalk view before a demo and print the timings.
 
     .venv/Scripts/python scripts/warmup.py            # CACHE the views the driver does not hold
     .venv/Scripts/python scripts/warmup.py --force    # CACHE every view again (no UNCACHE first)
     .venv/Scripts/python scripts/warmup.py --refresh  # UNCACHE then CACHE every view (re-reads S3)
-    .venv/Scripts/python scripts/warmup.py --targets won.ghcn_2025_tmax,won.ghcn_2025_tmin
+    .venv/Scripts/python scripts/warmup.py --targets cw.ghcn_2025_tmax,cw.ghcn_2025_tmin
     .venv/Scripts/python scripts/warmup.py --skip-dq  # caches only; no onboarding DQ pass at the end
 
 The Zetaris cache is driver-wide and is lost when the driver restarts, so the
@@ -11,8 +11,8 @@ gateway warms up at start and on a driver app-id change (gateway/app.py); this
 script does the same from the command line, in the gateway's order (the demo year
 first), and reports per view: state before, the statement run, its time, the
 in-memory size the Spark UI shows afterwards, and a COUNT(*) read time. Targets
-come from gateway.app.CACHE_TARGETS (WON_CACHE_TARGETS overrides) and every
-statement passes the registrar allowlist, so only won.* / WON_*.* objects can be
+come from gateway.app.CACHE_TARGETS (CW_CACHE_TARGETS overrides) and every
+statement passes the registrar allowlist, so only cw.* / CW_*.* objects can be
 cached or uncached here. Each statement is logged to data/evidence/sql_log.jsonl.
 
 At the end it runs the onboarding DQ pass (scripts/dq_onboard.py: RUN DQ

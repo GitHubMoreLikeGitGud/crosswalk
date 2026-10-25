@@ -59,9 +59,9 @@ function deps(ollama: OllamaClient): ToolDeps {
     ollama,
     evidence: new EvidenceStore(`r${Math.random().toString(36).slice(2, 8)}`, null),
     seeds,
-    hmem: new HMEM({ actor: "won-agent", clock }),
+    hmem: new HMEM({ actor: "cw-agent", clock }),
     world: new WeatherWorld({ directory: null, clock: () => new Date(clock()) }),
-    dqFile: path.join(os.tmpdir(), "won-no-such-dq.json"),
+    dqFile: path.join(os.tmpdir(), "cw-no-such-dq.json"),
   };
 }
 

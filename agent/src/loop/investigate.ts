@@ -3,7 +3,7 @@
 // the chosen tools (tools.ts). The run stops when the checklist is complete. A chain that
 // ends any other way (max chunks, an error, an abort) still gets a card: the host runs
 // finalize itself, and the open items are reported as gaps.
-// Adapted from ClearShelf (same author, Apache-2.0).
+// Adapted from Weather-or-Not and ClearShelf (same author, Apache-2.0).
 
 import { fileURLToPath } from "node:url";
 import { Markovian, type ChunkConfig, type MarkovianRun } from "../../../engines/markovian/reference/src/index.ts";
@@ -35,7 +35,7 @@ export interface InvestigateOptions {
   memoryContext?: string;
   onEvent?: (e: LoopEvent) => void;
   abortSignal?: AbortSignal;
-  /** Planner think mode; defaults to the adopted planner setting (WON_THINK=off forces off). */
+  /** Planner think mode; defaults to the adopted planner setting (CW_THINK=off forces off). */
   think?: boolean;
   /** Where the engine persists its run history (history.json); null keeps it in memory. */
   historyDir?: string | null;

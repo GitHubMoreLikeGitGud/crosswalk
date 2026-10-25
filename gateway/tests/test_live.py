@@ -1,4 +1,4 @@
-"""Live checks against the local Zetaris instance. Run with WON_LIVE=1."""
+"""Live checks against the local Zetaris instance. Run with CW_LIVE=1."""
 
 import os
 
@@ -7,7 +7,7 @@ import pytest
 from gateway.app import Gateway, TemplateRequest
 from gateway.jdbc import load_env
 
-pytestmark = pytest.mark.skipif(os.environ.get("WON_LIVE") != "1", reason="set WON_LIVE=1 to run against Zetaris")
+pytestmark = pytest.mark.skipif(os.environ.get("CW_LIVE") != "1", reason="set CW_LIVE=1 to run against Zetaris")
 
 
 @pytest.fixture(scope="module")

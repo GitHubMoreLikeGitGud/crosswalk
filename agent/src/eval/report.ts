@@ -574,7 +574,7 @@ function table(header: string[], rows: string[][]): string {
 
 export function renderMarkdown(r: EvalReport): string {
   const out: string[] = [];
-  out.push("# Weather-or-Not evaluation report");
+  out.push("# Crosswalk evaluation report");
   out.push("");
   out.push(`Generated ${r.generated_at}. Every number below is measured and read from a file: the saved runs under data/runs, the DQ onboarding file (data/dq/latest.json) and the join-map measurements (data/eval/joinmap.json, one-off Lightning SQL statements under the reader allowlist). Nothing is typed by hand; "not measured" marks what the files do not hold.`);
   out.push("");
@@ -643,7 +643,7 @@ export function renderMarkdown(r: EvalReport): string {
     out.push("### 1d. SIC foreign key (submissions `sic` against the company_dns SIC list)");
     out.push("");
     const sic = res.sic;
-    if (sic.measured) out.push(`Plain SQL (LEFT JOIN won.sic_codes, ${int(sic.elapsed_ms)} ms): ${int(sic.joined)} of ${sic.seeds} seeds join; orphan(s): ${sic.orphans.map((o) => `${o.name} (CIK ${o.cik}, SIC ${o.sic})`).join("; ") || "none"}.`);
+    if (sic.measured) out.push(`Plain SQL (LEFT JOIN cw.sic_codes, ${int(sic.elapsed_ms)} ms): ${int(sic.joined)} of ${sic.seeds} seeds join; orphan(s): ${sic.orphans.map((o) => `${o.name} (CIK ${o.cik}, SIC ${o.sic})`).join("; ") || "none"}.`);
     else out.push("Plain-SQL orphan check: not measured.");
     const q = sic.recorded_run_dq;
     out.push("");

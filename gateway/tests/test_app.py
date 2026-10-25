@@ -9,20 +9,20 @@ from gateway.app import Gateway, TemplateRequest, create_app
 from gateway.jdbc import QueryResult, QueryTimeout, ZetarisError
 from gateway.templates import Template
 
-FRAMES = "won.frames_revenues_cy2025q1"
-GHCN = "won_ghcn.ghcn_2025_tmax"
+FRAMES = "cw.frames_revenues_cy2025q1"
+GHCN = "cw_ghcn.ghcn_2025_tmax"
 STORAGE = {"app_id": "local-1", "started_at_ms": 0, "cached": {FRAMES, GHCN}}
 CONTRACT_KEYS = {"columns", "rows", "row_count", "truncated", "elapsed_ms", "sql", "sql_sha256", "objects", "raw_objects",
                  "executed_at", "cache_state", "cache_detail", "source_cached_at", "error"}
 # A reader template over a cached view, as the Zetaris lane will add them.
-FRAMES_COUNT = Template("frames_count", "SELECT COUNT(*) AS n FROM won.frames_{tag}_{period}", {"tag": "tag", "period": "period"},
-                        ("won.frames_{tag}_{period}",), ("won.frames_{tag}_{period}",), "facts in one frames period")
+FRAMES_COUNT = Template("frames_count", "SELECT COUNT(*) AS n FROM cw.frames_{tag}_{period}", {"tag": "tag", "period": "period"},
+                        ("cw.frames_{tag}_{period}",), ("cw.frames_{tag}_{period}",), "facts in one frames period")
 P = {"tag": "Revenues", "period": "CY2025Q1"}
 
 
 @pytest.fixture(autouse=True)
 def no_targets(monkeypatch):
-    monkeypatch.delenv("WON_CACHE_TARGETS", raising=False)
+    monkeypatch.delenv("CW_CACHE_TARGETS", raising=False)
     monkeypatch.setattr(app_module, "CACHE_TARGETS", ())
 
 
@@ -80,7 +80,7 @@ def test_health_ok():
     r = c.get("/health")
     assert r.status_code == 200
     body = r.json()
-    assert body["ok"] is True and body["zetaris"]["select1"] == 1 and body["service"] == "weather-or-not-gateway"
+    assert body["ok"] is True and body["zetaris"]["select1"] == 1 and body["service"] == "crosswalk-gateway"
     assert FRAMES in body["cache"]["cached_tables"]
     assert {"select1", "show_databases", "frames_period", "concept_history", "submission", "sic"} <= set(body["templates"])
     assert body["registrar_actions"] == sorted(templates.REGISTRAR_PLANS) and "register_frames" in body["registrar_actions"]
@@ -134,10 +134,10 @@ def test_cached_view_template_reports_hit_and_resolved_raw_objects(monkeypatch, 
     c, _ = client(conn)
     body = c.post("/sql/template", json={"template_id": "frames_count", "params": P}).json()
     assert body["rows"] == [[1937]] and body["cache_state"] == "hit"
-    assert body["objects"] == ["won.frames_{tag}_{period}"] and body["raw_objects"] == ["won.frames_Revenues_CY2025Q1"]
-    assert conn.sql == ["SELECT COUNT(*) AS n FROM won.frames_Revenues_CY2025Q1"]
+    assert body["objects"] == ["cw.frames_{tag}_{period}"] and body["raw_objects"] == ["cw.frames_Revenues_CY2025Q1"]
+    assert conn.sql == ["SELECT COUNT(*) AS n FROM cw.frames_Revenues_CY2025Q1"]
     body = c.post("/sql/template", json={"template_id": "frames_count", "params": {**P, "period": "CY2024Q1"}}).json()
-    assert body["cache_state"] == "miss" and body["cache_detail"] == {"won.frames_Revenues_CY2024Q1": "miss"}
+    assert body["cache_state"] == "miss" and body["cache_detail"] == {"cw.frames_Revenues_CY2024Q1": "miss"}
 
 
 def test_a_template_bound_overrides_the_gateway_default(temp_sql_log):
@@ -205,39 +205,39 @@ def test_default_cache_targets_are_the_sec_views_and_pass_the_cache_shape():
         [(t, p) for t in app_module.SEC_TAGS for p in app_module.SEC_PERIODS], list(app_module.SEC_CONCEPTS), list(app_module.SEC_UTILITIES))
     assert len(app_module.SEC_CONCEPTS) == 10 and app_module.SEC_UTILITIES == templates.SEED_CIKS and len(templates.SEED_CIKS) == 43
     assert len(targets) == len(set(targets)) == 6 + 10 + 43 + 1
-    assert "won.frames_Revenues_CY2025Q1" in targets and "won.submission_0001326160" in targets and targets[-1] == "won.sic_codes"
-    assert "won.submission_0001031296" in targets and "won.concept_0000004904_RevenueFromContractWithCustomerExcludingAssessedTax" in targets
+    assert "cw.frames_Revenues_CY2025Q1" in targets and "cw.submission_0001326160" in targets and targets[-1] == "cw.sic_codes"
+    assert "cw.submission_0001031296" in targets and "cw.concept_0000004904_RevenueFromContractWithCustomerExcludingAssessedTax" in targets
     for name in targets:
         assert allowlist.check(f"CACHE TABLE {name}", "registrar") == "register"
 
 
 def test_cache_targets_come_from_the_constant_or_the_environment(monkeypatch):
     assert app_module.cache_targets() == []
-    monkeypatch.setattr(app_module, "CACHE_TARGETS", (FRAMES, "WON_GHCN.ghcn_2025_tmax"))
-    assert app_module.cache_targets() == [FRAMES, "WON_GHCN.ghcn_2025_tmax"]
-    monkeypatch.setenv("WON_CACHE_TARGETS", " won.weather_2025 ,won.frames_revenues_cy2024q1 ")
-    assert app_module.cache_targets() == ["won.weather_2025", "won.frames_revenues_cy2024q1"]
-    monkeypatch.setenv("WON_CACHE_TARGETS", "ny_taxi.trips")
+    monkeypatch.setattr(app_module, "CACHE_TARGETS", (FRAMES, "CW_GHCN.ghcn_2025_tmax"))
+    assert app_module.cache_targets() == [FRAMES, "CW_GHCN.ghcn_2025_tmax"]
+    monkeypatch.setenv("CW_CACHE_TARGETS", " cw.weather_2025 ,cw.frames_revenues_cy2024q1 ")
+    assert app_module.cache_targets() == ["cw.weather_2025", "cw.frames_revenues_cy2024q1"]
+    monkeypatch.setenv("CW_CACHE_TARGETS", "ny_taxi.trips")
     with pytest.raises(allowlist.Refused):
         app_module.cache_targets()
 
 
 def test_warmup_caches_only_missing(monkeypatch):
-    monkeypatch.setenv("WON_CACHE_TARGETS", f"{FRAMES},won.frames_revenues_cy2024q1")
+    monkeypatch.setenv("CW_CACHE_TARGETS", f"{FRAMES},cw.frames_revenues_cy2024q1")
     conn = FakeConn(rows=[])
     gw = Gateway(connect=lambda role: conn, storage=lambda: STORAGE)
     result = gw.warmup()
-    assert result["cached_now"] == ["won.frames_revenues_cy2024q1"] and result["already_cached"] == 1
-    assert conn.sql == ["CACHE TABLE won.frames_revenues_cy2024q1"]
+    assert result["cached_now"] == ["cw.frames_revenues_cy2024q1"] and result["already_cached"] == 1
+    assert conn.sql == ["CACHE TABLE cw.frames_revenues_cy2024q1"]
 
 
 def test_warmup_runs_once_per_driver_app(monkeypatch):
-    monkeypatch.setenv("WON_CACHE_TARGETS", f"{FRAMES},{GHCN},won.frames_revenues_cy2024q1")
+    monkeypatch.setenv("CW_CACHE_TARGETS", f"{FRAMES},{GHCN},cw.frames_revenues_cy2024q1")
     storage = fresh(STORAGE)
     conn = CachingConn(storage=storage)
     gw = Gateway(connect=lambda role: conn, storage=lambda: storage)
     first = gw.warmup()
-    assert first["cached_now"] == ["won.frames_revenues_cy2024q1"] and gw.last_app_id == "local-1"
+    assert first["cached_now"] == ["cw.frames_revenues_cy2024q1"] and gw.last_app_id == "local-1"
     sent = list(conn.sql)
     assert gw.warmup()["skipped"].startswith("already warmed") and conn.sql == sent
     assert gw.last_warmup == first  # a skipped call does not replace the last result
@@ -245,15 +245,15 @@ def test_warmup_runs_once_per_driver_app(monkeypatch):
     assert conn.sql == sent
     storage.update(app_id="local-2", cached=set())  # driver restart drops every cache
     gw.warmup()
-    assert conn.sql[len(sent):] == [f"CACHE TABLE {FRAMES}", f"CACHE TABLE {GHCN}", "CACHE TABLE won.frames_revenues_cy2024q1"]
+    assert conn.sql[len(sent):] == [f"CACHE TABLE {FRAMES}", f"CACHE TABLE {GHCN}", "CACHE TABLE cw.frames_revenues_cy2024q1"]
     assert gw.last_app_id == "local-2"
 
 
 def test_failed_cache_is_retried_with_backoff_not_dropped(monkeypatch, temp_sql_log):
     """A failed CACHE (the source answered 503) keeps the app not warmed; the next tries
     wait RETRY_BASE_S, then twice that, and the app is warmed once it succeeds."""
-    bad = "won.frames_revenues_cy2024q1"
-    monkeypatch.setenv("WON_CACHE_TARGETS", f"{FRAMES},{bad}")
+    bad = "cw.frames_revenues_cy2024q1"
+    monkeypatch.setenv("CW_CACHE_TARGETS", f"{FRAMES},{bad}")
     storage = fresh(STORAGE)
     conn = CachingConn(storage=storage, fail={bad: 2})
     gw = Gateway(connect=lambda role: conn, storage=lambda: storage)
@@ -277,7 +277,7 @@ def test_failed_cache_is_retried_with_backoff_not_dropped(monkeypatch, temp_sql_
 
 
 def test_a_bad_target_name_is_reported_and_never_sent(monkeypatch):
-    monkeypatch.setenv("WON_CACHE_TARGETS", "ny_taxi.trips")
+    monkeypatch.setenv("CW_CACHE_TARGETS", "ny_taxi.trips")
     conn = FakeConn(rows=[])
     gw = Gateway(connect=lambda role: conn, storage=lambda: fresh(STORAGE))
     result = gw.warmup()
@@ -288,7 +288,7 @@ def test_templates_over_a_pending_target_wait_for_the_warmup(monkeypatch, temp_s
     """While a cache target the template reads is not in the driver, the template gets 503
     and starts a warm-up; nothing reaches Zetaris. A template over other objects runs."""
     monkeypatch.setitem(templates.TEMPLATES, FRAMES_COUNT.id, FRAMES_COUNT)
-    monkeypatch.setenv("WON_CACHE_TARGETS", FRAMES)
+    monkeypatch.setenv("CW_CACHE_TARGETS", FRAMES)
     storage = {"app_id": "local-1", "started_at_ms": 0, "cached": set()}
     conn = CachingConn(storage=storage)
     gw = Gateway(connect=lambda role: conn, storage=lambda: storage)
@@ -296,7 +296,7 @@ def test_templates_over_a_pending_target_wait_for_the_warmup(monkeypatch, temp_s
     gw.start_warmup = lambda: started.append(1)
     status, body = gw.run_template(TemplateRequest(template_id="frames_count", params=P))
     assert status == 503 and body["error"].startswith("warming: ") and started and conn.sql == []
-    assert body["cache_state"] == "miss" and body["cache_detail"] == {"won.frames_Revenues_CY2025Q1": "miss"}
+    assert body["cache_state"] == "miss" and body["cache_detail"] == {"cw.frames_Revenues_CY2025Q1": "miss"}
     logged = [json.loads(line) for line in temp_sql_log.read_text(encoding="utf-8").splitlines()]
     assert logged[-1]["template_id"] == "frames_count" and logged[-1]["sent"] is False
     status, _ = gw.run_template(TemplateRequest(template_id="select1"))
@@ -312,7 +312,7 @@ def test_templates_over_a_pending_target_wait_for_the_warmup(monkeypatch, temp_s
 
 def test_a_request_warms_a_driver_the_start_could_not_see(monkeypatch):
     monkeypatch.setitem(templates.TEMPLATES, FRAMES_COUNT.id, FRAMES_COUNT)
-    monkeypatch.setenv("WON_CACHE_TARGETS", FRAMES)
+    monkeypatch.setenv("CW_CACHE_TARGETS", FRAMES)
     state = {"storage": None}
     conn = CachingConn()
     gw = Gateway(connect=lambda role: conn, storage=lambda: state["storage"])
@@ -330,11 +330,11 @@ def test_spark_ui_down_gives_unknown_cache_state_and_still_runs(monkeypatch):
     c, _ = client(conn, storage=None)
     body = c.post("/sql/template", json={"template_id": "frames_count", "params": P}).json()
     assert body["rows"] == [[1937]] and body["cache_state"] == "unknown"
-    assert body["cache_detail"] == {"won.frames_Revenues_CY2025Q1": "spark_ui_unreachable"}
+    assert body["cache_detail"] == {"cw.frames_Revenues_CY2025Q1": "spark_ui_unreachable"}
 
 
 def test_reconnect_does_not_rewarm_the_same_driver(monkeypatch):
-    monkeypatch.setenv("WON_CACHE_TARGETS", f"{FRAMES},won.frames_revenues_cy2024q1")
+    monkeypatch.setenv("CW_CACHE_TARGETS", f"{FRAMES},cw.frames_revenues_cy2024q1")
     storage = fresh(STORAGE)
     conn = CachingConn(storage=storage)
     gw = Gateway(connect=lambda role: conn, storage=lambda: storage)

@@ -11,12 +11,12 @@ Zetaris Lightning 2.4.3.1 runs locally in Docker. JDBC `jdbc:zetaris:lightning@l
 ## Writing SQL
 
 - Lightning SQL only. Not Spark SQL or Hive SQL; never start a local Spark session.
-- One statement per call, no trailing semicolon, qualified names (`<database>.<table>`, `won.<view>`).
+- One statement per call, no trailing semicolon, qualified names (`<database>.<table>`, `cw.<view>`).
 - A multi-table `COMPILE USL ... DDL CREATE TABLE ...; CREATE TABLE ...` is ONE statement. Never split it on `;`.
-- `CREATE LIGHTNING DATABASE` and `CREATE SCHEMASTORE CONTAINER` do not accept `IF NOT EXISTS` on 2.4.3.1 (parse error `mismatched input 'not'`); rerun scripts with `--skip-exists` instead. `CREATE NAMESPACE IF NOT EXISTS` and `COMPILE USL IF NOT EXISTS` are fine; `lightning.metastore` must exist before `lightning.metastore.weatherornot`.
+- `CREATE LIGHTNING DATABASE` and `CREATE SCHEMASTORE CONTAINER` do not accept `IF NOT EXISTS` on 2.4.3.1 (parse error `mismatched input 'not'`); rerun scripts with `--skip-exists` instead. `CREATE NAMESPACE IF NOT EXISTS` and `COMPILE USL IF NOT EXISTS` are fine; `lightning.metastore` must exist before `lightning.metastore.crosswalk`.
 - `tag` is a reserved word in the Lightning catalog parser: the USL column is `xbrl_tag`. Table-level composite primary keys are accepted.
 - `UPDATE USL ... SET [TABLE | COLUMN] DESCRIPTION <text>` takes unquoted text (a quoted string is stored with its quotes); no semicolon or apostrophe in the text.
-- Nested JSON is read with `LATERAL VIEW explode(...)` in a SchemaStore view (`CREATE SCHEMASTORE VIEW <v> WITH CONTAINER won AS SELECT ...`); never select street address fields from SEC submissions.
+- Nested JSON is read with `LATERAL VIEW explode(...)` in a SchemaStore view (`CREATE SCHEMASTORE VIEW <v> WITH CONTAINER cw AS SELECT ...`); never select street address fields from SEC submissions.
 - Frames `cik` is an integer: join with `LPAD(CAST(cik AS STRING), 10, '0')`. Frames `val` is inferred `double` for some periods and `bigint` for others: `CAST(val AS DOUBLE)` downstream.
 - Arithmetic that feeds a USL `double` column must be double from the source (`CAST(... AS DOUBLE)`); a decimal result raises `java.math.BigDecimal is not a valid external type for schema of double` on aggregates over the USL table.
 - Degree days are computed in SQL over the cached station views: `Tmean F = ((TMAX + TMIN) / 2.0) / 10.0 * 9.0 / 5.0 + 32`, HDD and CDD with base 65, days with a non-empty `Q_FLAG` on either element dropped, in the same evaluation order as `agent/src/tools/degreeDays.ts`.
@@ -25,15 +25,15 @@ Zetaris Lightning 2.4.3.1 runs locally in Docker. JDBC `jdbc:zetaris:lightning@l
 
 ## Objects we own (and the only ones we touch)
 
-- Lightning databases `WON_SEC` (REST, host `data.sec.gov`), `WON_DNS` (REST, host `company-dns.mediumroast.io`), `WON_GHCN` (FILESTORE PARQUET, bucket `s3a://noaa-ghcn-pds/`); SchemaStore container `won`.
-- Views `won.frames_<tag>_<period>`, `won.concept_<cik10>_<tag>`, `won.submission_<cik10>`, `won.sic_codes`, `won.ghcn_<year>_<element>` (station-filtered), all cached.
-- USL `lightning.metastore.weatherornot.weather_or_not_usl` (`sic_code`, `utility`, `station`, `weather_quarter`, `revenue_quarter`), DQ rule `coverage_ok`.
+- Lightning databases `CW_SEC` (REST, host `data.sec.gov`), `CW_DNS` (REST, host `company-dns.mediumroast.io`), `CW_GHCN` (FILESTORE PARQUET, bucket `s3a://noaa-ghcn-pds/`); SchemaStore container `cw`.
+- Views `cw.frames_<tag>_<period>`, `cw.concept_<cik10>_<tag>`, `cw.submission_<cik10>`, `cw.sic_codes`, `cw.ghcn_<year>_<element>` (station-filtered), all cached.
+- USL `lightning.metastore.crosswalk.crosswalk_usl` (`sic_code`, `utility`, `station`, `weather_quarter`, `revenue_quarter`), DQ rule `coverage_ok`.
 - Never DROP anything, ours or not; never GRANT, REVOKE or INVALIDATE CACHE; never touch other namespaces or databases.
 
 ## REST and filestore tables
 
-- The `user-agent` header is the placeholder `YOUR_APP_NAME YOUR_CONTACT_EMAIL` in every committed statement and template; the runner and the gateway replace it from `WON_USER_AGENT` on the wire only. Never commit a real value and never invent a contact.
-- SEC EDGAR: at most 10 requests per second (the runner and the registrar space statements that name `data.sec.gov` or `WON_SEC.*` by at least 0.1 s). Each `CREATE LIGHTNING REST TABLE` and each `CACHE TABLE` of a REST view is one request. companyconcept answers 404 for a tag a filer never used: concept tables exist per (filer, tag) and are registered on demand.
+- The `user-agent` header is the placeholder `YOUR_APP_NAME YOUR_CONTACT_EMAIL` in every committed statement and template; the runner and the gateway replace it from `CW_USER_AGENT` on the wire only. Never commit a real value and never invent a contact.
+- SEC EDGAR: at most 10 requests per second (the runner and the registrar space statements that name `data.sec.gov` or `CW_SEC.*` by at least 0.1 s). Each `CREATE LIGHTNING REST TABLE` and each `CACHE TABLE` of a REST view is one request. companyconcept answers 404 for a tag a filer never used: concept tables exist per (filer, tag) and are registered on demand.
 - NOAA GHCN parquet: `isS3BucketPublic "true"`, endpoint `s3.us-east-1.amazonaws.com`, no credentials. The raw tables are never cached; the station-filtered views are.
 - The cache is held by the driver, not the JDBC session: a driver restart drops it, and the gateway warm-up (and `scripts/warmup.py`) re-caches `CACHE_TARGETS`. A template whose objects are not cached yet returns 503 `warming`.
 
@@ -41,7 +41,7 @@ Zetaris Lightning 2.4.3.1 runs locally in Docker. JDBC `jdbc:zetaris:lightning@l
 
 - The agent sends only `{template_id, params, role}` to `POST /sql/template`; it never sends SQL text. A registrar plan runs through `POST /registrar/<action>` with the plan's parameters and a signed execution contract; a registrar-kind statement sent to `/sql/template` is refused (403).
 - Parameter kinds (`gateway/templates.py` PARAM_PATTERNS, mirrored in `agent/src/zetaris/client.ts`): `cik10` ten digits; `tag` one of `Revenues`, `RevenueFromContractWithCustomerExcludingAssessedTax`, `RegulatedAndUnregulatedOperatingRevenue`; `period` `^CY\d{4}Q[1-3]$`; `year` `^20\d{2}$`; `quarter` 1 to 3; `station` `^US[A-Z0-9]{9}$`; `station_list` 1 to 40 station ids separated by commas; `element` TMAX or TMIN; `sic` four digits.
-- Allowlist roles. Reader: `SELECT`, `SHOW`, `DESCRIBE`, `LOAD USL`, `LIST DQ`, `RUN DQ`, `SHOW DQ`. Registrar adds `CREATE LIGHTNING DATABASE WON_*`, `CREATE SCHEMASTORE CONTAINER won`, `CREATE SCHEMASTORE VIEW ... WITH CONTAINER won`, `CREATE LIGHTNING REST TABLE ... FROM WON_*` (one https endpoint on `data.sec.gov` or `company-dns.mediumroast.io`, no AUTH BY), `CREATE LIGHTNING FILESTORE TABLE ... FROM WON_*` (one PATH in `s3a://noaa-ghcn-pds/`, no credentials), `CACHE`/`UNCACHE TABLE` on `won.*` and `WON_*.*`, `CREATE NAMESPACE`, `COMPILE USL ... weather_or_not_usl`, `ACTIVATE USL TABLE lightning.metastore.weatherornot.*`, `REGISTER DQ`. Onboard (CLI only) adds `UPDATE USL ... DESCRIPTION`, `UPDATE DQ`, `REMOVE USL weather_or_not_usl`.
+- Allowlist roles. Reader: `SELECT`, `SHOW`, `DESCRIBE`, `LOAD USL`, `LIST DQ`, `RUN DQ`, `SHOW DQ`. Registrar adds `CREATE LIGHTNING DATABASE CW_*`, `CREATE SCHEMASTORE CONTAINER cw`, `CREATE SCHEMASTORE VIEW ... WITH CONTAINER cw`, `CREATE LIGHTNING REST TABLE ... FROM CW_*` (one https endpoint on `data.sec.gov` or `company-dns.mediumroast.io`, no AUTH BY), `CREATE LIGHTNING FILESTORE TABLE ... FROM CW_*` (one PATH in `s3a://noaa-ghcn-pds/`, no credentials), `CACHE`/`UNCACHE TABLE` on `cw.*` and `CW_*.*`, `CREATE NAMESPACE`, `COMPILE USL ... crosswalk_usl`, `ACTIVATE USL TABLE lightning.metastore.crosswalk.*`, `REGISTER DQ`. Onboard (CLI only) adds `UPDATE USL ... DESCRIPTION`, `UPDATE DQ`, `REMOVE USL crosswalk_usl`.
 - Always refused: `DROP`, `GRANT`, `REVOKE`, `INVALIDATE CACHE`, `OFFSITE*`, port 8889, two statements in one call, a trailing `;`.
 - Every statement is logged to `data/evidence/sql_log.jsonl` with its sha256; replies cap at 200 rows (`row_count` holds the total).
 

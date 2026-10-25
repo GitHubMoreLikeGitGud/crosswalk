@@ -1,8 +1,8 @@
-// HTTP client for the Zetaris gateway (127.0.0.1:8793). The agent sends a template id
+// HTTP client for the Zetaris gateway (127.0.0.1:8803). The agent sends a template id
 // and parameters, never SQL text. Parameters are checked here with the gateway's own
 // patterns before any request, so a bad CIK or period fails fast and locally; the gateway
 // checks them again. Only loopback gateway hosts are accepted.
-// Adapted from ClearShelf (same author, Apache-2.0).
+// Adapted from Weather-or-Not and ClearShelf (same author, Apache-2.0).
 
 import { DEFAULT_GATEWAY_URL } from "../config.ts";
 
@@ -100,7 +100,7 @@ export type ParamKind = keyof typeof PARAM_PATTERNS;
 export const TEMPLATE_PARAMS: Record<string, Record<string, ParamKind>> = {
   select1: {},
   show_databases: {},
-  // GHCN degree days over the cached won.ghcn_<year>_<element> views (zetaris/sql/04_won_ghcn_*.sql):
+  // GHCN degree days over the cached cw.ghcn_<year>_<element> views (zetaris/sql/04_won_ghcn_*.sql):
   // station_id, year, quarter, hdd, cdd, days_observed, days_in_quarter, coverage per station,
   // about 19 s for any station list (1 to 60 ids), so one call per (year, quarter).
   weather_quarter: { year: "year", quarter: "quarter", station_list: "station_list" },
@@ -108,21 +108,21 @@ export const TEMPLATE_PARAMS: Record<string, Record<string, ParamKind>> = {
   usl_describe: {},
   dq_invalid: {},
   dq_run_coverage: {},
-  // SEC frames (won.frames_<tag>_<period>): cik, entityName, loc, start, end, val, accn.
+  // SEC frames (cw.frames_<tag>_<period>): cik, entityName, loc, start, end, val, accn.
   // frames_period holds every filer (the reply carries the first 200 rows; row_count is the total).
   frames_period: { tag: "tag", period: "period" },
   frames_count: { tag: "tag", period: "period" },
   frames_fact: { tag: "tag", period: "period", cik10: "cik10" },
   // The seed utilities' facts in one frames period (the peer universe in one call; at most one row per seed).
   frames_seeds: { tag: "tag", period: "period" },
-  // SEC companyconcept (won.concept_<cik10>_<tag>): fy, fp, form, filed, accn, start, end, val.
+  // SEC companyconcept (cw.concept_<cik10>_<tag>): fy, fp, form, filed, accn, start, end, val.
   concept_history: { cik10: "cik10", tag: "tag" },
   // The same columns for the facts whose period ends in `year` or the year before: the like-for-like
   // window the get_revenue tool reads (concept_history is cut at the 200-row cap for long histories).
   concept_window: { cik10: "cik10", tag: "tag", year: "year" },
-  // SEC submissions (won.submission_<cik10>): cik, name, sic, sicDescription, state.
+  // SEC submissions (cw.submission_<cik10>): cik, name, sic, sicDescription, state.
   submission: { cik10: "cik10" },
-  // SIC reference (won.sic_codes): code, description, division, division_desc, major_group, major_group_desc.
+  // SIC reference (cw.sic_codes): code, description, division, division_desc, major_group, major_group_desc.
   sic: { code: "sic" },
   // The governed USL copies (keys, descriptions, DQ): slow reads for the evidence drawer, not the hot path.
   usl_utility: { cik10: "cik10" },

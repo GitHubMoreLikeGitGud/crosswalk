@@ -1,10 +1,10 @@
 """Execution-contract verification for registrar calls (Scout Intent subset, Python side).
 
-Adapted from ClearShelf (same author, Apache-2.0).
+Adapted from Weather-or-Not and ClearShelf (same author, Apache-2.0).
 
 The agent signs Scout-style execution contracts (agent/src/contract/scout.ts): HMAC-SHA256
 over the canonical JSON of the contract without its `signature`, keyed by
-WON_CONTRACT_SECRET. This module checks the same contracts before a registrar plan
+CW_CONTRACT_SECRET. This module checks the same contracts before a registrar plan
 (gateway/registrar.py, POST /registrar/<action>) runs, with the same canonical encoding
 (a shared test vector pins it). It is an integrity check, as in Scout's own docs, not
 cryptographic-grade security.
@@ -35,12 +35,12 @@ from pathlib import Path
 from . import templates
 from .jdbc import ROOT
 
-POLICY_PACK_VERSION = "weather-or-not-scout-subset@1"
+POLICY_PACK_VERSION = "crosswalk-scout-subset@1"
 CONTRACT_TTL = timedelta(minutes=15)
 CLOCK_SKEW = timedelta(seconds=60)
 APPROVER = "analyst"
-APPROVAL_SURFACE = "won-ui"
-SURFACES = ("won-ui", "won-agent")
+APPROVAL_SURFACE = "cw-ui"
+SURFACES = ("cw-ui", "cw-agent")
 # Reads are low risk; every registrar plan (templates.REGISTRAR_PLANS) is medium risk. The
 # analyst's override_recast (parameters conflict_id, chosen, reason) is high risk and runs in
 # the agent, never here; it is mirrored so both verifiers class every action of the pack alike.
@@ -100,10 +100,10 @@ def signature_for(contract: dict, secret: str) -> str:
 
 
 def load_secret() -> str:
-    """WON_CONTRACT_SECRET (gateway.jdbc.load_env puts .env.local into the environment)."""
-    s = os.environ.get("WON_CONTRACT_SECRET", "")
+    """CW_CONTRACT_SECRET (gateway.jdbc.load_env puts .env.local into the environment)."""
+    s = os.environ.get("CW_CONTRACT_SECRET", "")
     if len(s) < 32:
-        raise ContractError("WON_CONTRACT_SECRET is not set or shorter than 32 characters")
+        raise ContractError("CW_CONTRACT_SECRET is not set or shorter than 32 characters")
     return s
 
 

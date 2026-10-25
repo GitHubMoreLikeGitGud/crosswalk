@@ -2,7 +2,7 @@
 // Untrusted source text (filing names, entity names, anything read from a source) is
 // fenced in <source_text> tags; any copy of those tags inside the text is neutralised so
 // the text cannot close its own fence.
-// Adapted from ClearShelf (same author, Apache-2.0).
+// Adapted from Weather-or-Not and ClearShelf (same author, Apache-2.0).
 
 import { readFileSync } from "node:fs";
 

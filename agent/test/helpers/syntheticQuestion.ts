@@ -125,23 +125,23 @@ export function syntheticResolver(seeds: Seeds, opts: { missingFrames?: Set<stri
   return (templateId, params): Reply | undefined => {
     switch (templateId) {
       case "submission": {
-        if (opts.missingSubmission) return missing(`won.submission_${params.cik10}`);
+        if (opts.missingSubmission) return missing(`cw.submission_${params.cik10}`);
         const u = seeds.utilities.find((x) => x.cik === params.cik10);
         return u ? { columns: ["cik", "name", "sic", "sicDescription", "state"], rows: [[Number(u.cik), u.name, u.sic, "Electric Services", u.hq_state]] } : { columns: ["cik", "name", "sic", "sicDescription", "state"], rows: [] };
       }
       case "frames_fact": {
-        if (framesMissing.has(`${params.tag}|${params.period}`)) return missing(`won.frames_${params.tag}_${params.period}`);
+        if (framesMissing.has(`${params.tag}|${params.period}`)) return missing(`cw.frames_${params.tag}_${params.period}`);
         const rows = framesRows(params.tag as RevenueTag, params.period!, seeds).filter((r) => String(r[0]).padStart(10, "0") === params.cik10);
         return { columns: FRAMES_COLS, rows };
       }
       case "frames_seeds": {
-        if (framesMissing.has(`${params.tag}|${params.period}`)) return missing(`won.frames_${params.tag}_${params.period}`);
+        if (framesMissing.has(`${params.tag}|${params.period}`)) return missing(`cw.frames_${params.tag}_${params.period}`);
         return { columns: FRAMES_COLS, rows: framesRows(params.tag as RevenueTag, params.period!, seeds) };
       }
       case "concept_window": {
-        if (params.cik10 !== TARGET) return missing(`won.concept_${params.cik10}_${params.tag}`);
-        if (params.tag !== "Revenues") return missing(`won.concept_${params.cik10}_${params.tag}`);
-        if (opts.missingConcept) return missing(`won.concept_${params.cik10}_${params.tag}`);
+        if (params.cik10 !== TARGET) return missing(`cw.concept_${params.cik10}_${params.tag}`);
+        if (params.tag !== "Revenues") return missing(`cw.concept_${params.cik10}_${params.tag}`);
+        if (opts.missingConcept) return missing(`cw.concept_${params.cik10}_${params.tag}`);
         const f = TARGET_FACTS;
         return {
           columns: CONCEPT_COLS,

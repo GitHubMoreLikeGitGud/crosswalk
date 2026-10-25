@@ -8,7 +8,7 @@
 // Nothing here computes a number the deterministic tools do not: degree days come back from
 // Lightning SQL, growth, the peer set, the recast rule and the attribution come from
 // agent/src/tools. The model never sees SQL and never decides the verdict.
-// Adapted from ClearShelf (same author, Apache-2.0); the tools are Weather-or-Not's.
+// Adapted from Weather-or-Not and ClearShelf (same author, Apache-2.0); the tools are Crosswalk's.
 
 import { existsSync, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -20,7 +20,7 @@ import type { OllamaClient } from "../llm/ollama.ts";
 import { fenceUntrusted } from "../llm/prompts.ts";
 import type { ChecklistItemId, PlannerAction, ToolName } from "../llm/schemas.ts";
 import { TOOL_CATALOG } from "../llm/toolCatalog.ts";
-import { provenanceOf, type HMEM, type WonProvenance } from "../memory/hmemFacade.ts";
+import { provenanceOf, type HMEM, type CwProvenance } from "../memory/hmemFacade.ts";
 import type { RecastConflict, RecastValue } from "../memory/recastConflicts.ts";
 import { findUtility, stationsOf, type SeedUtility, type Seeds } from "../seeds.ts";
 import { attribute as attributeFn, peerSet, type Attribution, type Exclusion, type PeerPoint, type RevenueRow } from "../tools/attribution.ts";
@@ -362,7 +362,7 @@ async function worldIngest(ctx: QuestionContext, deps: ToolDeps, step: string, f
   }
 }
 
-function fileFact(ctx: QuestionContext, deps: ToolDeps, f: { content: string; source: string; label: string; provenance: WonProvenance | null; refs: string[]; tags?: string[]; key?: string; layer?: "working" | "long_term" }): string | null {
+function fileFact(ctx: QuestionContext, deps: ToolDeps, f: { content: string; source: string; label: string; provenance: CwProvenance | null; refs: string[]; tags?: string[]; key?: string; layer?: "working" | "long_term" }): string | null {
   if (!deps.hmem) return null;
   const r = deps.hmem.addFact({ ...f, tags: [`cik:${ctx.cik}`, `period:${ctx.period}`, ...(f.tags ?? [])] });
   ctx.memoryIds.push(r.memory.id);
@@ -990,7 +990,7 @@ const dqTool = def("dq_gate", {
     let invalidForTarget: Record<string, unknown>[] = [];
     if (dq) {
       for (const s of dq.statements ?? []) {
-        const obj = dq.table ?? "lightning.metastore.weatherornot.weather_or_not_usl.weather_quarter";
+        const obj = dq.table ?? "lightning.metastore.crosswalk.crosswalk_usl.weather_quarter";
         const ev = deps.evidence.add({
           kind: "dq",
           claim: `Onboarding DQ ${s.template_id ?? "statement"} on ${obj} (${s.started_at ?? "?"}, ${s.elapsed_s ?? "?"} s): ${s.row_count ?? 0} row(s)${s.error ? `; error ${s.error}` : ""}`,
@@ -1000,7 +1000,7 @@ const dqTool = def("dq_gate", {
           sql_sha256: s.sql_sha256 ?? "",
           zetaris_object: obj,
           zetaris_objects: [obj],
-          raw_objects: ["won.ghcn_2025_tmax", "won.ghcn_2025_tmin", "won.ghcn_2024_tmax", "won.ghcn_2024_tmin"],
+          raw_objects: ["cw.ghcn_2025_tmax", "cw.ghcn_2025_tmin", "cw.ghcn_2024_tmax", "cw.ghcn_2024_tmin"],
           source_url: sourceFor(obj).url,
           licence: sourceFor(obj).licence,
           source_cached_at: null,
@@ -1050,7 +1050,7 @@ const dqTool = def("dq_gate", {
     };
     fileFact(ctx, deps, {
       content: `DQ gate for CIK ${ctx.cik} in ${ctx.period}: ${label} (${note}).`,
-      source: "zetaris:lightning.metastore.weatherornot.weather_or_not_usl.weather_quarter",
+      source: "zetaris:lightning.metastore.crosswalk.crosswalk_usl.weather_quarter",
       label: "coverage_ok rule (onboarding RUN DQ and SHOW DQ INVALID RECORD) plus the utility's own coverage",
       provenance: ids[0] ? provenanceOf(deps.evidence.get(ids[0])!) : null,
       refs: ids,

@@ -5,11 +5,11 @@
 //     `known_to_fail` source becomes a negative memory (low confidence, tagged);
 //   - every `known_to_fail/ISSUE*.md` in that repository, mined with the reference's
 //     model-free path (deterministic at boot; no model time);
-//   - Weather-or-Not's own measured source findings (below), each with the gate that measured it.
+//   - Crosswalk's own measured source findings (below), each with the gate that measured it.
 // Every memory carries provenance origin "document" and refs [file, sha256]. Seeding is
 // idempotent: a document whose sha256 is already recorded in seed.json is skipped.
 // Run it directly (from agent/): npx tsx src/memory/seed.ts
-// Adapted from ClearShelf (same author, Apache-2.0).
+// Adapted from Weather-or-Not and ClearShelf (same author, Apache-2.0).
 
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import path from "node:path";
@@ -34,7 +34,7 @@ export const SOURCE_FINDINGS: readonly SourceFinding[] = [
   {
     id: "noaa-by-station-stale",
     source: "noaa",
-    text: "The GHCN-Daily by_station CSVs on the public bucket were last modified 2025-02-09, while the parquet by_year partitions (YEAR=2025/ELEMENT=TMAX, 9 files, 14.9 MB) were current on 2026-10-24; Weather-or-Not reads the parquet by_year partitions only.",
+    text: "The GHCN-Daily by_station CSVs on the public bucket were last modified 2025-02-09, while the parquet by_year partitions (YEAR=2025/ELEMENT=TMAX, 9 files, 14.9 MB) were current on 2026-10-24; Crosswalk reads the parquet by_year partitions only.",
     label: "Day-0 prechecks, measured 2026-10-24",
     refs: ["PRECHECKS", "zetaris/sql/04_won_ghcn_create.sql"],
   },
@@ -245,7 +245,7 @@ export async function seedMemory(hmem: HMEM, opts: SeedOptions = {}): Promise<Se
   }
 
   // 3. Our measured source findings.
-  const fkey = "weather-or-not/source-findings";
+  const fkey = "crosswalk/source-findings";
   const fsha = sha256(JSON.stringify(SOURCE_FINDINGS)).slice(0, 12);
   if (already(fkey, fsha)) {
     reports.push({ file: fkey, sha12: fsha, via: "listed", memories: seeded[fkey]!.memoryIds.length, skipped: true, wallMs: 0 });
@@ -264,7 +264,7 @@ export async function seedMemory(hmem: HMEM, opts: SeedOptions = {}): Promise<Se
           layer: "long_term",
           tags: ["kind:source_note", `finding:${f.id}`, `source:${f.source}`],
           confidence: 0.85,
-          source: "document:weather-or-not-source-findings",
+          source: "document:crosswalk-source-findings",
           provenance: { origin: "document", learnedAt: hmem.clock(), label: f.label, refs: f.refs },
         }).id,
       );

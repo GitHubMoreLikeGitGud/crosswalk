@@ -1,6 +1,6 @@
 // What the planner is told about each tool and which checklist items each tool completes.
 // The host runs the tools (loop/tools.ts); this file only describes them to the model.
-// Adapted from ClearShelf (same author, Apache-2.0); the tools are Weather-or-Not's.
+// Adapted from Weather-or-Not and ClearShelf (same author, Apache-2.0); the tools are Crosswalk's.
 
 import type { ToolSpec } from "./prompts.ts";
 import type { ChecklistItemId, ToolName } from "./schemas.ts";

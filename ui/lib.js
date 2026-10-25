@@ -1,4 +1,4 @@
-// Shared helpers for the Weather-or-Not analyst UI. Nothing here touches document, window or
+// Shared helpers for the Crosswalk analyst UI. Nothing here touches document, window or
 // EventSource at import time, so the view modules can be imported in Node for render tests.
 
 const ESC = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;", "`": "&#96;" };

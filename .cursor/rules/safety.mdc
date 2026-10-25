@@ -1,5 +1,5 @@
 ---
-description: Method integrity, untrusted input, network, secrets and public-text rules for all Weather-or-Not code
+description: Method integrity, untrusted input, network, secrets and public-text rules for all Crosswalk code
 alwaysApply: true
 ---
 
@@ -22,12 +22,12 @@ alwaysApply: true
 
 - At runtime the agent reads SEC EDGAR, NOAA GHCN and company_dns only through Zetaris (via the gateway). The gateway client refuses non-loopback hosts and counts any attempt.
 - No cloud model calls. Nemotron runs in local Ollama at `OLLAMA_URL` (127.0.0.1:11434); the model client refuses non-loopback hosts.
-- Source etiquette: SEC EDGAR at most 10 requests per second with the `User-Agent` from `WON_USER_AGENT`; company_dns with an identifying `User-Agent`; NOAA GHCN read anonymously from the public bucket. Never invent or reuse a contact.
-- Services bind to 127.0.0.1 only: UI and API 8794, gateway 8793.
+- Source etiquette: SEC EDGAR at most 10 requests per second with the `User-Agent` from `CW_USER_AGENT`; company_dns with an identifying `User-Agent`; NOAA GHCN read anonymously from the public bucket. Never invent or reuse a contact.
+- Services bind to 127.0.0.1 only: UI and API 8804, gateway 8803.
 
 ## Secrets
 
-- Credentials, `WON_USER_AGENT` and `WON_CONTRACT_SECRET` live only in `.env.local`, which is gitignored. Never print, log, commit or paste them into prompts, fixtures, SQL files or task files; committed statements carry the placeholder `YOUR_APP_NAME YOUR_CONTACT_EMAIL`.
+- Credentials, `CW_USER_AGENT` and `CW_CONTRACT_SECRET` live only in `.env.local`, which is gitignored. Never print, log, commit or paste them into prompts, fixtures, SQL files or task files; committed statements carry the placeholder `YOUR_APP_NAME YOUR_CONTACT_EMAIL`.
 
 ## Integrity
 
@@ -35,7 +35,7 @@ alwaysApply: true
 - Never fabricate filing values, management quotes or analyst history. Synthetic fixtures are labelled synthetic and used for tests only. Never present a replayed run as live.
 - Extracted SEC data is never committed (counts and schemas are fine); `seeds/` holds identifiers, names, states and station ids only.
 - Dominion Energy is never the demo case.
-- Weather-or-Not is decision support for someone judging a claim, not financial or legal advice.
+- Crosswalk is decision support for someone judging a claim, not financial or legal advice.
 
 ## Public text
 

@@ -1,7 +1,7 @@
 // Saved runs: data/runs/<runId>/run.json (the whole RunResult: card, memo, chunks, evidence
 // ids and records, telemetry) and data/runs/index.json (every run and the latest per
 // utility and period). The CLI's replay and the server's /api/runs read from here.
-// Adapted from ClearShelf (same author, Apache-2.0).
+// Adapted from Weather-or-Not and ClearShelf (same author, Apache-2.0).
 
 import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";

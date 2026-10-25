@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { periodEnd, utilityId, WeatherWorld, type WorldBatch } from "../src/world/world.ts";
 
-const meta = { object: "won.frames_Revenues_CY2025Q1", sqlSha256: "deadbeef", url: "https://data.sec.gov/x", evidenceId: "ev-1" };
+const meta = { object: "cw.frames_Revenues_CY2025Q1", sqlSha256: "deadbeef", url: "https://data.sec.gov/x", evidenceId: "ev-1" };
 
 function batch(): WorldBatch {
   return {
