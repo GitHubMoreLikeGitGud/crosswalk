@@ -93,3 +93,10 @@ The shell (routing, the run picker, the REPLAY/LIVE banner, the engineering togg
 `C7: join map screen (Cursor Agent)`
 
 Do not commit; leave the changes in the working tree.
+
+## Run record
+
+- Run 2026-10-25 16:09:50 SGT, Cursor Agent CLI (model Auto): 234.7 s wall, exit 0, no commit (as asked), only the three deliverables added. Cursor reported `node --test ui/test/joinmap.test.mjs` 10 of 10 passed and the export check printing `mount,proposerWords,rateText,renderJoinGraph,renderJoinMap,renderJoinTable,renderSummary,transformWords,verdictClass`.
+- Reviewed by hand against this file (transform words, proposer words, rate text, verdict class and the definition beside every chip, provenance words, the SQL toggle, the `eng` wrapping of row ids, key routes, memory ids and `measured_as`, the ellipse layout and the label offsets, escaping) and in the browser on the saved cold and warm runs at 1920x1080 and 1366x768 (no horizontal scroll, no engineering id visible with the toggle off). Checks re-run: 10 passed. Committed unchanged as `d9c00d8` (`C7: join map screen (Cursor Agent)`).
+- Review correction (`d9901e9`, `C7 review: ...`): on the real cold run three keys join the same two tables (cik, loc and the no-pad control), and their lines were drawn on top of each other, so a dashed REJECTED line hid under a VERIFIED one; each further key between the same pair is now offset 7 px perpendicular to the line (its number moves with it). Orphans wrap inline instead of one per line (ten CIKs made rows 220 px tall), and the generic `left ~ right under transform` label is not repeated under the two columns it already names. One test added; `node --test ui/test/joinmap.test.mjs` 11 passed.
+- Used by the host: `ui/app.js` mounts it as the Join map screen with the run picked in the top bar; `ui/index.html` links `views/joinmap.css`.
