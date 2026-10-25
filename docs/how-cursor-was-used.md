@@ -43,7 +43,7 @@ Wall time of the seven runs: 199.4 + 153.8 + 289.3 + 119.7 + 92.0 + 148 + 234.7 
 | C6 | `noteCheck.ts` 280/288, `note-check.test.ts` 94/94 | 374 / 382 |
 | C7 | `joinmap.js` 301/313, `joinmap.css` 62/64, `joinmap.test.mjs` 197/221 | 560 / 598 |
 
-All of these suites run in `npm test` (agent, 25 files / 360 tests) and `node --test ui/test/*.test.mjs` (24 tests) on a fresh clone.
+All of these suites run in `npm test` (agent: 27 files / 388 tests at `1a936df`, 26 Oct; 25 files / 360 tests when this page was first written) and `node --test ui/test/*.test.mjs` (24 tests) on a fresh clone; `npm run verify` in `agent/` runs both with the gateway tests and the conformance suites.
 
 **How the pieces are used at run time** (written outside Cursor Agent): `measure_key` renders C1's statement shapes through the gateway's `match_rate` template (the gateway tests assert the same SQL strings); `compile_usl` renders the governed plan with C2 and compares it with the compiled USL; `search_catalogue` and `probe_source` call C4; C5 is both the fallback for `propose_keys` and the baseline every run scores the model against (the comparison in [`eval-report.md`](eval-report.md), section 2, which the baseline wins); `finalize` checks every model draft with C6 before the note is kept; C7 is the Join map screen.
 
