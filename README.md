@@ -25,7 +25,7 @@ Demo video: link added at submission · Deck (PDF): [`docs/deck/Crosswalk.pdf`](
 > **Verify in 3 minutes** (no Zetaris, no GPU; Node 22.12 or newer, Python 3.12, git). Measured on a fresh clone of commit `078f890`, Windows 11, Node 22.13.1, Python 3.12.0, Git Bash:
 >
 > ```bash
-> cd agent && npm ci && npm test && npm run typecheck && cd ..   # added 38 packages in 2s; Test Files 25 passed (25), Tests 360 passed (360); tsc exit 0
+> cd agent && npm ci && npm test && npm run typecheck && cd ..   # added 38 packages, and audited 39 packages in 2s; Test Files 25 passed (25), Tests 360 passed (360); tsc exit 0
 > node --test ui/test/*.test.mjs                                 # tests 24, pass 24, fail 0
 > (cd engines/hmem/reference && npm install && npx tsx ../conformance/runner.ts)          # 13/13 checks passed
 > (cd engines/markovian/reference && npm install && npx tsx ../conformance/runner.ts)     # 8/8 checks passed
@@ -35,7 +35,7 @@ Demo video: link added at submission · Deck (PDF): [`docs/deck/Crosswalk.pdf`](
 > .venv/Scripts/python -X utf8 -m pytest gateway/tests -q        # 381 passed, 2 skipped (the 2 need a live Zetaris)
 > ```
 >
-> Wall time on that clone: 54 s from `git clone` to the last test, 25 s of it the Python package install. The same steps run in CI on `windows-latest` ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)), plus the agent and UI suites again with the clock moved forward 400 days (no test reads today's date).
+> Wall time on that clone: 54 s from `git clone` to the last test, 25 s of it the Python package install. The same box run again on a fresh clone of `ff69cbb` (the commit that added this README) gave the same outputs in 49 s. The same steps run in CI on `windows-latest` ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)), plus the agent and UI suites again with the clock moved forward 400 days (no test reads today's date).
 
 ## Contents
 
