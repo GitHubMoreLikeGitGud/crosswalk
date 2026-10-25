@@ -25,7 +25,7 @@ const cell = fx("cell-revenue-change.json");
 
 /** The text a viewer sees with "Show engineering detail" off: tags stripped, .eng spans removed. */
 function visible(html) {
-  let s = String(html);
+  let s = String(html).replace(/<div class="kv__row eng-row">[\s\S]*?<\/div>/gu, "");
   for (;;) {
     const next = s.replace(/<span class="eng">(?:(?!<span class="eng">)[\s\S])*?<\/span>/u, (m) => {
       const opens = (m.match(/<span\b/gu) ?? []).length;

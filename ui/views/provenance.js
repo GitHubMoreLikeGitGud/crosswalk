@@ -24,6 +24,11 @@ function kv(label, value) {
   return `<div class="kv__row"><dt>${esc(label)}</dt><dd>${value}</dd></div>`;
 }
 
+/** "Revenue change CY2024Q1 to CY2025Q1" -> "Revenue change Q1 2024 to Q1 2025". */
+export function quarterText(text) {
+  return String(text ?? "").replace(/\bCY(\d{4})Q([1-4])\b/gu, "Q$2 $1");
+}
+
 /** The value of a cell in words: a change as a signed percentage, a count plain, money in millions. */
 export function valueWords(field, value) {
   if (value === null || value === undefined) return "not computed";
@@ -47,7 +52,7 @@ export function renderStatement(s, i) {
       ${kv("Cache", `${s.cache_state ? `statement cache ${esc(s.cache_state)}` : `<span class="nm">not reported</span>`}; source cached at ${cached ? esc(fmtSgt(cached)) : `<span class="nm">not reported by the gateway</span>`}`)}
       ${url || s.source_url ? kv("Source", url ? `<a href="${esc(url)}" rel="noreferrer" target="_blank">${esc(url)}</a>` : `<code class="wrap">${esc(s.source_url)}</code>`) : ""}
       ${s.licence ? kv("Licence", esc(s.licence)) : ""}
-      ${kv("Ids", eng(`<code>${esc(s.evidence_id)}</code> template <code>${esc(s.template)}</code> sha256 <code class="hash">${esc(s.sql_sha256)}</code>`))}
+      <div class="kv__row eng-row"><dt>Ids</dt><dd><code>${esc(s.evidence_id)}</code> template <code>${esc(s.template)}</code> sha256 <code class="hash">${esc(s.sql_sha256)}</code></dd></div>
     </dl>
     ${rowsTable(s)}
     <details class="prov__sql"><summary>Lightning SQL</summary><pre><code>${esc(s.sql)}</code></pre></details>
@@ -77,5 +82,5 @@ export async function openCell(run, cell, { push = false } = {}) {
     updateDrawer(entry, { kicker: "", html: renderError(r) });
     return;
   }
-  updateDrawer(entry, { title: r.data.label ?? "Provenance", kicker: r.data.subject ?? "", html: renderCell(r.data) });
+  updateDrawer(entry, { title: quarterText(r.data.label ?? "Provenance"), kicker: r.data.subject ?? "", html: renderCell(r.data) });
 }

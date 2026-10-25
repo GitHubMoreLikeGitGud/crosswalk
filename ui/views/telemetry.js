@@ -13,8 +13,8 @@ function item(k, v, note = "", title = "", cls = "") {
 const n = (x, d = 0) => (typeof x === "number" && Number.isFinite(x) ? `<span class="tnum">${esc(fmtNum(x, d))}</span>` : NOT_MEASURED);
 
 /** Pure: the footer from a telemetry view ({run_id, quarter, mode, chunks, ...}); label names the run. */
-export function renderFooter(t, label = "") {
-  if (!t || typeof t !== "object") return `<div class="tele">${item("Telemetry", NOT_MEASURED)}</div>`;
+export function renderFooter(t, label = "", empty = "") {
+  if (!t || typeof t !== "object") return `<div class="tele">${item("Telemetry", empty ? `<span class="nm">${esc(empty)}</span>` : NOT_MEASURED)}</div>`;
   const L = t.labels ?? {};
   const tok = t.tokens ?? {};
   const tps = t.tokens_per_s ?? {};
@@ -41,7 +41,7 @@ async function load(runId) {
   if (runId) {
     const r = await api(`/api/runs/${encodeURIComponent(runId)}/telemetry`);
     if (shown !== runId) return;
-    el.innerHTML = r.ok ? renderFooter(r.data, runWords(r.data)) : renderFooter(null);
+    el.innerHTML = r.ok && r.status !== 202 ? renderFooter(r.data, runWords(r.data)) : renderFooter(null, "", "counted when the run is saved");
   } else {
     const r = await api("/api/telemetry");
     if (shown !== runId) return;

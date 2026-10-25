@@ -5,6 +5,7 @@
 // saved run otherwise; the banner follows the stream's own header. The row renderers are pure.
 
 import { api, eng, esc, fmtClock, fmtMs, fmtNum, fmtSgt, openRunStream, plural, quarterWords, renderError, runWords, toolWord } from "../lib.js";
+import { questionFor } from "./ask.js";
 
 const EV_REF = /\s*\[ev-r\d{8}T\d{6}[0-9a-f]{4}-\d{2,4}(?:,\s*ev-r\d{8}T\d{6}[0-9a-f]{4}-\d{2,4})*\]/gu;
 
@@ -109,7 +110,7 @@ export function mount(el, ctx) {
   el.innerHTML = `<section class="tlv">
     <h1 class="view-h">Discovery <span class="view-h__sub">what the agent searched, probed, proposed and measured, step by step</span></h1>
     <div class="panel tlv__head">
-      <p class="tlv__q">${meta?.question ? `<q>${esc(meta.question)}</q>` : ""}</p>
+      <p class="tlv__q">${meta?.question || meta?.quarter ? `<q>${esc(meta.question ?? questionFor(meta.quarter))}</q>` : ""}</p>
       <p class="tlv__sum" data-sum>Loading the stream…</p>
       <div class="tlv__ctl" data-ctl hidden>
         <button type="button" class="btn btn--small" data-pace="0">Show the whole run</button>
