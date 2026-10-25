@@ -154,7 +154,7 @@
 <section class="slide s1">
   <div class="eyebrow">Open Agent Hackathon 2026 &middot; Track 1: Solving Fragmented Intelligence</div>
   <div class="brand">Cross<span>walk</span></div>
-  <p class="tagline"><b>A question that spans three US agencies, and no data engineer to join them.</b> Crosswalk finds which public datasets join which, measures every join key in Lightning SQL with its orphans, builds a governed semantic layer from the keys that hold, and answers with the SQL behind every number.</p>
+  <p class="tagline"><b>0 of 43 as published; 42 of 43 measured.</b> SEC writes the same company number two ways. Crosswalk finds which public datasets join which, measures each join key in Lightning SQL with its orphans, answers each column only through a key that passed, leaves a governed semantic layer, and cites the SQL behind every number.</p>
   <div class="meta">
     <div><b>Zetaris</b><span>The only data path: OpenFEMA, SEC EDGAR, NOAA GHCN-Daily and company_dns registered as Lightning tables, cached, and joined in Lightning SQL; a USL with primary and foreign keys and data-quality rules; the SQL text is the citation.</span></div>
     <div><b>Meterless</b><span>H-MEM remembers the keys that held; a Markovian chain carries a small fixed state between chunks; the World Model records every measured key and since when.</span></div>
@@ -176,7 +176,7 @@
     <div class="col" style="width:800px; gap:16px">
       <div class="card">
         <h3>The user</h3>
-        <p>An analyst at a research desk, a state commission, a newsroom or a small fund who is handed a cross-agency question and has no data engineer on call.</p>
+        <p>An analyst at a state utility commission who is handed a cross-agency question and has no data engineer on call.</p>
       </div>
       <div class="card">
         <h3>The question</h3>
@@ -188,7 +188,7 @@
           <li>SEC frames carry the company number as an integer, the filer profiles as a 10-digit string: joined as published, <b>0 of 43</b> utilities match; padded to 10 digits, 42 of 43.</li>
           <li>FEMA rows are designated counties (116 rows for 10 declarations in 8 states); utilities serve states, curated from each utility's 10-K.</li>
           <li>A weather station's state sits in columns 39-40 of a fixed-width text file of 133,039 lines.</li>
-          <li>Alaska has a declaration and no seed utility; MGE Energy's SIC 4900 is missing from the SIC reference.</li>
+          <li>Alaska has a declaration and no seed utility; MGE Energy's SIC 4900 is on SEC's own list but missing from the company_dns reference, as are 172 of SEC's 444 codes.</li>
         </ul>
       </div>
     </div>
@@ -429,7 +429,7 @@
 <!-- 9. NVIDIA -->
 <section class="slide">
   <div class="eyebrow">How NVIDIA Nemotron is used, measured</div>
-  <h2 class="title">Nemotron 3 Nano 4B runs locally at 133 tokens/s; here it adds time, not keys</h2>
+  <h2 class="title">Measured before use: 7 of 11 model keys REJECTED; it adds time, not keys</h2>
   <div class="body" style="display:flex; flex-direction:column; gap:18px">
     <table class="t">
       <thead><tr><th>Cold question, same code</th><th class="n">Wall</th><th class="n">Chunks</th><th class="n">Planner replies valid / calls (first try)</th><th class="n">Host fallback steps</th><th class="n">Output tokens</th><th class="n">Median tok/s</th><th class="n">Model keys VERIFIED / made</th><th class="n">GPU util median</th><th>Answer</th></tr></thead>
@@ -458,7 +458,7 @@
       <figcaption>Every screen carries the run's telemetry footer (cold run 16:00 SGT shown).</figcaption>
     </figure>
   </div>
-  <div class="foot"><span class="src">docs/eval-report.md section 5 and docs/eval/summary.json: GPU sampled every 500 ms by nvidia-smi; VRAM as Ollama reports it; tokens and tok/s are Ollama's counts.</span><span class="pg">9 / 12</span></div>
+  <div class="foot"><span class="src">docs/eval-report.md section 5 and docs/eval/summary.json (7 of 11: the five cold runs with the model, l2.cold_totals): GPU sampled every 500 ms by nvidia-smi; VRAM as Ollama reports it; tokens and tok/s are Ollama's counts.</span><span class="pg">9 / 12</span></div>
 </section>
 
 <!-- 10. Evaluation -->
@@ -564,7 +564,7 @@
       <div class="card card--model">
         <h4>Pre-existing code, declared</h4>
         <ul class="b small">
-          <li>Meterless H-MEM, Markovian and World Model engines, vendored unchanged: 60 files, 13,189 lines (<code>git ls-files engines | xargs cat | wc -l</code>).</li>
+          <li>Meterless H-MEM, Markovian and World Model engines, vendored unchanged: 60 files, 13,189 lines (<code>git ls-files engines | xargs wc -l</code>).</li>
           <li><code>gateway/jdbc.py</code> (279 lines) adapted from the Zetaris getting-started repository.</li>
           <li>Scaffolding adapted from the same author's Weather-or-Not (github.com/GitHubMoreLikeGitGud/weather-or-not) and ClearShelf (github.com/GitHubMoreLikeGitGud/clearshelf): 26 code files carry that header, 8,523 lines today, rewritten in part (<code>git grep -l "Adapted from Weather-or-Not"</code> over agent, gateway, ui, scripts, zetaris, seeds).</li>
         </ul>
