@@ -70,6 +70,15 @@ describe("bad lines", () => {
       expect(() => parseStationLine(line)).toThrow();
     }
   });
+
+  it("throws on a blank coordinate field instead of reading it as 0", () => {
+    const good = fixture.lines[0]!;
+    const blankLat = good.slice(0, 12) + " ".repeat(8) + good.slice(20);
+    expect(blankLat.length).toBe(good.length);
+    expect(() => parseStationLine(blankLat)).toThrow();
+    const blankElev = good.slice(0, 31) + " ".repeat(6) + good.slice(37);
+    expect(() => parseStationLine(blankElev)).toThrow();
+  });
 });
 
 describe("stationsViewSql", () => {
@@ -91,7 +100,16 @@ describe("stationsViewSql", () => {
 
   it("refuses WON_ tables, unqualified names, and injection", () => {
     expect(() => stationsViewSql("WON_GHCN.stations_raw")).toThrow();
+    expect(() => stationsViewSql("won_ghcn.stations_raw")).toThrow();
+    expect(() => stationsViewSql("won.stations")).toThrow();
     expect(() => stationsViewSql("stations_raw")).toThrow();
     expect(() => stationsViewSql("CW_GHCN.x; DROP")).toThrow();
+    expect(() => stationsViewSql("CW_GHCN.stations_raw", "line; DROP")).toThrow();
+  });
+
+  it("trims the name in SQL as parseStationLine does, so both paths agree", () => {
+    const sql = stationsViewSql();
+    expect(sql).toContain("TRIM(SUBSTR(line, 42, 30)) AS name");
+    expect(sql.split("\n")[0]).toBe("SELECT SUBSTR(line, 1, 11) AS id,");
   });
 });

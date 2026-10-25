@@ -27,7 +27,7 @@ export function quarterOf(iso: string): string {
   const year = iso.slice(0, 4);
   const monthStr = iso.slice(5, 7);
   const month = Number(monthStr);
-  if (!/^\d{4}$/.test(year) || !/^\d{2}$/.test(monthStr) || Number.isNaN(month)) {
+  if (!/^\d{4}$/.test(year) || !/^\d{2}$/.test(monthStr) || month < 1 || month > 12) {
     throw new Error(`invalid declaration date month: ${iso}`);
   }
   const quarter = Math.floor((month + 2) / 3);

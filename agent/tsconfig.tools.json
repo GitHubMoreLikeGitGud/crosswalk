@@ -8,6 +8,8 @@
     "test/frames.test.ts",
     "test/transforms.test.ts",
     "test/match-rate.test.ts",
-    "test/usl-plan.test.ts"
+    "test/usl-plan.test.ts",
+    "test/fema.test.ts",
+    "test/stations.test.ts"
   ]
 }

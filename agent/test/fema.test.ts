@@ -47,6 +47,13 @@ describe("quarterOf", () => {
     expect(() => quarterOf("2025")).toThrow();
     expect(() => quarterOf("2025-xx-01")).toThrow();
   });
+
+  it("throws on a month outside 1 to 12 instead of inventing a fifth quarter", () => {
+    expect(() => quarterOf("2025-13-01")).toThrow();
+    expect(() => quarterOf("2025-00-15")).toThrow();
+    expect(quarterOf("2025-12-01")).toBe("CY2025Q4");
+    expect(quarterOf("2025-01-01")).toBe("CY2025Q1");
+  });
 });
 
 describe("onlyMajorDisasters", () => {

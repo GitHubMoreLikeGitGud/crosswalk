@@ -372,7 +372,7 @@ def build_stations() -> dict:
             "SUBSTR(line, 22, 9)",
             "SUBSTR(line, 32, 6)",
             "SUBSTR(line, 39, 2) AS state",
-            "SUBSTR(line, 42, 30) AS name",
+            "TRIM(SUBSTR(line, 42, 30)) AS name",
             "FROM CW_GHCN.stations_raw",
         ],
     }
