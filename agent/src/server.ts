@@ -1,16 +1,31 @@
-// Crosswalk agent server: the HTTP API for the analyst UI, server-sent events on
-// /api/events and the static UI files (ui/), on 127.0.0.1 only (UI_PORT, default 8804).
+// Crosswalk agent server: the HTTP API for the analyst UI, server-sent events and the static UI
+// files (ui/), on 127.0.0.1 only (UI_PORT, default 8804).
+//
+// Routes (SPEC D20; all JSON unless noted, errors are {error, code}):
+//   GET  /api/health                  model, gateway reachability, saved runs, busy run
+//   POST /api/ask                     {quarter, mode?, max_chunks?, think?} -> 202 {run_id} | 409 {busy_run_id}
+//   GET  /api/events                  SSE: every live event of every run (Last-Event-ID / ?since replay the ring)
+//   GET  /api/runs                    saved runs, newest first, plus the run in progress
+//   GET  /api/runs/:id                one saved run (run.json; ?slim=1 leaves out evidence and call records)
+//   GET  /api/runs/:id/events         SSE chunk stream of one run: live while it runs, else replayed from run.json (replay: true)
+//   GET  /api/runs/:id/telemetry      footer telemetry of one run
+//   GET  /api/runs/:id/memo.md        the note as markdown with its citations (text/markdown)
+//   GET  /api/runs/:id/evidence       every evidence record of the run
+//   GET  /api/telemetry               footer telemetry of the latest saved run
+//   GET  /api/joinmap/:run            join map in canonical orientation, both rates, verdict definitions
+//   GET  /api/answer/:run             answer table with a cell id per value
+//   GET  /api/evidence/:run/:cell     provenance drawer of one cell (SQL, object, rows, ms, cache state and times)
+//   GET  /api/usl                     governed USL, onboarding DQ file, the last live rules, invalid rows (?run= picks the run)
+//   GET  /api/why/:memId, /api/world, /api/world/:cik, /api/eval, /api/seeds
 //
 // Safety:
-// - The server holds one runtime for its lifetime (it takes <data>/agent.lock) and runs one
-//   model job at a time: POST /api/ask answers 202 {run_id} or 409 {busy_run_id}.
-// - The analyst's override of a recast resolution runs only through POST /api/override with a
-//   signed high-risk contract (POST /api/approvals/sign issues it for the local demo identity
-//   "analyst"; a real deployment needs SSO). Without a valid contract the reply is 403, the
-//   refusal is logged in <data>/contracts/verifier-server.jsonl and nothing is written.
-// - Requests must name this server as Host (DNS rebinding) and, for writes, come with a JSON
-//   body and no foreign Origin (cross-site requests).
-// - Static files come from ui/ only: parent, absolute and drive paths are refused.
+// - The server holds one runtime for its lifetime (it takes <data>/agent.lock) and runs one model
+//   job at a time.
+// - Requests must name this server as Host (DNS rebinding). CORS is closed: no Access-Control
+//   header is ever sent, a request carrying a foreign Origin or a cross-site Sec-Fetch-Site is
+//   refused (any method), OPTIONS is refused, and writes need a JSON body.
+// - Run ids, cell ids and memory ids are checked against fixed patterns before any lookup; static
+//   files come from ui/ only (parent, absolute, drive and network paths are refused).
 //
 //   npx tsx src/server.ts            (npm run dev)
 //
@@ -20,15 +35,17 @@ import { createReadStream, existsSync, readFileSync, statSync } from "node:fs";
 import http, { type IncomingMessage, type ServerResponse } from "node:http";
 import { extname, resolve, sep } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import { DATA_DIR, DATA_PATHS, loadConfig, REPO_ROOT_URL } from "./config.ts";
-import { analystApproval, APPROVAL_SURFACE, APPROVER, ContractError, ContractVerifier, loadContractSecret, type RecastSide } from "./contract/scout.ts";
+import { DATA_DIR, DATA_PATHS, loadConfig, REPO_ROOT, REPO_ROOT_URL } from "./config.ts";
 import { newRunId, type EvidenceRecord } from "./evidence/store.ts";
 import type { LoopEvent } from "./loop/generator.ts";
-import type { RunResult } from "./loop/investigate.ts";
-import { num, pct } from "./loop/tools.ts";
+import { answerView, CELL_ID, cellEvidence } from "./ops/cells.ts";
+import { canonicalRow, joinMapView } from "./ops/joinmap.ts";
+import { finishedSummary, replayEvents, telemetryView, type StreamEvent } from "./ops/replay.ts";
+import { asRun, type RunIn } from "./ops/runShape.ts";
 import type { SavedRun } from "./ops/runStore.ts";
+import { sgt, seconds } from "./ops/time.ts";
+import { readJsonFile, uslView, type DqFile, type UslPlanFile } from "./ops/usl.ts";
 import { ask as runAsk, openRuntime, type AskOutcome, type AskRequest, type Runtime } from "./runtime.ts";
-import { findUtility } from "./seeds.ts";
 import { PARAM_PATTERNS } from "./zetaris/client.ts";
 
 // ---------- events ----------
@@ -40,11 +57,18 @@ export interface BusEvent {
   data: Record<string, unknown>;
 }
 
+const TERMINAL = new Set(["run_finished", "run_failed"]);
+
+interface Client {
+  res: ServerResponse;
+  runId: string | null;
+}
+
 /** Server-sent events with a ring of the last `keep` events; a reconnect replays from Last-Event-ID. */
 export class EventBus {
   private seq = 0;
   private readonly ring: BusEvent[] = [];
-  private readonly clients = new Set<ServerResponse>();
+  private readonly clients = new Set<Client>();
 
   constructor(private readonly keep = 500) {}
 
@@ -52,34 +76,67 @@ export class EventBus {
     const e: BusEvent = { id: ++this.seq, type, at: new Date().toISOString(), data };
     this.ring.push(e);
     if (this.ring.length > this.keep) this.ring.splice(0, this.ring.length - this.keep);
-    for (const c of this.clients) EventBus.write(c, e);
+    for (const c of this.clients) {
+      if (c.runId !== null && e.data.run_id !== c.runId) continue;
+      EventBus.write(c.res, e);
+      if (c.runId !== null && TERMINAL.has(e.type)) {
+        c.res.end();
+        this.clients.delete(c);
+      }
+    }
     return e;
   }
 
-  recent(after = 0): BusEvent[] {
-    return this.ring.filter((e) => e.id > after);
+  recent(after = 0, runId: string | null = null): BusEvent[] {
+    return this.ring.filter((e) => e.id > after && (runId === null || e.data.run_id === runId));
   }
 
-  private static write(res: ServerResponse, e: BusEvent): void {
+  /** True when the ring holds a run_finished or run_failed event of this run. */
+  ended(runId: string): boolean {
+    return this.ring.some((e) => e.data.run_id === runId && TERMINAL.has(e.type));
+  }
+
+  static write(res: ServerResponse, e: BusEvent): void {
     res.write(`id: ${e.id}\nevent: ${e.type}\ndata: ${JSON.stringify({ ...e.data, at: e.at })}\n\n`);
   }
 
-  attach(req: IncomingMessage, res: ServerResponse): void {
-    res.writeHead(200, { "content-type": "text/event-stream; charset=utf-8", "cache-control": "no-store", connection: "keep-alive", "x-accel-buffering": "no" });
+  static open(res: ServerResponse): void {
+    res.writeHead(200, { "content-type": "text/event-stream; charset=utf-8", "cache-control": "no-store", connection: "keep-alive", "x-accel-buffering": "no", "x-content-type-options": "nosniff" });
     res.write("retry: 3000\n\n");
-    // Only a reconnect (Last-Event-ID) or an explicit ?since gets the missed events; a new
-    // connection starts with what happens from now on.
+  }
+
+  private hold(req: IncomingMessage, client: Client): void {
+    this.clients.add(client);
+    const beat = setInterval(() => client.res.write(": keep-alive\n\n"), 15_000);
+    const drop = () => {
+      clearInterval(beat);
+      this.clients.delete(client);
+    };
+    req.on("close", drop);
+    client.res.on("close", drop);
+  }
+
+  /** Every run's events. Only a reconnect (Last-Event-ID) or an explicit ?since gets missed events. */
+  attach(req: IncomingMessage, res: ServerResponse): void {
+    EventBus.open(res);
     const since = req.headers["last-event-id"] ?? new URL(req.url ?? "/", "http://x").searchParams.get("since");
     if (since !== undefined && since !== null && since !== "") {
       const last = Number(since);
       for (const e of this.recent(Number.isFinite(last) ? last : 0)) EventBus.write(res, e);
     }
-    this.clients.add(res);
-    const beat = setInterval(() => res.write(`: keep-alive ${Date.now()}\n\n`), 15_000);
-    req.on("close", () => {
-      clearInterval(beat);
-      this.clients.delete(res);
-    });
+    this.hold(req, { res, runId: null });
+  }
+
+  /** One live run's events from its start (or after Last-Event-ID); the stream ends with the run. */
+  attachRun(req: IncomingMessage, res: ServerResponse, runId: string): void {
+    EventBus.open(res);
+    res.write(`event: stream\ndata: ${JSON.stringify({ run_id: runId, mode: "live", replay: false })}\n\n`);
+    const raw = req.headers["last-event-id"];
+    const last = raw === undefined ? 0 : Number(raw);
+    const past = this.recent(Number.isFinite(last) ? last : 0, runId);
+    for (const e of past) EventBus.write(res, e);
+    if (past.some((e) => TERMINAL.has(e.type)) || this.ended(runId)) return void res.end();
+    this.hold(req, { res, runId });
   }
 
   get listeners(): number {
@@ -87,7 +144,7 @@ export class EventBus {
   }
 
   closeAll(): void {
-    for (const c of this.clients) c.end();
+    for (const c of this.clients) c.res.end();
     this.clients.clear();
   }
 }
@@ -103,8 +160,6 @@ export interface ServerDeps {
   runtime: ServerRuntime;
   /** The question runner (runtime.ts ask); tests pass a stub. */
   ask?: AskFn;
-  /** Verifies and issues override contracts; default: the agent's secret, ledger under <data>/contracts (verifier-server.jsonl, used-server.jsonl). */
-  verifier?: ContractVerifier;
   bus?: EventBus;
   /** ui/ directory to serve; null serves no files. */
   uiDir?: string | null;
@@ -112,6 +167,10 @@ export interface ServerDeps {
   evalReport?: string | null;
   /** <data>/evidence/ for records a saved run does not carry inline; null reads none. */
   evidenceDir?: string | null;
+  /** <data>/dq/latest.json (the onboarding DQ results); null reads none. */
+  dqFile?: string | null;
+  /** seeds/usl-plan.json (the governed USL); null reads none. */
+  uslPlanFile?: string | null;
   log?: (line: string) => void;
 }
 
@@ -127,12 +186,10 @@ class HttpError extends Error {
 
 const MAX_BODY = 256 * 1024;
 const RUN_ID = /^r\d{8}T\d{6}[0-9a-f]{4}$/u;
-const EV_ID = /^ev-r\d{8}T\d{6}[0-9a-f]{4}-\d{2,4}$/u;
 const MEM_ID = /^mem-\d{1,9}$/u;
-const CONFLICT_ID = /^rc-[0-9a-f]{12}$/u;
 const CIK = /^\d{1,10}$/u;
-const SIDES: readonly RecastSide[] = ["own_filing", "later_filing"];
-const OVERRIDE_PARAMS = ["conflict_id", "chosen", "reason"] as const;
+const MAX_REPLAY_DELAY_MS = 2000;
+const LIVE_RULE_SCAN = 25;
 const MIME: Record<string, string> = {
   ".html": "text/html; charset=utf-8",
   ".js": "text/javascript; charset=utf-8",
@@ -146,6 +203,7 @@ const MIME: Record<string, string> = {
   ".txt": "text/plain; charset=utf-8",
   ".woff2": "font/woff2",
 };
+const SLIM_DROP = ["evidence", "planner_calls", "tool_calls", "tool_calls_detail"] as const;
 
 function send(res: ServerResponse, status: number, body: unknown): void {
   res.writeHead(status, { "content-type": "application/json; charset=utf-8", "cache-control": "no-store", "x-content-type-options": "nosniff" });
@@ -177,43 +235,33 @@ async function readJson(req: IncomingMessage): Promise<Record<string, unknown>> 
   }
 }
 
-function s(v: unknown, name: string, required = true): string {
-  if (v === undefined || v === null || v === "") {
-    if (required) throw new HttpError(400, `${name} is required`, "missing_field");
-    return "";
-  }
+function s(v: unknown, name: string): string {
+  if (v === undefined || v === null || v === "") throw new HttpError(400, `${name} is required`, "missing_field");
   if (typeof v !== "string") throw new HttpError(400, `${name} must be a string`, "bad_field");
   return v;
-}
-
-/** The override_recast parameters (D4): conflict_id, chosen, reason; nothing else. */
-function overrideParamErrors(params: Record<string, unknown>): string[] {
-  const out: string[] = [];
-  for (const k of OVERRIDE_PARAMS) if (typeof params[k] !== "string" || params[k] === "") out.push(`${k} is required`);
-  if (typeof params.conflict_id === "string" && !CONFLICT_ID.test(params.conflict_id)) out.push("conflict_id is not a recast conflict id (rc-<12 hex>)");
-  if (typeof params.chosen === "string" && !(SIDES as readonly string[]).includes(params.chosen)) out.push(`chosen must be ${SIDES.join(" or ")}`);
-  if (typeof params.reason === "string" && params.reason.trim().length === 0) out.push("reason is empty");
-  for (const k of Object.keys(params)) if (!(OVERRIDE_PARAMS as readonly string[]).includes(k)) out.push(`unexpected parameter ${k}`);
-  return out;
 }
 
 function cell(v: unknown): string {
   return String(v ?? "").replace(/\r?\n/gu, " ").replace(/\|/gu, "\\|");
 }
 
+const fix = (x: number | null | undefined, d: number) => (typeof x === "number" && Number.isFinite(x) ? x.toFixed(d) : "n/a");
+const signedPct = (x: number | null | undefined) => (typeof x === "number" && Number.isFinite(x) ? `${x >= 0 ? "+" : ""}${(x * 100).toFixed(2)}%` : "n/a");
+
 /**
- * The saved memo as markdown: the verdict, the memo text, the attribution ranges, the
- * card's cited claims, the Not-tested list, the recast conflicts, then a citations table with
- * every evidence id of the run, its Zetaris object, endpoint, retrieval time and latency.
+ * The saved note as markdown: the note, the join map (canonical orientation), the answer, the cited
+ * claims, the Not-tested list, then a citations table with every evidence id of the run, its Zetaris
+ * object, endpoint, retrieval time (SGT) and latency.
  */
-export function renderMemoMarkdown(run: RunResult | SavedRun, records: EvidenceRecord[] = run.evidence ?? []): string {
-  const c = run.card;
+export function renderMemoMarkdown(runIn: unknown, records?: EvidenceRecord[]): string {
+  const run = runIn as RunIn & { card?: { claims?: { text: string; evidenceIds: string[] }[]; gaps?: string[] } };
+  const recs = records ?? run.evidence ?? [];
   const out: string[] = [];
-  out.push(`# Crosswalk note: ${run.quarter} vs ${run.previous_quarter}`);
+  out.push(`# Crosswalk note: ${run.quarter ?? "?"} vs ${run.previous_quarter ?? "?"}`);
   out.push("");
-  out.push(`Run \`${run.run_id}\` (${run.mode}), started ${run.started_at}, ${run.wall_ms} ms wall, ${run.markovian.chunks} chunk(s); model ${run.telemetry.model ?? "none"}; note ${run.memo ? `${run.memo.source}, ${run.memo.words} words` : "none"}.`);
+  out.push(`Run \`${run.run_id}\` (${run.mode ?? "?"}), started ${sgt(run.started_at) ?? "?"}, ${seconds(run.wall_ms) ?? "?"} s wall, ${run.markovian?.chunks ?? "?"} chunk(s); model ${run.telemetry?.model ?? "none"}; note ${run.memo ? `${run.memo.source}, ${run.memo.words} words` : "none"}.`);
   out.push("");
-  out.push(`**Question.** ${run.question}`);
+  out.push(`**Question.** ${run.question ?? ""}`);
   out.push("");
   out.push("## Note");
   out.push("");
@@ -221,44 +269,53 @@ export function renderMemoMarkdown(run: RunResult | SavedRun, records: EvidenceR
   out.push("");
   out.push("## Join map");
   out.push("");
-  out.push("| Key | Left | Right | Transform | Matched / left | Rate | Verdict | Orphans |");
-  out.push("|---|---|---|---|---|---|---|---|");
-  for (const k of run.join_map) out.push(`| ${cell(k.key)} | ${cell(k.left)} | ${cell(k.right)} | ${cell(k.transform)} | ${k.matched_rows ?? "?"} / ${k.left_rows ?? "?"} | ${k.rate === null ? "n/a" : num(k.rate, 3)} | ${cell(k.verdict ?? k.status)}${k.from_memory ? " (recalled)" : ""} | ${cell(k.orphans.join("; "))} |`);
+  out.push("Left is the table whose rows are counted; rate = matched rows / left rows.");
   out.push("");
-  if (run.answer) {
+  out.push("| Key | Left | Right | Transform | Matched / left | Rate | Distinct | Verdict | Orphans |");
+  out.push("|---|---|---|---|---|---|---|---|---|");
+  for (const k of (run.join_map ?? []).map(canonicalRow)) {
+    out.push(`| ${cell(k.key)} | ${cell(k.left.ref)} | ${cell(k.right.ref)} | ${cell(k.transform)} | ${k.matched_rows ?? "?"} / ${k.left_rows ?? "?"} | ${fix(k.rate, 3)} | ${k.matched_keys ?? "?"} / ${k.left_keys ?? "?"} | ${cell(k.verdict ?? k.status)}${k.recalled ? ` (recalled; measured as ${cell(k.measured_as)})` : ""} | ${cell(k.orphans.join("; "))} |`);
+  }
+  out.push("");
+  if (run.answer?.rows?.length) {
     out.push("## Answer");
     out.push("");
-    for (const r of run.answer.rows) out.push(`- ${r.name}${r.ticker ? ` (${r.ticker})` : ""}: ${r.declarations} declaration(s) in ${r.states.map((s) => s.state).join(", ")}; revenue ${r.revenue?.change !== null && r.revenue?.change !== undefined ? `${pct(r.revenue.change)} under ${r.revenue.tag}` : `not compared (${r.revenue?.note ?? r.revenue_note ?? "n/a"})`}${r.weather ? `; degree days ${pct(r.weather.change)}` : ""}`);
+    for (const r of run.answer.rows) {
+      const rev = typeof r.revenue?.change === "number" ? `${signedPct(r.revenue.change)} under ${r.revenue.tag}` : `not compared (${r.revenue?.note ?? r.revenue_note ?? "n/a"})`;
+      out.push(`- ${r.name}${r.ticker ? ` (${r.ticker})` : ""}: ${r.declarations ?? "?"} declaration(s) in ${(r.states ?? []).map((x) => x.state).join(", ")}; revenue ${rev}${r.weather ? `; degree days ${signedPct(r.weather.change)}` : ""}`);
+    }
     out.push("");
   }
-  if (c.claims.length) {
+  const claims = run.card?.claims ?? [];
+  if (claims.length) {
     out.push("## Cited claims");
     out.push("");
-    for (const k of c.claims) out.push(`- ${k.text} [${k.evidenceIds.join(", ") || "no evidence"}]`);
+    for (const k of claims) out.push(`- ${k.text} [${k.evidenceIds.join(", ") || "no evidence"}]`);
     out.push("");
   }
   out.push("## Not tested");
   out.push("");
-  if (run.not_tested.length) for (const n of run.not_tested) out.push(`- ${n}`);
+  if (run.not_tested?.length) for (const n of run.not_tested) out.push(`- ${n}`);
   else out.push("- (none listed)");
   out.push("");
-  if (c.gaps.length) {
+  const gaps = run.card?.gaps ?? [];
+  if (gaps.length) {
     out.push("## Gaps");
     out.push("");
-    for (const g of c.gaps) out.push(`- ${g}`);
+    for (const g of gaps) out.push(`- ${g}`);
     out.push("");
   }
   out.push("## Citations");
   out.push("");
-  out.push(`Every number above comes from one of these ${records.length} evidence records of run \`${run.run_id}\` (E-cov ${num(run.quality.e_cov, 2)}, E-complete ${num(run.quality.e_complete, 2)}).`);
+  out.push(`Every number above comes from one of these ${recs.length} evidence records of run \`${run.run_id}\`. Times are Singapore time (SGT).`);
   out.push("");
   out.push("| Evidence | Kind | Template or tool | Zetaris object | Endpoint | Retrieved | Latency | SQL sha256 |");
   out.push("|---|---|---|---|---|---|---|---|");
-  for (const e of records) {
-    const what = e.template_id ?? (e.kind === "model" ? e.model?.name ?? "model" : (e.derived_from?.length ? `from ${e.derived_from.join(", ")}` : e.kind));
-    out.push(`| ${cell(e.id)} | ${cell(e.kind)} | ${cell(what)} | ${cell(e.zetaris_object ?? "")} | ${cell(e.source_url ?? "")} | ${cell(e.queried_at)} | ${e.elapsed_ms === undefined ? "" : `${e.elapsed_ms} ms`} | ${cell(e.sql_sha256 ? e.sql_sha256.slice(0, 12) : "")} |`);
+  for (const e of recs) {
+    const what = e.template_id ?? (e.kind === "model" ? e.model?.name ?? "model" : e.derived_from?.length ? `from ${e.derived_from.join(", ")}` : e.kind);
+    out.push(`| ${cell(e.id)} | ${cell(e.kind)} | ${cell(what)} | ${cell(e.zetaris_object ?? "")} | ${cell(e.source_url ?? "")} | ${cell(sgt(e.queried_at) ?? e.queried_at)} | ${e.elapsed_ms === undefined ? "" : `${e.elapsed_ms} ms`} | ${cell(e.sql_sha256 ? e.sql_sha256.slice(0, 12) : "")} |`);
   }
-  const licences = [...new Set(records.map((e) => e.licence).filter((x): x is string => !!x))];
+  const licences = [...new Set(recs.map((e) => e.licence).filter((x): x is string => !!x && x !== "none"))];
   if (licences.length) {
     out.push("");
     out.push("Licences of the sources read:");
@@ -278,6 +335,8 @@ export interface CwServer {
   close(): Promise<void>;
 }
 
+const DEFAULT_USL_PLAN = fileURLToPath(new URL("seeds/usl-plan.json", REPO_ROOT_URL));
+
 export function createServer(deps: ServerDeps): CwServer {
   const rt = deps.runtime;
   const bus = deps.bus ?? new EventBus();
@@ -286,21 +345,19 @@ export function createServer(deps: ServerDeps): CwServer {
   const uiDir = deps.uiDir === undefined ? fileURLToPath(new URL("ui/", REPO_ROOT_URL)) : deps.uiDir;
   const evalReport = deps.evalReport === undefined ? DATA_PATHS.evalReport : deps.evalReport;
   const evidenceDir = deps.evidenceDir === undefined ? DATA_PATHS.evidence : deps.evidenceDir;
-  let verifier: ContractVerifier | null = deps.verifier ?? null;
-  const verifierOf = (): ContractVerifier => {
-    // The secret is read on first use, so a server without .env.local still serves reads.
-    if (!verifier) verifier = new ContractVerifier(loadContractSecret(), "server", DATA_PATHS.contracts);
-    return verifier;
-  };
+  const dqFile = deps.dqFile === undefined ? DATA_PATHS.dqLatest : deps.dqFile;
+  const uslPlanFile = deps.uslPlanFile === undefined ? DEFAULT_USL_PLAN : deps.uslPlanFile;
   let port = 0;
-  let busy: string | null = null;
+  let busy: { run_id: string; quarter: string; mode: string; started_at: string } | null = null;
 
   function hostOk(req: IncomingMessage): boolean {
     const h = String(req.headers.host ?? "").toLowerCase();
     return h === `127.0.0.1:${port}` || h === `localhost:${port}`;
   }
 
+  /** CORS closed: no foreign Origin and no cross-site fetch, for any method. */
   function originOk(req: IncomingMessage): boolean {
+    if (String(req.headers["sec-fetch-site"] ?? "").toLowerCase() === "cross-site") return false;
     const o = req.headers.origin;
     if (!o) return true;
     return o === `http://127.0.0.1:${port}` || o === `http://localhost:${port}`;
@@ -309,7 +366,7 @@ export function createServer(deps: ServerDeps): CwServer {
   function runOf(id: string): SavedRun {
     if (!RUN_ID.test(id)) throw new HttpError(400, "bad run id", "bad_id");
     const r = rt.runs.load(id);
-    if (!r) throw new HttpError(404, `no saved run ${id}`, "not_found");
+    if (!r) throw new HttpError(404, busy?.run_id === id ? `run ${id} is still running` : `no saved run ${id}`, busy?.run_id === id ? "running" : "not_found");
     return r;
   }
 
@@ -325,31 +382,42 @@ export function createServer(deps: ServerDeps): CwServer {
       .map((l) => JSON.parse(l) as EvidenceRecord);
   }
 
-  function finishedSummary(r: RunResult): Record<string, unknown> {
-    return {
-      run_id: r.run_id,
-      quarter: r.quarter,
-      mode: r.mode,
-      question: r.question,
-      utilities: r.answer?.rows.length ?? 0,
-      keys: r.join_map.length,
-      wall_ms: r.wall_ms,
-      chunks: r.markovian.chunks,
-      checklist_complete: r.checklist_complete,
-      memo_source: r.memo?.source ?? null,
-      memo_words: r.memo?.words ?? null,
-      skipped_chunks: r.telemetry.skipped_chunks,
-      skipped_steps: r.skipped_steps.length,
-      evidence_records: r.evidence_ids.length,
-      memory_ids: r.memory?.ids ?? [],
+  /** The latest saved run (index order) whose compile_usl ran the live DQ rules. */
+  function latestLiveRulesRun(): RunIn | null {
+    for (const e of rt.runs.list().slice(0, LIVE_RULE_SCAN)) {
+      const r = rt.runs.load(e.run_id);
+      if (r?.usl?.live_rules_run?.length) return asRun(r);
+    }
+    return null;
+  }
+
+  function streamReplay(req: IncomingMessage, res: ServerResponse, run: RunIn, delayMs: number): void {
+    const events: StreamEvent[] = replayEvents(run);
+    const raw = req.headers["last-event-id"];
+    const last = raw === undefined ? 0 : Number(raw);
+    EventBus.open(res);
+    res.write(`event: stream\ndata: ${JSON.stringify({ run_id: run.run_id, mode: "replay", replay: true, events: events.length })}\n\n`);
+    let i = Number.isFinite(last) && last > 0 ? last : 0;
+    let closed = false;
+    req.on("close", () => (closed = true));
+    const writeNext = (): void => {
+      if (closed) return;
+      if (i >= events.length) return void res.end();
+      const e = events[i]!;
+      i += 1;
+      res.write(`id: ${i}\nevent: ${e.type}\ndata: ${JSON.stringify(e.data)}\n\n`);
+      if (delayMs > 0) setTimeout(writeNext, delayMs);
+      else writeNext();
     };
+    writeNext();
   }
 
   async function route(req: IncomingMessage, res: ServerResponse): Promise<void> {
     const url = new URL(req.url ?? "/", `http://127.0.0.1:${port}`);
     const p = url.pathname;
     const m = req.method ?? "GET";
-    if (m !== "GET" && m !== "HEAD" && !originOk(req)) throw new HttpError(403, "cross-origin request refused", "origin");
+    if (!originOk(req)) throw new HttpError(403, "cross-origin request refused", "origin");
+    if (m === "OPTIONS") throw new HttpError(405, "no cross-origin requests (CORS is closed)", "method");
 
     if (m === "GET" && p === "/api/events") return bus.attach(req, res);
 
@@ -373,8 +441,11 @@ export function createServer(deps: ServerDeps): CwServer {
         gateway_templates: gatewayTemplates,
         gateway_error: gatewayError,
         runs: rt.runs.list().length,
-        data_dir: DATA_DIR,
-        busy_run_id: busy,
+        data_dir: process.env.CW_DATA_DIR ? "CW_DATA_DIR" : "default (data/ in the repository)",
+        dq_file: !!dqFile && existsSync(dqFile),
+        usl_plan: !!uslPlanFile && existsSync(uslPlanFile),
+        ui: !!uiDir && existsSync(uiDir),
+        busy_run_id: busy?.run_id ?? null,
         sse_listeners: bus.listeners,
       });
     }
@@ -383,6 +454,7 @@ export function createServer(deps: ServerDeps): CwServer {
       const b = await readJson(req);
       const quarter = s(b.quarter, "quarter");
       if (!PARAM_PATTERNS.fema_quarter.test(quarter)) throw new HttpError(400, "quarter must look like CY2025Q1", "bad_quarter");
+      if (b.mode !== undefined && b.mode !== "cold" && b.mode !== "warm") throw new HttpError(400, "mode must be cold or warm", "bad_field");
       const mode = b.mode === "cold" ? "cold" : "warm";
       let maxChunks: number | undefined;
       if (b.max_chunks !== undefined && b.max_chunks !== null && b.max_chunks !== "") {
@@ -391,31 +463,93 @@ export function createServer(deps: ServerDeps): CwServer {
         maxChunks = n;
       }
       const think = typeof b.think === "boolean" ? b.think : undefined;
-      if (busy) return send(res, 409, { error: `a run is in progress (${busy}); one model job at a time`, code: "busy", busy_run_id: busy });
+      if (busy) return send(res, 409, { error: `a run is in progress (${busy.run_id}); one model job at a time`, code: "busy", busy_run_id: busy.run_id });
       const runId = newRunId();
-      busy = runId;
       const startedAt = new Date().toISOString();
-      bus.publish("run_started", { run_id: runId, quarter, mode, max_chunks: maxChunks ?? null, think: think ?? null, started_at: startedAt });
+      busy = { run_id: runId, quarter, mode, started_at: startedAt };
+      bus.publish("run_started", { run_id: runId, quarter, mode, max_chunks: maxChunks ?? null, think: think ?? null, started_at: startedAt, started_at_sgt: sgt(startedAt), replay: false });
       log(`run ${runId} started: ${quarter} ${mode}`);
       void (async () => {
         try {
-          const o = await askFn(rt, { quarter, mode, maxChunks, think, runId, onEvent: (e: LoopEvent) => bus.publish(e.type, { ...e, run_id: runId }) }, { source: "server" });
-          const summary = finishedSummary(o.result);
+          const o = await askFn(rt, { quarter, mode, maxChunks, think, runId, onEvent: (e: LoopEvent) => bus.publish(e.type, { ...e, run_id: runId, replay: false }) }, { source: "server" });
+          const summary = finishedSummary(asRun(o.result));
           if (o.result.run_id !== runId) summary.announced_run_id = runId;
-          bus.publish("run_finished", summary);
-          log(`run ${o.result.run_id} finished in ${o.result.wall_ms} ms, ${o.result.markovian.chunks} chunk(s)`);
+          busy = null;
+          bus.publish("run_finished", { ...summary, run_id: runId, replay: false });
+          log(`run ${o.result.run_id} finished in ${o.result.wall_ms} ms`);
         } catch (e) {
           const error = (e as Error).message.slice(0, 500);
           log(`run ${runId} failed: ${error}`);
-          bus.publish("run_failed", { run_id: runId, quarter, mode, error });
-        } finally {
           busy = null;
+          bus.publish("run_failed", { run_id: runId, quarter, mode, error, replay: false });
         }
       })();
-      return send(res, 202, { run_id: runId, quarter, mode, started_at: startedAt, state: "running" });
+      return send(res, 202, { run_id: runId, quarter, mode, started_at: startedAt, started_at_sgt: sgt(startedAt), state: "running", events: `/api/runs/${runId}/events` });
     }
 
-    if (m === "GET" && p === "/api/runs") return send(res, 200, { runs: rt.runs.list(), busy_run_id: busy });
+    if (m === "GET" && p === "/api/runs") {
+      const runs = rt.runs.list().map((r) => ({ ...r, started_at_sgt: sgt(r.started_at), wall_s: seconds(r.wall_ms) }));
+      return send(res, 200, { runs, running: busy ? { ...busy, started_at_sgt: sgt(busy.started_at) } : null, busy_run_id: busy?.run_id ?? null });
+    }
+
+    if (m === "GET" && p === "/api/telemetry") {
+      const list = rt.runs.list();
+      const latest = list[0] ? rt.runs.load(list[0].run_id) : null;
+      return send(res, 200, { model: rt.ollama?.model ?? null, runs: list.length, busy_run_id: busy?.run_id ?? null, latest: latest ? telemetryView(asRun(latest)) : null });
+    }
+
+    let mt = /^\/api\/runs\/([^/]+)(?:\/(events|telemetry|memo\.md|evidence))?$/u.exec(p);
+    if (m === "GET" && mt) {
+      const id = mt[1]!;
+      const sub = mt[2];
+      if (!RUN_ID.test(id)) throw new HttpError(400, "bad run id", "bad_id");
+      if (sub === "events") {
+        if (busy?.run_id === id || (bus.recent(0, id).length && !rt.runs.load(id))) return bus.attachRun(req, res, id);
+        const run = runOf(id);
+        const d = Number(url.searchParams.get("delay_ms") ?? 0);
+        if (!Number.isInteger(d) || d < 0 || d > MAX_REPLAY_DELAY_MS) throw new HttpError(400, `delay_ms must be an integer from 0 to ${MAX_REPLAY_DELAY_MS}`, "bad_field");
+        return streamReplay(req, res, asRun(run), d);
+      }
+      if (sub === undefined && busy?.run_id === id && !rt.runs.load(id)) return send(res, 202, { run_id: id, state: "running", events: `/api/runs/${id}/events` });
+      const run = runOf(id);
+      if (sub === "telemetry") return send(res, 200, telemetryView(asRun(run)));
+      if (sub === "memo.md") return sendText(res, 200, renderMemoMarkdown(run, evidenceOf(run)), MIME[".md"]!, { "content-disposition": `inline; filename="${run.run_id}-memo.md"` });
+      if (sub === "evidence") return send(res, 200, { run_id: run.run_id, records: evidenceOf(run) });
+      if (url.searchParams.get("slim") === "1") {
+        const slim: Record<string, unknown> = { ...run };
+        for (const k of SLIM_DROP) delete slim[k];
+        return send(res, 200, slim);
+      }
+      return send(res, 200, run);
+    }
+
+    mt = /^\/api\/joinmap\/([^/]+)$/u.exec(p);
+    if (m === "GET" && mt) return send(res, 200, joinMapView(asRun(runOf(mt[1]!))));
+
+    mt = /^\/api\/answer\/([^/]+)$/u.exec(p);
+    if (m === "GET" && mt) return send(res, 200, answerView(asRun(runOf(mt[1]!))));
+
+    mt = /^\/api\/evidence\/([^/]+)\/([^/]+)$/u.exec(p);
+    if (m === "GET" && mt) {
+      const run = runOf(mt[1]!);
+      let c: string;
+      try {
+        c = decodeURIComponent(mt[2]!);
+      } catch {
+        throw new HttpError(400, "bad cell id encoding", "bad_id");
+      }
+      if (!CELL_ID.test(c)) throw new HttpError(400, "bad cell id (<cik10>.<field>, key.<route> or an evidence id)", "bad_id");
+      const shaped = asRun({ ...run, evidence: evidenceOf(run) });
+      const out = cellEvidence(shaped, c);
+      if (!out) throw new HttpError(404, `no cell ${c} in run ${run.run_id}`, "not_found");
+      return send(res, 200, out);
+    }
+
+    if (m === "GET" && p === "/api/usl") {
+      const pick = url.searchParams.get("run");
+      const liveRun = pick ? asRun(runOf(pick)) : latestLiveRulesRun();
+      return send(res, 200, uslView(readJsonFile<UslPlanFile>(uslPlanFile), readJsonFile<DqFile>(dqFile), liveRun));
+    }
 
     if (m === "GET" && p === "/api/seeds") {
       return send(res, 200, {
@@ -423,35 +557,13 @@ export function createServer(deps: ServerDeps): CwServer {
       });
     }
 
-    const rm = /^\/api\/run\/([^/]+)$/u.exec(p);
-    if (m === "GET" && rm) return send(res, 200, runOf(rm[1]!));
-
-    const rmm = /^\/api\/run\/([^/]+)\/memo\.md$/u.exec(p);
-    if (m === "GET" && rmm) {
-      const run = runOf(rmm[1]!);
-      return sendText(res, 200, renderMemoMarkdown(run, evidenceOf(run)), MIME[".md"]!, { "content-disposition": `inline; filename="${run.run_id}-memo.md"` });
+    mt = /^\/api\/why\/([^/]+)$/u.exec(p);
+    if (m === "GET" && mt) {
+      if (!MEM_ID.test(mt[1]!)) throw new HttpError(400, "bad memory id (mem-N)", "bad_id");
+      const t = rt.hmem.why(mt[1]!);
+      if (!t.memory) throw new HttpError(404, `no memory ${mt[1]}`, "not_found");
+      return send(res, 200, { memory_id: mt[1], ...t });
     }
-
-    const rme = /^\/api\/run\/([^/]+)\/evidence(?:\/([^/]+))?$/u.exec(p);
-    if (m === "GET" && rme) {
-      const run = runOf(rme[1]!);
-      const recs = evidenceOf(run);
-      if (rme[2] === undefined) return send(res, 200, { run_id: run.run_id, records: recs });
-      if (!EV_ID.test(rme[2])) throw new HttpError(400, "bad evidence id", "bad_id");
-      const one = recs.find((r) => r.id === rme[2]);
-      if (!one) throw new HttpError(404, `no evidence record ${rme[2]} in run ${run.run_id}`, "not_found");
-      return send(res, 200, one);
-    }
-
-    const wy = /^\/api\/why\/([^/]+)$/u.exec(p);
-    if (m === "GET" && wy) {
-      if (!MEM_ID.test(wy[1]!)) throw new HttpError(400, "bad memory id (mem-N)", "bad_id");
-      const t = rt.hmem.why(wy[1]!);
-      if (!t.memory) throw new HttpError(404, `no memory ${wy[1]}`, "not_found");
-      return send(res, 200, { memory_id: wy[1], ...t });
-    }
-
-    if (m === "GET" && p === "/api/conflicts") return send(res, 200, { conflicts: [] });
 
     if (m === "GET" && p === "/api/world") {
       const g = rt.world.exportGraph();
@@ -459,33 +571,13 @@ export function createServer(deps: ServerDeps): CwServer {
       return send(res, 200, { entities: g.byType, edges: g.edgeTypes, events: g.events, nodes_total: g.nodes.length, edges_total: g.edges.length, ...(full ? { graph: { nodes: g.nodes, edges: g.edges } } : {}) });
     }
 
-    const wc = /^\/api\/world\/([^/]+)$/u.exec(p);
-    if (m === "GET" && wc) {
-      if (!CIK.test(wc[1]!)) throw new HttpError(400, "bad cik", "bad_cik");
-      const cik = wc[1]!.padStart(10, "0");
+    mt = /^\/api\/world\/([^/]+)$/u.exec(p);
+    if (m === "GET" && mt) {
+      if (!CIK.test(mt[1]!)) throw new HttpError(400, "bad cik", "bad_cik");
+      const cik = mt[1]!.padStart(10, "0");
       const history = rt.world.utilityHistory(cik);
       if (!history.length) throw new HttpError(404, `no utility with CIK ${cik} in the World Model`, "not_found");
       return send(res, 200, { cik, history });
-    }
-
-    if (m === "GET" && p === "/api/telemetry") {
-      const list = rt.runs.list();
-      const latest = list[0] ? rt.runs.load(list[0].run_id) : null;
-      return send(res, 200, {
-        model: rt.ollama?.model ?? null,
-        runs: list.length,
-        busy_run_id: busy,
-        run_id: latest?.run_id ?? null,
-        quarter: latest?.quarter ?? null,
-        mode: latest?.mode ?? null,
-        started_at: latest?.started_at ?? null,
-        wall_ms: latest?.wall_ms ?? null,
-        chunks: latest?.markovian.chunks ?? null,
-        summary: latest?.summary ?? null,
-        telemetry: latest?.telemetry ?? null,
-        chart: latest?.chart ?? [],
-        skipped_steps: latest?.skipped_steps ?? [],
-      });
     }
 
     if (m === "GET" && p === "/api/eval") {
@@ -496,45 +588,11 @@ export function createServer(deps: ServerDeps): CwServer {
       } catch (e) {
         throw new HttpError(500, `evaluation report is not valid JSON: ${(e as Error).message.slice(0, 120)}`, "bad_report");
       }
-      return send(res, 200, { file: "eval/report.json", updated_at: new Date(statSync(evalReport).mtimeMs).toISOString(), report: body });
+      const updated = new Date(statSync(evalReport).mtimeMs).toISOString();
+      return send(res, 200, { file: "eval/report.json", updated_at: updated, updated_at_sgt: sgt(updated), report: body });
     }
 
-    if (m === "POST" && p === "/api/approvals/sign") {
-      const b = await readJson(req);
-      const action = s(b.action, "action");
-      if (action !== "override_recast") throw new HttpError(400, "action must be override_recast (the only high-risk action)", "bad_action");
-      const raw = b.params;
-      if (!raw || typeof raw !== "object" || Array.isArray(raw)) throw new HttpError(400, "params must be an object of strings", "bad_field");
-      const params = raw as Record<string, unknown>;
-      const errors = overrideParamErrors(params);
-      if (errors.length) throw new HttpError(400, `override_recast parameters: ${errors.join("; ")}`, "bad_params");
-      const parameters = { conflict_id: params.conflict_id as string, chosen: params.chosen as string, reason: (params.reason as string).trim() };
-      try {
-        const contract = verifierOf().issue({ action: "override_recast", parameters, user: APPROVER, surface: APPROVAL_SURFACE, approvals: [analystApproval(parameters.reason)], flags: ["analyst_override"] });
-        log(`contract ${contract.contractId} signed for override_recast ${parameters.conflict_id} -> ${parameters.chosen} (expires ${contract.expiresAt})`);
-        return send(res, 200, { contract, expires_at: contract.expiresAt });
-      } catch (e) {
-        if (e instanceof ContractError) throw new HttpError(400, e.message, "contract");
-        throw e;
-      }
-    }
-
-    if (m === "POST" && p === "/api/override") {
-      const b = await readJson(req);
-      const params = { conflict_id: s(b.conflict_id, "conflict_id"), chosen: s(b.chosen, "chosen"), reason: s(b.reason, "reason").trim() };
-      const errors = overrideParamErrors(params);
-      if (errors.length) throw new HttpError(400, `override_recast parameters: ${errors.join("; ")}`, "bad_params");
-      // Every verification, accepted or refused, lands in <data>/contracts/verifier-server.jsonl.
-      const v = verifierOf().verify(b.contract, { action: "override_recast", params });
-      if (!v.ok) {
-        log(`override of ${params.conflict_id} refused (${v.code}): ${v.reason}`);
-        throw new HttpError(403, `refused: ${v.reason}`, v.code);
-      }
-      // Crosswalk keeps no recast conflicts (the inherited route stays until the Day-2 server rewrite).
-      throw new HttpError(404, `no recast conflict ${params.conflict_id}`, "not_found");
-    }
-
-    if (p.startsWith("/api/")) throw new HttpError(404, `no route ${m} ${p}`, "not_found");
+    if (p.startsWith("/api/")) throw new HttpError(m === "GET" || m === "POST" ? 404 : 405, `no route ${m} ${p}`, m === "GET" || m === "POST" ? "not_found" : "method");
 
     // ---- static UI ----
     if ((m === "GET" || m === "HEAD") && uiDir) {
@@ -562,7 +620,7 @@ export function createServer(deps: ServerDeps): CwServer {
   const server = http.createServer((req, res) => {
     if (!hostOk(req)) return send(res, 421, { error: "unknown Host; Crosswalk answers on 127.0.0.1 only", code: "host" });
     route(req, res).catch((e: unknown) => {
-      if (e instanceof HttpError) return send(res, e.status, { error: e.message, code: e.code });
+      if (e instanceof HttpError) return res.headersSent ? void res.end() : send(res, e.status, { error: e.message, code: e.code });
       log(`error ${req.method} ${req.url}: ${(e as Error).stack ?? e}`);
       if (!res.headersSent) send(res, 500, { error: (e as Error).message.slice(0, 300), code: "internal" });
       else res.end();
@@ -573,7 +631,7 @@ export function createServer(deps: ServerDeps): CwServer {
     server,
     bus,
     get busy() {
-      return busy;
+      return busy?.run_id ?? null;
     },
     listen(p: number, host = "127.0.0.1"): Promise<number> {
       if (host !== "127.0.0.1" && host !== "localhost") throw new Error("Crosswalk listens on 127.0.0.1 only");
@@ -595,7 +653,7 @@ export function createServer(deps: ServerDeps): CwServer {
 
 export async function main(): Promise<void> {
   const cfg = loadConfig();
-  const log = (l: string) => process.stderr.write(`${new Date().toISOString()} ${l}\n`);
+  const log = (l: string) => process.stderr.write(`${sgt(new Date().toISOString())} ${l}\n`);
   // One process holds <data>/hmem and <data>/world: the server takes <data>/agent.lock for its lifetime.
   const rt = openRuntime({ command: "server", log });
   const app = createServer({ runtime: rt, log });
@@ -606,7 +664,7 @@ export async function main(): Promise<void> {
     rt.close();
     throw e;
   }
-  log(`Crosswalk agent server on http://127.0.0.1:${bound} (pid ${process.pid}; gateway ${rt.gateway.baseUrl}; model ${rt.ollama?.model ?? "none"}; data ${DATA_DIR}; ${rt.runs.list().length} saved run(s))`);
+  log(`Crosswalk agent server on http://127.0.0.1:${bound} (pid ${process.pid}; gateway ${rt.gateway.baseUrl}; model ${rt.ollama?.model ?? "none"}; data ${DATA_DIR === `${REPO_ROOT}data` ? "data/" : "CW_DATA_DIR"}; ${rt.runs.list().length} saved run(s))`);
   const stop = () => {
     void app.close();
     rt.close();
