@@ -207,7 +207,7 @@
       </div>
       <div class="card card--memory">
         <h4>Two references</h4>
-        <p>The company_dns SIC list (1,005 codes) and a state reference (50 states and DC with FIPS codes). Seeds: 43 utilities with the states they serve and 56 airport stations, curated from public filings and labelled curated.</p>
+        <p>The company_dns SIC list (1,005 codes) and a state reference (50 states and DC with FIPS codes). Seeds: 43 utilities with the states they serve and 56 first-order weather stations, curated from public filings and labelled curated.</p>
       </div>
     </div>
   </div>
@@ -264,7 +264,7 @@
         </table>
         <p style="margin-top:10px"><b>The baseline wins.</b> The model is kept as a second proposer whose every proposal is measured in Lightning SQL before anything uses it. It found no key the baseline missed: each key it got VERIFIED was also measured from a baseline proposal in the same run.</p>
       </div>
-      <p style="flex:1; font-size:19px; line-height:1.42; color:var(--ink-2)">Then <code>answer</code> (fixed SQL templates), <code>not_tested</code> and <code>finalize</code> (the note, checked word by word against the join map and the answer). The checklist (sources found, shapes probed, keys proposed, keys measured, sources registered, USL built, DQ run, answered, not-tested listed, note written) fixes the order; the model chooses among the steps it allows and proposes keys. It never writes SQL or DDL and never produces a number. A reply that is invalid twice hands the step to the host.</p>
+      <p style="flex:1; font-size:19px; line-height:1.42; color:var(--ink-2)">Then <code>answer</code> (fixed SQL templates), <code>not_tested</code> and <code>finalize</code> (the note, checked word by word against the join map and the answer). The checklist (sources found, shapes probed, keys proposed, keys measured, sources registered, USL built, DQ run, answered, not-tested listed, note written) fixes the order; the model chooses among the steps it allows and proposes keys. It never writes SQL or DDL and never computes a number. A reply that is invalid twice hands the step to the host.</p>
     </div>
     <figure>
       <img class="shot" src="../img/timeline-cold.png" style="width:1442px" alt="Discovery timeline of the cold run: the model proposes three keys, then each is measured in Lightning SQL: one VERIFIED, two REJECTED at 0.0%">
@@ -355,14 +355,14 @@
         <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:0 14px">
           <div class="mod"><span class="who zt">REST</span><b>CW_FEMA, CW_SEC, CW_DNS</b>: OpenFEMA, SEC EDGAR frames and submissions, company_dns</div>
           <div class="mod"><span class="who zt">Filestore</span><b>CW_GHCN</b>: GHCN-Daily parquet 2024 and 2025, the station inventory as one-column CSV</div>
-          <div class="mod"><span class="who zt">USL</span><b>crosswalk_usl</b>: 7 tables, 6 foreign keys, 6 DQ rules, activated from the cached views</div>
+          <div class="mod"><span class="who zt">USL</span><b>crosswalk_usl</b>: 7 tables, 6 foreign keys with a DQ rule each, activated from the cached views</div>
         </div>
         <div class="mod" style="background:#f3ecf4; border-color:var(--zet)"><b>Question path</b>: cached SchemaStore views in container <code>cw</code> only; 0 of 399 statements over 20 s, slowest 18.1 s (the weather statement). <b>Onboarding path</b> (<code>npm run onboard</code>): register, cache, compile the USL, run every DQ rule bounded at 900 s.</div>
       </div>
     </div>
     <div class="down"><span>&darr;</span>HTTPS, read by Zetaris only</div>
     <div class="tier">
-      <div class="box" style="flex:1; border-style:dashed"><div class="sub" style="font-size:17px; color:var(--ink-2)"><b>Public sources</b>: OpenFEMA API (fema.gov), SEC EDGAR (data.sec.gov, declared User-Agent, at most 10 requests a second), NOAA GHCN-Daily on the AWS Open Data bucket, company_dns; the Zetaris getting-started manifest is read at boot for the catalogue.</div></div>
+      <div class="box" style="flex:1; border-style:dashed"><div class="sub" style="font-size:17px; color:var(--ink-2)"><b>Public sources</b>: OpenFEMA API (fema.gov), SEC EDGAR (data.sec.gov, declared User-Agent, a fair-access limit of 10 requests a second), NOAA GHCN-Daily on the AWS Open Data bucket, company_dns; the Zetaris getting-started manifest is read at boot for the catalogue.</div></div>
     </div>
   </div>
   <div class="foot"><span class="src">At runtime the agent never calls OpenFEMA, SEC EDGAR, NOAA or company_dns directly; only Zetaris does. Statement times: docs/eval-report.md section 6 (7 Day-2 runs).</span><span class="pg">6 / 12</span></div>
@@ -388,7 +388,7 @@
       </figure>
       <div class="row" style="gap:16px">
         <p class="small" style="flex:1"><b>Governed USL.</b> <code>crosswalk_usl</code>: 7 tables with primary keys and 6 foreign keys, each a key measured before it was declared; activated from the cached views, because a raw REST table re-fetches its endpoint on every read. Each question runs 2 DQ rules live; the other 4 are read from the onboarding run of 25 Oct 13:46 SGT, where MGE Energy is the one invalid row.</p>
-        <p class="small" style="flex:1"><b>Registration at run time.</b> <code>register_source</code> creates, caches and counts a catalogue source under a signed contract: FEMA Q1 2024 in 1.34 s wall, 72 rows equal to the API. A Day-1 warm run registered three Q1 2023 revenue frames live; in the Day-2 runs every call answered already registered.</p>
+        <p class="small" style="flex:1"><b>Registration at run time.</b> <code>register_source</code> creates, caches and counts a catalogue source under a signed contract. A Day-1 warm run registered three Q1 2023 revenue frames live, about 1 s each; the warm run recorded for the video registered FEMA Q1 2023 in 1.6 s and three Q1 2022 frames. In the Day-2 evaluation runs every call answered already registered.</p>
       </div>
     </div>
     <figure style="flex:1">
@@ -396,7 +396,7 @@
       <figcaption>The citation: OGE's +25.28% opens two Lightning SQL statements over the cached frames views. The revenue level is hidden in this image only.</figcaption>
     </figure>
   </div>
-  <div class="foot"><span class="src">Counts and timings from zetaris/README.md; live and onboarding DQ from the USL and DQ screen of the cold run 16:00 SGT; registrations from docs/eval-report.md (Not measured) and the Day-1 run records.</span><span class="pg">7 / 12</span></div>
+  <div class="foot"><span class="src">Counts and timings from zetaris/README.md; live and onboarding DQ from the USL and DQ screen of the cold run 16:00 SGT; registrations from the Day-1 run record and docs/video/shotlist.md.</span><span class="pg">7 / 12</span></div>
 </section>
 
 <!-- 8. Meterless -->
@@ -515,7 +515,7 @@
   <h2 class="title">What did not go well, and what the answer does not test</h2>
   <div class="body row" style="gap:36px">
     <div class="col" style="width:1060px; gap:0">
-      <div class="finding"><div class="n">1</div><div><h4>The model loses the key-proposal comparison</h4><p>11 proposals and 3 VERIFIED against the baseline's 30 and 25; no key it found was missed by the baseline. Some choices are pairs nobody would try (company number against FIPS code: 0 of 43); Lightning SQL rejects them, at the cost of a planner step and a statement each.</p></div></div>
+      <div class="finding"><div class="n">1</div><div><h4>The model loses the key-proposal comparison</h4><p>11 proposals and 3 VERIFIED against the baseline's 30 and 25; every key it verified was also among the baseline's proposals. Some choices are pairs nobody would try (company number against FIPS code: 0 of 43); Lightning SQL rejects them, at the cost of a planner step and a statement each.</p></div></div>
       <div class="finding"><div class="n">2</div><div><h4>Without the model, the same answer in about a third of the time</h4><p>88.4 s with no model against 247.7 to 285.8 s with it, same answer and governed keys: on this question the planner and the note add time, not keys.</p></div></div>
       <div class="finding"><div class="n">3</div><div><h4>The planner's replies and the note</h4><p>125 of 157 planner replies valid; the host took 2 to 8 checklist steps itself per run. The model's note was replaced by the 250-word template in 3 of the 6 runs with the model; one early draft said revenue "held up" while EIX and POR fell, and the verifier rule was fixed afterwards.</p></div></div>
       <div class="finding"><div class="n">4</div><div><h4>A VERIFIED rate is containment, not meaning</h4><p>Two state-code lists overlap and measure VERIFIED (28 of 28, 43 of 43) though nobody would join on them.</p></div></div>
