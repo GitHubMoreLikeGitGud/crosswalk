@@ -1,0 +1,594 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1920">
+<title>Crosswalk</title>
+<style>
+  @page { size: 1920px 1080px; margin: 0; }
+  :root {
+    --paper: #f4f1ea;
+    --surface: #fffdf8;
+    --surface-2: #f6f2e9;
+    --ink: #1d2b2e;
+    --ink-2: #45565a;
+    --ink-3: #66777b;
+    --rule: #ddd6c8;
+    --rule-strong: #b9b0a0;
+    --accent: #0e6b67;
+    --accent-soft: #dcefeb;
+    --good: #0e6b67; --good-bg: #d9efe9; --good-edge: #3f9a93;
+    --mid: #8a5a12; --mid-bg: #f7e8c8; --mid-edge: #cf9a3a;
+    --bad: #9b2d2a; --bad-bg: #f6dcda; --bad-edge: #c9605c;
+    --memory: #5b4a7a; --memory-bg: #ece6f4; --memory-edge: #9b8bb8;
+    --model: #35507a; --model-bg: #e3e9f4; --model-edge: #7f93b8;
+    --zet: #6a2c70; --nv: #3d6b12;
+    --top-bg: #1f3a3d;
+    --gold: #e8c170;
+    --font-display: "Cambria", "Charter", "Georgia", "Times New Roman", serif;
+    --font-body: "Segoe UI Variable Text", "Segoe UI", system-ui, Arial, sans-serif;
+    --font-fig: "Segoe UI Variable Display", "Segoe UI", system-ui, Arial, sans-serif;
+    --font-mono: "Cascadia Mono", "Cascadia Code", Consolas, ui-monospace, monospace;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--paper); }
+  body { color: var(--ink); font: 400 22px/1.4 var(--font-body); -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  code, .mono { font-family: var(--font-mono); font-size: 0.86em; }
+  b, strong { font-weight: 600; }
+
+  .slide { width: 1920px; height: 1080px; position: relative; overflow: hidden; background: var(--surface); break-after: page; page-break-after: always; }
+  .slide:last-of-type { break-after: auto; page-break-after: auto; }
+  .slide::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 10px; background: var(--top-bg); }
+  .slide::after { content: ""; position: absolute; left: 0; top: 10px; width: 96px; height: 4px; background: var(--gold); }
+  .eyebrow { position: absolute; left: 96px; top: 46px; font: 600 18px/1 var(--font-body); letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); }
+  .title { position: absolute; left: 96px; right: 96px; top: 76px; margin: 0; font: 600 48px/1.14 var(--font-display); color: var(--ink); letter-spacing: -0.005em; }
+  .body { position: absolute; left: 96px; right: 96px; top: 184px; bottom: 82px; }
+  .foot { position: absolute; left: 96px; right: 96px; bottom: 30px; padding-top: 12px; border-top: 1px solid var(--rule); display: flex; justify-content: space-between; gap: 24px; font-size: 15.5px; color: var(--ink-3); }
+  .foot .src { flex: 1; }
+  .foot .pg { font-family: var(--font-fig); font-weight: 600; color: var(--ink-2); white-space: nowrap; }
+
+  .row { display: flex; gap: 40px; }
+  .col { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
+  .lead { font-size: 26px; line-height: 1.38; color: var(--ink); margin: 0; }
+  .muted { color: var(--ink-3); }
+  .small { font-size: 17px; line-height: 1.4; }
+  p { margin: 0; }
+  ul.b { margin: 0; padding-left: 24px; }
+  ul.b li { margin: 0 0 8px; }
+  ul.b li::marker { color: var(--accent); }
+  h3 { margin: 0 0 8px; font: 600 25px/1.2 var(--font-display); color: var(--ink); }
+  h4 { margin: 0 0 6px; font: 600 21px/1.25 var(--font-display); color: var(--ink); }
+
+  .card { border: 1px solid var(--rule); border-top: 4px solid var(--accent); border-radius: 6px; padding: 16px 20px; background: var(--surface); }
+  .card p, .card li { font-size: 19px; line-height: 1.4; }
+  .card--bad { border-top-color: var(--bad-edge); }
+  .card--mid { border-top-color: var(--mid-edge); }
+  .card--memory { border-top-color: var(--memory-edge); }
+  .card--model { border-top-color: var(--model-edge); }
+  .card--zet { border-top-color: var(--zet); }
+  .card--nv { border-top-color: var(--nv); }
+  .panel { background: var(--surface-2); border: 1px solid var(--rule); border-radius: 6px; padding: 16px 20px; }
+
+  figure { margin: 0; }
+  .shot { display: block; border: 1px solid var(--rule-strong); border-radius: 6px; box-shadow: 0 2px 12px rgba(29, 43, 46, 0.14); background: #fff; }
+  figcaption { margin-top: 8px; font-size: 15.5px; line-height: 1.35; color: var(--ink-3); }
+
+  .chip { display: inline-flex; align-items: center; padding: 1px 10px; border: 2px solid; border-radius: 999px; font: 700 15.5px/1.3 var(--font-body); letter-spacing: 0.02em; white-space: nowrap; }
+  .chip--good { color: var(--good); background: var(--good-bg); border-color: var(--good-edge); }
+  .chip--mid { color: var(--mid); background: var(--mid-bg); border-color: var(--mid-edge); }
+  .chip--bad { color: var(--bad); background: var(--bad-bg); border-color: var(--bad-edge); }
+
+  table.t { border-collapse: collapse; width: 100%; font-size: 18.5px; }
+  table.t th, table.t td { padding: 6px 10px; border-bottom: 1px solid var(--rule); text-align: left; vertical-align: top; }
+  table.t th { font: 600 15.5px/1.25 var(--font-body); color: var(--ink-2); background: var(--surface-2); letter-spacing: 0.02em; }
+  table.t td.n, table.t th.n { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; font-family: var(--font-fig); }
+  table.t tr.hi td { background: var(--accent-soft); }
+  table.t tr.no td { background: #fbf1ef; }
+  table.t td code { font-size: 0.84em; }
+  table.t.sm { font-size: 16.5px; }
+  table.t.sm th { font-size: 14.5px; }
+
+  .stat { border: 1px solid var(--rule); border-radius: 6px; padding: 14px 18px; background: var(--surface); }
+  .stat .v { font: 700 40px/1.05 var(--font-fig); color: var(--ink); font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
+  .stat .k { margin-top: 6px; font-size: 17px; line-height: 1.35; color: var(--ink-2); }
+
+  /* title slide */
+  .s1 .brand { position: absolute; left: 96px; top: 150px; font: 700 112px/1 var(--font-display); letter-spacing: -0.015em; color: var(--ink); }
+  .s1 .brand span { color: var(--accent); }
+  .s1 .tagline { position: absolute; left: 96px; top: 290px; width: 760px; font: 400 28px/1.36 var(--font-display); color: var(--ink); }
+  .s1 .tagline b { font-weight: 600; }
+  .s1 .meta { position: absolute; left: 96px; top: 560px; width: 760px; }
+  .s1 .meta div { display: flex; gap: 14px; padding: 10px 0; border-top: 1px solid var(--rule); font-size: 18.5px; line-height: 1.36; }
+  .s1 .meta div b { width: 120px; flex: none; font-family: var(--font-fig); color: var(--accent); }
+  .s1 .team { position: absolute; left: 96px; top: 950px; font: 600 24px/1 var(--font-fig); color: var(--ink-2); }
+  .s1 .hero { position: absolute; left: 900px; top: 70px; width: 924px; }
+  .s1 .hook { position: absolute; left: 900px; top: 800px; width: 924px; margin: 0; font: 600 23px/1.36 var(--font-display); color: var(--ink); }
+
+  /* flow band */
+  .flow { display: flex; align-items: stretch; }
+  .flow .step { flex: 1; border: 1px solid var(--rule); border-left: 5px solid var(--accent); background: var(--surface-2); padding: 10px 14px; border-radius: 4px; font-size: 16.5px; line-height: 1.33; }
+  .flow .step b { display: block; font: 600 19px/1.2 var(--font-mono); margin-bottom: 4px; color: var(--ink); }
+  .flow .step.m { border-left-color: var(--model-edge); background: var(--model-bg); }
+  .flow .arrow { flex: none; width: 26px; display: flex; align-items: center; justify-content: center; color: var(--accent); font: 700 24px/1 var(--font-fig); }
+
+  /* architecture */
+  .tier { display: flex; gap: 18px; align-items: stretch; }
+  .box { border: 2px solid var(--ink); border-radius: 8px; background: #fff; padding: 12px 16px; }
+  .box h4 { font-size: 21px; margin-bottom: 2px; }
+  .box .sub { font-size: 15.5px; color: var(--ink-3); line-height: 1.35; }
+  .box.zet { border-color: var(--zet); }
+  .box.nvd { border-color: var(--nv); }
+  .mod { border: 1px solid var(--rule-strong); border-radius: 5px; background: var(--surface-2); padding: 7px 11px; margin-top: 8px; font-size: 15.5px; line-height: 1.33; }
+  .mod b { font-family: var(--font-display); font-size: 17px; }
+  .who { float: right; font: 600 12.5px/1.6 var(--font-body); letter-spacing: 0.06em; text-transform: uppercase; color: #fff; background: var(--accent); border-radius: 3px; padding: 0 6px; margin-left: 8px; }
+  .who.nv { background: var(--nv); }
+  .who.zt { background: var(--zet); }
+  .who.mm { background: var(--memory); }
+  .down { text-align: center; font: 600 15px/1.3 var(--font-body); color: var(--ink-2); padding: 4px 0; }
+  .down span { color: var(--accent); font: 700 22px/1 var(--font-fig); margin-right: 8px; }
+
+  .finding { display: flex; gap: 16px; padding: 10px 0; border-top: 1px solid var(--rule); }
+  .finding:first-child { border-top: none; padding-top: 0; }
+  .finding .n { flex: none; width: 36px; height: 36px; border-radius: 50%; background: var(--ink); color: #fff; font: 700 19px/36px var(--font-fig); text-align: center; }
+  .finding h4 { font-size: 20.5px; margin-bottom: 3px; }
+  .finding p { font-size: 17.5px; line-height: 1.38; color: var(--ink-2); }
+
+  .quote { border-left: 6px solid var(--accent); background: var(--accent-soft); padding: 16px 22px; font-size: 22px; line-height: 1.42; border-radius: 0 6px 6px 0; font-family: var(--font-display); font-style: italic; }
+  .defs { display: grid; grid-template-columns: 128px 1fr; column-gap: 14px; row-gap: 6px; font-size: 16.5px; line-height: 1.36; }
+  .defs dt { margin: 0; }
+  .defs dd { margin: 0; color: var(--ink-2); }
+  .lic div { padding: 8px 0; border-top: 1px solid var(--rule); font-size: 17px; line-height: 1.38; }
+  .lic div:first-child { border-top: none; }
+  .lic b { font-family: var(--font-fig); }
+  .big { font: 700 30px/1.15 var(--font-fig); color: var(--ink); font-variant-numeric: tabular-nums; }
+  .s2 .card p, .s2 .card li { font-size: 20.5px; }
+  .s11 .finding h4 { font-size: 22.5px; }
+  .s11 .finding p { font-size: 19.5px; }
+  .s11 .finding { padding: 14px 0; }
+  .s10 .card p { font-size: 20px; }
+</style>
+</head>
+<body>
+
+<!-- 1. Title -->
+<section class="slide s1">
+  <div class="eyebrow">Open Agent Hackathon 2026 &middot; Track 1: Solving Fragmented Intelligence</div>
+  <div class="brand">Cross<span>walk</span></div>
+  <p class="tagline"><b>A question that spans three US agencies, and no data engineer to join them.</b> Crosswalk finds which public datasets join which, measures every join key in Lightning SQL with its orphans, builds a governed semantic layer from the keys that hold, and answers with the SQL behind every number.</p>
+  <div class="meta">
+    <div><b>Zetaris</b><span>The only data path: OpenFEMA, SEC EDGAR, NOAA GHCN-Daily and company_dns registered as Lightning tables, cached, and joined in Lightning SQL; a USL with primary and foreign keys and data-quality rules; the SQL text is the citation.</span></div>
+    <div><b>Meterless</b><span>H-MEM remembers the keys that held; a Markovian chain carries a small fixed state between chunks; the World Model records every measured key and since when.</span></div>
+    <div><b>NVIDIA</b><span>Nemotron 3 Nano 4B through local Ollama chooses the next step the checklist allows and proposes join keys from a menu; every proposal is measured before use. 0 cloud model calls.</span></div>
+  </div>
+  <div class="team">Umar Mohktar, Singapore - solo</div>
+  <figure class="hero">
+    <img class="shot" src="../img/answer.png" style="width:924px" alt="Crosswalk Answer screen for Q1 2025 against Q1 2024: twelve utilities with the declared states they serve, the number of declarations, the revenue change and the degree-day change at their weather stations">
+  </figure>
+  <p class="hook">Q1 2025: FEMA declared major disasters in 8 states, and 12 investor-owned utilities served 7 of them. Against Q1 2024 their revenue rose for 9, fell for 2 and was not comparable for 1; degree days rose at the stations of all 12.</p>
+  <div class="foot"><span class="src">Saved cold run of 25 Oct 2026 16:00 SGT, Answer screen. Data: OpenFEMA (fema.gov; not endorsed by FEMA), SEC EDGAR (public domain; queried live, never redistributed), NOAA GHCN-Daily (NOAA NCEI), company_dns SIC list (Apache-2.0).</span><span class="pg">1 / 12</span></div>
+</section>
+
+<!-- 2. The user and the question -->
+<section class="slide s2">
+  <div class="eyebrow">The user and the question</div>
+  <h2 class="title">Three agencies publish the pieces; no column joins them as published</h2>
+  <div class="body row" style="gap:36px">
+    <div class="col" style="width:800px; gap:16px">
+      <div class="card">
+        <h3>The user</h3>
+        <p>An analyst at a research desk, a state commission, a newsroom or a small fund who is handed a cross-agency question and has no data engineer on call.</p>
+      </div>
+      <div class="card">
+        <h3>The question</h3>
+        <p class="quote" style="margin-top:6px">Which investor-owned electric utilities served states with FEMA major-disaster declarations in Q1 2025, what did the weather at their stations do that quarter, and did their revenue hold up year on year?</p>
+      </div>
+      <div class="card card--bad">
+        <h3>Why the join is hard (each measured)</h3>
+        <ul class="b">
+          <li>SEC frames carry the company number as an integer, the filer profiles as a 10-digit string: joined as published, <b>0 of 43</b> utilities match; padded to 10 digits, 42 of 43.</li>
+          <li>FEMA rows are designated counties (116 rows for 10 declarations in 8 states); utilities serve states, curated from each utility's 10-K.</li>
+          <li>A weather station's state sits in columns 39-40 of a fixed-width text file of 133,039 lines.</li>
+          <li>Alaska has a declaration and no seed utility; MGE Energy's SIC 4900 is missing from the SIC reference.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="col" style="flex:1; gap:16px">
+      <div class="card card--mid">
+        <h4>FEMA (OpenFEMA)</h4>
+        <p>Disaster Declarations Summaries v2: one row per declaration and designated county, with the state as two letters and as a FIPS code. Major-disaster (DR) declarations dated in the quarter.</p>
+      </div>
+      <div class="card card--model">
+        <h4>SEC EDGAR (XBRL)</h4>
+        <p>Frames: one revenue fact per filer and quarter under a tag, company number unpadded, location as <code>US-XX</code>. Submissions: the filer profile with the 10-digit company number, SIC code and business-address state.</p>
+      </div>
+      <div class="card">
+        <h4>NOAA GHCN-Daily</h4>
+        <p>Daily TMAX and TMIN per station (parquet by year on the AWS Open Data bucket) and the station inventory <code>ghcnd-stations.txt</code>, fixed-width text with the state inside each line.</p>
+      </div>
+      <div class="card card--memory">
+        <h4>Two references</h4>
+        <p>The company_dns SIC list (1,005 codes) and a state reference (50 states and DC with FIPS codes). Seeds: 43 utilities with the states they serve and 56 airport stations, curated from public filings and labelled curated.</p>
+      </div>
+    </div>
+  </div>
+  <div class="foot"><span class="src">Counts from zetaris/README.md (measured 25 Oct 2026) and docs/eval-report.md section 4 (the five keys by hand through the gateway).</span><span class="pg">2 / 12</span></div>
+</section>
+
+<!-- 3. The answer -->
+<section class="slide">
+  <div class="eyebrow">The answer</div>
+  <h2 class="title">12 utilities served 7 declared states; every number opens its SQL</h2>
+  <div class="body row" style="gap:32px">
+    <figure style="width:1000px">
+      <img class="shot" src="../img/answer.png" style="width:1000px" alt="Answer table: AEP, DUK, AEE, D, EIX, EVRG, FE, OGE, PCG, POR, PPL and SRE with declared states, declarations, revenue change with its tag and degree-day change with the number of stations">
+      <figcaption>Saved cold run, 25 Oct 2026 16:00 SGT (REPLAY). The FEMA join selects the utilities; none is hand-picked. Revenue levels are hidden here: the repository keeps only the changes.</figcaption>
+    </figure>
+    <div class="col" style="flex:1; gap:16px">
+      <p class="lead" style="font-size:22px">FEMA declared major disasters in 8 states in Q1 2025; 12 of the 43 seed utilities serve 7 of them (no seed utility serves Alaska). Revenue against Q1 2024 rose for 9, fell for EIX (&minus;6.55%) and POR (&minus;0.11%), and is not compared for SRE, whose first available tag differs between the two quarters.</p>
+      <figure>
+        <img class="shot" src="../img/drawer-weather.png" style="width:560px" alt="Provenance drawer for OGE's degree-day change: two weather_quarter statements over the cached GHCN views, with rows, time, cache state, source and licence">
+        <figcaption>The drawer behind OGE's +11.88%: two Lightning SQL statements over the cached GHCN views (18.1 s and 17.8 s), the row each returned, source and licence.</figcaption>
+      </figure>
+    </div>
+  </div>
+  <div class="foot"><span class="src">Answer identical in every field across 6 cold Day-2 runs (docs/eval-report.md section 1). Weather is the total degree days (heating + cooling) averaged over each utility's seed stations.</span><span class="pg">3 / 12</span></div>
+</section>
+
+<!-- 4. Discovery workflow -->
+<section class="slide">
+  <div class="eyebrow">How it works: discovery</div>
+  <h2 class="title">Six discovery tools in a fixed checklist; the model's key proposals are scored</h2>
+  <div class="body" style="display:flex; flex-direction:column; gap:20px">
+    <div class="flow">
+      <div class="step"><b>search_catalogue</b>the Zetaris getting-started manifest, the registered views and the OpenFEMA dataset catalogue (a cached view)</div>
+      <div class="arrow">&rarr;</div>
+      <div class="step"><b>probe_source</b>DESCRIBE, five rows and distinct counts of candidate key columns</div>
+      <div class="arrow">&rarr;</div>
+      <div class="step m"><b>propose_keys</b>up to six {left, right, transform} from a menu of probed columns and a closed transform set</div>
+      <div class="arrow">&rarr;</div>
+      <div class="step"><b>measure_key</b>match rate in Lightning SQL over cached views; orphans listed</div>
+      <div class="arrow">&rarr;</div>
+      <div class="step"><b>register_source</b>catalogue sources only, under a signed contract</div>
+      <div class="arrow">&rarr;</div>
+      <div class="step"><b>compile_usl</b>the plan from the verified keys, diffed against the governed USL; two DQ rules live</div>
+    </div>
+    <div class="row" style="gap:32px">
+      <div class="card card--model" style="width:1010px">
+        <h4>Model against a deterministic baseline, same probes, same SQL (5 cold runs)</h4>
+        <table class="t sm" style="margin-top:6px">
+          <thead><tr><th>Proposer</th><th class="n">Made</th><th class="n">VERIFIED</th><th class="n">PARTIAL</th><th class="n">REJECTED</th><th class="n">Unmeasurable</th></tr></thead>
+          <tbody>
+            <tr><td>Nemotron 3 Nano 4B, choosing from a menu of probed columns</td><td class="n">11</td><td class="n">3</td><td class="n">1</td><td class="n">7</td><td class="n">0</td></tr>
+            <tr class="hi"><td>Name-and-statistics baseline (no model)</td><td class="n">30</td><td class="n">25</td><td class="n">0</td><td class="n">5</td><td class="n">0</td></tr>
+          </tbody>
+        </table>
+        <p style="margin-top:10px"><b>The baseline wins.</b> The model is kept as a second proposer whose every proposal is measured in Lightning SQL before anything uses it. It found no key the baseline missed: each key it got VERIFIED was also measured from a baseline proposal in the same run.</p>
+      </div>
+      <p style="flex:1; font-size:19px; line-height:1.42; color:var(--ink-2)">Then <code>answer</code> (fixed SQL templates), <code>not_tested</code> and <code>finalize</code> (the note, checked word by word against the join map and the answer). The checklist (sources found, shapes probed, keys proposed, keys measured, sources registered, USL built, DQ run, answered, not-tested listed, note written) fixes the order; the model chooses among the steps it allows and proposes keys. It never writes SQL or DDL and never produces a number. A reply that is invalid twice hands the step to the host.</p>
+    </div>
+    <figure>
+      <img class="shot" src="../img/timeline-cold.png" style="width:1442px" alt="Discovery timeline of the cold run: the model proposes three keys, then each is measured in Lightning SQL: one VERIFIED, two REJECTED at 0.0%">
+      <figcaption>Discovery timeline, saved cold run 25 Oct 2026 16:00 SGT: the model's three proposals, then each measured in Lightning SQL: 1 VERIFIED, 2 REJECTED at 0.0% of the left table's rows.</figcaption>
+    </figure>
+  </div>
+  <div class="foot"><span class="src">Model and baseline counts: docs/eval-report.md section 2 (cold runs with the model on Day 2). Transforms: identity, upper, lpad10, substr, strip_prefix('US-'), yyyymmdd_to_date, iso_to_quarter.</span><span class="pg">4 / 12</span></div>
+</section>
+
+<!-- 5. Join map -->
+<section class="slide">
+  <div class="eyebrow">The join map</div>
+  <h2 class="title">Every key measured with both rates and its orphans; the no's stay on the map</h2>
+  <div class="body row" style="gap:32px">
+    <div class="col" style="width:1000px; gap:14px">
+      <table class="t sm">
+        <thead><tr><th>Key (left &rarr; right)</th><th>Transform</th><th class="n">Rows matched</th><th class="n">Distinct values</th><th>Verdict</th><th>Orphans</th></tr></thead>
+        <tbody>
+          <tr><td>(a) submissions company number &rarr; frames company number</td><td><code>lpad10</code></td><td class="n">42 / 43 (97.7%)</td><td class="n">42 / 43</td><td><span class="chip chip--good">VERIFIED</span></td><td>IDACORP (no Q1 2025 fact)</td></tr>
+          <tr class="no"><td>(a) control: the same, without padding</td><td><code>identity</code></td><td class="n">0 / 43 (0.0%)</td><td class="n">0 / 43</td><td><span class="chip chip--bad">REJECTED</span></td><td>all 43</td></tr>
+          <tr><td>(b) frames location &rarr; business-address state</td><td><code>substr(4,2)</code></td><td class="n">42 / 42 (100%)</td><td class="n">42 / 42</td><td><span class="chip chip--good">VERIFIED</span></td><td>none</td></tr>
+          <tr class="no"><td>(c) FEMA state &rarr; states the utilities serve</td><td><code>identity</code></td><td class="n">7 / 8 (87.5%)</td><td class="n">7 / 8</td><td><span class="chip chip--mid">PARTIAL</span></td><td>AK</td></tr>
+          <tr><td>(c) FEMA FIPS state code &rarr; state reference</td><td><code>identity</code></td><td class="n">8 / 8 (100%)</td><td class="n">8 / 8</td><td><span class="chip chip--good">VERIFIED</span></td><td>none</td></tr>
+          <tr><td>(d) seed station id &rarr; GHCN station inventory</td><td><code>identity</code></td><td class="n">56 / 56 (100%)</td><td class="n">56 / 56</td><td><span class="chip chip--good">VERIFIED</span></td><td>none</td></tr>
+          <tr><td>(e) utility SIC &rarr; SIC reference</td><td><code>identity</code></td><td class="n">42 / 43 (97.7%)</td><td class="n">3 / 4 (75.0%)</td><td><span class="chip chip--good">VERIFIED</span></td><td>MGE Energy (4900)</td></tr>
+          <tr class="no"><td>(c) in the warm run, Q1 2024: FEMA state &rarr; served states</td><td><code>identity</code></td><td class="n">8 / 11 (72.7%)</td><td class="n">8 / 11</td><td><span class="chip chip--bad">REJECTED</span></td><td>AK, ME, VT</td></tr>
+        </tbody>
+      </table>
+      <div class="panel">
+        <dl class="defs">
+          <dt><span class="chip chip--good">VERIFIED</span></dt><dd>At least 95% of the left table's rows found a match on the right under this transform. Safe to join on; any rows that did not match are listed as orphans.</dd>
+          <dt><span class="chip chip--mid">PARTIAL</span></dt><dd>Between 80% and 95% matched. Usable with care: the orphans listed drop out of any join on this key.</dd>
+          <dt><span class="chip chip--bad">REJECTED</span></dt><dd>Fewer than 80% matched. This key does not join the two tables with this transform.</dd>
+          <dt><b>Rate</b></dt><dd>Matched rows over the rows of the left table; the verdict is read from it. The distinct-value reading is shown beside it and never decides (it would misread SIC, where 43 utilities share 4 codes).</dd>
+        </dl>
+      </div>
+    </div>
+    <div class="col" style="flex:1; gap:14px">
+      <figure>
+        <img class="shot" src="../img/joinmap-graph.png" style="width:696px" alt="Join graph of the cold run: tables as nodes, one numbered line per measured key, teal VERIFIED, amber PARTIAL, red dashed REJECTED">
+        <figcaption>Join graph of the cold run: 12 keys measured, 7 VERIFIED, 1 PARTIAL, 4 REJECTED, each one Lightning SQL statement over cached views.</figcaption>
+      </figure>
+      <div class="card card--bad">
+        <h4>A VERIFIED rate measures containment, not meaning</h4>
+        <p>Two lists of US state codes overlap, so <code>hq_state</code> &rarr; station state (28 of 28) and served state &rarr; station state (43 of 43) also measure VERIFIED. Nobody would join on them; the join map shows them beside the governed keys without saying so.</p>
+      </div>
+    </div>
+  </div>
+  <div class="foot"><span class="src">Cold run 25 Oct 2026 16:00 SGT and warm run 15:56 SGT (Join map screen and run files); the same numbers by hand in docs/eval-report.md section 4. Left = the table whose rows are counted.</span><span class="pg">5 / 12</span></div>
+</section>
+
+<!-- 6. Architecture -->
+<section class="slide">
+  <div class="eyebrow">Architecture</div>
+  <h2 class="title">One data path through Zetaris; the model only chooses and proposes</h2>
+  <div class="body" style="display:flex; flex-direction:column; gap:6px">
+    <div class="tier">
+      <div class="box" style="flex:1"><h4>Analyst</h4><div class="sub">Browser UI on 127.0.0.1:8804 (Ask, Discovery, Join map, USL and DQ, Answer; telemetry footer; REPLAY or LIVE, never both) or the CLI: <code>npm run ask</code>, <code>npm run onboard</code></div></div>
+    </div>
+    <div class="down"><span>&darr;</span>HTTP and server-sent events</div>
+    <div class="tier">
+      <div class="box" style="flex:2.2">
+        <h4>Agent: Node 22 + TypeScript, no runtime dependencies</h4>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:0 14px">
+          <div class="mod"><span class="who mm">Meterless</span><b>Markovian chain</b>: at most 12 chunks, an 800-token carryover between them</div>
+          <div class="mod"><span class="who mm">Meterless</span><b>H-MEM</b>: key_verified and source_access memories with Zetaris provenance</div>
+          <div class="mod"><span class="who mm">Meterless</span><b>World Model</b>: datasets, columns, keys (<code>crosswalks_to</code>, valid from the measurement), utilities, states, declarations</div>
+          <div class="mod"><span class="who">host</span><b>Deterministic tools</b>: the six discovery tools, answer templates, not-tested list, the note's word verifier</div>
+        </div>
+      </div>
+      <div class="box nvd" style="flex:1">
+        <h4>Ollama, 127.0.0.1:11434</h4>
+        <div class="sub">local only; 0 cloud model calls</div>
+        <div class="mod"><span class="who nv">NVIDIA</span><b>Nemotron 3 Nano 4B</b> (Q4_K_M): picks the next checklist step, proposes keys from an enumerated menu (JSON schema), drafts the note</div>
+      </div>
+    </div>
+    <div class="down"><span>&darr;</span>template id + parameters (the agent never sends SQL)</div>
+    <div class="tier">
+      <div class="box" style="flex:1">
+        <h4>Gateway: Python 3.12, FastAPI, 127.0.0.1:8803</h4>
+        <div class="sub">named Lightning SQL templates with a parameter allowlist (object names must be in the manifest); registrar plans under a signed contract; every statement logged with its time</div>
+      </div>
+    </div>
+    <div class="down"><span>&darr;</span>Lightning SQL over JDBC</div>
+    <div class="tier">
+      <div class="box zet" style="flex:1">
+        <h4>Zetaris Lightning 2.4.3.1</h4>
+        <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:0 14px">
+          <div class="mod"><span class="who zt">REST</span><b>CW_FEMA, CW_SEC, CW_DNS</b>: OpenFEMA, SEC EDGAR frames and submissions, company_dns</div>
+          <div class="mod"><span class="who zt">Filestore</span><b>CW_GHCN</b>: GHCN-Daily parquet 2024 and 2025, the station inventory as one-column CSV</div>
+          <div class="mod"><span class="who zt">USL</span><b>crosswalk_usl</b>: 7 tables, 6 foreign keys, 6 DQ rules, activated from the cached views</div>
+        </div>
+        <div class="mod" style="background:#f3ecf4; border-color:var(--zet)"><b>Question path</b>: cached SchemaStore views in container <code>cw</code> only; 0 of 399 statements over 20 s, slowest 18.1 s (the weather statement). <b>Onboarding path</b> (<code>npm run onboard</code>): register, cache, compile the USL, run every DQ rule bounded at 900 s.</div>
+      </div>
+    </div>
+    <div class="down"><span>&darr;</span>HTTPS, read by Zetaris only</div>
+    <div class="tier">
+      <div class="box" style="flex:1; border-style:dashed"><div class="sub" style="font-size:17px; color:var(--ink-2)"><b>Public sources</b>: OpenFEMA API (fema.gov), SEC EDGAR (data.sec.gov, declared User-Agent, at most 10 requests a second), NOAA GHCN-Daily on the AWS Open Data bucket, company_dns; the Zetaris getting-started manifest is read at boot for the catalogue.</div></div>
+    </div>
+  </div>
+  <div class="foot"><span class="src">At runtime the agent never calls OpenFEMA, SEC EDGAR, NOAA or company_dns directly; only Zetaris does. Statement times: docs/eval-report.md section 6 (7 Day-2 runs).</span><span class="pg">6 / 12</span></div>
+</section>
+
+<!-- 7. Zetaris -->
+<section class="slide">
+  <div class="eyebrow">How Zetaris is used</div>
+  <h2 class="title">Zetaris: registered sources, cached views, a governed USL, SQL as the citation</h2>
+  <div class="body row" style="gap:32px">
+    <div class="col" style="width:1066px; gap:12px">
+      <table class="t sm">
+        <thead><tr><th>Lightning database</th><th>Source, as registered</th><th>Counted against the source (25 Oct 2026)</th></tr></thead>
+        <tbody>
+          <tr><td><b>CW_FEMA</b> (REST)</td><td>Declarations, DR filter percent-encoded; the OpenFEMA dataset catalogue</td><td>116 rows, 10 declarations, 8 states (Q1 2025); 72 / 14 / 11 (Q1 2024)</td></tr>
+          <tr><td><b>CW_SEC</b> (REST)</td><td>Frames for 3 revenue tags &times; 2 quarters; 43 filer profiles</td><td>20 to 2,654 facts per frame, one row per filer</td></tr>
+          <tr><td><b>CW_DNS</b> (REST)</td><td>company_dns SIC list</td><td>1,005 codes</td></tr>
+          <tr><td><b>CW_GHCN</b> (filestore)</td><td>Station inventory (CSV, <code>|</code> delimiter, parsed by SUBSTR); parquet TMAX and TMIN, 2024 and 2025</td><td>133,039 stations; about 20,800 rows per year and element for 57 stations</td></tr>
+        </tbody>
+      </table>
+      <figure>
+        <img class="shot" src="../img/usl-dq.png" style="width:1066px" alt="USL and DQ screen: six data-quality rules with their onboarding results, the two rules run live in this run, and MGE Energy as the one invalid row">
+      </figure>
+      <div class="row" style="gap:16px">
+        <p class="small" style="flex:1"><b>Governed USL.</b> <code>crosswalk_usl</code>: 7 tables with primary keys and 6 foreign keys, each a key measured before it was declared; activated from the cached views, because a raw REST table re-fetches its endpoint on every read. Each question runs 2 DQ rules live; the other 4 are read from the onboarding run of 25 Oct 13:46 SGT, where MGE Energy is the one invalid row.</p>
+        <p class="small" style="flex:1"><b>Registration at run time.</b> <code>register_source</code> creates, caches and counts a catalogue source under a signed contract: FEMA Q1 2024 in 1.34 s wall, 72 rows equal to the API. A Day-1 warm run registered three Q1 2023 revenue frames live; in the Day-2 runs every call answered already registered.</p>
+      </div>
+    </div>
+    <figure style="flex:1">
+      <img class="shot" src="../img/drawer-revenue.png" style="width:596px" alt="Provenance drawer for OGE's revenue change: two answer_revenue statements over the cached frames views with the Lightning SQL text, rows, time, source URL and licence">
+      <figcaption>The citation: OGE's +25.28% opens two Lightning SQL statements over the cached frames views. The revenue level is hidden in this image only.</figcaption>
+    </figure>
+  </div>
+  <div class="foot"><span class="src">Counts and timings from zetaris/README.md; live and onboarding DQ from the USL and DQ screen of the cold run 16:00 SGT; registrations from docs/eval-report.md (Not measured) and the Day-1 run records.</span><span class="pg">7 / 12</span></div>
+</section>
+
+<!-- 8. Meterless -->
+<section class="slide">
+  <div class="eyebrow">How Meterless is used</div>
+  <h2 class="title">Meterless: remembered keys, a flat carried state, keys dated in the world</h2>
+  <div class="body" style="display:flex; flex-direction:column; gap:18px">
+    <div class="row" style="gap:24px">
+      <div class="card card--memory" style="flex:1">
+        <h4>H-MEM: the keys that held</h4>
+        <p>Every key measured VERIFIED is kept as a <code>key_verified</code> memory with its Zetaris provenance (SQL, object, time). The warm question (Q1 2024) recalled 6 and spent no planner step and no statement on them: 194.1 s, against 247.7 to 285.8 s for the cold runs. Seeded at boot with 46 memories: 23 from the Zetaris getting-started manifest, 10 from its known-to-fail notes, 12 source findings, 1 from the catalogue's known-to-fail list.</p>
+      </div>
+      <div class="card card--memory" style="flex:1">
+        <h4>Markovian: a flat carried state</h4>
+        <p>Cold run 16:00 SGT: 10 chunks of at most 12. The state carried between chunks was 273 to 451 tokens (estimated) against an 800-token cap. The first prompt of each chunk, as Ollama counted it, stayed between 1,782 and 2,236 tokens, while a prompt carrying the whole history would have reached 9,308 by chunk 10 (estimated).</p>
+      </div>
+      <div class="card card--memory" style="flex:1">
+        <h4>World Model: since when</h4>
+        <p>After the cold run: 444 events; 12 datasets, 71 columns and 25 <code>crosswalks_to</code> edges, one per measured key, carrying transform, rate and verdict, valid from the time Lightning measured it. Asked about OGE, it answers: DR-4862 (severe storms) declared in OK, valid from 2025-03-18; OGE serves OK (10-K seed, curated).</p>
+      </div>
+    </div>
+    <figure>
+      <img class="shot" src="../img/timeline-warm.png" style="width:1442px" alt="Warm run Discovery timeline: six measure steps not run because each key was measured VERIFIED by an earlier run and recalled from memory">
+      <figcaption>Warm run, Q1 2024, 25 Oct 2026 15:56 SGT: the six skipped measure steps, each recalled from a key memory with the rows it matched when it was measured.</figcaption>
+    </figure>
+  </div>
+  <div class="foot"><span class="src">Run files of the cold run 16:00 SGT and the warm run 15:56 SGT; the H-MEM seed record; the World Model read through <code>GET /api/world/1021635</code>. Engines vendored unchanged.</span><span class="pg">8 / 12</span></div>
+</section>
+
+<!-- 9. NVIDIA -->
+<section class="slide">
+  <div class="eyebrow">How NVIDIA Nemotron is used, measured</div>
+  <h2 class="title">Nemotron 3 Nano 4B runs locally at 133 tokens/s; here it adds time, not keys</h2>
+  <div class="body" style="display:flex; flex-direction:column; gap:18px">
+    <table class="t">
+      <thead><tr><th>Cold question, same code</th><th class="n">Wall</th><th class="n">Chunks</th><th class="n">Planner replies valid / calls (first try)</th><th class="n">Host fallback steps</th><th class="n">Output tokens</th><th class="n">Median tok/s</th><th class="n">Model keys VERIFIED / made</th><th class="n">GPU util median</th><th>Answer</th></tr></thead>
+      <tbody>
+        <tr><td>Think on</td><td class="n">275.2 s</td><td class="n">9</td><td class="n">21 / 25 (19)</td><td class="n">4</td><td class="n">22,047</td><td class="n">132.9</td><td class="n">0 / 1</td><td class="n">81%</td><td>reference</td></tr>
+        <tr><td>Think off</td><td class="n">227.9 s</td><td class="n">10</td><td class="n">20 / 28 (19)</td><td class="n">8</td><td class="n">15,813</td><td class="n">133.1</td><td class="n">1 / 2</td><td class="n">73%</td><td>identical</td></tr>
+        <tr class="hi"><td>No model (host takes every step)</td><td class="n">88.4 s</td><td class="n">9</td><td class="n">0 / 0</td><td class="n">25</td><td class="n">0</td><td class="n">n/a</td><td class="n">n/a</td><td class="n">16%</td><td>identical</td></tr>
+      </tbody>
+    </table>
+    <div class="row" style="gap:24px">
+      <div class="card card--nv" style="flex:1">
+        <h4>The model</h4>
+        <p><code>nemotron-3-nano:4b</code> through Ollama: 4.0B parameters, Q4_K_M, context 8,192, <b>2,881 MiB of VRAM</b>. JSON-schema replies: across the six runs with the model, 125 of 157 planner replies were valid; an empty reply cut by length is repaired once with thinking off. 0 cloud model calls.</p>
+      </div>
+      <div class="card card--bad" style="flex:1">
+        <h4>What the numbers say, plainly</h4>
+        <p>Without the model the same answer and governed keys arrive in 32% of the think-on wall time. One run per setting: the four think-on cold runs spread over 38.1 s, so the 47.3 s think-off gap is not claimed as an effect. The model was unloaded and reloaded mid-run 3 times (think on) and 2 times (off); the likely cause, a host-RAM guard, is not verified.</p>
+      </div>
+    </div>
+    <figure>
+      <img class="shot" src="../img/timeline-cold-measure.png" style="width:1442px" alt="Cold run chunk 8: the model chooses three measure steps; Lightning SQL returns PARTIAL at 87.5%, VERIFIED at 100.0% and REJECTED at 0.0% for the no-padding control">
+      <figcaption>Cold run, chunk 8: each MODEL row is the model's stated plan ("its plan, not a fact"), each TOOL row what Lightning SQL measured: PARTIAL (AK), VERIFIED (FIPS), REJECTED (the control without padding).</figcaption>
+    </figure>
+    <figure>
+      <img class="shot" src="../img/footer.png" style="width:1091px" alt="Telemetry footer of the cold run: 10 of 12 chunks, 0 skipped, 92,249 tokens, 131.4 tok/s, 247.7 s, nemotron-3-nano:4b, 26 of 28 planner replies valid, 0 cloud model calls">
+      <figcaption>Every screen carries the run's telemetry footer (cold run 16:00 SGT shown).</figcaption>
+    </figure>
+  </div>
+  <div class="foot"><span class="src">docs/eval-report.md section 5 and docs/eval/summary.json: GPU sampled every 500 ms by nvidia-smi; VRAM as Ollama reports it; tokens and tok/s are Ollama's counts.</span><span class="pg">9 / 12</span></div>
+</section>
+
+<!-- 10. Evaluation -->
+<section class="slide s10">
+  <div class="eyebrow">Evaluation</div>
+  <h2 class="title">Reproducible, checked outside the agent, and compared with doing it by hand</h2>
+  <div class="body row" style="gap:32px">
+    <div class="col" style="width:820px; gap:16px">
+      <div class="card">
+        <h4>Reproducibility</h4>
+        <p>6 cold runs of the demo question (think on, off, no model): the same 12-row answer in every field, and the same numbers and orphans for the 7 governed join-map keys in every pair. The report and its JSON are regenerated from the saved runs by one command, with no gateway or model call.</p>
+      </div>
+      <div class="card card--mid">
+        <h4>Outside checks: numbers the agent did not compute</h4>
+        <table class="t sm" style="margin-top:4px">
+          <thead><tr><th>Check</th><th>Outside</th><th>Agent / Zetaris</th><th>Equal</th></tr></thead>
+          <tbody>
+            <tr><td>OpenFEMA API, Q1 2025: rows / declarations / states</td><td class="n">116 / 10 / 8</td><td class="n">116 / 10 / 8</td><td>yes</td></tr>
+            <tr><td>OpenFEMA API, Q1 2024</td><td class="n">72 / 14 / 11</td><td class="n">72 / 14 / 11</td><td>yes</td></tr>
+            <tr><td>EVRG FY2024 10-K: states served</td><td>KS, MO</td><td>KS, MO</td><td>yes</td></tr>
+            <tr class="no"><td>PPL FY2024 10-K: states served</td><td>KY, PA, RI, VA</td><td>KY, PA, RI</td><td>no (VA has no declaration in either quarter)</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="col" style="flex:1; gap:16px">
+      <div class="card">
+        <h4>Manual baseline: the five keys by hand, through the same gateway</h4>
+        <table class="t sm" style="margin-top:4px">
+          <thead><tr><th></th><th class="n">Statements</th><th class="n">Decisions asked</th><th class="n">Wall</th><th>Also produces</th></tr></thead>
+          <tbody>
+            <tr><td>By hand (pre-written SQL)</td><td class="n">27</td><td class="n">24</td><td class="n">179.5 s</td><td>the five keys and their orphans</td></tr>
+            <tr><td>Agent, cold, median</td><td class="n">60</td><td class="n">0</td><td class="n">275.8 s</td><td>keys, cited answer, USL check, live DQ, checked note</td></tr>
+            <tr><td>Agent, warm (Q1 2024)</td><td class="n">46</td><td class="n">0</td><td class="n">194.1 s</td><td>the same, verified keys recalled</td></tr>
+            <tr><td>Agent, cold, no model</td><td class="n">56</td><td class="n">0</td><td class="n">88.4 s</td><td>same answer and keys, template note</td></tr>
+          </tbody>
+        </table>
+        <p style="margin-top:10px">An expert who already knows the five keys is faster by hand. The agent asks for none of the 24 decisions and adds what the hand session does not produce: every key measured with its orphans, the governed USL and its DQ, the cited answer, and memory for the next question. A person's time to write and read that SQL is not measured.</p>
+      </div>
+    </div>
+  </div>
+  <div class="row" style="position:absolute; left:96px; right:96px; bottom:96px; gap:24px">
+    <div class="stat" style="flex:1"><div class="v">6 of 6</div><div class="k">cold runs with the same answer in every field (think on, off, no model)</div></div>
+    <div class="stat" style="flex:1"><div class="v">2 of 2</div><div class="k">FEMA quarters where the OpenFEMA API equals the Zetaris cached view</div></div>
+    <div class="stat" style="flex:1"><div class="v">24 &rarr; 0</div><div class="k">decisions a person takes by hand to find the five keys, against one command</div></div>
+    <div class="stat" style="flex:1"><div class="v">0 of 399</div><div class="k">question-path statements over 20 s; the slowest, 18,135 ms, is the weather statement</div></div>
+  </div>
+  <div class="foot"><span class="src">docs/eval-report.md sections 1, 3, 4 and 6; docs/eval/summary.json, outside-checks.json, manual-baseline.json. The hand session ran gateway reader templates one at a time; 33.7 s of it was statement time.</span><span class="pg">10 / 12</span></div>
+</section>
+
+<!-- 11. Limitations -->
+<section class="slide s11">
+  <div class="eyebrow">Limitations and what did not go well</div>
+  <h2 class="title">What did not go well, and what the answer does not test</h2>
+  <div class="body row" style="gap:36px">
+    <div class="col" style="width:1060px; gap:0">
+      <div class="finding"><div class="n">1</div><div><h4>The model loses the key-proposal comparison</h4><p>11 proposals and 3 VERIFIED against the baseline's 30 and 25; no key it found was missed by the baseline. Some choices are pairs nobody would try (company number against FIPS code: 0 of 43); Lightning SQL rejects them, at the cost of a planner step and a statement each.</p></div></div>
+      <div class="finding"><div class="n">2</div><div><h4>Without the model, the same answer in about a third of the time</h4><p>88.4 s with no model against 247.7 to 285.8 s with it, same answer and governed keys: on this question the planner and the note add time, not keys.</p></div></div>
+      <div class="finding"><div class="n">3</div><div><h4>The planner's replies and the note</h4><p>125 of 157 planner replies valid; the host took 2 to 8 checklist steps itself per run. The model's note was replaced by the 250-word template in 3 of the 6 runs with the model; one early draft said revenue "held up" while EIX and POR fell, and the verifier rule was fixed afterwards.</p></div></div>
+      <div class="finding"><div class="n">4</div><div><h4>A VERIFIED rate is containment, not meaning</h4><p>Two state-code lists overlap and measure VERIFIED (28 of 28, 43 of 43) though nobody would join on them.</p></div></div>
+      <div class="finding"><div class="n">5</div><div><h4>The curated seed has a gap; the station inventory is slow</h4><p>PPL's 10-K also names Virginia, which the seed leaves out (no answer changes). Probing the 133,039-row station inventory costs about 27 s per cold run; each weather statement 18 s.</p></div></div>
+    </div>
+    <div class="col" style="flex:1; gap:16px">
+      <div class="card card--mid">
+        <h4>Not tested (on every answer)</h4>
+        <ul class="b small">
+          <li>County geography: declarations are joined to utilities by state, not by the counties they name.</li>
+          <li>Non-major declarations: emergency (EM) and fire-management (FM) declarations are left out.</li>
+          <li>Fuel-cost pass-through: a revenue change is not a measure of disaster impact.</li>
+          <li>Recasts: frames serve the latest filed value; restated comparatives are not reconciled.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h4>Not measured</h4>
+        <ul class="b small">
+          <li>A person's time for the manual baseline.</li>
+          <li>More than one run per ablation setting; a second quantisation.</li>
+          <li>Revenue against the companies' own reports; 41 of the 43 seed service-territory lists.</li>
+          <li>Live registration in the Day-2 runs (all already registered), and the full DQ run on Day 2.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="foot"><span class="src">docs/eval-report.md "What did not go well" and "Not measured"; the Not-tested list as the Answer screen shows it.</span><span class="pg">11 / 12</span></div>
+</section>
+
+<!-- 12. Future work, attributions -->
+<section class="slide">
+  <div class="eyebrow">Next, and what it is built on</div>
+  <h2 class="title">Future work, data and code attributions</h2>
+  <div class="body row" style="gap:36px">
+    <div class="col" style="width:820px; gap:16px">
+      <div class="card">
+        <h4>Future work</h4>
+        <ul class="b" style="font-size:18.5px">
+          <li>Give the model sources whose keys the column names do not reveal, and keep scoring it against the baseline on the same probes.</li>
+          <li>Flag VERIFIED keys that are only overlapping code lists.</li>
+          <li>County-level geography: declaration counties against service territories.</li>
+          <li>Like-for-like revenue with restatements, more quarters, the full DQ run on a schedule with its history.</li>
+          <li>A timed manual baseline with analysts; repeated ablation runs and a second quantisation.</li>
+        </ul>
+      </div>
+      <div class="card card--model">
+        <h4>Pre-existing code, declared</h4>
+        <ul class="b small">
+          <li>Meterless H-MEM, Markovian and World Model engines, vendored unchanged: 60 files, 13,189 lines (<code>git ls-files engines | xargs cat | wc -l</code>).</li>
+          <li><code>gateway/jdbc.py</code> (279 lines) adapted from the Zetaris getting-started repository.</li>
+          <li>Scaffolding adapted from the same author's Weather-or-Not (github.com/GitHubMoreLikeGitGud/weather-or-not) and ClearShelf (github.com/GitHubMoreLikeGitGud/clearshelf): 26 code files carry that header, 8,523 lines today, rewritten in part (<code>git grep -l "Adapted from Weather-or-Not"</code> over agent, gateway, ui, scripts, zetaris, seeds).</li>
+        </ul>
+      </div>
+    </div>
+    <div class="col" style="flex:1; gap:16px">
+      <div class="card card--zet">
+        <h4>Data</h4>
+        <div class="lic">
+          <div><b>OpenFEMA</b>: Disaster Declarations Summaries v2 and the dataset catalogue. Data from OpenFEMA (fema.gov); this product is not endorsed by FEMA.</div>
+          <div><b>SEC EDGAR</b>: XBRL frames and submissions; US government work, public domain; queried live with a declared User-Agent, never redistributed.</div>
+          <div><b>NOAA GHCN-Daily</b>: NOAA National Centers for Environmental Information, Global Historical Climatology Network daily, AWS Open Data bucket.</div>
+          <div><b>company_dns</b>: SIC code list, Apache-2.0.</div>
+          <div><b>Zetaris getting-started</b> manifest and known-to-fail notes (Apache-2.0) seed the catalogue and memories.</div>
+        </div>
+      </div>
+      <div class="card">
+        <p><b>Developed in Cursor; details in docs/how-cursor-was-used.md.</b> Seven pieces (C1-C7) were written by Cursor Agent from task files in docs/cursor-tasks, reviewed and committed as "(Cursor Agent)".</p>
+        <p style="margin-top:10px">Code: github.com/GitHubMoreLikeGitGud/crosswalk (Apache-2.0). Model: NVIDIA Nemotron under the NVIDIA Open Model License.</p>
+      </div>
+    </div>
+  </div>
+  <div class="foot"><span class="src">Umar Mohktar, Singapore - solo. Line counts at the commit that carries this deck.</span><span class="pg">12 / 12</span></div>
+</section>
+
+</body>
+</html>
