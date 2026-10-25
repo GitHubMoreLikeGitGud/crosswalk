@@ -39,7 +39,7 @@
       "status": "verified",
       "note": "Disaster Declarations Summaries v2: one row per declared county/area (disasterNumber, state, fipsStateCode, fipsCountyCode, declarationDate, incidentType, declarationType DR | EM | FM, ...). The array field is `DisasterDeclarationsSummaries`; the Q1-2025 DR filter returns one page. Keys: state (two letters) -> states.code; fipsStateCode (2-digit string) -> states.fips; declarationDate (ISO) -> quarter bucket.",
       "verified_how": "plain HTTPS 2026-10-25 08:0x SGT: HTTP 200, 116 rows, 10 distinct disasterNumber, states AK CA KY MO OK OR SC WV, incidentType Severe Storm 107 / Fire 6 / Flood 3; metadata.count was 0 (not a row count); registration in Zetaris is gate G1",
-      "zetaris_object": "CW_FEMA.declarations_dr_2025q1 -> cw.fema_declarations_dr_2025q1 (cached; 116 rows, 2026-10-25)"
+      "zetaris_object": "CW_FEMA.declarations_dr_2025q1 -> cw.fema_declarations_dr_2025q1 (cached; 116 rows, 2026-10-25); CW_FEMA.declarations_dr_2024q1 -> cw.fema_declarations_dr_2024q1 (registered at run time by register_source, cached; 72 rows, 2026-10-25)"
     },
     {
       "id": "sec_frames",
@@ -87,8 +87,8 @@
       "licence": "NOAA GHCN-Daily: CC0-1.0 / US Government work (Registry of Open Data on AWS, bucket noaa-ghcn-pds); attribution to NOAA NCEI requested.",
       "status": "verified",
       "note": "GHCN-Daily parquet partitioned by year and element (ID, DATE yyyymmdd, DATA_VALUE in tenths of a degree C, M_FLAG, Q_FLAG, S_FLAG, OBS_TIME). Years 2024 and 2025, elements TMAX and TMIN; isS3BucketPublic true, endpoint s3.us-east-1.amazonaws.com, no credentials. Every read of a filestore table costs about 9 s per table per view level; the raw tables are never cached, the station-filtered views are. Days with a non-empty Q_FLAG on either element are dropped.",
-      "verified_how": "Weather-or-Not registered and cached the four year/element views on 2026-10-24 (pyarrow row counts matched); Crosswalk's CW_GHCN copies are registered by lane Z",
-      "zetaris_object": "CW_GHCN.ghcn_{year}_{element} -> cw.ghcn_{year}_{element} (planned)"
+      "verified_how": "gateway lane, 2026-10-25: four register_source calls (register_ghcn for 2025 and 2024 x TMAX, TMIN) registered and cached the CW_GHCN tables and the station-filtered views (57 stations each); degree days for USW00013740 and USW00013722 in Q1 2025 and Q1 2024 equal the sister entry's pyarrow values to 0.01",
+      "zetaris_object": "CW_GHCN.ghcn_{year}_{element} -> cw.ghcn_{year}_{element} (cached; 2025 and 2024 x tmax, tmin, 2026-10-25)"
     },
     {
       "id": "noaa_ghcn_stations",

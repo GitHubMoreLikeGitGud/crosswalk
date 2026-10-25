@@ -118,6 +118,22 @@
         "container": "cw",
         "views": ["cw.seed_utility_names"]
       }
+    },
+    {
+      "id": "cw_ghcn",
+      "kind": "filestore-parquet",
+      "script": "zetaris/sql/09_cw_ghcn_create.sql",
+      "select": "zetaris/sql/09_cw_ghcn_select.sql",
+      "status": "verified",
+      "requires": ["cw_stations"],
+      "hosts": ["s3a://noaa-ghcn-pds/"],
+      "summary": "NOAA GHCN-Daily parquet by_year 2024 and 2025 x TMAX, TMIN as CW_GHCN filestore tables, registered through the gateway's register_source (catalogue id noaa_ghcn_by_year -> register_ghcn, one signed contract each, 54-58 s wall each, CACHE 41-45 s), with station-filtered views over the 56 seed stations plus the validation station USW00013740; 20,801 / 20,799 / 20,859 / 20,858 rows, 57 stations each, full-year date ranges; degree days for USW00013740 and USW00013722 in Q1 2025 and Q1 2024 equal the sister entry's pyarrow values to 0.01; every view cached (2026-10-25)",
+      "objects": {
+        "database": "CW_GHCN",
+        "raw": ["CW_GHCN.ghcn_2025_tmax", "CW_GHCN.ghcn_2025_tmin", "CW_GHCN.ghcn_2024_tmax", "CW_GHCN.ghcn_2024_tmin"],
+        "views": ["cw.ghcn_2025_tmax", "cw.ghcn_2025_tmin", "cw.ghcn_2024_tmax", "cw.ghcn_2024_tmin"],
+        "runtime_views": ["cw.ghcn_<year>_<element>"]
+      }
     }
   ]
 }

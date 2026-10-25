@@ -59,7 +59,7 @@ CACHE_TARGETS: tuple[str, ...] = templates.cache_targets_for(
     "cw.fema_declarations_dr_2025q1", "cw.fema_catalogue",
     "cw.states", "cw.utility_states", "cw.seed_stations", "cw.seed_utilities", "cw.seed_utility_names",
     "cw.stations",
-)
+) + templates.GHCN_VIEWS  # 09_cw_ghcn: the station-filtered parquet views, last (each CACHE scans 9 files, about 40 s)
 
 
 class TemplateRequest(BaseModel):
