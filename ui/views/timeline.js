@@ -100,6 +100,19 @@ export function pendingRow(tool) {
   return `<li class="tl tl--pending" data-pending role="status"><span class="tl__who">Now</span> <span class="tl__spin" aria-hidden="true"></span> ${what}…</li>`;
 }
 
+export const MAX_STREAM_REOPENS = 5;
+
+/**
+ * Pure: what to do when a run's stream ends. A live stream that ends without run_finished or
+ * run_failed lost its connection, not its run: reopen it (the server sends the live run again, or
+ * the saved run as a replay once it has finished) instead of calling the run finished.
+ */
+export function streamEndAction({ mode, terminal, reopens }) {
+  if (mode === "live" && !terminal && reopens < MAX_STREAM_REOPENS) return "reopen";
+  if (mode === "live" && !terminal) return "lost";
+  return mode === "live" ? "finished" : "done";
+}
+
 /** Where the skipped block goes: after the key proposals, else before the first measurement, else before the USL. */
 function insertSkipped(list, html) {
   if (!html || list.querySelector(".tl--skiphead")) return;
@@ -132,6 +145,7 @@ export function mount(el, ctx) {
   let alive = true;
   let skipped = [];
   let counts;
+  let reopens = 0;
 
   const refreshSummary = (done) => {
     sum.textContent = `${summaryLine(counts, skipped.length)}${done ? "." : " so far."}`;
@@ -150,10 +164,12 @@ export function mount(el, ctx) {
     counts = { chunks: 0, tools: 0, fallback: 0, planner: 0, invalid: 0 };
     skipped = [];
     let mode = null;
+    let terminal = false;
     close = openRunStream(ctx.run, {
       delayMs,
       onEvent: (type, d) => {
         if (!alive) return;
+        if (type === "run_finished" || type === "run_failed") terminal = true;
         if (type === "stream") {
           mode = d.mode === "live" ? "live" : "replay";
           if (mode === "live") ctx.setBanner("live", `${runWords(meta ?? d)}: the agent is measuring now; rows appear as each step finishes.`);
@@ -182,7 +198,20 @@ export function mount(el, ctx) {
       },
       onEnd: async () => {
         if (!alive) return;
+        const action = streamEndAction({ mode, terminal, reopens });
+        if (action === "reopen") {
+          reopens += 1;
+          await ctx.reloadRuns?.();
+          setTimeout(() => {
+            if (alive) start(0);
+          }, 1000);
+          return;
+        }
         list.querySelector("[data-pending]")?.remove();
+        if (action === "lost") {
+          sum.textContent = `${summaryLine(counts, skipped.length)} so far. The connection to the running run was lost; reload the page to follow it.`;
+          return;
+        }
         await loadSkipped();
         refreshSummary(true);
         if (mode === "live") {
@@ -196,7 +225,10 @@ export function mount(el, ctx) {
 
   ctl.addEventListener("click", (e) => {
     const b = e.target instanceof Element ? e.target.closest("[data-pace]") : null;
-    if (b) start(Number(b.getAttribute("data-pace")) || 0);
+    if (b) {
+      reopens = 0;
+      start(Number(b.getAttribute("data-pace")) || 0);
+    }
   });
 
   if (!ctx.run) {

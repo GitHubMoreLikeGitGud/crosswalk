@@ -12,7 +12,7 @@ import { answerSummary, renderAnswer, typesWords } from "../views/answer.js";
 import { bannerHtml } from "../views/banner.js";
 import { renderCell, valueWords } from "../views/provenance.js";
 import { renderFooter } from "../views/telemetry.js";
-import { keyWords, measureWords, pendingRow, renderEvent, renderSkipped, renderSkippedBlock, stripRefs, summaryLine } from "../views/timeline.js";
+import { keyWords, MAX_STREAM_REOPENS, measureWords, pendingRow, renderEvent, renderSkipped, renderSkippedBlock, streamEndAction, stripRefs, summaryLine } from "../views/timeline.js";
 import { invalidWords, renderUsl } from "../views/usl.js";
 
 const fx = (name) => JSON.parse(readFileSync(new URL(`fixtures/${name}`, import.meta.url), "utf8"));
@@ -180,4 +180,12 @@ test("footer: chunks, skipped steps, tokens, tok/s, wall, model, cloud calls; la
   assert.ok(c.includes("measured"));
   assert.ok(c.includes("Cloud model calls 0"));
   assert.ok(visible(renderFooter(null)).includes("not measured"));
+});
+
+test("a live stream that ends without run_finished is reopened, never called finished", () => {
+  assert.equal(streamEndAction({ mode: "live", terminal: false, reopens: 0 }), "reopen");
+  assert.equal(streamEndAction({ mode: "live", terminal: false, reopens: MAX_STREAM_REOPENS }), "lost");
+  assert.equal(streamEndAction({ mode: "live", terminal: true, reopens: 0 }), "finished");
+  assert.equal(streamEndAction({ mode: "replay", terminal: false, reopens: 0 }), "done");
+  assert.equal(streamEndAction({ mode: null, terminal: false, reopens: 0 }), "done");
 });
