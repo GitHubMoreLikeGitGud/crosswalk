@@ -1,0 +1,64 @@
+/* Join map screen (jm-*). Colour tokens come from the shell's styles.css. */
+
+.jm { display: flex; flex-direction: column; gap: 16px; max-width: 100%; }
+.jm .view-h__sub { margin: -8px 0 4px; font-size: 14px; }
+
+.jm-counts { font-size: 15px; margin: 0 0 12px; }
+.jm-subh { font-family: var(--font-serif); font-size: 15px; font-weight: 600; margin: 12px 0 8px; }
+.jm-proposers { width: 100%; border-collapse: collapse; font-size: 13px; }
+.jm-proposers th, .jm-proposers td { padding: 6px 10px; text-align: left; border-bottom: 1px solid var(--rule); vertical-align: top; }
+.jm-proposers thead th { color: var(--ink-2); font-weight: 600; font-size: 12px; }
+.jm-proposers .tnum { font-variant-numeric: tabular-nums; text-align: right; }
+.jm-proposers-note { margin: 8px 0 0; }
+
+.jm-graph { overflow-x: auto; }
+.jm-graph__svg { display: block; width: 100%; max-width: 960px; height: auto; background: var(--surface-2); border: 1px solid var(--rule); border-radius: var(--r); }
+.jm-node rect { fill: var(--surface); stroke: var(--rule-strong, var(--rule)); stroke-width: 1.25; }
+.jm-node text { fill: var(--ink); font-family: var(--font-mono); pointer-events: none; }
+.jm-edge { fill: none; }
+.jm-edge-num { fill: var(--surface); stroke-width: 1.5; }
+.jm-edge-num--good { stroke: var(--good-edge); }
+.jm-edge-num--mid { stroke: var(--mid-edge); }
+.jm-edge-num--bad { stroke: var(--bad-edge); }
+.jm-edge-num--neutral { stroke: var(--neutral-edge); }
+.jm-edge-num-t { fill: var(--ink); font-size: 11px; font-family: var(--font-mono); font-weight: 700; pointer-events: none; }
+
+.jm-legend { list-style: none; display: flex; flex-wrap: wrap; gap: 14px; margin: 10px 0 0; padding: 0; font-size: 13px; }
+.jm-legend__i { display: inline-flex; align-items: center; gap: 6px; color: var(--ink-2); }
+.jm-legend__swatch { width: 14px; height: 4px; border-radius: 2px; background: var(--neutral-edge); }
+.jm-legend__i--good .jm-legend__swatch { background: var(--good-edge); }
+.jm-legend__i--mid .jm-legend__swatch { background: var(--mid-edge); }
+.jm-legend__i--bad .jm-legend__swatch { background: var(--bad-edge); }
+
+.jm-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.jm-table th, .jm-table td { padding: 8px 10px; text-align: left; border-bottom: 1px solid var(--rule); vertical-align: top; }
+.jm-table thead th { color: var(--ink-2); font-weight: 600; font-size: 12px; position: sticky; top: 0; background: var(--surface); }
+.jm-n { width: 2.2em; color: var(--ink-3); }
+.jm-ref { font-family: var(--font-mono); font-size: 12px; overflow-wrap: anywhere; }
+.jm-ref--right { margin-top: 2px; color: var(--ink-2); }
+.jm-ref--right::before { content: "→ "; color: var(--ink-3); font-family: var(--font-body); }
+.jm-label { margin-top: 4px; }
+.jm-xform-name { font-size: 12px; }
+.jm-xform-words { color: var(--ink-2); }
+.jm-rate-rows { font-variant-numeric: tabular-nums; }
+.jm-rate-dist { margin-top: 2px; }
+.jm-verdict { min-width: 12em; }
+.jm-verdict .chip { margin-right: 6px; vertical-align: middle; }
+.jm-verdict-def { display: block; margin-top: 4px; color: var(--ink-2); font-size: 12.5px; line-height: 1.35; overflow-wrap: anywhere; }
+.jm-orphans { list-style: none; margin: 0; padding: 0; }
+.jm-orphans li { margin: 0 0 2px; }
+.jm-orphans code { font-size: 12px; overflow-wrap: anywhere; }
+.jm-prov--recalled { color: var(--memory); font-weight: 600; }
+.jm-prov--measured { color: var(--ink-2); }
+.jm-sql-details summary { cursor: pointer; font-size: 12.5px; color: var(--ink-2); }
+.jm-sql { margin: 6px 0 0; padding: 8px; background: var(--code-bg); border-radius: var(--r); white-space: pre-wrap; overflow-wrap: anywhere; font-size: 11.5px; max-width: 28rem; }
+.jm-sql-orphans-h { margin: 8px 0 0; }
+
+.jm-def { margin: 0; display: grid; grid-template-columns: minmax(7rem, 11rem) 1fr; gap: 6px 12px; font-size: 12.5px; }
+.jm-def__k { margin: 0; font-family: var(--font-mono); font-weight: 600; color: var(--ink-2); }
+.jm-def__v { margin: 0; color: var(--ink-2); overflow-wrap: anywhere; }
+
+@media (max-width: 900px) {
+  .jm-def { grid-template-columns: 1fr; }
+  .jm-table .jm-verdict-def { font-size: 12px; }
+}
