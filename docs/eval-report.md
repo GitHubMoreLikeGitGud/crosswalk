@@ -2,7 +2,7 @@
 
 Every number below is measured and copied from a saved run file or a measured side file; nothing is projected or estimated unless it says so. Runs were made on code `6652e2f`, `ee04b0c`, `fc130bd` with `nemotron-3-nano:4b` through local Ollama (0 cloud model calls) and Zetaris Lightning 2.4.3.1 through the gateway. The summary JSON is `docs/eval/summary.json`; both files are regenerated from the saved runs with `cd agent && npx tsx src/eval/run.ts --runs <dir of the ablation runs> --gpu <dir of its samples>` (no gateway or model call). Revenue appears only as the year-on-year change the answer shows.
 
-Code: the agent, gateway, prompts, seeds and Zetaris SQL are the same at fc130bd (the last four runs) and at the commit that carries this report; between them only the UI, the task records under docs/, this report and its tools (agent/src/eval) changed. The first three runs used earlier Day-2 commits (6652e2f, ee04b0c) whose later changes touched the note, the memory context and the evidence labels, not the answer or the join-map statements.
+Code: the agent loop and tools, the model client and prompts, memory, the gateway, seeds and Zetaris SQL are the same at fc130bd (the last four runs) and at the commit that carries this report; after fc130bd only the UI, the server's view functions (agent/src/ops/cells.ts, agent/src/ops/usl.ts), this report and its tools (agent/src/eval), tests, CI and the documentation changed. The first three runs used earlier Day-2 commits (6652e2f, ee04b0c) whose later changes touched the note, the memory context and the evidence labels, not the answer or the join-map statements.
 
 ## Headline
 
@@ -243,6 +243,6 @@ Over the 7 runs above. Statements over 20 s: 0. Planner calls: 157, median 4.5 s
 - A second quantisation of the model (only Q4_K_M was run), and the model's own VRAM peak while generating: nvidia-smi samples the whole card, so only the unload drop (about 3,150 MiB) and Ollama's figure (2,881 MiB) are the model's.
 - Revenue against the companies' own reports: the answer compares SEC frames values year on year under the first available tag; no 10-Q figure was checked.
 - Served states of the other 41 seed utilities against their 10-Ks (two were checked).
-- Run-time registration on Day 2: every registration in these runs answered already_registered; the evidence of a live registration is the Day-1 warm run r20261025T1413091c1c, and FEMA CY2023Q1 and frames CY2022Q1 stay unregistered for the recorded warm question (D19).
+- Run-time registration on Day 2: every registration in these runs answered already_registered; the evidence of a live registration is the Day-1 warm run r20261025T1413091c1c; FEMA CY2023Q1 and frames CY2022Q1 were left unregistered so that the warm question recorded for the video could register them live, which it did (run r20261025T183917676f, not part of this evaluation).
 - The full onboarding DQ run on Day 2: the onboarding DQ file is from 25 Oct 13:46 SGT; each question runs the two fast DQ rules live.
 - Statement times under concurrent question load: every run here ran alone.
