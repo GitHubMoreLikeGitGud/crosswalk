@@ -455,6 +455,16 @@ def render(template_id: str, params: dict | None) -> tuple[Template, str]:
     return t, sql
 
 
+def resolved_params(t: Template, params: dict | None) -> dict[str, str]:
+    """The request parameters plus the placeholders DERIVED from them, so that object names such as
+    cw.fema_declarations_dr_{quarter_slug} resolve the same way the SQL does."""
+    out = dict(params or {})
+    for name, kind in t.params.items():
+        if name in out and kind in DERIVED:
+            out.update(DERIVED[kind](validate_param(kind, out[name])))
+    return out
+
+
 def plan_params(plan: Plan, body: dict) -> dict[str, str]:
     """The plan's parameters taken from a request body and validated; BadParams otherwise."""
     return {name: validate_param(kind, body.get(name)) for name, kind in plan.params.items()}

@@ -140,6 +140,21 @@ def test_cached_view_template_reports_hit_and_resolved_raw_objects(monkeypatch, 
     assert body["cache_state"] == "miss" and body["cache_detail"] == {"cw.frames_Revenues_CY2024Q1": "miss"}
 
 
+def test_derived_placeholder_resolves_in_raw_objects_and_cache_state(temp_sql_log):
+    # fema_by_state names its view through the DERIVED placeholder {quarter_slug}; the cache check must see
+    # the resolved name, or every FEMA read reports a miss while the view is cached.
+    storage = {"app_id": "local-1", "started_at_ms": 0, "cached": {"cw.fema_declarations_dr_2025q1"}}
+    conn = FakeConn(rows=[["KY", 69, 1]])
+    c, _ = client(conn, storage)
+    body = c.post("/sql/template", json={"template_id": "fema_by_state", "params": {"quarter": "CY2025Q1"}}).json()
+    assert body["rows"] == [["KY", 69, 1]] and body["cache_state"] == "hit"
+    assert body["raw_objects"] == ["cw.fema_declarations_dr_2025q1"]
+    assert body["cache_detail"] == {"cw.fema_declarations_dr_2025q1": "hit"}
+    assert "cw.fema_declarations_dr_2025q1" in conn.sql[-1] and "{quarter_slug}" not in conn.sql[-1]
+    body = c.post("/sql/template", json={"template_id": "fema_by_state", "params": {"quarter": "CY2024Q1"}}).json()
+    assert body["cache_state"] == "miss" and body["cache_detail"] == {"cw.fema_declarations_dr_2024q1": "miss"}
+
+
 def test_a_template_bound_overrides_the_gateway_default(temp_sql_log):
     class Timed(FakeConn):
         def __init__(self):

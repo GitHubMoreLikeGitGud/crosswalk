@@ -241,7 +241,8 @@ class Gateway:
         except templates.BadParams as e:
             out["error"] = str(e)
             return 400, out
-        out.update(sql=sql, sql_sha256=sha256(sql), objects=list(t.objects), raw_objects=cache.resolve(t.raw_objects, req.params))
+        params = templates.resolved_params(t, req.params)  # request values plus the DERIVED placeholders (quarter_slug)
+        out.update(sql=sql, sql_sha256=sha256(sql), objects=list(t.objects), raw_objects=cache.resolve(t.raw_objects, params))
         log = {"source_file": "gateway.template", "template_id": t.id, "role": req.role, "params": req.params,
                "sql": sql, "sql_sha256": out["sql_sha256"], "timeout_s": t.timeout_s or QUERY_TIMEOUT_S}
         try:
@@ -270,7 +271,7 @@ class Gateway:
                 # An uncached REST table is fetched from its source on every read.
                 hold = (f"warming: {len(uncached)} object(s) not cached yet "
                         f"({', '.join(uncached[:3])}{', ...' if len(uncached) > 3 else ''}); retry after the warm-up")
-        state, detail, cached_at = cache.cache_state(t.raw_objects, req.params, storage)
+        state, detail, cached_at = cache.cache_state(t.raw_objects, params, storage)
         out.update(cache_state=state, cache_detail=detail, source_cached_at=cached_at)
         if hold:
             out.update(error=hold, cache_state="miss")
