@@ -1,6 +1,8 @@
 // The answer gated on the join map (agent/src/tools/discovery.ts answerGate): the FEMA selection needs the
-// FEMA state key at PARTIAL or better, the revenue column needs the CIK key VERIFIED (measured in this run or
-// recalled). The last two tests replay the committed redacted server fixtures (synthetic values) offline.
+// FEMA FIPS key VERIFIED (the FEMA state codes join the state reference: form), the revenue column needs the CIK
+// key VERIFIED, the weather column the station key VERIFIED (measured in this run or recalled). The FEMA state key
+// against the states the seed utilities serve measures coverage: it is reported with its orphans, never gated.
+// The last two tests replay the committed redacted server fixtures (synthetic values) offline.
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { replayAnswer, type SavedRunForGate } from "../src/eval/gateReplay.ts";
@@ -9,9 +11,9 @@ import { answer, answerGate, type MeasureResult, type TemplatePort, type Templat
 const RUN = "r-test";
 const Q = "CY2025Q1";
 
-function key(route: string, verdict: "VERIFIED" | "PARTIAL" | "REJECTED", matched: number, rows: number, fromMemory: string | null = null): [string, MeasureResult] {
-  const k = `${route}@${route === "station" ? "all" : Q}`;
-  return [k, { key: k, route, status: "measured", verdict, matched_rows: matched, left_rows: rows, from_memory: fromMemory } as unknown as MeasureResult];
+function key(route: string, verdict: "VERIFIED" | "PARTIAL" | "REJECTED", matched: number, rows: number, fromMemory: string | null = null, orphans: string[] = [], quarter = Q): [string, MeasureResult] {
+  const k = `${route}@${route === "station" ? "all" : quarter}`;
+  return [k, { key: k, route, status: "measured", verdict, matched_rows: matched, left_rows: rows, orphans, from_memory: fromMemory } as unknown as MeasureResult];
 }
 
 const FEMA_REPLY = { columns: ["cik", "name", "ticker", "state", "declarations", "severe_storm"], rows: [["0000000001", "UTILITY ONE", "ONE", "OK", 1, 1]] };
@@ -33,14 +35,44 @@ const fixturePort = () => port((id, params) => (id === "answer_fema_utilities" ?
 const STATIONS = { "0000000001": ["USW00099001"] };
 
 describe("answerGate", () => {
-  it("passes a VERIFIED CIK key and a PARTIAL FEMA state key, the latter labelled usable with care", () => {
-    const g = answerGate(Q, new Map([key("cik", "VERIFIED", 42, 43), key("fema_state", "PARTIAL", 7, 8)]));
-    expect(g.revenue.ok).toBe(true);
-    expect(g.fema.ok).toBe(true);
-    expect(g.fema.note).toBe("FEMA selection: key fema_state@CY2025Q1 PARTIAL (7 of 8); usable with care");
+  it("warm Q1 2024 shape: the FEMA FIPS key VERIFIED (recalled) passes the FEMA selection; the FEMA state key REJECTED 8 of 11 is coverage, reported with its orphans", () => {
+    const W = "CY2024Q1";
+    const g = answerGate(W, new Map([
+      key("cik", "VERIFIED", 42, 43, "mem-59", [], W),
+      key("fema_fips", "VERIFIED", 8, 8, "mem-65", [], W),
+      key("fema_state", "REJECTED", 8, 11, null, ["AK", "ME", "VT"], W),
+      key("station", "VERIFIED", 56, 56, "mem-61"),
+    ]));
+    expect(g.fema).toMatchObject({ key: "fema_fips@CY2024Q1", need: "VERIFIED", verdict: "VERIFIED", matched_rows: 8, left_rows: 8, recalled: true, ok: true });
+    expect(g.fema.note).toBe("FEMA selection: key fema_fips@CY2024Q1 VERIFIED (8 of 8), recalled from memory");
+    expect(g.fema_coverage).toEqual({
+      key: "fema_state@CY2024Q1",
+      verdict: "REJECTED",
+      matched_rows: 8,
+      left_rows: 11,
+      orphans: ["AK", "ME", "VT"],
+      recalled: false,
+      note: "FEMA coverage (reported, not gated): key fema_state@CY2024Q1 REJECTED (8 of 11); declared states no seed utility serves: AK, ME, VT",
+    });
+    expect([g.revenue.ok, g.weather.ok]).toEqual([true, true]);
+  });
+  it("a REJECTED FEMA FIPS key withholds the FEMA selection, even with the coverage key VERIFIED", () => {
+    const g = answerGate(Q, new Map([key("cik", "VERIFIED", 42, 43), key("fema_fips", "REJECTED", 2, 8), key("fema_state", "VERIFIED", 8, 8)]));
+    expect(g.fema.ok).toBe(false);
+    expect(g.fema.note).toBe("FEMA selection withheld: key fema_fips@CY2025Q1 is REJECTED (2 of 8), and the answer needs it VERIFIED");
+    expect(g.fema_coverage).toMatchObject({ verdict: "VERIFIED", orphans: [] });
+  });
+  it("a PARTIAL FEMA FIPS key does not pass: the FEMA selection needs the codes to join the state reference", () => {
+    expect(answerGate(Q, new Map([key("fema_fips", "PARTIAL", 7, 8), key("fema_state", "VERIFIED", 8, 8)])).fema.ok).toBe(false);
+  });
+  it("cold Q1 2025 shape: the FEMA FIPS key VERIFIED passes; the PARTIAL coverage key (orphan AK) is reported", () => {
+    const g = answerGate(Q, new Map([key("cik", "VERIFIED", 42, 43), key("fema_fips", "VERIFIED", 8, 8), key("fema_state", "PARTIAL", 7, 8, null, ["AK"])]));
+    expect(g.fema).toMatchObject({ ok: true, key: "fema_fips@CY2025Q1" });
+    expect(g.fema.note).toBe("FEMA selection: key fema_fips@CY2025Q1 VERIFIED (8 of 8)");
+    expect(g.fema_coverage.note).toBe("FEMA coverage (reported, not gated): key fema_state@CY2025Q1 PARTIAL (7 of 8); declared states no seed utility serves: AK");
   });
   it("a recalled VERIFIED CIK key passes and is named as recalled", () => {
-    const g = answerGate(Q, new Map([key("cik", "VERIFIED", 42, 43, "mem-59"), key("fema_state", "VERIFIED", 8, 8)]));
+    const g = answerGate(Q, new Map([key("cik", "VERIFIED", 42, 43, "mem-59"), key("fema_fips", "VERIFIED", 8, 8)]));
     expect(g.revenue).toMatchObject({ ok: true, recalled: true });
     expect(g.revenue.note).toContain("recalled from memory");
   });
@@ -51,30 +83,39 @@ describe("answerGate", () => {
   it("a PARTIAL CIK key does not pass: the revenue column needs VERIFIED", () => {
     expect(answerGate(Q, new Map([key("cik", "PARTIAL", 40, 43)])).revenue.ok).toBe(false);
   });
-  it("keys not measured in the run do not pass", () => {
+  it("keys not measured in the run do not pass; an unmeasured coverage key is reported as such", () => {
     const g = answerGate(Q, new Map());
     expect(g.fema.ok).toBe(false);
     expect(g.revenue.ok).toBe(false);
-    expect(g.fema.note).toBe("FEMA selection withheld: key fema_state@CY2025Q1 is not measured in this run, and the answer needs it PARTIAL or better");
+    expect(g.fema.note).toBe("FEMA selection withheld: key fema_fips@CY2025Q1 is not measured in this run, and the answer needs it VERIFIED");
+    expect(g.fema_coverage).toMatchObject({ verdict: null, orphans: [], note: "FEMA coverage (reported, not gated): key fema_state@CY2025Q1 not measured in this run" });
   });
   it("a key measured for another quarter does not pass", () => {
-    const g = answerGate("CY2024Q1", new Map([key("cik", "VERIFIED", 42, 43), key("fema_state", "VERIFIED", 8, 8)]));
+    const g = answerGate("CY2024Q1", new Map([key("cik", "VERIFIED", 42, 43), key("fema_fips", "VERIFIED", 8, 8)]));
     expect([g.fema.ok, g.revenue.ok]).toEqual([false, false]);
   });
 });
 
 describe("answer under the gate", () => {
-  it("a REJECTED FEMA state key withholds the FEMA selection: no statement runs and no row is returned", async () => {
+  it("a REJECTED FEMA FIPS key withholds the FEMA selection: no statement runs and no row is returned", async () => {
     const g = fixturePort();
-    const r = await answer({ quarter: Q }, { gateway: g, runId: RUN, gate: answerGate(Q, new Map([key("cik", "VERIFIED", 42, 43), key("fema_state", "REJECTED", 1, 8)])) });
+    const r = await answer({ quarter: Q }, { gateway: g, runId: RUN, gate: answerGate(Q, new Map([key("cik", "VERIFIED", 42, 43), key("fema_fips", "REJECTED", 1, 8), key("fema_state", "VERIFIED", 8, 8)])) });
     expect(g.calls).toEqual([]);
     expect(r.rows).toEqual([]);
     expect(r.gate?.fema.ok).toBe(false);
-    expect(r.gate?.fema.note).toMatch(/^FEMA selection withheld: key fema_state@CY2025Q1 is REJECTED \(1 of 8\)/u);
+    expect(r.gate?.fema.note).toMatch(/^FEMA selection withheld: key fema_fips@CY2025Q1 is REJECTED \(1 of 8\)/u);
+  });
+  it("a REJECTED coverage key does not withhold: the FEMA selection runs and the answer equals the ungated answer", async () => {
+    const g = fixturePort();
+    const r = await answer({ quarter: Q }, { gateway: g, runId: RUN, gate: answerGate(Q, new Map([key("cik", "VERIFIED", 42, 43), key("fema_fips", "VERIFIED", 8, 8), key("fema_state", "REJECTED", 8, 11, null, ["AK", "ME", "VT"]), key("station", "VERIFIED", 56, 56)])) });
+    const plain = await answer({ quarter: Q }, { gateway: fixturePort(), runId: RUN });
+    expect(g.calls).toEqual(["answer_fema_utilities", "answer_revenue", "answer_revenue"]);
+    expect(r.rows).toEqual(plain.rows);
+    expect(r.gate?.fema_coverage).toMatchObject({ verdict: "REJECTED", orphans: ["AK", "ME", "VT"] });
   });
   it("a REJECTED CIK key withholds the revenue column: the FEMA rows stay, no revenue statement runs", async () => {
     const g = fixturePort();
-    const r = await answer({ quarter: Q }, { gateway: g, runId: RUN, gate: answerGate(Q, new Map([key("cik", "REJECTED", 0, 43), key("fema_state", "VERIFIED", 8, 8)])) });
+    const r = await answer({ quarter: Q }, { gateway: g, runId: RUN, gate: answerGate(Q, new Map([key("cik", "REJECTED", 0, 43), key("fema_fips", "VERIFIED", 8, 8)])) });
     expect(g.calls).toEqual(["answer_fema_utilities"]);
     expect(r.rows).toHaveLength(1);
     expect(r.rows[0]!.revenue).toBeNull();
@@ -82,13 +123,13 @@ describe("answer under the gate", () => {
   });
   it("a REJECTED station key withholds the weather column: no weather statement runs", async () => {
     const g = fixturePort();
-    const r = await answer({ quarter: Q }, { gateway: g, runId: RUN, stationsByCik: STATIONS, gate: answerGate(Q, new Map([key("cik", "VERIFIED", 42, 43), key("fema_state", "VERIFIED", 8, 8), key("station", "REJECTED", 0, 56)])) });
+    const r = await answer({ quarter: Q }, { gateway: g, runId: RUN, stationsByCik: STATIONS, gate: answerGate(Q, new Map([key("cik", "VERIFIED", 42, 43), key("fema_fips", "VERIFIED", 8, 8), key("station", "REJECTED", 0, 56)])) });
     expect(g.calls).toEqual(["answer_fema_utilities", "answer_revenue", "answer_revenue"]);
     expect(r.weather_status).toBe("not_tested");
     expect(r.rows[0]!.weather_note).toMatch(/^Weather column withheld: key station@all is REJECTED \(0 of 56\)/u);
   });
   it("with every key passing, the answer equals the ungated answer", async () => {
-    const gated = await answer({ quarter: Q }, { gateway: fixturePort(), runId: RUN, stationsByCik: STATIONS, gate: answerGate(Q, new Map([key("cik", "VERIFIED", 42, 43), key("fema_state", "PARTIAL", 7, 8), key("station", "VERIFIED", 56, 56)])) });
+    const gated = await answer({ quarter: Q }, { gateway: fixturePort(), runId: RUN, stationsByCik: STATIONS, gate: answerGate(Q, new Map([key("cik", "VERIFIED", 42, 43), key("fema_fips", "VERIFIED", 8, 8), key("fema_state", "PARTIAL", 7, 8, null, ["AK"]), key("station", "VERIFIED", 56, 56)])) });
     const plain = await answer({ quarter: Q }, { gateway: fixturePort(), runId: RUN, stationsByCik: STATIONS });
     expect(gated.rows).toEqual(plain.rows);
     expect(gated.weather_status).toBe("measured");
@@ -99,19 +140,21 @@ describe("answer under the gate", () => {
 const fixture = (name: string) => JSON.parse(readFileSync(new URL(`./fixtures/${name}`, import.meta.url), "utf8")) as SavedRunForGate;
 
 describe("the redacted saved runs replayed under the gate", () => {
-  it("cold Q1 2025: both keys pass and the 12-row answer is unchanged", async () => {
+  it("cold Q1 2025: every key passes, coverage PARTIAL 7 of 8 (AK) is reported, and the 12-row answer is unchanged", async () => {
     const { gate, saved, replayed } = await replayAnswer(fixture("server-run-cold.json"));
-    expect(gate.fema).toMatchObject({ ok: true, verdict: "PARTIAL", matched_rows: 7, left_rows: 8 });
+    expect(gate.fema).toMatchObject({ ok: true, key: "fema_fips@CY2025Q1", verdict: "VERIFIED", matched_rows: 8, left_rows: 8 });
+    expect(gate.fema_coverage).toMatchObject({ key: "fema_state@CY2025Q1", verdict: "PARTIAL", matched_rows: 7, left_rows: 8, orphans: ["AK"] });
     expect(gate.revenue).toMatchObject({ ok: true, verdict: "VERIFIED", matched_rows: 42, left_rows: 43 });
     expect(gate.weather).toMatchObject({ ok: true, verdict: "VERIFIED", matched_rows: 56, left_rows: 56 });
     expect(saved).toHaveLength(12);
     expect(replayed).toEqual(saved);
   });
-  it("warm Q1 2024: the FEMA state key is REJECTED (8 of 11), so the gate withholds the FEMA selection", async () => {
+  it("warm Q1 2024: the FEMA FIPS key (recalled) passes, the coverage key REJECTED 8 of 11 (AK, ME, VT) is reported, and the 16-row answer is unchanged", async () => {
     const { gate, saved, replayed } = await replayAnswer(fixture("server-run-warm.json"));
-    expect(gate.fema).toMatchObject({ ok: false, verdict: "REJECTED", matched_rows: 8, left_rows: 11 });
+    expect(gate.fema).toMatchObject({ ok: true, key: "fema_fips@CY2024Q1", verdict: "VERIFIED", matched_rows: 8, left_rows: 8, recalled: true });
+    expect(gate.fema_coverage).toMatchObject({ key: "fema_state@CY2024Q1", verdict: "REJECTED", matched_rows: 8, left_rows: 11, orphans: ["AK", "ME", "VT"] });
     expect(gate.revenue).toMatchObject({ ok: true, verdict: "VERIFIED", recalled: true });
     expect(saved).toHaveLength(16);
-    expect(replayed).toEqual([]);
+    expect(replayed).toEqual(saved);
   });
 });

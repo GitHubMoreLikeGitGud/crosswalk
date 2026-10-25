@@ -1137,7 +1137,7 @@ export interface AnswerResult {
 /** One join the answer depends on, checked against this run's join map (a key measured in this run, or recalled as VERIFIED). */
 export interface AnswerGateCheck {
   key: string;
-  need: "VERIFIED" | "PARTIAL or better";
+  need: "VERIFIED";
   verdict: Verdict | null;
   matched_rows: number | null;
   left_rows: number | null;
@@ -1146,28 +1146,53 @@ export interface AnswerGateCheck {
   note: string;
 }
 
-/** The FEMA selection needs the FEMA state key at PARTIAL or better (PARTIAL is used with care); the revenue column needs the CIK key VERIFIED; the weather column needs the station key VERIFIED. */
+/** A join-map key reported beside the gate and never used to withhold: its rate measures coverage, not whether the codes join. */
+export interface AnswerCoverage {
+  key: string;
+  verdict: Verdict | null;
+  matched_rows: number | null;
+  left_rows: number | null;
+  orphans: string[];
+  recalled: boolean;
+  note: string;
+}
+
+/** The FEMA selection needs the FEMA state codes to join the state reference (fema_fips VERIFIED: form); the revenue column needs the CIK key VERIFIED; the weather column needs the station key VERIFIED. The FEMA state key against the states the seed utilities serve (fema_state) measures coverage and is only reported. */
 export interface AnswerGate {
   fema: AnswerGateCheck;
   revenue: AnswerGateCheck;
   weather: AnswerGateCheck;
+  fema_coverage: AnswerCoverage;
 }
 
 export function answerGate(quarter: string, measured: ReadonlyMap<string, MeasureResult>): AnswerGate {
-  const check = (route: "fema_state" | "cik" | "station", need: AnswerGateCheck["need"], what: string): AnswerGateCheck => {
+  const read = (route: "fema_fips" | "fema_state" | "cik" | "station") => {
     const key = `${route}@${route === "station" ? "all" : quarter}`;
     const m = measured.get(key);
     const verdict = m && m.status === "measured" ? m.verdict : null;
-    const ok = verdict === "VERIFIED" || (need === "PARTIAL or better" && verdict === "PARTIAL");
     const counts = m && m.matched_rows !== null && m.left_rows !== null ? ` (${m.matched_rows} of ${m.left_rows})` : "";
     const recalled = !!m?.from_memory;
     const state = verdict ? `${verdict}${counts}${recalled ? ", recalled from memory" : ""}` : "not measured in this run";
-    const note = ok
-      ? `${what}: key ${key} ${state}${verdict === "PARTIAL" ? "; usable with care" : ""}`
-      : `${what} withheld: key ${key} is ${state}, and the answer needs it ${need}`;
-    return { key, need, verdict, matched_rows: m?.matched_rows ?? null, left_rows: m?.left_rows ?? null, recalled, ok, note };
+    return { key, m, verdict, recalled, state };
   };
-  return { fema: check("fema_state", "PARTIAL or better", "FEMA selection"), revenue: check("cik", "VERIFIED", "Revenue column"), weather: check("station", "VERIFIED", "Weather column") };
+  const check = (route: "fema_fips" | "cik" | "station", what: string): AnswerGateCheck => {
+    const { key, m, verdict, recalled, state } = read(route);
+    const ok = verdict === "VERIFIED";
+    const note = ok ? `${what}: key ${key} ${state}` : `${what} withheld: key ${key} is ${state}, and the answer needs it VERIFIED`;
+    return { key, need: "VERIFIED", verdict, matched_rows: m?.matched_rows ?? null, left_rows: m?.left_rows ?? null, recalled, ok, note };
+  };
+  const cov = read("fema_state");
+  const orphans = cov.verdict ? [...(cov.m?.orphans ?? [])] : [];
+  const fema_coverage: AnswerCoverage = {
+    key: cov.key,
+    verdict: cov.verdict,
+    matched_rows: cov.m?.matched_rows ?? null,
+    left_rows: cov.m?.left_rows ?? null,
+    orphans,
+    recalled: cov.recalled,
+    note: `FEMA coverage (reported, not gated): key ${cov.key} ${cov.state}${orphans.length ? `; declared states no seed utility serves: ${orphans.join(", ")}` : ""}`,
+  };
+  return { fema: check("fema_fips", "FEMA selection"), revenue: check("cik", "Revenue column"), weather: check("station", "Weather column"), fema_coverage };
 }
 
 const FEMA_BASE_COLUMNS = new Set(["cik", "name", "ticker", "state", "declarations"]);
