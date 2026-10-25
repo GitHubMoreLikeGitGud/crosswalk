@@ -595,13 +595,24 @@ export interface GpuSummary {
   quantization: string | null;
   parameters: string | null;
   resident_before: boolean | null;
+  /** Times the card memory fell more than 1,500 MiB below its first sample and came back: the model unloaded and reloaded mid-run. */
+  unload_dips: number;
+  /** First sample minus the lowest sample when there was a dip: the card memory the resident model held. */
+  card_drop_mib: number | null;
 }
 
 export function gpuSummary(g: GpuSamples): GpuSummary {
   const mem = g.samples.map((s) => s.mem_mib);
   const util = g.samples.map((s) => s.util_pct);
   const m = g.ollama_mid?.models?.[0] ?? g.ollama_after?.models?.[0] ?? g.ollama_before?.models?.[0] ?? null;
+  let dips = 0;
+  if (mem.length) {
+    const floor = mem[0]! - 1500;
+    for (let i = 1; i < mem.length; i++) if (mem[i]! < floor && mem[i - 1]! >= floor) dips++;
+  }
   return {
+    unload_dips: dips,
+    card_drop_mib: dips && mem.length ? mem[0]! - Math.min(...mem) : null,
     run_id: g.run_id,
     samples: g.samples.length,
     mem_first_mib: mem[0] ?? null,
@@ -1052,7 +1063,7 @@ export function renderMarkdown(r: EvalReport): string {
   out.push("");
   out.push(
     table(
-      ["Setting", "Run", "Wall", "Chunks", "Planner calls (valid / first try / repaired)", "Fallback steps", "Output tokens", "Median planner tok/s", "Note tok/s", "Model proposals m/v/V/P/R/u", "Note (verifier)", "Answer = think on", "Card VRAM first / peak (MiB)", "GPU util median / peak"],
+      ["Setting", "Run", "Wall", "Chunks", "Planner calls (valid / first try / repaired)", "Fallback steps", "Output tokens", "Median planner tok/s", "Note tok/s", "Model proposals m/v/V/P/R/u", "Note (verifier)", "Answer = think on", "Card VRAM first / peak (MiB)", "Model unloaded mid-run (card drop)", "GPU util median / peak"],
       r.ablation.map((x) => [
         x.setting.replace("_", " "),
         `\`${x.run_id}\``,
@@ -1067,6 +1078,7 @@ export function renderMarkdown(r: EvalReport): string {
         `${x.note.source ?? "n/a"} ${x.note.words ?? "?"} words${x.note.verifier_checked ? `; drafts rejected for words ${x.note.drafts_rejected_for_words}, final issues ${x.note.final_issues}` : ""}`,
         x.answer_identical_to_think_on === null ? "(reference)" : yes(x.answer_identical_to_think_on),
         x.gpu ? `${intf(x.gpu.mem_first_mib)} / ${intf(x.gpu.mem_peak_mib)}` : "not measured",
+        x.gpu ? (x.gpu.unload_dips ? `${x.gpu.unload_dips} times (${intf(x.gpu.card_drop_mib)} MiB)` : "no") : "not measured",
         x.gpu ? `${x.gpu.util_median_pct ?? "n/a"}% / ${x.gpu.util_peak_pct ?? "n/a"}%` : "not measured",
       ]),
     ),
@@ -1075,7 +1087,7 @@ export function renderMarkdown(r: EvalReport): string {
   const g = on?.gpu ?? off?.gpu ?? null;
   if (g) {
     out.push(
-      `The model: Ollama reports \`${g.ollama_model}\` (${g.parameters}, ${g.quantization}) resident with ${intf(g.ollama_size_vram_mib)} MiB in VRAM at context ${g.ollama_context}, the same before, during and after each run; it stayed resident through all three runs (Ollama keep-alive), so the whole-card numbers include it in every row, the no-model row too, and they move with other programs on the card (desktop, browsers): the card's peak is not the model's peak. GPU utilisation separates the settings: the no-model run leaves the card at the desktop's idle level.`,
+      `The model: Ollama reports \`${g.ollama_model}\` (${g.parameters}, ${g.quantization}) with ${intf(g.ollama_size_vram_mib)} MiB in VRAM at context ${g.ollama_context}. In the runs with the model the card memory fell by about ${intf(g.card_drop_mib)} MiB for about two seconds and came back (${r.ablation.filter((x) => x.gpu && x.setting !== "no_model").map((x) => `${x.gpu!.unload_dips} times with think ${x.setting === "think_on" ? "on" : "off"}`).join(", ")}): the model was unloaded and loaded again mid-run. The agent's host-RAM guard (it unloads the model when free host RAM falls below 2,048 MiB) is the only unload path in the agent and its events are not saved in the run file, so that cause is likely but not verified. The drop is the card memory the loaded model holds, measured on the card; the card's first and peak figures move with other programs (desktop, browsers) and are not the model's. GPU utilisation separates the settings: the no-model run leaves the card at the desktop's idle level.`,
     );
     out.push("");
   }

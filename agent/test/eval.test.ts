@@ -147,6 +147,10 @@ describe("eval report: timings, GPU, manual baseline", () => {
       ollama_mid: { models: [{ name: "m", size_vram: 3 * 1048576, context_length: 8192, details: { parameter_size: "4.0B", quantization_level: "Q4_K_M" } }] },
     });
     expect(g).toMatchObject({ samples: 3, mem_first_mib: 6900, mem_peak_mib: 7400, util_median_pct: 40, util_peak_pct: 90, ollama_size_vram_mib: 3, resident_before: false, quantization: "Q4_K_M" });
+    const d = gpuSummary({ run_id: "r2", samples: [6900, 3800, 6900, 3790, 6950].map((mem_mib, i) => ({ at: String(i), mem_mib, util_pct: 50 })) });
+    expect(d).toMatchObject({ unload_dips: 2, card_drop_mib: 3110 });
+    expect(g.unload_dips).toBe(0);
+    expect(g.card_drop_mib).toBeNull();
   });
 
   it("reads the driver log, the samples and the run id of each ablation run", () => {
